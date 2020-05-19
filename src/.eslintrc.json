@@ -103,6 +103,7 @@
     "reloadWithDebugInfo": false,
     "stringify": false,
     "compilationBindings": false,
+    "UNSAFE_restoreLegacyJqLiteXHTMLReplacement": false,
 
     "NODE_TYPE_ELEMENT": false,
     "NODE_TYPE_ATTRIBUTE": false,
