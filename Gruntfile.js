@@ -1,55 +1,8 @@
 'use strict';
 
-var serveFavicon = require('serve-favicon');
-var serveStatic = require('serve-static');
-var serveIndex = require('serve-index');
 var files = require('./angularFiles').files;
 var util = require('./lib/grunt/utils.js');
-var versionInfo = require('./lib/versions/version-info');
-var path = require('path');
-var e2e = require('./test/e2e/tools');
-
-var semver = require('semver');
-var exec = require('shelljs').exec;
-var pkg = require(__dirname + '/package.json');
-
-var docsScriptFolder = 'scripts/docs.angularjs.org-firebase';
-
-// Node.js version checks
-if (!semver.satisfies(process.version, pkg.engines.node)) {
-  reportOrFail('Invalid node version (' + process.version + '). ' +
-               'Please use a version that satisfies ' + pkg.engines.node);
-}
-
-// Yarn version checks
-var expectedYarnVersion = pkg.engines.yarn;
-var currentYarnVersion = exec('yarn --version', {silent: true}).stdout.trim();
-if (!semver.satisfies(currentYarnVersion, expectedYarnVersion)) {
-  reportOrFail('Invalid yarn version (' + currentYarnVersion + '). ' +
-               'Please use a version that satisfies ' + expectedYarnVersion);
-}
-
-// Grunt CLI version checks
-var expectedGruntVersion = pkg.engines.grunt;
-var currentGruntVersions = exec('grunt --version', {silent: true}).stdout;
-var match = /^grunt-cli v(.+)$/m.exec(currentGruntVersions);
-if (!match) {
-  reportOrFail('Unable to compute the current grunt-cli version. We found:\n' +
-               currentGruntVersions);
-} else {
-  if (!semver.satisfies(match[1], expectedGruntVersion)) {
-  reportOrFail('Invalid grunt-cli version (' + match[1] + '). ' +
-               'Please use a version that satisfies ' + expectedGruntVersion);
-  }
-}
-
-// Ensure Node.js dependencies have been installed
-if (!process.env.TRAVIS && !process.env.JENKINS_HOME) {
-  var yarnOutput = exec('yarn install');
-  if (yarnOutput.code !== 0) {
-    throw new Error('Yarn install failed: ' + yarnOutput.stderr);
-  }
-}
+var packageJson = require('./package.json');
 
 module.exports = function(grunt) {
 
@@ -61,20 +14,16 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('angular-benchpress');
 
   // compute version related info for this build
-  var NG_VERSION = versionInfo.currentVersion;
-  NG_VERSION.cdn = versionInfo.cdnVersion;
+  const [major, minor, patch] = packageJson.version.split('.');
+  var NG_VERSION = {
+    cdn: '',
+    codeName: '',
+    full: packageJson.version,
+    major: major,
+    minor: minor,
+    patch: patch
+  };
   var dist = 'angular-' + NG_VERSION.full;
-
-  var deployVersion = NG_VERSION.full;
-
-  if (NG_VERSION.isSnapshot) {
-    deployVersion = NG_VERSION.distTag === 'latest' ? 'snapshot-stable' : 'snapshot';
-  }
-
-  if (versionInfo.cdnVersion == null) {
-    throw new Error('Unable to read CDN version, are you offline or has the CDN not been properly pushed?\n' +
-                    'Perhaps you want to set the NG1_BUILD_NO_REMOTE_VERSION_REQUESTS environment variable?');
-  }
 
   //config
   grunt.initConfig({
@@ -85,90 +34,11 @@ module.exports = function(grunt) {
         benchmarksPath: 'benchmarks'
       }
     },
-
-    connect: {
-      devserver: {
-        options: {
-          port: 8000,
-          hostname: '0.0.0.0',
-          base: '.',
-          keepalive: true,
-          middleware: function(connect, options) {
-            var base = Array.isArray(options.base) ? options.base[options.base.length - 1] : options.base;
-            return [
-              util.conditionalCsp(),
-              util.rewrite(),
-              e2e.middleware(),
-              serveFavicon('images/favicon.ico'),
-              serveStatic(base),
-              serveIndex(base)
-            ];
-          }
-        }
-      },
-      testserver: {
-        options: {
-          // We use end2end task (which does not start the webserver)
-          // and start the webserver as a separate process (in travis_build.sh)
-          // to avoid https://github.com/joyent/libuv/issues/826
-          port: 8000,
-          hostname: '0.0.0.0',
-          middleware: function(connect, options) {
-            var base = Array.isArray(options.base) ? options.base[options.base.length - 1] : options.base;
-            return [
-              function(req, resp, next) {
-                // cache get requests to speed up tests on travis
-                if (req.method === 'GET') {
-                  resp.setHeader('Cache-control', 'public, max-age=3600');
-                }
-
-                next();
-              },
-              util.conditionalCsp(),
-              e2e.middleware(),
-              serveFavicon('images/favicon.ico'),
-              serveStatic(base)
-            ];
-          }
-        }
-      }
-    },
-
-
-    tests: {
-      jqlite: 'karma-jqlite.conf.js',
-      jquery: 'karma-jquery.conf.js',
-      'jquery-2.2': 'karma-jquery-2.2.conf.js',
-      'jquery-2.1': 'karma-jquery-2.1.conf.js',
-      docs: 'karma-docs.conf.js',
-      modules: 'karma-modules.conf.js'
-    },
-
-
-    autotest: {
-      jqlite: 'karma-jqlite.conf.js',
-      jquery: 'karma-jquery.conf.js',
-      'jquery-2.2': 'karma-jquery-2.2.conf.js',
-      'jquery-2.1': 'karma-jquery-2.1.conf.js',
-      modules: 'karma-modules.conf.js',
-      docs: 'karma-docs.conf.js'
-    },
-
-
-    protractor: {
-      normal: 'protractor-conf.js',
-      travis: 'protractor-travis-conf.js',
-      jenkins: 'protractor-jenkins-conf.js'
-    },
-
-
     clean: {
       build: ['build'],
       tmp: ['tmp'],
       deploy: [
-        'deploy/docs',
         'deploy/code',
-        docsScriptFolder + '/functions/html'
       ]
     },
 
@@ -331,48 +201,6 @@ module.exports = function(grunt) {
             flatten: true
           }
         ]
-      },
-      deployFirebaseCode: {
-        files: [
-          // copy files that are not handled by compress
-          {
-            cwd: 'build',
-            src: '**/*.{zip,jpg,jpeg,png}',
-            dest: 'deploy/code/' + deployVersion + '/',
-            expand: true
-          }
-        ]
-      },
-      deployFirebaseDocs: {
-        files: [
-          // The source files are needed by the embedded examples in the docs app.
-          {
-            src: ['build/angular*.{js,js.map,min.js}', 'build/sitemap.xml'],
-            dest: 'deploy/docs/',
-            expand: true,
-            flatten: true
-          },
-          {
-            cwd: 'build/docs',
-            src: ['**', '!ptore2e/**', '!index*.html'],
-            dest: 'deploy/docs/',
-            expand: true
-          },
-          {
-            src: 'build/docs/index-production.html',
-            dest: 'deploy/docs/index.html'
-          },
-          {
-            src: 'build/docs/index-production.html',
-            dest: docsScriptFolder + '/functions/content/index.html'
-          },
-          {
-            cwd: 'build/docs',
-            src: 'partials/**',
-            dest: docsScriptFolder + '/functions/content',
-            expand: true
-          }
-        ]
       }
     },
 
@@ -385,33 +213,8 @@ module.exports = function(grunt) {
         expand: true,
         dot: true,
         dest: dist + '/'
-      },
-      deployFirebaseCode: {
-        options: {
-          mode: 'gzip'
-        },
-        // Already compressed files should not be compressed again
-        src: ['**', '!**/*.{zip,png,jpeg,jpg}'],
-        cwd: 'build',
-        expand: true,
-        dest: 'deploy/code/' + deployVersion + '/'
       }
     },
-
-    shell: {
-      'install-node-dependencies': {
-        command: 'yarn'
-      },
-      'promises-aplus-tests': {
-        options: {
-          stdout: false,
-          stderr: true,
-          failOnError: true
-        },
-        command: path.normalize('./node_modules/.bin/promises-aplus-tests tmp/promises-aplus-adapter++.js --timeout 2000')
-      }
-    },
-
 
     write: {
       versionTXT: {file: 'build/version.txt', val: NG_VERSION.full},
@@ -429,54 +232,6 @@ module.exports = function(grunt) {
   });
 
   //alias tasks
-  grunt.registerTask('test', 'Run unit, docs and e2e tests with Karma', [
-    'eslint',
-    'package',
-    'test:unit',
-    'test:promises-aplus',
-    'tests:docs',
-    'test:protractor'
-  ]);
-  grunt.registerTask('test:jqlite', 'Run the unit tests with Karma' , ['tests:jqlite']);
-  grunt.registerTask('test:jquery', 'Run the jQuery (latest) unit tests with Karma', ['tests:jquery']);
-  grunt.registerTask('test:jquery-2.2', 'Run the jQuery 2.2 unit tests with Karma', ['tests:jquery-2.2']);
-  grunt.registerTask('test:jquery-2.1', 'Run the jQuery 2.1 unit tests with Karma', ['tests:jquery-2.1']);
-  grunt.registerTask('test:modules', 'Run the Karma module tests with Karma', [
-    'build',
-    'tests:modules'
-  ]);
-  grunt.registerTask('test:docs', 'Run the doc-page tests with Karma', ['package', 'tests:docs']);
-  grunt.registerTask('test:unit', 'Run unit, jQuery and Karma module tests with Karma', [
-    'test:jqlite',
-    'test:jquery',
-    'test:jquery-2.2',
-    'test:jquery-2.1',
-    'test:modules'
-  ]);
-  grunt.registerTask('test:protractor', 'Run the end to end tests with Protractor and keep a test server running in the background', [
-    'webdriver',
-    'connect:testserver',
-    'protractor:normal'
-  ]);
-  grunt.registerTask('test:travis-protractor', 'Run the end to end tests with Protractor for Travis CI builds', [
-    'connect:testserver',
-    'protractor:travis'
-  ]);
-  grunt.registerTask('test:ci-protractor', 'Run the end to end tests with Protractor for Jenkins CI builds', [
-    'webdriver',
-    'connect:testserver',
-    'protractor:jenkins'
-  ]);
-  grunt.registerTask('test:e2e', 'Alias for test:protractor', ['test:protractor']);
-  grunt.registerTask('test:promises-aplus',[
-    'build:promises-aplus-adapter',
-    'shell:promises-aplus-tests'
-  ]);
-  grunt.registerTask('minify', [
-    'clean',
-    'build',
-    'minall'
-  ]);
   grunt.registerTask('webserver', ['connect:devserver']);
   grunt.registerTask('package', [
     'validate-angular-files',
@@ -485,7 +240,6 @@ module.exports = function(grunt) {
     'minall',
     'collect-errors',
     'write',
-    'docs',
     'copy:i18n',
     'compress:build'
   ]);
@@ -496,21 +250,6 @@ module.exports = function(grunt) {
   ]);
   grunt.registerTask('prepareDeploy', [
     'package',
-    'compress:deployFirebaseCode',
-    'copy:deployFirebaseCode',
-    'firebaseDocsJsonForTravis',
-    'copy:deployFirebaseDocs'
   ]);
   grunt.registerTask('default', ['package']);
 };
-
-
-function reportOrFail(message) {
-  if (process.env.TRAVIS || process.env.JENKINS_HOME) {
-    throw new Error(message);
-  } else {
-    console.log('===============================================================================');
-    console.log(message);
-    console.log('===============================================================================');
-  }
-}
