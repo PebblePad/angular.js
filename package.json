@@ -14,7 +14,8 @@
     "grunt": "^1.2.0"
   },
   "scripts": {
-    "build": "grunt package"
+    "build": "grunt package",
+    "package:angular": "node ./scripts/packaging/packageAngular.js"
   },
   "devDependencies": {
     "angular-benchpress": "0.x.x",

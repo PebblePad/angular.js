@@ -95,6 +95,7 @@
   hasOwnProperty,
   createMap,
   stringify,
+  compilationBindings
 
   NODE_TYPE_ELEMENT,
   NODE_TYPE_ATTRIBUTE,

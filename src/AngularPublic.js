@@ -159,7 +159,8 @@ function publishExternalAPI(angular) {
     '$$csp': csp,
     '$$encodeUriSegment': encodeUriSegment,
     '$$encodeUriQuery': encodeUriQuery,
-    '$$stringify': stringify
+    '$$stringify': stringify,
+    '$$compilationBindings': compilationBindings
   });
 
   angularModule = setupModuleLoader(window);

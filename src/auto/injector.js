@@ -946,7 +946,12 @@ function createInjector(modulesToLoad, strictDi) {
         return fn.apply(self, args);
       } else {
         args.unshift(null);
-        return new (Function.prototype.bind.apply(fn, args))();
+        compilationBindings.current = self;
+
+        var instance = new (Function.prototype.bind.apply(fn, args))();
+        compilationBindings.current = null;
+
+        return instance;
       }
     }
 

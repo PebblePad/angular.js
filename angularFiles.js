@@ -2,6 +2,7 @@
 
 var angularFiles = {
   'angularSrc': [
+    'src/es6Bindings/compilationBindings.js',
     'src/minErr.js',
     'src/Angular.js',
     'src/loader.js',
@@ -151,6 +152,9 @@ var angularFiles = {
     ],
     'ngAria': [
       'src/ngAria/aria.js'
+    ],
+    'ngComponent': [
+      'src/es6Bindings/ngComponent.js'
     ]
   },
 

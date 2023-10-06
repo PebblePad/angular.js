@@ -133,6 +133,11 @@ module.exports = function(grunt) {
         dest: 'build/angular-parse-ext.js',
         src: util.wrap(files['angularModules']['ngParseExt'], 'module')
       },
+      ngComponent: {
+        dest: 'build/ngComponent.js',
+        src: files['angularModules']['ngComponent'],
+        strict: false
+      },
       'promises-aplus-adapter': {
         dest:'tmp/promises-aplus-adapter++.js',
         src:['src/ng/q.js', 'lib/promises-aplus/promises-aplus-test-adapter.js']
