@@ -4089,133 +4089,134 @@ describe('input', function() {
 
 
   describe('url', function() {
-
-    it('should validate url', function() {
-      var inputElm = helper.compileInput('<input type="url" ng-model="url" name="alias" />');
-      var widget = $rootScope.form.alias;
-
-      helper.changeInputValueTo('http://www.something.com');
-      expect($rootScope.url).toBe('http://www.something.com');
-      expect(inputElm).toBeValid();
-      expect(widget.$error.url).toBeFalsy();
-
-      helper.changeInputValueTo('invalid.com');
-      expect($rootScope.url).toBeUndefined();
-      expect(inputElm).toBeInvalid();
-      expect(widget.$error.url).toBeTruthy();
-    });
-
-
-    describe('URL_REGEXP', function() {
-      // See valid URLs in RFC3987 (http://tools.ietf.org/html/rfc3987)
-      // Note: We are being more lenient, because browsers are too.
-      var urls = [
-        ['scheme://hostname', true],
-        ['scheme://username:password@host.name:7678/pa/t.h?q=u&e=r&y#fragment', true],
+      // Valid scenarios are more lenient because browsers are.
+      const validUrlLikeScenarios = [
+        'scheme://hostname',
+        'scheme://username:password@host.name:7678/pa/t.h?q=u&e=r&y#fragment',
 
         // Validating `scheme`
-        ['://example.com', false],
-        ['0scheme://example.com', false],
-        ['.scheme://example.com', false],
-        ['+scheme://example.com', false],
-        ['-scheme://example.com', false],
-        ['_scheme://example.com', false],
-        ['scheme0://example.com', true],
-        ['scheme.://example.com', true],
-        ['scheme+://example.com', true],
-        ['scheme-://example.com', true],
-        ['scheme_://example.com', false],
+        'scheme0://example.com',
+        'scheme.://example.com',
+        'scheme+://example.com',
+        'scheme-://example.com',
 
         // Validating `:` and `/` after `scheme`
-        ['scheme//example.com', false],
-        ['scheme:example.com', true],
-        ['scheme:/example.com', true],
-        ['scheme:///example.com', true],
+        'scheme:example.com',
+        'scheme:/example.com',
+        'scheme:///example.com',
 
         // Validating `username` and `password`
-        ['scheme://@example.com', true],
-        ['scheme://username@example.com', true],
-        ['scheme://u0s.e+r-n_a~m!e@example.com', true],
-        ['scheme://u#s$e%r^n&a*m;e@example.com', true],
-        ['scheme://:password@example.com', true],
-        ['scheme://username:password@example.com', true],
-        ['scheme://username:pass:word@example.com', true],
-        ['scheme://username:p0a.s+s-w_o~r!d@example.com', true],
-        ['scheme://username:p#a$s%s^w&o*r;d@example.com', true],
+        'scheme://@example.com',
+        'scheme://username@example.com',
+        'scheme://u0s.e+r-n_a~m!e@example.com',
+        'scheme://u#s$e%r^n&a*m;e@example.com',
+        'scheme://:password@example.com',
+        'scheme://username:password@example.com',
+        'scheme://username:pass:word@example.com',
+        'scheme://username:p0a.s+s-w_o~r!d@example.com',
+        'scheme://username:p#a$s%s^w&o*r;d@example.com',
 
         // Validating `hostname`
-        ['scheme:', false],                                  // Chrome, FF: true
-        ['scheme://', false],                                // Chrome, FF: true
-        ['scheme:// example.com:', false],                   // Chrome, FF: true
-        ['scheme://example com:', false],                    // Chrome, FF: true
-        ['scheme://:', false],                               // Chrome, FF: true
-        ['scheme://?', false],                               // Chrome, FF: true
-        ['scheme://#', false],                               // Chrome, FF: true
-        ['scheme://username:password@:', false],             // Chrome, FF: true
-        ['scheme://username:password@/', false],             // Chrome, FF: true
-        ['scheme://username:password@?', false],             // Chrome, FF: true
-        ['scheme://username:password@#', false],             // Chrome, FF: true
-        ['scheme://host.name', true],
-        ['scheme://123.456.789.10', true],
-        ['scheme://[1234:0000:0000:5678:9abc:0000:0000:def]', true],
-        ['scheme://[1234:0000:0000:5678:9abc:0000:0000:def]:7678', true],
-        ['scheme://[1234:0:0:5678:9abc:0:0:def]', true],
-        ['scheme://[1234::5678:9abc::def]', true],
-        ['scheme://~`!@$%^&*-_=+|\\;\'",.()[]{}<>', true],
+        'scheme:',
+        'scheme://',
+        'scheme:// example.com:',
+        'scheme://example com:',
+        'scheme://:',
+        'scheme://?',
+        'scheme://#',
+        'scheme://username:password@:',
+        'scheme://username:password@/',
+        'scheme://username:password@?',
+        'scheme://username:password@#',
+        'scheme://host.name',
+        'scheme://123.456.789.10',
+        'scheme://[1234:0000:0000:5678:9abc:0000:0000:def]',
+        'scheme://[1234:0000:0000:5678:9abc:0000:0000:def]:7678',
+        'scheme://[1234:0:0:5678:9abc:0:0:def]',
+        'scheme://[1234::5678:9abc::def]',
+        'scheme://~`!@$%^&*-_=+|\\;\'",.()[]{}<>',
 
         // Validating `port`
-        ['scheme://example.com/no-port', true],
-        ['scheme://example.com:7678', true],
-        ['scheme://example.com:76T8', false],                // Chrome, FF: true
-        ['scheme://example.com:port', false],                // Chrome, FF: true
+        'scheme://example.com/no-port',
+        'scheme://example.com:7678',
+        'scheme://example.com:76T8',
+        'scheme://example.com:port',
 
         // Validating `path`
-        ['scheme://example.com/', true],
-        ['scheme://example.com/path', true],
-        ['scheme://example.com/path/~`!@$%^&*-_=+|\\;:\'",./()[]{}<>', true],
+        'scheme://example.com/',
+        'scheme://example.com/path',
+        'scheme://example.com/path/~`!@$%^&*-_=+|\\;:\'",./()[]{}<>',
 
         // Validating `query`
-        ['scheme://example.com?query', true],
-        ['scheme://example.com/?query', true],
-        ['scheme://example.com/path?query', true],
-        ['scheme://example.com/path?~`!@$%^&*-_=+|\\;:\'",.?/()[]{}<>', true],
+        'scheme://example.com?query',
+        'scheme://example.com/?query',
+        'scheme://example.com/path?query',
+        'scheme://example.com/path?~`!@$%^&*-_=+|\\;:\'",.?/()[]{}<>',
 
         // Validating `fragment`
-        ['scheme://example.com#fragment', true],
-        ['scheme://example.com/#fragment', true],
-        ['scheme://example.com/path#fragment', true],
-        ['scheme://example.com/path/#fragment', true],
-        ['scheme://example.com/path?query#fragment', true],
-        ['scheme://example.com/path?query#~`!@#$%^&*-_=+|\\;:\'",.?/()[]{}<>', true],
+        'scheme://example.com#fragment',
+        'scheme://example.com/#fragment',
+        'scheme://example.com/path#fragment',
+        'scheme://example.com/path/#fragment',
+        'scheme://example.com/path?query#fragment',
+        'scheme://example.com/path?query#~`!@#$%^&*-_=+|\\;:\'",.?/()[]{}<>',
 
         // Validating miscellaneous
-        ['scheme://☺.✪.⌘.➡/䨹', true],
-        ['scheme://مثال.إختبار', true],
-        ['scheme://例子.测试', true],
-        ['scheme://उदाहरण.परीक्षा', true],
+        'scheme://☺.✪.⌘.➡/䨹',
+        'scheme://مثال.إختبار',
+        'scheme://例子.测试',
+        'scheme://उदाहरण.परीक्षा',
 
         // Legacy tests
-        ['http://server:123/path', true],
-        ['https://server:123/path', true],
-        ['file:///home/user', true],
-        ['mailto:user@example.com?subject=Foo', true],
-        ['r2-d2.c3-p0://localhost/foo', true],
-        ['abc:/foo', true],
-        ['http://example.com/path;path', true],
-        ['http://example.com/[]$\'()*,~)', true],
-        ['http:', false],                                            // FF: true
-        ['a@B.c', false],
-        ['a_B.c', false],
-        ['0scheme://example.com', false],
-        ['http://example.com:9999/``', true]
+        'http://server:123/path',
+        'https://server:123/path',
+        'file:///home/user',
+        'mailto:user@example.com?subject=Foo',
+        'r2-d2.c3-p0://localhost/foo',
+        'abc:/foo',
+        'http://example.com/path;path',
+        'http://example.com/[]$\'()*,~)',
+        'http://example.com:9999/``'
       ];
 
-      they('should validate url: $prop', urls, function(item) {
-        var url = item[0];
-        var valid = item[1];
+      const invalidUrlLikeScenarios = [
+        'scheme_://example.com',
+        // Validating `scheme`
+        '://example.com',
+        '0scheme://example.com',
+        '.scheme://example.com',
+        '+scheme://example.com',
+        '-scheme://example.com',
+        '_scheme://example.com',
 
-        /* global URL_REGEXP: false */
-        expect(URL_REGEXP.test(url)).toBe(valid);
+        // Validating `:` and `/` after `scheme`
+        'scheme//example.com',
+
+        // Legacy tests
+        'http:',
+        'a@B.c',
+        'a_B.c',
+        '0scheme://example.com'
+      ];
+
+      they('should parse valid url without error: $prop', validUrlLikeScenarios, function(url) {
+        var inputElm = helper.compileInput('<input type="url" ng-model="url" name="alias" />');
+        var widget = $rootScope.form.alias;
+
+        helper.changeInputValueTo(url);
+        expect($rootScope.url).toBe(url);
+        expect(inputElm).toBeValid();
+        expect(widget.$error.url).toBeFalsy();
+      });
+
+      they('should parse invalid url with an error: $prop', validUrlLikeScenarios, function(url) {
+        var inputElm = helper.compileInput('<input type="url" ng-model="url" name="alias" />');
+        var widget = $rootScope.form.alias;
+
+        helper.changeInputValueTo(url);
+        expect($rootScope.url).toBeUndefined();
+        expect(inputElm).toBeInvalid();
+        expect(widget.$error.url).toBeTruthy();
       });
     });
   });
