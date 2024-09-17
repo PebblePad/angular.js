@@ -1775,38 +1775,17 @@ function $CompileProvider($provide, $$sanitizeUriProvider) {
           // sanitize a[href] and img[src] values
           this[key] = value = (value == null) ? value : $$sanitizeUri(value, key === 'src');
         } else if (nodeName === 'img' && key === 'srcset' && isDefined(value)) {
+          const srcSetValues = value.split(',')
+          const sanitisedSrcSet = [];
+          for (const srcSetValue of srcSetValues) {
+              const wellTrimmedSrcSetValue = srcSetValue.trim().replace(/\s{2,}/, ' ');
+              const srcSplit = wellTrimmedSrcSetValue.split(' ');
+              const uri = $$sanitizeUri(srcSplit[0], true);
+              sanitisedSrcSet.push(`${uri}${srcSplit[1] !== undefined ? " " + srcSplit[1] : ""}`)
+          }
+
+          const result = sanitisedSrcSet.join(',');
           // sanitize img[srcset] values
-          var result = '';
-
-          // first check if there are spaces because it's not the same pattern
-          var trimmedSrcset = trim(value);
-          //                (   999x   ,|   999w   ,|   ,|,   )
-          var srcPattern = /(\s+\d+x\s*,|\s+\d+w\s*,|\s+,|,\s+)/;
-          var pattern = /\s/.test(trimmedSrcset) ? srcPattern : /(,)/;
-
-          // split srcset into tuple of uri and descriptor except for the last item
-          var rawUris = trimmedSrcset.split(pattern);
-
-          // for each tuples
-          var nbrUrisWith2parts = Math.floor(rawUris.length / 2);
-          for (var i = 0; i < nbrUrisWith2parts; i++) {
-            var innerIdx = i * 2;
-            // sanitize the uri
-            result += $$sanitizeUri(trim(rawUris[innerIdx]), true);
-            // add the descriptor
-            result += (' ' + trim(rawUris[innerIdx + 1]));
-          }
-
-          // split the last item into uri and descriptor
-          var lastTuple = trim(rawUris[i * 2]).split(/\s/);
-
-          // sanitize the last uri
-          result += $$sanitizeUri(trim(lastTuple[0]), true);
-
-          // and add the last descriptor if any
-          if (lastTuple.length === 2) {
-            result += (' ' + trim(lastTuple[1]));
-          }
           this[key] = value = result;
         }
 
