@@ -75,8 +75,6 @@ describe('ngAnimate $animateCss', function() {
   }));
 
   describe('when active', function() {
-    if (!browserSupportsCssAnimations()) return;
-
     it('should not attempt an animation if animations are globally disabled',
       inject(function($animateCss, $animate, $rootElement, $document) {
 

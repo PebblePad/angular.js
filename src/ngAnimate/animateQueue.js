@@ -178,20 +178,14 @@ var $$AnimateQueueProvider = ['$animateProvider', /** @this */ function($animate
       return mergeAnimationDetails(element, animation, {});
     }
 
-    // IE9-11 has no method "contains" in SVG element and in Node.prototype. Bug #10259.
-    var contains = window.Node.prototype.contains || /** @this */ function(arg) {
-      // eslint-disable-next-line no-bitwise
-      return this === arg || !!(this.compareDocumentPosition(arg) & 16);
-    };
-
     function findCallbacks(targetParentNode, targetNode, event) {
       var matches = [];
       var entries = callbackRegistry[event];
       if (entries) {
         forEach(entries, function(entry) {
-          if (contains.call(entry.node, targetNode)) {
+          if (entry.node.contains(targetNode)) {
             matches.push(entry.callback);
-          } else if (event === 'leave' && contains.call(entry.node, targetParentNode)) {
+          } else if (event === 'leave' && entry.node.contains(targetParentNode)) {
             matches.push(entry.callback);
           }
         });

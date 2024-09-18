@@ -70,9 +70,6 @@ NgMapShim.prototype = {
     }
     this._keys[idx] = key;
     this._values[idx] = value;
-
-    // Support: IE11
-    // Do not `return this` to simulate the partial IE11 implementation
   },
   delete: function(key) {
     key = this._transformKey(key);

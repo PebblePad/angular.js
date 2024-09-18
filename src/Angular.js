@@ -3,7 +3,6 @@
 /* We need to tell ESLint what variables are being exported */
 /* exported
   angular,
-  msie,
   jqLite,
   jQuery,
   slice,
@@ -107,6 +106,14 @@
 */
 
 ////////////////////////////////////
+/**
+ * documentMode is an IE-only property
+ * http://msdn.microsoft.com/en-us/library/ie/cc196988(v=vs.85).aspx
+ */
+if (window.document.documentMode) {
+  throw new Error('Internet Explorer is not supported!');
+}
+
 
 /**
  * @ngdoc module
@@ -192,7 +199,6 @@ if ('i' !== 'I'.toLowerCase()) {
 
 
 var
-    msie,             // holds major version number for IE, or NaN if UA is not IE.
     jqLite,           // delay binding since jQuery could be loaded after us.
     jQuery,           // delay binding
     slice             = [].slice,
@@ -206,13 +212,6 @@ var
     angular           = window.angular || (window.angular = {}),
     angularModule,
     uid               = 0;
-
-// Support: IE 9-11 only
-/**
- * documentMode is an IE-only property
- * http://msdn.microsoft.com/en-us/library/ie/cc196988(v=vs.85).aspx
- */
-msie = window.document.documentMode;
 
 
 /**
@@ -1000,15 +999,6 @@ function copy(source, destination, maxDepth) {
         return new source.constructor(copyElement(source.buffer), source.byteOffset, source.length);
 
       case '[object ArrayBuffer]':
-        // Support: IE10
-        if (!source.slice) {
-          // If we're in this case we know the environment supports ArrayBuffer
-          /* eslint-disable no-undef */
-          var copied = new ArrayBuffer(source.byteLength);
-          new Uint8Array(copied).set(new Uint8Array(source));
-          /* eslint-enable */
-          return copied;
-        }
         return source.slice(0);
 
       case '[object Boolean]':
@@ -1361,8 +1351,8 @@ function fromJson(json) {
 
 var ALL_COLONS = /:/g;
 function timezoneToOffset(timezone, fallback) {
-  // Support: IE 9-11 only, Edge 13-15+
-  // IE/Edge do not "understand" colon (`:`) in timezone
+  // Support: Edge 13-15+
+  // Edge does not "understand" colon (`:`) in timezone
   timezone = timezone.replace(ALL_COLONS, '');
   var requestedTimezoneOffset = Date.parse('Jan 01, 1970 00:00:00 ' + timezone) / 60000;
   return isNumberNaN(requestedTimezoneOffset) ? fallback : requestedTimezoneOffset;
@@ -1524,13 +1514,6 @@ function getNgAttribute(element, ngAttr) {
 
 function allowAutoBootstrap(document) {
   var script = document.currentScript;
-
-  if (!script) {
-    // Support: IE 9-11 only
-    // IE does not have `document.currentScript`
-    return true;
-  }
-
   // If the `currentScript` property has been clobbered just return false, since this indicates a probable attack
   if (!(script instanceof window.HTMLScriptElement || script instanceof window.SVGScriptElement)) {
     return false;

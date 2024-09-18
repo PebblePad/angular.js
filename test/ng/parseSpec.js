@@ -2182,14 +2182,10 @@ describe('parser', function() {
         expect(scope.$eval('getter()()')).toBe(33);
       });
 
-      // Support: IE 9 only
-      // There is no "strict mode" in IE9
-      if (msie !== 9) {
-        it('should set no context to functions returned by other functions', function() {
-          scope.getter = function() { return function() { expect(this).toBeUndefined(); }; };
-          scope.$eval('getter()()');
-        });
-      }
+      it('should set no context to functions returned by other functions', function() {
+        scope.getter = function() { return function() { expect(this).toBeUndefined(); }; };
+        scope.$eval('getter()()');
+      });
 
       it('should evaluate multiplication and division', function() {
         scope.taxRate =  8;

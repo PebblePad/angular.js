@@ -14,8 +14,6 @@ function MockWindow(options) {
   var locationHref = 'http://server/';
   var committedHref = 'http://server/';
   var mockWindow = this;
-  var msie = options.msie;
-  var ieState;
 
   historyEntriesLength = 1;
 
@@ -100,23 +98,8 @@ function MockWindow(options) {
       committedHref = locationHref;
     }
   };
-  // IE 10-11 deserialize history.state on each read making subsequent reads
-  // different object.
-  if (!msie) {
-    this.history.state = null;
-  } else {
-    ieState = null;
-    Object.defineProperty(this.history, 'state', {
-      get: function() {
-        return copy(ieState);
-      },
-      set: function(value) {
-        ieState = value;
-      },
-      configurable: true,
-      enumerable: true
-    });
-  }
+
+  this.history.state = null;
 }
 
 function MockDocument() {
@@ -190,25 +173,17 @@ describe('browser', function() {
       });
     });
 
-    describe('in IE', runTests({msie: true}));
-    describe('not in IE', runTests({msie: false}));
+    describe('in a supported browser', runTests());
 
-    function runTests(options) {
+    function runTests() {
       return function() {
         it('should return the same state object on every read', function() {
-          var msie = options.msie;
-
-          fakeWindow = new MockWindow({msie: msie});
+          fakeWindow = new MockWindow();
           fakeWindow.location.state = {prop: 'val'};
           browser = new Browser(fakeWindow, fakeDocument, fakeLog, sniffer);
 
           browser.url(fakeWindow.location.href, false, {prop: 'val'});
-          if (msie) {
-            expect(fakeWindow.history.state).not.toBe(fakeWindow.history.state);
-            expect(fakeWindow.history.state).toEqual(fakeWindow.history.state);
-          } else {
-            expect(fakeWindow.history.state).toBe(fakeWindow.history.state);
-          }
+          expect(fakeWindow.history.state).toBe(fakeWindow.history.state);
         });
       };
     }
@@ -448,55 +423,19 @@ describe('browser', function() {
 
   });
 
-  describe('url (with ie 11 weirdnesses)', function() {
-
-    it('url() should actually set the url, even if IE 11 is weird and replaces HTML entities in the URL', function() {
-      // this test can not be expressed with the Jasmine spies in the previous describe block, because $browser.url()
-      // needs to observe the change to location.href during its invocation to enter the failing code path, but the spies
-      // are not callThrough
-
-      sniffer.history = true;
-      var originalReplace = fakeWindow.location.replace;
-      fakeWindow.location.replace = function(url) {
-        url = url.replace('&not', '¬');
-        // I really don't know why IE 11 (sometimes) does this, but I am not the only one to notice:
-        // https://connect.microsoft.com/IE/feedback/details/1040980/bug-in-ie-which-interprets-document-location-href-as-html
-        originalReplace.call(this, url);
-      };
-
-      // the initial URL contains a lengthy oauth token in the hash
-      var initialUrl = 'http://test.com/oauthcallback#state=xxx%3D&not-before-policy=0';
-      fakeWindow.location.href = initialUrl;
-      browser = new Browser(fakeWindow, fakeDocument, fakeLog, sniffer);
-
-      // somehow, $location gets a version of this url where the = is no longer escaped, and tells the browser:
-      var initialUrlFixedByLocation = initialUrl.replace('%3D', '=');
-      browser.url(initialUrlFixedByLocation, true, null);
-      expect(browser.url()).toEqual(initialUrlFixedByLocation);
-
-      // a little later (but in the same digest cycle) the view asks $location to replace the url, which tells $browser
-      var secondUrl = 'http://test.com/otherView';
-      browser.url(secondUrl, true, null);
-      expect(browser.url()).toEqual(secondUrl);
-    });
-
-  });
-
   describe('url (when state passed)', function() {
     var currentHref, pushState, replaceState, locationReplace;
 
     beforeEach(function() {
     });
-
-    describe('in IE', runTests({msie: true}));
-    describe('not in IE', runTests({msie: false}));
+    describe('in a supported browser', runTests());
 
     function runTests(options) {
       return function() {
         beforeEach(function() {
           sniffer = {history: true};
 
-          fakeWindow = new MockWindow({msie: options.msie});
+          fakeWindow = new MockWindow();
           currentHref = fakeWindow.location.href;
           pushState = spyOn(fakeWindow.history, 'pushState').and.callThrough();
           replaceState = spyOn(fakeWindow.history, 'replaceState').and.callThrough();
@@ -606,14 +545,12 @@ describe('browser', function() {
       expect(historyStateAccessed).toBe(false);
     });
 
-    describe('in IE', runTests({msie: true}));
-    describe('not in IE', runTests({msie: false}));
-
+    describe('in a supported browser', runTests());
 
     function runTests(options) {
       return function() {
         beforeEach(function() {
-          fakeWindow = new MockWindow({msie: options.msie});
+          fakeWindow = new MockWindow();
           browser = new Browser(fakeWindow, fakeDocument, fakeLog, sniffer);
         });
 
@@ -710,13 +647,12 @@ describe('browser', function() {
         currentHref = fakeWindow.location.href;
       });
 
-      describe('in IE', runTests({msie: true}));
-      describe('not in IE', runTests({msie: false}));
+      describe('in a supported browser', runTests());
 
       function runTests(options) {
         return function() {
           beforeEach(function() {
-            fakeWindow = new MockWindow({msie: options.msie});
+            fakeWindow = new MockWindow();
             browser = new Browser(fakeWindow, fakeDocument, fakeLog, sniffer);
           });
 

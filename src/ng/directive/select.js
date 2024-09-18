@@ -537,7 +537,7 @@ var SelectController =
  * - increased render speed by creating the options in a documentFragment instead of individually
  *
  * Specifically, select with repeated options slows down significantly starting at 2000 options in
- * Chrome and Internet Explorer / Edge.
+ * Chrome and Edge.
  *
  *
  * @param {string} ngModel Assignable AngularJS expression to data-bind to.
@@ -815,8 +815,8 @@ var selectDirective = function() {
                                                includes(value, selectCtrl.selectValueMap[option.value]));
             var currentlySelected = option.selected;
 
-            // Support: IE 9-11 only, Edge 12-15+
-            // In IE and Edge adding options to the selection via shift+click/UP/DOWN
+            // Support: Edge 12-15+
+            // In Edge adding options to the selection via shift+click/UP/DOWN
             // will de-select already selected options if "selected" on those options was set
             // more than once (i.e. when the options were already selected)
             // So we only modify the selected property if necessary.

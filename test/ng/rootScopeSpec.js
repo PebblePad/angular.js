@@ -123,9 +123,7 @@ describe('Scope', function() {
       function Listener() {
         expect(this).toBeUndefined();
       }
-      // Support: IE 9 only
-      // IE 9 doesn't support strict mode so its `this` will always be defined.
-      if (msie === 9) return;
+
       $rootScope.$watch(Getter, Listener);
       $rootScope.$digest();
     }));
@@ -1417,37 +1415,6 @@ describe('Scope', function() {
       expect(child.parentModel).toBe('parent');
       expect(child.childModel).toBe('child');
     }));
-
-
-    // Support: IE 9 only
-    if (msie === 9) {
-      // See issue https://github.com/angular/angular.js/issues/10706
-      it('should completely disconnect all child scopes on IE9', inject(function($rootScope) {
-        var parent = $rootScope.$new(),
-            child1 = parent.$new(),
-            child2 = parent.$new(),
-            grandChild1 = child1.$new(),
-            grandChild2 = child1.$new();
-
-        child1.$destroy();
-        $rootScope.$digest();
-
-        expect(isDisconnected(parent)).toBe(false);
-        expect(isDisconnected(child1)).toBe(true);
-        expect(isDisconnected(child2)).toBe(false);
-        expect(isDisconnected(grandChild1)).toBe(true);
-        expect(isDisconnected(grandChild2)).toBe(true);
-
-        function isDisconnected($scope) {
-          return $scope.$$nextSibling === null &&
-                 $scope.$$prevSibling === null &&
-                 $scope.$$childHead === null &&
-                 $scope.$$childTail === null &&
-                 $scope.$root === null &&
-                 $scope.$$watchers === null;
-        }
-      }));
-    }
   });
 
 

@@ -16,7 +16,7 @@ var ANIMATE_TIMER_KEY = '$$animateCss';
  * directives to create more complex animations that can be purely driven using CSS code.
  *
  * Note that only browsers that support CSS transitions and/or keyframe animations are capable of
- * rendering animations triggered via `$animateCss` (bad news for IE9 and lower).
+ * rendering animations triggered via `$animateCss`.
  *
  * ## General Use
  * Once again, `$animateCss` is designed to be used inside of a registered JavaScript animation that

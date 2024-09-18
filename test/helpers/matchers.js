@@ -370,9 +370,7 @@ beforeEach(function() {
           if (actual.selected === null || typeof actual.selected === 'undefined' || actual.selected === false) {
             errors.push('Expected option with value ' + optionVal + ' to have property "selected" set to truthy');
           }
-
-          // Support: IE 9 only
-          if (msie !== 9 && actual.hasAttribute('selected') === false) {
+          if (actual.hasAttribute('selected') === false) {
             errors.push('Expected option with value ' + optionVal + ' to have attribute "selected"');
           }
 
@@ -391,8 +389,7 @@ beforeEach(function() {
             errors.push('Expected option with value ' + optionVal + ' property "selected" to be falsy');
           }
 
-          // Support: IE 9 only
-          if (msie !== 9 && actual.hasAttribute('selected')) {
+          if (actual.hasAttribute('selected')) {
             errors.push('Expected option with value ' + optionVal + ' not to have attribute "selected"');
           }
 

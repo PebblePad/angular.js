@@ -659,8 +659,7 @@ forEach([LocationHashbangInHtml5Url, LocationHashbangUrl, LocationHtml5Url], fun
    * The state object is later passed to `pushState` or `replaceState`.
    *
    * NOTE: This method is supported only in HTML5 mode and only in browsers supporting
-   * the HTML5 History API (i.e. methods `pushState` and `replaceState`). If you need to support
-   * older browsers (like IE9 or Android < 4.0), don't use this method.
+   * the HTML5 History API (i.e. methods `pushState` and `replaceState`).
    *
    * @param {object=} state State object for pushState or replaceState
    * @return {object} state

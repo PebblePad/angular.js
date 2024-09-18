@@ -19,12 +19,6 @@ describe('support test results', function() {
       fatArrows: true,
       shorthandMethods: true
     };
-  } else if (/msie|trident/i.test(userAgent)) {
-    expected = {
-      classes: false,
-      fatArrows: false,
-      shorthandMethods: false
-    };
   } else if (/iphone os [78]_/i.test(userAgent)) {
     expected = {
       classes: false,

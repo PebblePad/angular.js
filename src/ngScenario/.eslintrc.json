@@ -2,7 +2,6 @@
   "globals": {
     "includes": false,
     "asyncForEach": false,
-    "msie": false,
     "browserTrigger": false,
     "console": false,
     "alert": false,

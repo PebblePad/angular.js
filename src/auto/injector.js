@@ -915,9 +915,7 @@ function createInjector(modulesToLoad, strictDi) {
     }
 
     function isClass(func) {
-      // Support: IE 9-11 only
-      // IE 9-11 do not support classes and IE9 leaks with the code below.
-      if (msie || typeof func !== 'function') {
+      if (typeof func !== 'function') {
         return false;
       }
       var result = func.$$ngIsClass;

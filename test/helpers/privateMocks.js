@@ -30,12 +30,6 @@ function xthey(msg, vals, spec) {
   baseThey(msg, vals, spec, xit);
 }
 
-function browserSupportsCssAnimations() {
-  // Support: IE 9 only
-  // Only IE 10+ support keyframes / transitions
-  return !(window.document.documentMode < 10);
-}
-
 function createMockStyleSheet(doc) {
   doc = doc ? doc[0] : window.document;
 

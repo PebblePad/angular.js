@@ -26,8 +26,6 @@ describe('ngAnimate $$animateCssDriver', function() {
   });
 
   describe('when active', function() {
-    if (!browserSupportsCssAnimations()) return;
-
     var element;
     var ss;
     afterEach(function() {

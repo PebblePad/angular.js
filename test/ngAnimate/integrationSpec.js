@@ -97,8 +97,6 @@ describe('ngAnimate integration tests', function() {
 
 
   describe('CSS animations', function() {
-    if (!browserSupportsCssAnimations()) return;
-
     it('should only create a single copy of the provided animation options',
       inject(function($rootScope, $rootElement, $animate) {
 

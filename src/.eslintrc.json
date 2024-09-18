@@ -8,7 +8,6 @@
 
     /* angular.js */
     "angular": false,
-    "msie": false,
     "jqLite": false,
     "jQuery": false,
     "slice": false,

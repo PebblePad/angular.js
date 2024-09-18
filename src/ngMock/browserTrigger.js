@@ -138,7 +138,6 @@
           data: eventData.data
         });
       } catch (e) {
-        // Support: IE9+
         evnt = window.document.createEvent('CompositionEvent', {});
         evnt.initCompositionEvent(
           eventType,

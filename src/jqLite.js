@@ -194,21 +194,10 @@ var wrapMap = {
 wrapMap.tbody = wrapMap.tfoot = wrapMap.colgroup = wrapMap.caption = wrapMap.thead;
 wrapMap.th = wrapMap.td;
 
-// Support: IE <10 only
-// IE 9 requires an option wrapper & it needs to have the whole table structure
-// set up up front; assigning `"<td></td>"` to `tr.innerHTML` doesn't work, etc.
-var wrapMapIE9 = {
-  option: [1, '<select multiple="multiple">', '</select>'],
-  _default: [0, '', '']
-};
-
 for (var key in wrapMap) {
   var wrapMapValueClosing = wrapMap[key];
   var wrapMapValue = wrapMapValueClosing.slice().reverse();
-  wrapMapIE9[key] = [wrapMapValue.length, '<' + wrapMapValue.join('><') + '>', '</' + wrapMapValueClosing.join('></') + '>'];
 }
-
-wrapMapIE9.optgroup = wrapMapIE9.option;
 
 function jqLiteIsTextNode(html) {
   return !HTML_REGEXP.test(html);
@@ -243,28 +232,16 @@ function jqLiteBuildFragment(html, context) {
     finalHtml = JQLite.legacyXHTMLReplacement ?
       html.replace(XHTML_TAG_REGEXP, '<$1></$2>') :
       html;
+    wrap = wrapMap[tag] || [];
 
-    if (msie < 10) {
-      wrap = wrapMapIE9[tag] || wrapMapIE9._default;
-      tmp.innerHTML = wrap[1] + finalHtml + wrap[2];
-
-      // Descend through wrappers to the right content
-      i = wrap[0];
-      while (i--) {
-        tmp = tmp.firstChild;
-      }
-    } else {
-      wrap = wrapMap[tag] || [];
-
-      // Create wrappers & descend into them
-      i = wrap.length;
-      while (--i > -1) {
-        tmp.appendChild(window.document.createElement(wrap[i]));
-        tmp = tmp.firstChild;
-      }
-
-      tmp.innerHTML = finalHtml;
+    // Create wrappers & descend into them
+    i = wrap.length;
+    while (--i > -1) {
+      tmp.appendChild(window.document.createElement(wrap[i]));
+      tmp = tmp.firstChild;
     }
+
+    tmp.innerHTML = finalHtml;
 
     nodes = concat(nodes, tmp.childNodes);
 
@@ -307,12 +284,6 @@ function jqLiteWrapNode(node, wrapper) {
   wrapper.appendChild(node);
 }
 
-
-// IE9-11 has no method "contains" in SVG element and in Node.prototype. Bug #10259.
-var jqLiteContains = window.Node.prototype.contains || /** @this */ function(arg) {
-  // eslint-disable-next-line no-bitwise
-  return !!(this.compareDocumentPosition(arg) & 16);
-};
 
 /////////////////////////////////////////////
 function JQLite(element) {
@@ -579,7 +550,6 @@ function jqLiteDocumentLoaded(action, win) {
 function jqLiteReady(fn) {
   function trigger() {
     window.document.removeEventListener('DOMContentLoaded', trigger);
-    window.removeEventListener('load', trigger);
     fn();
   }
 
@@ -587,13 +557,7 @@ function jqLiteReady(fn) {
   if (window.document.readyState === 'complete') {
     window.setTimeout(fn);
   } else {
-    // We can not use jqLite since we are not done loading and jQuery could be loaded later.
-
-    // Works for modern browsers and IE9
     window.document.addEventListener('DOMContentLoaded', trigger);
-
-    // Fallback to window.onload for others
-    window.addEventListener('load', trigger);
   }
 }
 
@@ -893,7 +857,7 @@ function specialMouseHandlerWrapper(target, event, handler) {
   var related = event.relatedTarget;
   // For mousenter/leave call the handler if related is outside the target.
   // NB: No relatedTarget if the mouse left/entered the browser window
-  if (!related || (related !== target && !jqLiteContains.call(target, related))) {
+  if (!related || (related !== target && !target.contains(related))) {
     handler.call(target, event);
   }
 }

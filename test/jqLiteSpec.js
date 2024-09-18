@@ -182,11 +182,6 @@ describe('jqLite', function() {
         // jQuery doesn't pass this test yet.
         if (!_jqLiteMode) return;
 
-        // Support: IE <10
-        // In IE 9 we still need to use the old-style innerHTML assignment
-        // as that's the only one that works.
-        if (msie < 10) return;
-
         expect(function() {
           // This test case attempts to close the tags which wrap input
           // based on matching done in wrapMap, escaping the wrapper & thus

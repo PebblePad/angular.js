@@ -406,8 +406,6 @@ var ngOptionsDirective = ['$compile', '$document', '$parse', function($compile, 
     };
   }
 
-
-  // Support: IE 9 only
   // We can't just jqLite('<option>') since jqLite is not smart enough
   // to create it in <select> and IE barfs otherwise.
   var optionTemplate = window.document.createElement('option'),
@@ -616,8 +614,8 @@ var ngOptionsDirective = ['$compile', '$document', '$parse', function($compile, 
       function updateOptionElement(option, element) {
         option.element = element;
         element.disabled = option.disabled;
-        // Support: IE 11 only, Edge 12-13 only
-        // NOTE: The label must be set before the value, otherwise IE 11 & Edge create unresponsive
+        // Support: Edge 12-13 only
+        // NOTE: The label must be set before the value, otherwise Edge create unresponsive
         // selects in certain circumstances when multiple selects are next to each other and display
         // the option list in listbox style, i.e. the select is [multiple], or specifies a [size].
         // See https://github.com/angular/angular.js/issues/11314 for more info.

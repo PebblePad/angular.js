@@ -1069,10 +1069,6 @@ var inputType = {
    *
    * The model for the range input must always be a `Number`.
    *
-   * IE9 and other browsers that do not support the `range` type fall back
-   * to a text input without any default values for `min`, `max` and `step`. Model binding,
-   * validation and number parsing are nevertheless supported.
-   *
    * Browsers that support range (latest Chrome, Safari, Firefox, Edge) treat `input[range]`
    * in a way that never allows the input to hold an invalid value. That means:
    * - any non-numerical value is set to `(max + min) / 2`.
@@ -1267,7 +1263,6 @@ function baseInputType(scope, element, attr, ctrl, $sniffer, $browser) {
       composing = true;
     });
 
-    // Support: IE9+
     element.on('compositionupdate', function(ev) {
       // End composition when ev.data is empty string on 'compositionupdate' event.
       // When the input de-focusses (e.g. by clicking away), IE triggers 'compositionupdate'
@@ -1309,38 +1304,7 @@ function baseInputType(scope, element, attr, ctrl, $sniffer, $browser) {
     }
   };
 
-  // if the browser does support "input" event, we are fine - except on IE9 which doesn't fire the
-  // input event on backspace, delete or cut
-  if ($sniffer.hasEvent('input')) {
-    element.on('input', listener);
-  } else {
-    var deferListener = function(ev, input, origValue) {
-      if (!timeout) {
-        timeout = $browser.defer(function() {
-          timeout = null;
-          if (!input || input.value !== origValue) {
-            listener(ev);
-          }
-        });
-      }
-    };
-
-    element.on('keydown', /** @this */ function(event) {
-      var key = event.keyCode;
-
-      // ignore
-      //    command            modifiers                   arrows
-      if (key === 91 || (15 < key && key < 19) || (37 <= key && key <= 40)) return;
-
-      deferListener(event, this, this.value);
-    });
-
-    // if user modifies input value using context menu in IE, we need "paste", "cut" and "drop" events to catch it
-    if ($sniffer.hasEvent('paste')) {
-      element.on('paste cut drop', deferListener);
-    }
-  }
-
+  element.on('input', listener);
   // if user paste into input using mouse on older browser
   // or form autocomplete on newer browser, we need "change" event to catch it
   element.on('change', listener);
@@ -1956,20 +1920,6 @@ function checkboxInputType(scope, element, attr, ctrl, $sniffer, $browser, $filt
  * @param {string=} ngChange AngularJS expression to be executed when input changes due to user
  *    interaction with the input element.
  * @param {boolean=} [ngTrim=true] If set to false AngularJS will not automatically trim the input.
- *
- * @knownIssue
- *
- * When specifying the `placeholder` attribute of `<textarea>`, Internet Explorer will temporarily
- * insert the placeholder value as the textarea's content. If the placeholder value contains
- * interpolation (`{{ ... }}`), an error will be logged in the console when AngularJS tries to update
- * the value of the by-then-removed text node. This doesn't affect the functionality of the
- * textarea, but can be undesirable.
- *
- * You can work around this Internet Explorer issue by using `ng-attr-placeholder` instead of
- * `placeholder` on textareas, whenever you need interpolation in the placeholder value. You can
- * find more details on `ngAttr` in the
- * [Interpolation](guide/interpolation#-ngattr-for-binding-to-arbitrary-attributes) section of the
- * Developer Guide.
  */
 
 
@@ -2194,9 +2144,7 @@ var ngValueDirective = function() {
    *  makes it possible to use ngValue as a sort of one-way bind.
    */
   function updateElementValue(element, attr, value) {
-    // Support: IE9 only
-    // In IE9 values are converted to string (e.g. `input.value = null` results in `input.value === 'null'`).
-    var propValue = isDefined(value) ? value : (msie === 9) ? '' : null;
+    var propValue = isDefined(value) ? value : null;
     element.prop('value', propValue);
     attr.$set('value', value);
   }

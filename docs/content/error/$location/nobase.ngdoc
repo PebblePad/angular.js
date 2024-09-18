@@ -14,10 +14,6 @@ $locationProvider.html5Mode({
   requireBase: false
 });
 ```
-
-Note that removing the requirement for a `<base>` tag will have adverse side effects when resolving
-relative paths with `$location` in IE9.
-
 The base URL is then used to resolve all relative URLs throughout the application regardless of the
 entry point into the app.
 

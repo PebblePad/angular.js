@@ -237,14 +237,6 @@ are added to the list and are collapsed back down to **0px** before being remove
 There is also a catchy fade-in/fade-out effect that occurs at the same time. All this is handled by
 the CSS transition declaration at the top of the CSS file.
 
-<div class="alert alert-warning">
-  Although all modern browsers have good support for [CSS transitions][caniuse-css-transitions] and
-  [CSS animations][caniuse-css-animation], IE9 and earlier IE versions do not.
-  If you want animations that are backwards-compatible with older browsers, consider using
-  JavaScript-based animations, which are demonstrated below.
-</div>
-
-
 ## CSS Keyframe Animations: Animating `ngView`
 
 Next, let's add an animation for transitions between route changes in

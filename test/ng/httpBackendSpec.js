@@ -397,26 +397,6 @@ describe('$httpBackend', function() {
 
       expect(callback).toHaveBeenCalledOnce();
     });
-
-
-    it('should read responseText if response was not defined', function() {
-      //  old browsers like IE9, don't support responseType, so they always respond with responseText
-
-      $backend('GET', '/whatever', null, callback, {}, null, null, 'blob');
-
-      var xhrInstance = MockXhr.$$lastInstance;
-      var responseText = '{"some": "object"}';
-      expect(xhrInstance.responseType).toBe('blob');
-
-      callback.and.callFake(function(status, response) {
-        expect(response).toBe(responseText);
-      });
-
-      xhrInstance.responseText = responseText;
-      xhrInstance.onload();
-
-      expect(callback).toHaveBeenCalledOnce();
-    });
   });
 
 

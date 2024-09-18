@@ -23,12 +23,6 @@ describe('$compile', function() {
     return !isUnknownElement(d.firstChild);
   }
 
-  // IE9-11 do not support foreignObject in svg...
-  function supportsForeignObject() {
-    var d = document.createElementNS('http://www.w3.org/2000/svg', 'foreignObject');
-    return !!d.toString().match(/SVGForeignObject/);
-  }
-
   function getChildScopes(scope) {
     var children = [];
     if (!scope.$$childHead) { return children; }
@@ -471,91 +465,89 @@ describe('$compile', function() {
       assertIsValidSvgCircle(circle[0]);
     }));
 
-    if (supportsForeignObject()) {
-      // Supports: Chrome 53-57+
-      // Since Chrome 53-57+, the reported size of `<foreignObject>` elements and their descendants
-      // is affected by global display settings (e.g. font size) and browser settings (e.g. default
-      // zoom level). In order to avoid false negatives, we compare against the size of the
-      // equivalent, hand-written SVG instead of fixed widths/heights.
-      var HAND_WRITTEN_SVG =
-        '<svg width="400" height="400">' +
-          '<foreignObject width="100" height="100">' +
-            '<div style="position:absolute;width:20px;height:20px">test</div>' +
-          '</foreignObject>' +
-        '</svg>';
+    // Supports: Chrome 53-57+
+    // Since Chrome 53-57+, the reported size of `<foreignObject>` elements and their descendants
+    // is affected by global display settings (e.g. font size) and browser settings (e.g. default
+    // zoom level). In order to avoid false negatives, we compare against the size of the
+    // equivalent, hand-written SVG instead of fixed widths/heights.
+    var HAND_WRITTEN_SVG =
+      '<svg width="400" height="400">' +
+        '<foreignObject width="100" height="100">' +
+          '<div style="position:absolute;width:20px;height:20px">test</div>' +
+        '</foreignObject>' +
+      '</svg>';
 
-      it('should handle foreignObject', inject(function() {
-        element = jqLite(
-          '<div>' +
-            // By hand (for reference)
-            HAND_WRITTEN_SVG +
-            // By directive
-            '<svg-container>' +
-              '<foreignObject width="100" height="100">' +
-                '<div style="position:absolute;width:20px;height:20px">test</div>' +
-              '</foreignObject>' +
-            '</svg-container>' +
-          '</div>');
+    it('should handle foreignObject', inject(function() {
+      element = jqLite(
+        '<div>' +
+          // By hand (for reference)
+          HAND_WRITTEN_SVG +
+          // By directive
+          '<svg-container>' +
+            '<foreignObject width="100" height="100">' +
+              '<div style="position:absolute;width:20px;height:20px">test</div>' +
+            '</foreignObject>' +
+          '</svg-container>' +
+        '</div>');
+      $compile(element.contents())($rootScope);
+      document.body.appendChild(element[0]);
+
+      var referenceElem = element.find('div')[0];
+      var testElem = element.find('div')[1];
+      var referenceBounds = referenceElem.getBoundingClientRect();
+      var testBounds = testElem.getBoundingClientRect();
+
+      expect(isHTMLElement(testElem)).toBe(true);
+      expect(referenceBounds.width).toBeGreaterThan(0);
+      expect(referenceBounds.height).toBeGreaterThan(0);
+      expect(testBounds.width).toBe(referenceBounds.width);
+      expect(testBounds.height).toBe(referenceBounds.height);
+    }));
+
+    it('should handle custom svg containers that transclude to foreignObject that transclude html', inject(function() {
+      element = jqLite(
+        '<div>' +
+          // By hand (for reference)
+          HAND_WRITTEN_SVG +
+          // By directive
+          '<svg-container>' +
+            '<my-foreign-object>' +
+              '<div style="width:20px;height:20px">test</div>' +
+            '</my-foreign-object>' +
+          '</svg-container>' +
+        '</div>');
+      $compile(element.contents())($rootScope);
+      document.body.appendChild(element[0]);
+
+      var referenceElem = element.find('div')[0];
+      var testElem = element.find('div')[1];
+      var referenceBounds = referenceElem.getBoundingClientRect();
+      var testBounds = testElem.getBoundingClientRect();
+
+      expect(isHTMLElement(testElem)).toBe(true);
+      expect(referenceBounds.width).toBeGreaterThan(0);
+      expect(referenceBounds.height).toBeGreaterThan(0);
+      expect(testBounds.width).toBe(referenceBounds.width);
+      expect(testBounds.height).toBe(referenceBounds.height);
+    }));
+
+    // NOTE: This test may be redundant.
+    // Support: Edge 14-15+
+    // An `<svg>` element inside a `<foreignObject>` element on MS Edge has no
+    // size, causing the included `<circle>` element to also have no size and thus fails an
+    // assertion (relying on the element having a non-zero size).
+    if (!isEdge) {
+      it('should handle custom svg containers that transclude to foreignObject' +
+         ' that transclude to custom svg containers that transclude to custom elements', inject(function() {
+        element = jqLite('<div><svg-container>' +
+            '<my-foreign-object><svg-container><svg-circle></svg-circle></svg-container></my-foreign-object>' +
+            '</svg-container></div>');
         $compile(element.contents())($rootScope);
         document.body.appendChild(element[0]);
 
-        var referenceElem = element.find('div')[0];
-        var testElem = element.find('div')[1];
-        var referenceBounds = referenceElem.getBoundingClientRect();
-        var testBounds = testElem.getBoundingClientRect();
-
-        expect(isHTMLElement(testElem)).toBe(true);
-        expect(referenceBounds.width).toBeGreaterThan(0);
-        expect(referenceBounds.height).toBeGreaterThan(0);
-        expect(testBounds.width).toBe(referenceBounds.width);
-        expect(testBounds.height).toBe(referenceBounds.height);
+        var circle = element.find('circle');
+        assertIsValidSvgCircle(circle[0]);
       }));
-
-      it('should handle custom svg containers that transclude to foreignObject that transclude html', inject(function() {
-        element = jqLite(
-          '<div>' +
-            // By hand (for reference)
-            HAND_WRITTEN_SVG +
-            // By directive
-            '<svg-container>' +
-              '<my-foreign-object>' +
-                '<div style="width:20px;height:20px">test</div>' +
-              '</my-foreign-object>' +
-            '</svg-container>' +
-          '</div>');
-        $compile(element.contents())($rootScope);
-        document.body.appendChild(element[0]);
-
-        var referenceElem = element.find('div')[0];
-        var testElem = element.find('div')[1];
-        var referenceBounds = referenceElem.getBoundingClientRect();
-        var testBounds = testElem.getBoundingClientRect();
-
-        expect(isHTMLElement(testElem)).toBe(true);
-        expect(referenceBounds.width).toBeGreaterThan(0);
-        expect(referenceBounds.height).toBeGreaterThan(0);
-        expect(testBounds.width).toBe(referenceBounds.width);
-        expect(testBounds.height).toBe(referenceBounds.height);
-      }));
-
-      // NOTE: This test may be redundant.
-      // Support: Edge 14-15+
-      // An `<svg>` element inside a `<foreignObject>` element on MS Edge has no
-      // size, causing the included `<circle>` element to also have no size and thus fails an
-      // assertion (relying on the element having a non-zero size).
-      if (!isEdge) {
-        it('should handle custom svg containers that transclude to foreignObject' +
-           ' that transclude to custom svg containers that transclude to custom elements', inject(function() {
-          element = jqLite('<div><svg-container>' +
-              '<my-foreign-object><svg-container><svg-circle></svg-circle></svg-container></my-foreign-object>' +
-              '</svg-container></div>');
-          $compile(element.contents())($rootScope);
-          document.body.appendChild(element[0]);
-
-          var circle = element.find('circle');
-          assertIsValidSvgCircle(circle[0]);
-        }));
-      }
     }
 
     it('should handle directives with templates that manually add the transclude further down', inject(function() {
@@ -796,8 +788,8 @@ describe('$compile', function() {
           expect(sortTag($exceptionHandler.errors[2][1])).
               toEqual('<div class="ng-scope" factory-error="" linking-error="" template-error="">');
 
-          // Support: IE 9-11 only, Edge 15+
-          // IE/Edge sort attributes in a different order.
+          // Support: Edge 15+
+          // Edge sort attributes in a different order.
           function sortTag(text) {
             var parts, elementName;
 
@@ -1191,17 +1183,13 @@ describe('$compile', function() {
           expect(element).toHaveClass('class_2');
         }));
 
-        // Support: IE 9-11 only
-        if (!msie) {
-          // style interpolation not working on IE (including IE11).
-          it('should handle interpolated css style from replacing directive', inject(
-            function($compile, $rootScope) {
-              element = $compile('<div replace-with-interpolated-style></div>')($rootScope);
-              $rootScope.$digest();
-              expect(element.css('width')).toBe('2px');
-            }
-          ));
-        }
+        it('should handle interpolated css style from replacing directive', inject(
+          function($compile, $rootScope) {
+            element = $compile('<div replace-with-interpolated-style></div>')($rootScope);
+            $rootScope.$digest();
+            expect(element.css('width')).toBe('2px');
+          }
+        ));
 
         it('should merge interpolated css class', inject(function($compile, $rootScope) {
           element = $compile('<div class="one {{cls}} three" replace></div>')($rootScope);
@@ -11109,12 +11097,6 @@ describe('$compile', function() {
 
           expect(element.text()).toBe('102030');
           expect(newWatcherCount).toBe(3);
-
-          // Support: IE 11 only
-          // See #11781 and #14924
-          if (msie === 11) {
-            expect(element.find('ng-transclude').contents().length).toBe(1);
-          }
         });
       }
     );
@@ -11132,51 +11114,6 @@ describe('$compile', function() {
       $rootScope.$digest();
       expect(element.attr('src')).toEqual('http://example.com/image2.png');
     }));
-
-    // Support: IE 9 only
-    // IE9 rejects the video / audio tag with "Error: Not implemented" and the source tag with
-    // "Unable to get value of the property 'childNodes': object is null or undefined"
-    if (msie !== 9) {
-      they('should NOT require trusted values for $prop src', ['video', 'audio'],
-      function(tag) {
-        inject(function($rootScope, $compile, $sce) {
-          element = $compile('<' + tag + ' src="{{testUrl}}"></' + tag + '>')($rootScope);
-          $rootScope.testUrl = 'http://example.com/image.mp4';
-          $rootScope.$digest();
-          expect(element.attr('src')).toEqual('http://example.com/image.mp4');
-
-          // But it should accept trusted values anyway.
-          $rootScope.testUrl = $sce.trustAsUrl('http://example.com/image2.mp4');
-          $rootScope.$digest();
-          expect(element.attr('src')).toEqual('http://example.com/image2.mp4');
-
-          // and trustedResourceUrls for retrocompatibility
-          $rootScope.testUrl = $sce.trustAsResourceUrl('http://example.com/image3.mp4');
-          $rootScope.$digest();
-          expect(element.attr('src')).toEqual('http://example.com/image3.mp4');
-        });
-      });
-
-      they('should NOT require trusted values for $prop src', ['source', 'track'],
-      function(tag) {
-        inject(function($rootScope, $compile, $sce) {
-          element = $compile('<video><' + tag + ' src="{{testUrl}}"></' + tag + '></video>')($rootScope);
-          $rootScope.testUrl = 'http://example.com/image.mp4';
-          $rootScope.$digest();
-          expect(element.find(tag).attr('src')).toEqual('http://example.com/image.mp4');
-
-          // But it should accept trusted values anyway.
-          $rootScope.testUrl = $sce.trustAsUrl('http://example.com/image2.mp4');
-          $rootScope.$digest();
-          expect(element.find(tag).attr('src')).toEqual('http://example.com/image2.mp4');
-
-          // and trustedResourceUrls for retrocompatibility
-          $rootScope.testUrl = $sce.trustAsResourceUrl('http://example.com/image3.mp4');
-          $rootScope.$digest();
-          expect(element.find(tag).attr('src')).toEqual('http://example.com/image3.mp4');
-        });
-      });
-    }
   });
 
   describe('img[src] sanitization', function() {
@@ -11569,34 +11506,30 @@ describe('$compile', function() {
     }));
   });
 
-  // Support: IE 9-10 only
-  // IEs <11 don't support srcdoc
-  if (!msie || msie === 11) {
-    describe('iframe[srcdoc]', function() {
-      it('should NOT set iframe contents for untrusted values', inject(function($compile, $rootScope, $sce) {
-        element = $compile('<iframe srcdoc="{{html}}"></iframe>')($rootScope);
-        $rootScope.html = '<div onclick="">hello</div>';
-        expect(function() { $rootScope.$digest(); }).toThrowMinErr('$interpolate', 'interr', new RegExp(
-            /Can't interpolate: {{html}}\n/.source +
-            /[^[]*\[\$sce:unsafe] Attempting to use an unsafe value in a safe context./.source));
-      }));
+  describe('iframe[srcdoc]', function() {
+    it('should NOT set iframe contents for untrusted values', inject(function($compile, $rootScope, $sce) {
+      element = $compile('<iframe srcdoc="{{html}}"></iframe>')($rootScope);
+      $rootScope.html = '<div onclick="">hello</div>';
+      expect(function() { $rootScope.$digest(); }).toThrowMinErr('$interpolate', 'interr', new RegExp(
+          /Can't interpolate: {{html}}\n/.source +
+          /[^[]*\[\$sce:unsafe] Attempting to use an unsafe value in a safe context./.source));
+    }));
 
-      it('should NOT set html for wrongly typed values', inject(function($rootScope, $compile, $sce) {
-        element = $compile('<iframe srcdoc="{{html}}"></iframe>')($rootScope);
-        $rootScope.html = $sce.trustAsCss('<div onclick="">hello</div>');
-        expect(function() { $rootScope.$digest(); }).toThrowMinErr('$interpolate', 'interr', new RegExp(
-            /Can't interpolate: \{\{html}}\n/.source +
-            /[^[]*\[\$sce:unsafe] Attempting to use an unsafe value in a safe context./.source));
-      }));
+    it('should NOT set html for wrongly typed values', inject(function($rootScope, $compile, $sce) {
+      element = $compile('<iframe srcdoc="{{html}}"></iframe>')($rootScope);
+      $rootScope.html = $sce.trustAsCss('<div onclick="">hello</div>');
+      expect(function() { $rootScope.$digest(); }).toThrowMinErr('$interpolate', 'interr', new RegExp(
+          /Can't interpolate: \{\{html}}\n/.source +
+          /[^[]*\[\$sce:unsafe] Attempting to use an unsafe value in a safe context./.source));
+    }));
 
-      it('should set html for trusted values', inject(function($rootScope, $compile, $sce) {
-        element = $compile('<iframe srcdoc="{{html}}"></iframe>')($rootScope);
-        $rootScope.html = $sce.trustAsHtml('<div onclick="">hello</div>');
-        $rootScope.$digest();
-        expect(angular.lowercase(element.attr('srcdoc'))).toEqual('<div onclick="">hello</div>');
-      }));
-    });
-  }
+    it('should set html for trusted values', inject(function($rootScope, $compile, $sce) {
+      element = $compile('<iframe srcdoc="{{html}}"></iframe>')($rootScope);
+      $rootScope.html = $sce.trustAsHtml('<div onclick="">hello</div>');
+      $rootScope.$digest();
+      expect(angular.lowercase(element.attr('srcdoc'))).toEqual('<div onclick="">hello</div>');
+    }));
+  });
 
   describe('ngAttr* attribute binding', function() {
     it('should bind after digest but not before', inject(function() {

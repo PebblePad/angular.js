@@ -191,8 +191,7 @@ var NG_HIDE_IN_PROGRESS_CLASS = 'ng-hide-animate';
  * happen that both the element to show and the element to hide are visible for a very short time.
  *
  * This usually happens when the {@link ngAnimate ngAnimate module} is included, but no actual animations
- * are defined for {@link ngShow} / {@link ngHide}. Internet Explorer is affected more often than
- * other browsers.
+ * are defined for {@link ngShow} / {@link ngHide}.
  *
  * There are several way to mitigate this problem:
  *
@@ -410,8 +409,7 @@ var ngShowDirective = ['$animate', function($animate) {
  * happen that both the element to show and the element to hide are visible for a very short time.
  *
  * This usually happens when the {@link ngAnimate ngAnimate module} is included, but no actual animations
- * are defined for {@link ngShow} / {@link ngHide}. Internet Explorer is affected more often than
- * other browsers.
+ * are defined for {@link ngShow} / {@link ngHide}.
  *
  * There are several way to mitigate this problem:
  *

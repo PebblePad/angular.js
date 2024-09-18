@@ -81,13 +81,8 @@ function createHttpBackend($browser, createXhr, $browserDefer, callbacks, rawDoc
 
       xhr.onload = function requestLoaded() {
         var statusText = xhr.statusText || '';
-
-        // responseText is the old-school way of retrieving response (supported by IE9)
-        // response/responseType properties were introduced in XHR Level2 spec (supported by IE10)
-        var response = ('response' in xhr) ? xhr.response : xhr.responseText;
-
-        // normalize IE9 bug (http://bugs.jquery.com/ticket/1450)
-        var status = xhr.status === 1223 ? 204 : xhr.status;
+        var response = xhr.response;
+        var status = xhr.status;
 
         // fix status code when it is 0 (0 status is undocumented).
         // Occurs when accessing file resources or on Android 4.1 stock browser

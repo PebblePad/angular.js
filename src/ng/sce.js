@@ -808,16 +808,6 @@ function $SceProvider() {
 
   this.$get = ['$parse', '$sceDelegate', function(
                 $parse,   $sceDelegate) {
-    // Support: IE 9-11 only
-    // Prereq: Ensure that we're not running in IE<11 quirks mode.  In that mode, IE < 11 allow
-    // the "expression(javascript expression)" syntax which is insecure.
-    if (enabled && msie < 8) {
-      throw $sceMinErr('iequirks',
-        'Strict Contextual Escaping does not support Internet Explorer version < 11 in quirks ' +
-        'mode.  You can fix this by adding the text <!doctype html> to the top of your HTML ' +
-        'document.  See http://docs.angularjs.org/api/ng.$sce for more information.');
-    }
-
     var sce = shallowCopy(SCE_CONTEXTS);
 
     /**

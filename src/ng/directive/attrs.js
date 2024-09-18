@@ -315,11 +315,6 @@
  * A special directive is necessary because we cannot use interpolation inside the `open`
  * attribute. See the {@link guide/interpolation interpolation guide} for more info.
  *
- * ## A note about browser compatibility
- *
- * Internet Explorer and Edge do not support the `details` element, it is
- * recommended to use {@link ng.ngShow} and {@link ng.ngHide} instead.
- *
  * @example
      <example name="ng-open">
        <file name="index.html">
@@ -431,13 +426,6 @@ forEach(['src', 'srcset', 'href'], function(attrName) {
           }
 
           attr.$set(name, value);
-
-          // Support: IE 9-11 only
-          // On IE, if "ng:src" directive declaration is used and "src" attribute doesn't exist
-          // then calling element.setAttribute('src', 'foo') doesn't do anything, so we need
-          // to set the property as well to achieve the desired effect.
-          // We use attr[attrName] value since $set can sanitize the url.
-          if (msie && propName) element.prop(propName, attr[name]);
         });
       }
     };

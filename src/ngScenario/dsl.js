@@ -202,20 +202,12 @@ angular.scenario.dsl('binding', function() {
 angular.scenario.dsl('input', function() {
   var chain = {};
 
-  // Support: IE 9-11 only
-  // IE9 implements 'input' event it's so fubared that we rather pretend that it doesn't have
-  // it. In particular the event is not fired when backspace or delete key are pressed or
-  // when cut operation is performed.
-  // IE10+ implements 'input' event but it erroneously fires under various situations,
-  // e.g. when placeholder changes, or a form is focused.
-  var supportInputEvent = 'oninput' in window.document.createElement('div') && !msie;
-
   chain.enter = function(value, event) {
     return this.addFutureAction('input \'' + this.name + '\' enter \'' + value + '\'',
       function($window, $document, done) {
         var input = $document.elements('[ng\\:model="$1"]', this.name).filter(':input');
         input.val(value);
-        input.trigger(event || (supportInputEvent ? 'input' : 'change'));
+        input.trigger(event || 'input');
         done();
     });
   };

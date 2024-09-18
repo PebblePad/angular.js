@@ -89,9 +89,7 @@ function Browser(window, document, $log, $sniffer) {
       getCurrentState = !$sniffer.history ? noop : function getCurrentState() {
         try {
           return history.state;
-        } catch (e) {
-          // MSIE can reportedly throw when there is no state (UNCONFIRMED).
-        }
+        } catch (e) { /**/ }
       };
 
   cacheState();

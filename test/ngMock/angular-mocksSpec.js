@@ -993,8 +993,7 @@ describe('ngMock', function() {
 
       describe('error stack trace when called outside of spec context', function() {
         // - Chrome, Firefox, Edge give us the stack trace as soon as an Error is created
-        // - IE10+, PhantomJS give us the stack trace only once the error is thrown
-        // - IE9 does not provide stack traces
+        // - PhantomJS give us the stack trace only once the error is thrown
         var stackTraceSupported = (function() {
           var error = new Error();
           if (!error.stack) {
@@ -2726,8 +2725,6 @@ describe('ngMockE2E', function() {
       it('should trigger a series of CSS animations to trigger and start once run',
         inject(function($animate, $rootScope) {
 
-        if (!browserSupportsCssAnimations()) return;
-
         ss.addRule('.leave-me.ng-leave', 'transition:1s linear all;');
 
         var i, elm, elms = [];
@@ -2793,8 +2790,6 @@ describe('ngMockE2E', function() {
       it('should close the currently running $animateCss animations',
         inject(function($animateCss, $animate) {
 
-        if (!browserSupportsCssAnimations()) return;
-
         var spy = jasmine.createSpy();
         var runner = $animateCss(element, {
           duration: 1,
@@ -2832,8 +2827,6 @@ describe('ngMockE2E', function() {
 
       it('should not throw when a regular animation has no javascript animation',
         inject(function($animate, $$animation, $rootElement) {
-
-        if (!browserSupportsCssAnimations()) return;
 
         var element = jqLite('<div></div>');
         $rootElement.append(element);

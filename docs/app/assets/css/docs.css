@@ -407,7 +407,7 @@ iframe.example {
 
 @supports (-moz-column-count: 2) {
   .search-results-group .search-result {
-    /* Prevents column breaks inside words in FF, but has adverse effects in IE11 and Chrome */
+    /* Prevents column breaks inside words in FF, but has adverse effects in Chrome */
     overflow: hidden;
     padding-left: 1em; /* In FF the list item bullet is otherwise  hidden */
     margin-left: -1em; /* offset the padding left */

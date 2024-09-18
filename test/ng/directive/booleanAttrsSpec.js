@@ -180,37 +180,6 @@ describe('ngSrc', function() {
             '$interpolate', 'interr', 'Can\'t interpolate: {{id}}\nError: [$sce:insecurl] Blocked ' +
                 'loading resource from url not allowed by $sceDelegate policy.  URL: http://somewhere');
   }));
-
-
-  // Support: IE 9-11 only
-  if (msie) {
-    it('should update the element property as well as the attribute', inject(
-        function($compile, $rootScope, $sce) {
-          // on IE, if "ng:src" directive declaration is used and "src" attribute doesn't exist
-          // then calling element.setAttribute('src', 'foo') doesn't do anything, so we need
-          // to set the property as well to achieve the desired effect
-
-          var element = $compile('<div ng-src="{{id}}"></div>')($rootScope);
-
-          $rootScope.$digest();
-          expect(element.prop('src')).toBeUndefined();
-          dealoc(element);
-
-          element = $compile('<div ng-src="some/"></div>')($rootScope);
-
-          $rootScope.$digest();
-          expect(element.prop('src')).toEqual('some/');
-          dealoc(element);
-
-          element = $compile('<div ng-src="{{id}}"></div>')($rootScope);
-          $rootScope.$apply(function() {
-            $rootScope.id = $sce.trustAsResourceUrl('http://somewhere');
-          });
-          expect(element.prop('src')).toEqual('http://somewhere');
-
-          dealoc(element);
-        }));
-  }
 });
 
 
@@ -284,9 +253,9 @@ describe('ngHref', function() {
     expect(element.attr('href')).toEqual(undefined);
   }));
 
-  // Support: IE 9-11 only, Edge 12-15+
-  if (msie || /\bEdge\/[\d.]+\b/.test(window.navigator.userAgent)) {
-    // IE/Edge fail when setting a href to a URL containing a % that isn't a valid escape sequence
+  // Support: Edge 12-15+
+  if (/\bEdge\/[\d.]+\b/.test(window.navigator.userAgent)) {
+    // Edge fail when setting a href to a URL containing a % that isn't a valid escape sequence
     // See https://github.com/angular/angular.js/issues/13388
     it('should throw error if ng-href contains a non-escaped percent symbol', inject(function($rootScope, $compile) {
       element = $compile('<a ng-href="http://www.google.com/{{\'a%link\'}}">')($rootScope);
