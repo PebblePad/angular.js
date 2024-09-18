@@ -1770,11 +1770,10 @@ function $CompileProvider($provide, $$sanitizeUriProvider) {
 
         nodeName = nodeName_(this.$$element);
 
-        if ((nodeName === 'a' && (key === 'href' || key === 'xlinkHref')) ||
-            (nodeName === 'img' && key === 'src')) {
+        if ((nodeName === 'a' && (key === 'href' || key === 'xlinkHref')) || ((nodeName === 'img' || nodeName === 'source') && key === 'src')) {
           // sanitize a[href] and img[src] values
           this[key] = value = (value == null) ? value : $$sanitizeUri(value, key === 'src');
-        } else if (nodeName === 'img' && key === 'srcset' && isDefined(value)) {
+        } else if ((nodeName === 'img' || nodeName === 'source') && key === 'srcset' && isDefined(value)) {
           const srcSetValues = value.split(',')
           const sanitisedSrcSet = [];
           for (const srcSetValue of srcSetValues) {
