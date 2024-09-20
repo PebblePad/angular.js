@@ -2820,9 +2820,9 @@ angular.mock.$RootScopeDecorator = ['$delegate', function($delegate) {
 }];
 
 
-(function(jasmineOrMocha) {
+(function(isUsingSupportedTestingFramework) {
 
-  if (!jasmineOrMocha) {
+  if (!isUsingSupportedTestingFramework) {
     return;
   }
 
@@ -3218,4 +3218,4 @@ angular.mock.$RootScopeDecorator = ['$delegate', function($delegate) {
       return !this.shared || this.sharedError;
     };
   }
-})(window.jasmine || window.mocha);
+})(window.jasmine || window.mocha || typeof jest !== 'undefined');
