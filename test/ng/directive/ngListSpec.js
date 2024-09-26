@@ -8,7 +8,7 @@ describe('ngList', function() {
 
   generateInputCompilerHelper(helper);
 
-  beforeEach(inject(function(_$rootScope_) {
+  beforeEach(angular.mock.inject(function(_$rootScope_) {
     $rootScope = _$rootScope_;
   }));
 

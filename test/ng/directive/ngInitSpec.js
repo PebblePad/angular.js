@@ -9,13 +9,13 @@ describe('ngInit', function() {
   });
 
 
-  it('should init model', inject(function($rootScope, $compile) {
+  it('should init model', angular.mock.inject(function($rootScope, $compile) {
     element = $compile('<div ng-init="a=123"></div>')($rootScope);
     expect($rootScope.a).toEqual(123);
   }));
 
 
-  it('should be evaluated before ngInclude', inject(function($rootScope, $templateCache, $compile) {
+  it('should be evaluated before ngInclude', angular.mock.inject(function($rootScope, $templateCache, $compile) {
     $templateCache.put('template1.tpl', '<span>1</span>');
     $templateCache.put('template2.tpl', '<span>2</span>');
     $rootScope.template = 'template1.tpl';
@@ -28,10 +28,10 @@ describe('ngInit', function() {
 
 
   it('should be evaluated after ngController', function() {
-    module(function($controllerProvider) {
+    angular.mock.module(function($controllerProvider) {
       $controllerProvider.register('TestCtrl', function($scope) {});
     });
-    inject(function($rootScope, $compile) {
+    angular.mock.inject(function($rootScope, $compile) {
       element = $compile('<div><div ng-controller="TestCtrl" ' +
                                    'ng-init="test=123"></div></div>')($rootScope);
       $rootScope.$digest();

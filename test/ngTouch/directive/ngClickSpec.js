@@ -3,12 +3,9 @@
 describe('ngClick (touch)', function() {
   var element, time, orig_now;
 
-  // TODO(braden): Once we have other touch-friendly browsers on CI, allow them here.
-  // Currently Firefox and IE refuse to fire touch events.
-  // Enable iPhone for manual testing.
-  if (!/chrome|iphone/i.test(window.navigator.userAgent)) {
-    return;
-  }
+  afterEach(function() {
+    dealoc(element);
+  });
 
   function mockTime() {
     return time;
@@ -16,17 +13,17 @@ describe('ngClick (touch)', function() {
 
 
   describe('config', function() {
-    beforeEach(module('ngTouch'));
+    beforeEach(angular.mock.module('ngTouch'));
 
     it('should expose ngClickOverrideEnabled in the $touchProvider', function() {
       var _$touchProvider;
 
-      module(function($touchProvider) {
+      angular.mock.module(function($touchProvider) {
         _$touchProvider = $touchProvider;
       });
 
-      inject(function() {
-        expect(_$touchProvider.ngClickOverrideEnabled).toEqual(jasmine.any(Function));
+      angular.mock.inject(function() {
+        expect(_$touchProvider.ngClickOverrideEnabled).toEqual(expect.any(Function));
       });
     });
 
@@ -34,18 +31,18 @@ describe('ngClick (touch)', function() {
     it('should return "false" for ngClickOverrideEnabled by default', function() {
       var enabled;
 
-      module(function($touchProvider) {
+      angular.mock.module(function($touchProvider) {
         enabled = $touchProvider.ngClickOverrideEnabled();
       });
 
-      inject(function() {
+      angular.mock.inject(function() {
         expect(enabled).toBe(false);
       });
     });
 
 
     it('should not apply the ngClick override directive by default', function() {
-      inject(function($rootScope, $compile) {
+      angular.mock.inject(function($rootScope, $compile) {
         element = $compile('<div ng-click="tapped = true"></div>')($rootScope);
         $rootScope.$digest();
         expect($rootScope.tapped).toBeUndefined();
@@ -61,20 +58,20 @@ describe('ngClick (touch)', function() {
 
     it('should not remove other ngClick directives when removing ngTouch ngClick in the decorator', function() {
       // Add another ngClick before ngTouch
-      module(function($compileProvider) {
+      angular.mock.module(function($compileProvider) {
         $compileProvider.directive('ngClick', function() {
           return {};
         });
       });
 
-      module('ngTouch');
+      angular.mock.module('ngTouch');
 
-      module(function($touchProvider) {
+      angular.mock.module(function($touchProvider) {
         $touchProvider.ngClickOverrideEnabled(true);
         $touchProvider.ngClickOverrideEnabled(false);
       });
 
-      inject(function($rootScope, $compile) {
+      angular.mock.inject(function($rootScope, $compile) {
         element = $compile('<div ng-click="tapped = true"></div>')($rootScope);
         $rootScope.$digest();
         expect($rootScope.tapped).toBeUndefined();
@@ -90,8 +87,8 @@ describe('ngClick (touch)', function() {
   describe('directive', function() {
 
     beforeEach(function() {
-      module('ngTouch');
-      module(function($touchProvider) {
+      angular.mock.module('ngTouch');
+      angular.mock.module(function($touchProvider) {
         $touchProvider.ngClickOverrideEnabled(true);
       });
       orig_now = Date.now;
@@ -105,12 +102,12 @@ describe('ngClick (touch)', function() {
     });
 
     it('should not apply the ngClick override directive if ngClickOverrideEnabled has been set to false again', function() {
-      module(function($touchProvider) {
+      angular.mock.module(function($touchProvider) {
         // beforeEach calls this with "true"
         $touchProvider.ngClickOverrideEnabled(false);
       });
 
-      inject(function($rootScope, $compile) {
+      angular.mock.inject(function($rootScope, $compile) {
         element = $compile('<div ng-click="tapped = true"></div>')($rootScope);
         $rootScope.$digest();
         expect($rootScope.tapped).toBeUndefined();
@@ -122,7 +119,7 @@ describe('ngClick (touch)', function() {
     });
 
 
-    it('should get called on a tap', inject(function($rootScope, $compile) {
+    it('should get called on a tap', angular.mock.inject(function($rootScope, $compile) {
       element = $compile('<div ng-click="tapped = true"></div>')($rootScope);
       $rootScope.$digest();
       expect($rootScope.tapped).toBeUndefined();
@@ -133,7 +130,7 @@ describe('ngClick (touch)', function() {
     }));
 
 
-    it('should pass event object', inject(function($rootScope, $compile) {
+    it('should pass event object', angular.mock.inject(function($rootScope, $compile) {
       element = $compile('<div ng-click="event = $event"></div>')($rootScope);
       $rootScope.$digest();
 
@@ -143,7 +140,7 @@ describe('ngClick (touch)', function() {
     }));
 
     if (window.jQuery) {
-      it('should not unwrap a jQuery-wrapped event object on click', inject(function($rootScope, $compile) {
+      it('should not unwrap a jQuery-wrapped event object on click', angular.mock.inject(function($rootScope, $compile) {
         element = $compile('<div ng-click="event = $event"></div>')($rootScope);
         $rootScope.$digest();
 
@@ -158,7 +155,7 @@ describe('ngClick (touch)', function() {
       }));
 
       it('should not unwrap a jQuery-wrapped event object on touchstart/touchend',
-          inject(function($rootScope, $compile, $rootElement) {
+          angular.mock.inject(function($rootScope, $compile, $rootElement) {
         element = $compile('<div ng-click="event = $event"></div>')($rootScope);
         $rootElement.append(element);
         $rootScope.$digest();
@@ -171,7 +168,7 @@ describe('ngClick (touch)', function() {
     }
 
 
-    it('should not click if the touch is held too long', inject(function($rootScope, $compile, $rootElement) {
+    it('should not click if the touch is held too long', angular.mock.inject(function($rootScope, $compile, $rootElement) {
       element = $compile('<div ng-click="count = count + 1"></div>')($rootScope);
       $rootElement.append(element);
       $rootScope.count = 0;
@@ -197,7 +194,7 @@ describe('ngClick (touch)', function() {
     }));
 
 
-    it('should not click if the touchend is too far away', inject(function($rootScope, $compile, $rootElement) {
+    it('should not click if the touchend is too far away', angular.mock.inject(function($rootScope, $compile, $rootElement) {
       element = $compile('<div ng-click="tapped = true"></div>')($rootScope);
       $rootElement.append(element);
       $rootScope.$digest();
@@ -219,7 +216,7 @@ describe('ngClick (touch)', function() {
     }));
 
 
-    it('should not prevent click if a touchmove comes before touchend', inject(function($rootScope, $compile, $rootElement) {
+    it('should not prevent click if a touchmove comes before touchend', angular.mock.inject(function($rootScope, $compile, $rootElement) {
       element = $compile('<div ng-click="tapped = true"></div>')($rootScope);
       $rootElement.append(element);
       $rootScope.$digest();
@@ -241,7 +238,7 @@ describe('ngClick (touch)', function() {
       expect($rootScope.tapped).toEqual(true);
     }));
 
-    it('should add the CSS class while the element is held down, and then remove it', inject(function($rootScope, $compile, $rootElement) {
+    it('should add the CSS class while the element is held down, and then remove it', angular.mock.inject(function($rootScope, $compile, $rootElement) {
       element = $compile('<div ng-click="tapped = true"></div>')($rootScope);
       $rootElement.append(element);
       $rootScope.$digest();
@@ -267,7 +264,7 @@ describe('ngClick (touch)', function() {
 
     if (!/\bEdge\//.test(window.navigator.userAgent)) {
       // Edge cannot blur svg elements
-      it('should click when target element is an SVG', inject(
+      it('should click when target element is an SVG', angular.mock.inject(
         function($rootScope, $compile, $rootElement) {
           element = $compile('<svg ng-click="tapped = true"></svg>')($rootScope);
           $rootElement.append(element);
@@ -284,16 +281,21 @@ describe('ngClick (touch)', function() {
     describe('the clickbuster', function() {
       var element1, element2;
 
-      beforeEach(inject(function($rootElement, $document) {
+      afterEach(function() {
+        dealoc(element1);
+        dealoc(element2);
+      });
+
+      beforeEach(angular.mock.inject(function($rootElement, $document) {
         $document.find('body').append($rootElement);
       }));
 
-      afterEach(inject(function($document) {
+      afterEach(angular.mock.inject(function($document) {
         $document.find('body').empty();
       }));
 
 
-      it('should cancel the following click event', inject(function($rootScope, $compile, $rootElement, $document) {
+      it('should cancel the following click event', angular.mock.inject(function($rootScope, $compile, $rootElement, $document) {
         element = $compile('<div ng-click="count = count + 1"></div>')($rootScope);
         $rootElement.append(element);
 
@@ -330,7 +332,7 @@ describe('ngClick (touch)', function() {
       }));
 
 
-      it('should cancel the following click event even when the element has changed', inject(
+      it('should cancel the following click event even when the element has changed', angular.mock.inject(
           function($rootScope, $compile, $rootElement) {
         $rootElement.append(
             '<div ng-show="!tapped" ng-click="count1 = count1 + 1; tapped = true">x</div>' +
@@ -377,7 +379,7 @@ describe('ngClick (touch)', function() {
       }));
 
 
-      it('should not cancel clicks on distant elements', inject(function($rootScope, $compile, $rootElement) {
+      it('should not cancel clicks on distant elements', angular.mock.inject(function($rootScope, $compile, $rootElement) {
         $rootElement.append(
             '<div ng-click="count1 = count1 + 1">x</div>' +
             '<div ng-click="count2 = count2 + 1">y</div>'
@@ -413,7 +415,7 @@ describe('ngClick (touch)', function() {
 
         time = 90;
         // Verify that it is blurred so we don't get soft-keyboard
-        element1[0].blur = jasmine.createSpy('blur');
+        element1[0].blur = jest.fn();
         browserTrigger(element1, 'click',{
           keys: [],
           x: 10,
@@ -472,7 +474,7 @@ describe('ngClick (touch)', function() {
       }));
 
 
-      it('should not cancel clicks that come long after', inject(function($rootScope, $compile) {
+      it('should not cancel clicks that come long after', angular.mock.inject(function($rootScope, $compile) {
         element1 = $compile('<div ng-click="count = count + 1"></div>')($rootScope);
 
         $rootScope.count = 0;
@@ -534,7 +536,7 @@ describe('ngClick (touch)', function() {
 
         var $rootScope;
         var container, otherElement, input, label;
-        beforeEach(inject(function(_$rootScope_, $compile, $rootElement) {
+        beforeEach(angular.mock.inject(function(_$rootScope_, $compile, $rootElement) {
           $rootScope = _$rootScope_;
           var container = $compile('<div><div ng-click="count = count + 1"></div>' +
             '<input id="input1" type="radio" ng-model="selection" value="radio1">' +
@@ -603,7 +605,7 @@ describe('ngClick (touch)', function() {
 
 
         it('should blur the other element on click', function() {
-          var blurSpy = spyOn(otherElement, 'blur');
+          var blurSpy = jest.spyOn(otherElement, 'blur');
           touch(otherElement, 10, 10);
 
           time = 500;
@@ -617,7 +619,7 @@ describe('ngClick (touch)', function() {
 
     describe('click fallback', function() {
 
-      it('should treat a click as a tap on desktop', inject(function($rootScope, $compile) {
+      it('should treat a click as a tap on desktop', angular.mock.inject(function($rootScope, $compile) {
         element = $compile('<div ng-click="tapped = true"></div>')($rootScope);
         $rootScope.$digest();
         expect($rootScope.tapped).toBeFalsy();
@@ -627,7 +629,7 @@ describe('ngClick (touch)', function() {
       }));
 
 
-      it('should pass event object', inject(function($rootScope, $compile) {
+      it('should pass event object', angular.mock.inject(function($rootScope, $compile) {
         element = $compile('<div ng-click="event = $event"></div>')($rootScope);
         $rootScope.$digest();
 
@@ -638,7 +640,7 @@ describe('ngClick (touch)', function() {
 
 
     describe('disabled state', function() {
-      it('should not trigger click if ngDisabled is true', inject(function($rootScope, $compile) {
+      it('should not trigger click if ngDisabled is true', angular.mock.inject(function($rootScope, $compile) {
         element = $compile('<div ng-click="event = $event" ng-disabled="disabled"></div>')($rootScope);
         $rootScope.disabled = true;
         $rootScope.$digest();
@@ -656,7 +658,7 @@ describe('ngClick (touch)', function() {
 
         expect($rootScope.event).toBeUndefined();
       }));
-      it('should trigger click if ngDisabled is false', inject(function($rootScope, $compile) {
+      it('should trigger click if ngDisabled is false', angular.mock.inject(function($rootScope, $compile) {
         element = $compile('<div ng-click="event = $event" ng-disabled="disabled"></div>')($rootScope);
         $rootScope.disabled = false;
         $rootScope.$digest();
@@ -674,7 +676,7 @@ describe('ngClick (touch)', function() {
 
         expect($rootScope.event).toBeDefined();
       }));
-      it('should not trigger click if regular disabled is true', inject(function($rootScope, $compile) {
+      it('should not trigger click if regular disabled is true', angular.mock.inject(function($rootScope, $compile) {
         element = $compile('<div ng-click="event = $event" disabled="true"></div>')($rootScope);
 
         browserTrigger(element, 'touchstart',{
@@ -690,7 +692,7 @@ describe('ngClick (touch)', function() {
 
         expect($rootScope.event).toBeUndefined();
       }));
-      it('should not trigger click if regular disabled is present', inject(function($rootScope, $compile) {
+      it('should not trigger click if regular disabled is present', angular.mock.inject(function($rootScope, $compile) {
         element = $compile('<button ng-click="event = $event" disabled ></button>')($rootScope);
 
         browserTrigger(element, 'touchstart',{
@@ -706,7 +708,7 @@ describe('ngClick (touch)', function() {
 
         expect($rootScope.event).toBeUndefined();
       }));
-      it('should trigger click if regular disabled is not present', inject(function($rootScope, $compile) {
+      it('should trigger click if regular disabled is not present', angular.mock.inject(function($rootScope, $compile) {
         element = $compile('<div ng-click="event = $event" ></div>')($rootScope);
 
         browserTrigger(element, 'touchstart',{
@@ -726,7 +728,7 @@ describe('ngClick (touch)', function() {
 
 
     describe('the normal click event', function() {
-      it('should be capturable by other handlers', inject(function($rootScope, $compile) {
+      it('should be capturable by other handlers', angular.mock.inject(function($rootScope, $compile) {
         var called = false;
 
         element = $compile('<div ng-click="event = $event" ></div>')($rootScope);

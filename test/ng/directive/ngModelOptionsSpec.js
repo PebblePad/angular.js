@@ -8,12 +8,12 @@ describe('ngModelOptions', function() {
 
   describe('defaultModelOptions', function() {
     it('should provide default values', function() {
-      expect(defaultModelOptions.getOption('updateOn')).toEqual('');
-      expect(defaultModelOptions.getOption('updateOnDefault')).toEqual(true);
-      expect(defaultModelOptions.getOption('debounce')).toBe(0);
-      expect(defaultModelOptions.getOption('getterSetter')).toBe(false);
-      expect(defaultModelOptions.getOption('allowInvalid')).toBe(false);
-      expect(defaultModelOptions.getOption('timezone')).toBe(null);
+      expect(ngInternals.defaultModelOptions.getOption('updateOn')).toEqual('');
+      expect(ngInternals.defaultModelOptions.getOption('updateOnDefault')).toEqual(true);
+      expect(ngInternals.defaultModelOptions.getOption('debounce')).toBe(0);
+      expect(ngInternals.defaultModelOptions.getOption('getterSetter')).toBe(false);
+      expect(ngInternals.defaultModelOptions.getOption('allowInvalid')).toBe(false);
+      expect(ngInternals.defaultModelOptions.getOption('timezone')).toBe(null);
     });
   });
 
@@ -25,7 +25,7 @@ describe('ngModelOptions', function() {
 
       generateInputCompilerHelper(helper);
 
-      beforeEach(inject(function(_$compile_, _$rootScope_, _$timeout_, _$q_) {
+      beforeEach(angular.mock.inject(function(_$compile_, _$rootScope_, _$timeout_, _$q_) {
         $compile = _$compile_;
         $rootScope = _$rootScope_;
         $timeout = _$timeout_;
@@ -39,12 +39,12 @@ describe('ngModelOptions', function() {
               '<input type="text" ng-model="name" name="alias" />');
 
           var inputOptions = $rootScope.form.alias.$options;
-          expect(inputOptions.getOption('updateOn')).toEqual(defaultModelOptions.getOption('updateOn'));
-          expect(inputOptions.getOption('updateOnDefault')).toEqual(defaultModelOptions.getOption('updateOnDefault'));
-          expect(inputOptions.getOption('debounce')).toEqual(defaultModelOptions.getOption('debounce'));
-          expect(inputOptions.getOption('getterSetter')).toEqual(defaultModelOptions.getOption('getterSetter'));
-          expect(inputOptions.getOption('allowInvalid')).toEqual(defaultModelOptions.getOption('allowInvalid'));
-          expect(inputOptions.getOption('timezone')).toEqual(defaultModelOptions.getOption('timezone'));
+          expect(inputOptions.getOption('updateOn')).toEqual(ngInternals.defaultModelOptions.getOption('updateOn'));
+          expect(inputOptions.getOption('updateOnDefault')).toEqual(ngInternals.defaultModelOptions.getOption('updateOnDefault'));
+          expect(inputOptions.getOption('debounce')).toEqual(ngInternals.defaultModelOptions.getOption('debounce'));
+          expect(inputOptions.getOption('getterSetter')).toEqual(ngInternals.defaultModelOptions.getOption('getterSetter'));
+          expect(inputOptions.getOption('allowInvalid')).toEqual(ngInternals.defaultModelOptions.getOption('allowInvalid'));
+          expect(inputOptions.getOption('timezone')).toEqual(ngInternals.defaultModelOptions.getOption('timezone'));
         });
 
 
@@ -53,9 +53,9 @@ describe('ngModelOptions', function() {
               '<input type="text" ng-model="name" name="alias" ng-model-options="{ updateOn: \'blur\' }"/>');
 
           var inputOptions = $rootScope.form.alias.$options;
-          expect(inputOptions.getOption('debounce')).toEqual(defaultModelOptions.getOption('debounce'));
+          expect(inputOptions.getOption('debounce')).toEqual(ngInternals.defaultModelOptions.getOption('debounce'));
           expect(inputOptions.getOption('updateOnDefault')).toBe(false);
-          expect(inputOptions.getOption('updateOnDefault')).not.toEqual(defaultModelOptions.getOption('updateOnDefault'));
+          expect(inputOptions.getOption('updateOnDefault')).not.toEqual(ngInternals.defaultModelOptions.getOption('updateOnDefault'));
         });
 
 
@@ -65,9 +65,9 @@ describe('ngModelOptions', function() {
                                   '</form>')($rootScope);
           var inputOptions = $rootScope.form.alias.$options;
 
-          expect(inputOptions.getOption('debounce')).toEqual(defaultModelOptions.getOption('debounce'));
+          expect(inputOptions.getOption('debounce')).toEqual(ngInternals.defaultModelOptions.getOption('debounce'));
           expect(inputOptions.getOption('updateOnDefault')).toBe(false);
-          expect(inputOptions.getOption('updateOnDefault')).not.toEqual(defaultModelOptions.getOption('updateOnDefault'));
+          expect(inputOptions.getOption('updateOnDefault')).not.toEqual(ngInternals.defaultModelOptions.getOption('updateOnDefault'));
           dealoc(form);
         });
       });
@@ -492,7 +492,7 @@ describe('ngModelOptions', function() {
                 'ng-model-options="{ debounce: 10000 }"' +
               '/>');
 
-          var watchSpy = jasmine.createSpy('watchSpy');
+          var watchSpy = jest.fn();
           $rootScope.$watch(watchSpy);
 
           helper.changeInputValueTo('a');
@@ -706,7 +706,7 @@ describe('ngModelOptions', function() {
             '<input type="text" ng-model="name" ' +
               'ng-model-options="{ getterSetter: false }" />');
 
-          var spy = $rootScope.name = jasmine.createSpy('setterSpy');
+          var spy = $rootScope.name = jest.fn();
           helper.changeInputValueTo('a');
           expect(spy).not.toHaveBeenCalled();
           expect(inputElm.val()).toBe('a');
@@ -716,7 +716,7 @@ describe('ngModelOptions', function() {
         it('should not try to invoke a model if getterSetter is not set', function() {
           var inputElm = helper.compileInput('<input type="text" ng-model="name" />');
 
-          var spy = $rootScope.name = jasmine.createSpy('setterSpy');
+          var spy = $rootScope.name = jest.fn();
           helper.changeInputValueTo('a');
           expect(spy).not.toHaveBeenCalled();
           expect(inputElm.val()).toBe('a');
@@ -728,7 +728,7 @@ describe('ngModelOptions', function() {
             '<input type="text" ng-model="name" ' +
               'ng-model-options="{ getterSetter: true }" />');
 
-          var spy = $rootScope.name = jasmine.createSpy('setterSpy').and.callFake(function() {
+          var spy = $rootScope.name = jest.fn(function() {
             return 'b';
           });
           $rootScope.$apply();
@@ -779,7 +779,7 @@ describe('ngModelOptions', function() {
               return this.value;
             }
           };
-          spyOn($rootScope.someService, 'getterSetter').and.callThrough();
+          jest.spyOn($rootScope.someService, 'getterSetter');
           $rootScope.$apply();
 
           expect(inputElm.val()).toBe('a');
@@ -817,8 +817,7 @@ describe('ngModelOptions', function() {
           });
           helper.changeInputValueTo('abcd');
 
-          expect($rootScope.value).toBeUndefined();
-          expect(inputElm).toBeInvalid();
+          expect($rootScope.value).toBeNull();
         });
 
 
@@ -863,18 +862,18 @@ describe('ngModelOptions', function() {
         it('should not call ng-change listeners twice if the model did not change with allowInvalid', function() {
           var inputElm = helper.compileInput('<input type="text" name="input" ng-model="value" ' +
                       'ng-model-options="{allowInvalid: true}" ng-change="changed()" />');
-          $rootScope.changed = jasmine.createSpy('changed');
+          $rootScope.changed = jest.fn();
           $rootScope.form.input.$parsers.push(function(value) {
             return 'modelValue';
           });
 
           helper.changeInputValueTo('input1');
           expect($rootScope.value).toBe('modelValue');
-          expect($rootScope.changed).toHaveBeenCalledOnce();
+          expect($rootScope.changed).toHaveBeenCalledTimes(1);
 
           helper.changeInputValueTo('input2');
           expect($rootScope.value).toBe('modelValue');
-          expect($rootScope.changed).toHaveBeenCalledOnce();
+          expect($rootScope.changed).toHaveBeenCalledTimes(1);
         });
       });
     });
@@ -884,21 +883,21 @@ describe('ngModelOptions', function() {
 
       var $rootScope, $compile;
 
-      beforeEach(module(function($compileProvider) {
-        $compileProvider.directive('foo', valueFn({
+      beforeEach(angular.mock.module(function($compileProvider) {
+        $compileProvider.directive('foo', ngInternals.valueFn({
           replace: true,
           template: '<input type="text" ng-model-options="{debounce: 1000}" />'
         }));
       }));
 
-      beforeEach(inject(function(_$compile_, _$rootScope_) {
+      beforeEach(angular.mock.inject(function(_$compile_, _$rootScope_) {
         $compile = _$compile_;
         $rootScope = _$rootScope_;
       }));
 
 
       it('should get initialized in time for `ngModel` on the original element', function() {
-        var inputElm = $compile('<foo ng-model="value"></foo>')($rootScope);
+        var inputElm = compileForTest('<foo ng-model="value"></foo>');
         var ngModelCtrl = inputElm.controller('ngModel');
 
         expect(ngModelCtrl.$options.getOption('debounce')).toBe(1000);

@@ -3,7 +3,7 @@
 describe('Filter: filter', function() {
   var filter;
 
-  beforeEach(inject(function($filter) {
+  beforeEach(angular.mock.inject(function($filter) {
     filter = $filter('filter');
   }));
 
@@ -287,7 +287,7 @@ describe('Filter: filter', function() {
   it('should ignore function properties in items', function() {
     // Own function properties
     var items = [
-      {text: 'hello', func: noop},
+      {text: 'hello', func: angular.noop},
       {text: 'goodbye'},
       {text: 'kittens'},
       {text: 'puppies'}
@@ -303,7 +303,7 @@ describe('Filter: filter', function() {
     function Item(text) {
         this.text = text;
     }
-    Item.prototype.func = noop;
+    Item.prototype.func = angular.noop;
 
     items = [
       new Item('hello'),
@@ -327,7 +327,7 @@ describe('Filter: filter', function() {
       {text: 'kittens'},
       {text: 'puppies'}
     ];
-    var expr = {text: 'hello', func: noop};
+    var expr = {text: 'hello', func: angular.noop};
 
     expect(filter(items, expr).length).toBe(1);
     expect(filter(items, expr)[0]).toBe(items[0]);
@@ -338,7 +338,7 @@ describe('Filter: filter', function() {
     function Expr(text) {
         this.text = text;
     }
-    Expr.prototype.func = noop;
+    Expr.prototype.func = angular.noop;
 
     expr = new Expr('hello');
 
@@ -404,10 +404,10 @@ describe('Filter: filter', function() {
     Object.prototype.someProp = 'oo';
 
     var items = [
-      createMap(),
-      createMap(),
-      createMap(),
-      createMap()
+      Object.create(null),
+      Object.create(null),
+      Object.create(null),
+      Object.create(null)
     ];
     items[0].someProp = 'hello';
     items[1].someProp = 'goodbye';
@@ -452,7 +452,7 @@ describe('Filter: filter', function() {
     }
     var argsObj = getArguments({name: 'Misko'}, {name: 'Igor'}, {name: 'Brad'});
 
-    var nodeList = jqLite('<p><span>Misko</span><span>Igor</span><span>Brad</span></p>')[0].childNodes;
+    var nodeList = angular.element('<p><span>Misko</span><span>Igor</span><span>Brad</span></p>')[0].childNodes;
     function nodeFilterPredicate(node) {
       return node.innerHTML.indexOf('I') !== -1;
     }
@@ -527,16 +527,16 @@ describe('Filter: filter', function() {
     expect(filter(items, flt).length).toBe(items.length);
 
     flt = {value: NaN};
-    expect(includes(filter(items, flt), items[0])).toBeFalsy();
+    expect(filter(items, flt).includes(items[0])).toBeFalsy();
 
     flt = {value: false};
-    expect(includes(filter(items, flt), items[0])).toBeFalsy();
+    expect(filter(items, flt).includes(items[0])).toBeFalsy();
 
     flt = '';
-    expect(includes(filter(items, flt), items[0])).toBeFalsy();
+    expect(filter(items, flt).includes(items[0])).toBeFalsy();
 
     flt = {value: 'null'};
-    expect(includes(filter(items, flt), items[0])).toBeFalsy();
+    expect(filter(items, flt).includes(items[0])).toBeFalsy();
   });
 
 
@@ -674,7 +674,7 @@ describe('Filter: filter', function() {
       expect(filter(items, expr)).toEqual([items[1]]);
 
       comp = function(actual, expected) {
-        return isString(actual) && isString(expected) && (actual.indexOf(expected) === 0);
+        return angular.isString(actual) && angular.isString(expected) && (actual.indexOf(expected) === 0);
       };
 
       expr = {details: {email: 'admin@example.com', role: 'min'}};

@@ -81,7 +81,7 @@ function createHttpBackend($browser, createXhr, $browserDefer, callbacks, rawDoc
 
       xhr.onload = function requestLoaded() {
         var statusText = xhr.statusText || '';
-        var response = xhr.response;
+        var response = ('response' in xhr) ? xhr.response : xhr.responseText;
         var status = xhr.status;
 
         // fix status code when it is 0 (0 status is undocumented).

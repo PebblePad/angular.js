@@ -11,7 +11,7 @@ describe('event directives', function() {
 
   describe('ngSubmit', function() {
 
-    it('should get called on form submit', inject(function($rootScope, $compile) {
+    it('should get called on form submit', angular.mock.inject(function($rootScope, $compile) {
       element = $compile(
         '<form action="/foo" ng-submit="submitted = true">' +
           '<input type="submit" />' +
@@ -31,7 +31,7 @@ describe('event directives', function() {
       expect($rootScope.submitted).toEqual(true);
     }));
 
-    it('should expose event on form submit', inject(function($rootScope, $compile) {
+    it('should expose event on form submit', angular.mock.inject(function($rootScope, $compile) {
       $rootScope.formSubmission = function(e) {
         if (e) {
           $rootScope.formSubmitted = 'foo';
@@ -62,46 +62,46 @@ describe('event directives', function() {
 
     describe('call the listener asynchronously during $apply', function() {
       function run(scope) {
-        inject(function($compile) {
+        angular.mock.inject(function($compile) {
           element = $compile('<input type="text" ng-focus="focus()">')(scope);
-          scope.focus = jasmine.createSpy('focus');
+          scope.focus = jest.fn();
 
           scope.$apply(function() {
             element.triggerHandler('focus');
             expect(scope.focus).not.toHaveBeenCalled();
           });
 
-          expect(scope.focus).toHaveBeenCalledOnce();
+          expect(scope.focus).toHaveBeenCalledTimes(1);
         });
       }
 
-      it('should call the listener with non isolate scopes', inject(function($rootScope) {
+      it('should call the listener with non isolate scopes', angular.mock.inject(function($rootScope) {
         run($rootScope.$new());
       }));
 
-      it('should call the listener with isolate scopes', inject(function($rootScope) {
+      it('should call the listener with isolate scopes', angular.mock.inject(function($rootScope) {
         run($rootScope.$new(true));
       }));
 
     });
 
     it('should call the listener synchronously inside of $apply if outside of $apply',
-        inject(function($rootScope, $compile) {
+        angular.mock.inject(function($rootScope, $compile) {
       element = $compile('<input type="text" ng-focus="focus()" ng-model="value">')($rootScope);
-      $rootScope.focus = jasmine.createSpy('focus').and.callFake(function() {
+      $rootScope.focus = jest.fn(function() {
         $rootScope.value = 'newValue';
       });
 
       element.triggerHandler('focus');
 
-      expect($rootScope.focus).toHaveBeenCalledOnce();
+      expect($rootScope.focus).toHaveBeenCalledTimes(1);
       expect(element.val()).toBe('newValue');
     }));
 
   });
 
   describe('DOM event object', function() {
-    it('should allow access to the $event object', inject(function($rootScope, $compile) {
+    it('should allow access to the $event object', angular.mock.inject(function($rootScope, $compile) {
       var scope = $rootScope.$new();
       element = $compile('<button ng-click="e = $event">BTN</button>')(scope);
       element.triggerHandler('click');
@@ -113,39 +113,39 @@ describe('event directives', function() {
 
     describe('call the listener asynchronously during $apply', function() {
       function run(scope) {
-        inject(function($compile) {
+        angular.mock.inject(function($compile) {
           element = $compile('<input type="text" ng-blur="blur()">')(scope);
-          scope.blur = jasmine.createSpy('blur');
+          scope.blur = jest.fn();
 
           scope.$apply(function() {
             element.triggerHandler('blur');
             expect(scope.blur).not.toHaveBeenCalled();
           });
 
-          expect(scope.blur).toHaveBeenCalledOnce();
+          expect(scope.blur).toHaveBeenCalledTimes(1);
         });
       }
 
-      it('should call the listener with non isolate scopes', inject(function($rootScope) {
+      it('should call the listener with non isolate scopes', angular.mock.inject(function($rootScope) {
         run($rootScope.$new());
       }));
 
-      it('should call the listener with isolate scopes', inject(function($rootScope) {
+      it('should call the listener with isolate scopes', angular.mock.inject(function($rootScope) {
         run($rootScope.$new(true));
       }));
 
     });
 
     it('should call the listener synchronously inside of $apply if outside of $apply',
-        inject(function($rootScope, $compile) {
+        angular.mock.inject(function($rootScope, $compile) {
       element = $compile('<input type="text" ng-blur="blur()" ng-model="value">')($rootScope);
-      $rootScope.blur = jasmine.createSpy('blur').and.callFake(function() {
+      $rootScope.blur = jest.fn(function() {
         $rootScope.value = 'newValue';
       });
 
       element.triggerHandler('blur');
 
-      expect($rootScope.blur).toHaveBeenCalledOnce();
+      expect($rootScope.blur).toHaveBeenCalledTimes(1);
       expect(element.val()).toBe('newValue');
     }));
 

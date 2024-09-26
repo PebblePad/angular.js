@@ -5,9 +5,9 @@ describe('ngView', function() {
   describe('basics', function() {
     var element;
 
-    beforeEach(module('ngRoute'));
+    beforeEach(angular.mock.module('ngRoute'));
 
-    beforeEach(module(function($provide) {
+    beforeEach(angular.mock.module(function($provide) {
       return function($rootScope, $compile, $animate) {
         element = $compile('<div><ng:view onload="load()"></ng:view></div>')($rootScope);
       };
@@ -20,7 +20,7 @@ describe('ngView', function() {
 
 
     it('should do nothing when no routes are defined',
-        inject(function($rootScope, $compile, $location) {
+        angular.mock.inject(function($rootScope, $compile, $location) {
       $location.path('/unknown');
       $rootScope.$digest();
       expect(element.text()).toEqual('');
@@ -34,7 +34,7 @@ describe('ngView', function() {
             log.push('ctrl-init');
           };
 
-      module(function($compileProvider, $routeProvider) {
+      angular.mock.module(function($compileProvider, $routeProvider) {
         $compileProvider.directive('compileLog', function() {
           return {
             compile: function() {
@@ -46,7 +46,7 @@ describe('ngView', function() {
         $routeProvider.when('/some', {templateUrl: '/tpl.html', controller: Ctrl});
       });
 
-      inject(function($route, $rootScope, $templateCache, $location) {
+      angular.mock.inject(function($route, $rootScope, $templateCache, $location) {
         $templateCache.put('/tpl.html', [200, '<div compile-log>partial</div>', {}]);
         $location.path('/some');
         $rootScope.$digest();
@@ -65,11 +65,11 @@ describe('ngView', function() {
             log.push('ctrl-init');
           };
 
-      module(function($routeProvider) {
+      angular.mock.module(function($routeProvider) {
         $routeProvider.when('/some', {templateUrl: '/tpl.html', controller: Ctrl});
       });
 
-      inject(function($route, $rootScope, $templateCache, $location) {
+      angular.mock.inject(function($route, $rootScope, $templateCache, $location) {
         $templateCache.put('/tpl.html', [200, '', {}]);
         $location.path('/some');
 
@@ -90,11 +90,11 @@ describe('ngView', function() {
         controllerScope = $scope;
       }
 
-      module(function($compileProvider, $routeProvider) {
+      angular.mock.module(function($compileProvider, $routeProvider) {
         $routeProvider.when('/some', {templateUrl: '/tpl.html', controller: Ctrl, controllerAs: 'ctrl'});
       });
 
-      inject(function($route, $rootScope, $templateCache, $location) {
+      angular.mock.inject(function($route, $rootScope, $templateCache, $location) {
         $templateCache.put('/tpl.html', [200, '<div></div>', {}]);
         $location.path('/some');
         $rootScope.$digest();
@@ -105,14 +105,14 @@ describe('ngView', function() {
 
 
     it('should support string controller declaration', function() {
-      var MyCtrl = jasmine.createSpy('MyCtrl');
+      var MyCtrl = jest.fn();
 
-      module(function($controllerProvider, $routeProvider) {
+      angular.mock.module(function($controllerProvider, $routeProvider) {
         $controllerProvider.register('MyCtrl', ['$scope', MyCtrl]);
         $routeProvider.when('/foo', {controller: 'MyCtrl', templateUrl: '/tpl.html'});
       });
 
-      inject(function($route, $location, $rootScope, $templateCache) {
+      angular.mock.inject(function($route, $location, $rootScope, $templateCache) {
         $templateCache.put('/tpl.html', [200, '<div></div>', {}]);
         $location.path('/foo');
         $rootScope.$digest();
@@ -124,7 +124,7 @@ describe('ngView', function() {
 
 
     it('should reference resolved locals in scope', function() {
-      module(function($routeProvider) {
+      angular.mock.module(function($routeProvider) {
         $routeProvider.when('/foo', {
           resolve: {
             name: function() {
@@ -135,7 +135,7 @@ describe('ngView', function() {
         });
       });
 
-      inject(function($location, $rootScope) {
+      angular.mock.inject(function($location, $rootScope) {
         $location.path('/foo');
         $rootScope.$digest();
         expect(element.text()).toEqual('shahar');
@@ -144,7 +144,7 @@ describe('ngView', function() {
 
 
     it('should allow to provide an alias for resolved locals using resolveAs', function() {
-      module(function($routeProvider) {
+      angular.mock.module(function($routeProvider) {
         $routeProvider.when('/foo', {
           resolveAs: 'myResolve',
           resolve: {
@@ -156,7 +156,7 @@ describe('ngView', function() {
         });
       });
 
-      inject(function($location, $rootScope) {
+      angular.mock.inject(function($location, $rootScope) {
         $location.path('/foo');
         $rootScope.$digest();
         expect(element.text()).toEqual('shahar');
@@ -165,12 +165,12 @@ describe('ngView', function() {
 
 
     it('should load content via xhr when route changes', function() {
-      module(function($routeProvider) {
+      angular.mock.module(function($routeProvider) {
         $routeProvider.when('/foo', {templateUrl: 'myUrl1'});
         $routeProvider.when('/bar', {templateUrl: 'myUrl2'});
       });
 
-      inject(function($rootScope, $compile, $httpBackend, $location, $route) {
+      angular.mock.inject(function($rootScope, $compile, $httpBackend, $location, $route) {
         expect(element.text()).toEqual('');
 
         $location.path('/foo');
@@ -189,13 +189,13 @@ describe('ngView', function() {
 
 
     it('should use inline content route changes', function() {
-      module(function($routeProvider) {
+      angular.mock.module(function($routeProvider) {
         $routeProvider.when('/foo', {template: '<div>{{1+3}}</div>'});
         $routeProvider.when('/bar', {template: 'AngularJS is da best'});
         $routeProvider.when('/blank', {template: ''});
       });
 
-      inject(function($rootScope, $compile, $location, $route) {
+      angular.mock.inject(function($rootScope, $compile, $location, $route) {
         expect(element.text()).toEqual('');
 
         $location.path('/foo');
@@ -214,11 +214,11 @@ describe('ngView', function() {
 
 
     it('should remove all content when location changes to an unknown route', function() {
-      module(function($routeProvider) {
+      angular.mock.module(function($routeProvider) {
         $routeProvider.when('/foo', {templateUrl: 'myUrl1'});
       });
 
-      inject(function($rootScope, $compile, $location, $httpBackend, $route) {
+      angular.mock.inject(function($rootScope, $compile, $location, $httpBackend, $route) {
         $location.path('/foo');
         $httpBackend.expect('GET', 'myUrl1').respond('<div>{{1+3}}</div>');
         $rootScope.$digest();
@@ -233,11 +233,11 @@ describe('ngView', function() {
 
 
     it('should chain scopes and propagate evals to the child scope', function() {
-      module(function($routeProvider) {
+      angular.mock.module(function($routeProvider) {
         $routeProvider.when('/foo', {templateUrl: 'myUrl1'});
       });
 
-      inject(function($rootScope, $compile, $location, $httpBackend, $route) {
+      angular.mock.inject(function($rootScope, $compile, $location, $httpBackend, $route) {
         $rootScope.parentVar = 'parent';
 
         $location.path('/foo');
@@ -255,11 +255,11 @@ describe('ngView', function() {
 
     it('should be possible to nest ngView in ngInclude', function() {
 
-      module(function($routeProvider) {
+      angular.mock.module(function($routeProvider) {
         $routeProvider.when('/foo', {templateUrl: 'viewPartial.html'});
       });
 
-      inject(function($httpBackend, $location, $route, $compile, $rootScope) {
+      angular.mock.inject(function($httpBackend, $location, $route, $compile, $rootScope) {
         $httpBackend.whenGET('includePartial.html').respond('view: <ng:view></ng:view>');
         $httpBackend.whenGET('viewPartial.html').respond('content');
         $location.path('/foo');
@@ -285,12 +285,12 @@ describe('ngView', function() {
         $scope.log.push('parent');
       }
 
-      module(function($routeProvider) {
+      angular.mock.module(function($routeProvider) {
         $routeProvider.when('/foo', {controller: ParentCtrl, templateUrl: 'viewPartial.html'});
       });
 
 
-      inject(function($rootScope, $compile, $location, $httpBackend, $route) {
+      angular.mock.inject(function($rootScope, $compile, $location, $httpBackend, $route) {
         $rootScope.log = [];
 
         $rootScope.ChildCtrl = function($scope) {
@@ -324,12 +324,12 @@ describe('ngView', function() {
         'finished loading',  function() {
       // this is a test for a bad race condition that affected feedback
 
-      module(function($routeProvider) {
+      angular.mock.module(function($routeProvider) {
         $routeProvider.when('/foo', {templateUrl: 'myUrl1'});
         $routeProvider.when('/bar', {templateUrl: 'myUrl2'});
       });
 
-      inject(function($route, $rootScope, $location, $httpBackend) {
+      angular.mock.inject(function($route, $rootScope, $location, $httpBackend) {
         expect(element.text()).toEqual('');
 
         $location.path('/foo');
@@ -346,11 +346,11 @@ describe('ngView', function() {
 
 
     it('should be async even if served from cache', function() {
-      module(function($routeProvider) {
+      angular.mock.module(function($routeProvider) {
         $routeProvider.when('/foo', {controller: angular.noop, templateUrl: 'myUrl1'});
       });
 
-      inject(function($route, $rootScope, $location, $templateCache) {
+      angular.mock.inject(function($route, $rootScope, $location, $templateCache) {
         $templateCache.put('myUrl1', [200, 'my partial', {}]);
         $location.path('/foo');
 
@@ -378,11 +378,11 @@ describe('ngView', function() {
         log.push('init-ctrl');
       };
 
-      module(function($routeProvider) {
+      angular.mock.module(function($routeProvider) {
         $routeProvider.when('/foo', {templateUrl: 'tpl.html', controller: Ctrl});
       });
 
-      inject(function($templateCache, $rootScope, $location) {
+      angular.mock.inject(function($templateCache, $rootScope, $location) {
         $rootScope.$on('$routeChangeStart', logger('$routeChangeStart'));
         $rootScope.$on('$routeChangeSuccess', logger('$routeChangeSuccess'));
         $rootScope.$on('$viewContentLoaded', logger('$viewContentLoaded'));
@@ -399,11 +399,11 @@ describe('ngView', function() {
     });
 
     it('should destroy previous scope', function() {
-      module(function($routeProvider) {
+      angular.mock.module(function($routeProvider) {
         $routeProvider.when('/foo', {templateUrl: 'tpl.html'});
       });
 
-      inject(function($templateCache, $rootScope, $location) {
+      angular.mock.inject(function($templateCache, $rootScope, $location) {
         $templateCache.put('tpl.html', [200, 'partial', {}]);
 
         expect($rootScope.$$childHead).toBeNull();
@@ -436,12 +436,12 @@ describe('ngView', function() {
         };
       };
 
-      module(function($routeProvider) {
+      angular.mock.module(function($routeProvider) {
         $routeProvider.when('/one', {templateUrl: 'one.html', controller: createCtrl('ctrl1')});
         $routeProvider.when('/two', {templateUrl: 'two.html', controller: createCtrl('ctrl2')});
       });
 
-      inject(function($httpBackend, $rootScope, $location) {
+      angular.mock.inject(function($httpBackend, $rootScope, $location) {
         $httpBackend.whenGET('one.html').respond('content 1');
         $httpBackend.whenGET('two.html').respond('content 2');
 
@@ -485,7 +485,7 @@ describe('ngView', function() {
         };
       }
 
-      module(function($routeProvider) {
+      angular.mock.module(function($routeProvider) {
         $routeProvider.when('/bar', {templateUrl: 'tpl.html', controller: createController('bar')});
         $routeProvider.when('/foo', {
           templateUrl: 'tpl.html',
@@ -494,7 +494,7 @@ describe('ngView', function() {
         });
       });
 
-      inject(function($templateCache, $location, $rootScope) {
+      angular.mock.inject(function($templateCache, $location, $rootScope) {
         $templateCache.put('tpl.html', [200, 'partial', {}]);
 
         $location.url('/foo');
@@ -513,17 +513,17 @@ describe('ngView', function() {
 
 
     it('should evaluate onload expression after linking the content', function() {
-      module(function($routeProvider) {
+      angular.mock.module(function($routeProvider) {
         $routeProvider.when('/foo', {templateUrl: 'tpl.html'});
       });
 
-      inject(function($templateCache, $location, $rootScope) {
+      angular.mock.inject(function($templateCache, $location, $rootScope) {
         $templateCache.put('tpl.html', [200, '{{1+1}}', {}]);
-        $rootScope.load = jasmine.createSpy('onload');
+        $rootScope.load = jest.fn();
 
         $location.url('/foo');
         $rootScope.$digest();
-        expect($rootScope.load).toHaveBeenCalledOnce();
+        expect($rootScope.load).toHaveBeenCalledTimes(1);
       });
     });
 
@@ -534,11 +534,11 @@ describe('ngView', function() {
         $scope.ctrl = this;
       }
 
-      module(function($routeProvider) {
+      angular.mock.module(function($routeProvider) {
         $routeProvider.when('/foo', {templateUrl: 'tpl.html', controller: MyCtrl});
       });
 
-      inject(function($templateCache, $location, $rootScope, $route) {
+      angular.mock.inject(function($templateCache, $location, $rootScope, $route) {
         // in the template the white-space before the div is an intentional non-element node,
         // a text might get wrapped into span so it's safer to just use white space
         $templateCache.put('tpl.html', [200, '   \n   <div>{{state}}</div>', {}]);
@@ -561,11 +561,11 @@ describe('ngView', function() {
     it('should not set $scope or $controllerController on top level text elements in the view', function() {
       function MyCtrl($scope) {}
 
-      module(function($routeProvider) {
+      angular.mock.module(function($routeProvider) {
         $routeProvider.when('/foo', {templateUrl: 'tpl.html', controller: MyCtrl});
       });
 
-      inject(function($templateCache, $location, $rootScope, $route) {
+      angular.mock.inject(function($templateCache, $location, $rootScope, $route) {
         $templateCache.put('tpl.html', '<div></div>  ');
         $location.url('/foo');
         $rootScope.$digest();
@@ -587,13 +587,13 @@ describe('ngView', function() {
 
 
     it('should not trigger a digest when the view is changed', function() {
-      module(function($routeProvider) {
+      angular.mock.module(function($routeProvider) {
         $routeProvider.when('/foo', {templateUrl: 'myUrl1'});
         $routeProvider.when('/bar', {templateUrl: 'myUrl2'});
       });
 
-      inject(function($$rAF, $templateCache, $rootScope, $compile, $timeout, $location, $httpBackend) {
-        var spy = spyOn($rootScope, '$digest').and.callThrough();
+      angular.mock.inject(function($$rAF, $templateCache, $rootScope, $compile, $timeout, $location, $httpBackend) {
+        var spy = jest.spyOn($rootScope, '$digest');
 
         $templateCache.put('myUrl1', 'my template content');
         $templateCache.put('myUrl2', 'my other template content');
@@ -607,7 +607,7 @@ describe('ngView', function() {
 
         $location.path('/bar');
         $rootScope.$digest();
-        spy.calls.reset();
+        spy.mockReset();
 
         $$rAF.flush();
         expect(element.text()).toEqual('my other template content');
@@ -623,7 +623,7 @@ describe('ngView', function() {
   describe('and transcludes', function() {
     var element, directive;
 
-    beforeEach(module('ngRoute', function($compileProvider) {
+    beforeEach(angular.mock.module('ngRoute', function($compileProvider) {
       element = null;
       directive = $compileProvider.directive;
     }));
@@ -636,7 +636,7 @@ describe('ngView', function() {
 
     it('should allow access to directive controller from children when used in a replace template', function() {
       var controller;
-      module(function($routeProvider) {
+      angular.mock.module(function($routeProvider) {
         $routeProvider.when('/view', {templateUrl: 'view.html'});
         directive('template', function() {
           return {
@@ -657,7 +657,7 @@ describe('ngView', function() {
           };
         });
       });
-      inject(function($compile, $rootScope, $httpBackend, $location) {
+      angular.mock.inject(function($compile, $rootScope, $httpBackend, $location) {
         $httpBackend.expectGET('view.html').respond('<div><div test></div></div>');
         element = $compile('<div><div template></div></div>')($rootScope);
         $location.url('/view');
@@ -669,7 +669,7 @@ describe('ngView', function() {
 
     it('should compile its content correctly (although we remove it later)', function() {
       var testElement;
-      module(function($compileProvider, $routeProvider) {
+      angular.mock.module(function($compileProvider, $routeProvider) {
         $routeProvider.when('/view', {template: ' '});
         var directive = $compileProvider.directive;
         directive('test', function() {
@@ -680,7 +680,7 @@ describe('ngView', function() {
           };
         });
       });
-      inject(function($compile, $rootScope, $location) {
+      angular.mock.inject(function($compile, $rootScope, $location) {
         element = $compile('<div><div ng-view><div test someAttr></div></div></div>')($rootScope);
         $location.url('/view');
         $rootScope.$apply();
@@ -691,7 +691,7 @@ describe('ngView', function() {
 
     it('should link directives on the same element after the content has been loaded', function() {
       var contentOnLink;
-      module(function($compileProvider, $routeProvider) {
+      angular.mock.module(function($compileProvider, $routeProvider) {
         $routeProvider.when('/view', {template: 'someContent'});
         $compileProvider.directive('test', function() {
           return {
@@ -701,7 +701,7 @@ describe('ngView', function() {
           };
         });
       });
-      inject(function($compile, $rootScope, $location) {
+      angular.mock.inject(function($compile, $rootScope, $location) {
         element = $compile('<div><div ng-view test></div>')($rootScope);
         $location.url('/view');
         $rootScope.$apply();
@@ -711,7 +711,7 @@ describe('ngView', function() {
 
     it('should add the content to the element before compiling it', function() {
       var root;
-      module(function($compileProvider, $routeProvider) {
+      angular.mock.module(function($compileProvider, $routeProvider) {
         $routeProvider.when('/view', {template: '<span test></span>'});
         $compileProvider.directive('test', function() {
           return {
@@ -721,7 +721,7 @@ describe('ngView', function() {
           };
         });
       });
-      inject(function($compile, $rootScope, $location) {
+      angular.mock.inject(function($compile, $rootScope, $location) {
         element = $compile('<div><div ng-view></div>')($rootScope);
         $location.url('/view');
         $rootScope.$apply();
@@ -733,7 +733,7 @@ describe('ngView', function() {
   describe('animations', function() {
     var body, element, $rootElement;
 
-    beforeEach(module('ngRoute'));
+    beforeEach(angular.mock.module('ngRoute'));
 
     function html(content) {
       $rootElement.html(content);
@@ -742,7 +742,7 @@ describe('ngView', function() {
       return element;
     }
 
-    beforeEach(module(function() {
+    beforeEach(angular.mock.module(function() {
       // we need to run animation on attached elements;
       return function(_$rootElement_) {
         $rootElement = _$rootElement_;
@@ -753,10 +753,11 @@ describe('ngView', function() {
     afterEach(function() {
       dealoc(body);
       dealoc(element);
+      dealoc($rootElement)
     });
 
 
-    beforeEach(module(function($provide, $routeProvider) {
+    beforeEach(angular.mock.module(function($provide, $routeProvider) {
       $routeProvider.when('/foo', {controller: angular.noop, templateUrl: '/foo.html'});
       $routeProvider.when('/bar', {controller: angular.noop, templateUrl: '/bar.html'});
       return function($templateCache) {
@@ -766,11 +767,11 @@ describe('ngView', function() {
     }));
 
     describe('hooks', function() {
-      beforeEach(module('ngAnimate'));
-      beforeEach(module('ngAnimateMock'));
+      beforeEach(angular.mock.module('ngAnimate'));
+      beforeEach(angular.mock.module('ngAnimateMock'));
 
       it('should fire off the enter animation',
-          inject(function($compile, $rootScope, $location, $timeout, $animate) {
+          angular.mock.inject(function($compile, $rootScope, $location, $timeout, $animate) {
             element = $compile(html('<div ng-view></div>'))($rootScope);
 
             $location.path('/foo');
@@ -781,7 +782,7 @@ describe('ngView', function() {
           }));
 
       it('should fire off the leave animation',
-          inject(function($compile, $rootScope, $location, $templateCache, $timeout, $animate) {
+          angular.mock.inject(function($compile, $rootScope, $location, $templateCache, $timeout, $animate) {
 
         var item;
         $templateCache.put('/foo.html', [200, '<div>foo</div>', {}]);
@@ -799,10 +800,10 @@ describe('ngView', function() {
       }));
 
       it('should animate two separate ngView elements',
-        inject(function($compile, $rootScope, $templateCache, $location, $animate) {
+        angular.mock.inject(function($compile, $rootScope, $templateCache, $location, $animate) {
           var item;
           $rootScope.tpl = 'one';
-          element = $compile(html('<div ng-view></div>'))($rootScope);
+          element = compileForTest(html('<div ng-view></div>'));
           $rootScope.$digest();
 
           $location.path('/foo');
@@ -827,7 +828,7 @@ describe('ngView', function() {
       );
 
       it('should render ngClass on ngView',
-        inject(function($compile, $rootScope, $templateCache, $animate, $location) {
+        angular.mock.inject(function($compile, $rootScope, $templateCache, $animate, $location) {
 
           var item;
           $rootScope.tpl = 'one';
@@ -878,7 +879,7 @@ describe('ngView', function() {
       it('should not double compile when the route changes', function() {
 
         var window;
-        module(function($routeProvider, $animateProvider, $provide) {
+        angular.mock.module(function($routeProvider, $animateProvider, $provide) {
           $routeProvider.when('/foo', {template: '<div ng-repeat="i in [1,2]">{{i}}</div>'});
           $routeProvider.when('/bar', {template: '<div ng-repeat="i in [3,4]">{{i}}</div>'});
           $animateProvider.register('.my-animation', function() {
@@ -890,7 +891,7 @@ describe('ngView', function() {
           });
         });
 
-        inject(function($rootScope, $compile, $location, $route, $timeout, $rootElement, $sniffer, $animate) {
+        angular.mock.inject(function($rootScope, $compile, $location, $route, $timeout, $rootElement, $sniffer, $animate) {
           element = $compile(html('<div><ng:view onload="load()" class="my-animation"></ng:view></div>'))($rootScope);
           $animate.enabled(true);
 
@@ -925,7 +926,7 @@ describe('ngView', function() {
       });
 
       it('should destroy the previous leave animation if a new one takes place',
-        inject(function($compile, $rootScope, $animate, $location, $timeout) {
+        angular.mock.inject(function($compile, $rootScope, $animate, $location, $timeout) {
           var $scope = $rootScope.$new();
           element = $compile(html(
             '<div>' +
@@ -963,7 +964,7 @@ describe('ngView', function() {
 
       function spyOnAnchorScroll() {
         return function($provide, $routeProvider) {
-          autoScrollSpy = jasmine.createSpy('$anchorScroll');
+          autoScrollSpy = jest.fn();
           $provide.value('$anchorScroll', autoScrollSpy);
           $routeProvider.when('/foo', {
             controller: angular.noop,
@@ -974,7 +975,7 @@ describe('ngView', function() {
 
       function spyOnAnimateEnter() {
         return function($animate) {
-          spyOn($animate, 'enter').and.callThrough();
+          jest.spyOn($animate, 'enter');
         };
       }
 
@@ -984,10 +985,10 @@ describe('ngView', function() {
         };
       }
 
-      beforeEach(module(spyOnAnchorScroll(), 'ngAnimateMock'));
-      beforeEach(inject(spyOnAnimateEnter()));
+      beforeEach(angular.mock.module(spyOnAnchorScroll(), 'ngAnimateMock'));
+      beforeEach(angular.mock.inject(spyOnAnimateEnter()));
 
-      it('should call $anchorScroll if autoscroll attribute is present', inject(
+      it('should call $anchorScroll if autoscroll attribute is present', angular.mock.inject(
           compileAndLink('<div><ng:view autoscroll></ng:view></div>'),
           function($rootScope, $animate, $timeout, $location) {
 
@@ -998,11 +999,11 @@ describe('ngView', function() {
         $rootScope.$digest();
 
         expect($animate.queue.shift().event).toBe('enter');
-        expect(autoScrollSpy).toHaveBeenCalledOnce();
+        expect(autoScrollSpy).toHaveBeenCalledTimes(1);
       }));
 
 
-      it('should call $anchorScroll if autoscroll evaluates to true', inject(
+      it('should call $anchorScroll if autoscroll evaluates to true', angular.mock.inject(
           compileAndLink('<div><ng:view src="tpl" autoscroll="value"></ng:view></div>'),
           function($rootScope, $animate, $timeout, $location) {
 
@@ -1014,11 +1015,11 @@ describe('ngView', function() {
         $rootScope.$digest();
 
         expect($animate.queue.shift().event).toBe('enter');
-        expect(autoScrollSpy).toHaveBeenCalledOnce();
+        expect(autoScrollSpy).toHaveBeenCalledTimes(1);
       }));
 
 
-      it('should not call $anchorScroll if autoscroll attribute is not present', inject(
+      it('should not call $anchorScroll if autoscroll attribute is not present', angular.mock.inject(
           compileAndLink('<div><ng:view></ng:view></div>'),
           function($rootScope, $location, $animate, $timeout) {
 
@@ -1030,7 +1031,7 @@ describe('ngView', function() {
       }));
 
 
-      it('should not call $anchorScroll if autoscroll evaluates to false', inject(
+      it('should not call $anchorScroll if autoscroll evaluates to false', angular.mock.inject(
           compileAndLink('<div><ng:view autoscroll="value"></ng:view></div>'),
           function($rootScope, $location, $animate, $timeout) {
 
@@ -1043,7 +1044,7 @@ describe('ngView', function() {
       }));
 
 
-      it('should only call $anchorScroll after the "enter" animation completes', inject(
+      it('should only call $anchorScroll after the "enter" animation completes', angular.mock.inject(
         compileAndLink('<div><ng:view autoscroll></ng:view></div>'),
         function($rootScope, $location, $animate, $timeout) {
           $location.path('/foo');
@@ -1058,16 +1059,16 @@ describe('ngView', function() {
           $animate.flush();
           $rootScope.$digest();
 
-          expect($animate.enter).toHaveBeenCalledOnce();
-          expect(autoScrollSpy).toHaveBeenCalledOnce();
+          expect($animate.enter).toHaveBeenCalledTimes(1);
+          expect(autoScrollSpy).toHaveBeenCalledTimes(1);
         }
       ));
     });
   });
 
   describe('in async template', function() {
-    beforeEach(module('ngRoute'));
-    beforeEach(module(function($compileProvider, $provide, $routeProvider) {
+    beforeEach(angular.mock.module('ngRoute'));
+    beforeEach(angular.mock.module(function($compileProvider, $provide, $routeProvider) {
       $compileProvider.directive('asyncView', function() {
         return {templateUrl: 'async-view.html'};
       });
@@ -1084,7 +1085,7 @@ describe('ngView', function() {
 
     it('should work correctly upon initial page load',
       // Injecting `$location` here is necessary, so that it gets instantiated early
-      inject(function($compile, $location, $rootScope, $timeout) {
+      angular.mock.inject(function($compile, $location, $rootScope, $timeout) {
         var elem = $compile('<async-view></async-view>')($rootScope);
         $rootScope.$digest();
         $timeout.flush(500);

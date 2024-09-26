@@ -27,7 +27,7 @@ describe('$$cookieReader', function() {
       deleteAllCookies();
       expect(document.cookie).toEqual('');
 
-      inject(function(_$$cookieReader_) {
+      angular.mock.inject(function(_$$cookieReader_) {
         $$cookieReader = _$$cookieReader_;
       });
     });
@@ -115,14 +115,14 @@ describe('$$cookieReader', function() {
   describe('without access to `document.cookie`', function() {
     var cookieSpy;
 
-    beforeEach(module(function($provide) {
-      cookieSpy = jasmine.createSpy('cookie').and.throwError('Can\'t touch this!');
+    beforeEach(angular.mock.module(function($provide) {
+      cookieSpy = jest.fn().mockImplementation(() => { throw new Error('Can\'t touch this!') });
       document = Object.create({}, {'cookie': {get: cookieSpy}});
 
       $provide.value('$document', [document]);
     }));
 
-    beforeEach(inject(function(_$$cookieReader_) {
+    beforeEach(angular.mock.inject(function(_$$cookieReader_) {
       $$cookieReader = _$$cookieReader_;
     }));
 

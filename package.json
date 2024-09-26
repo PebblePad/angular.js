@@ -13,7 +13,9 @@
     "npm": "^10.2.3"
   },
   "scripts": {
-    "build": "node ./workspace-scripts/BuildDist.js"
+    "build": "node ./workspace-scripts/BuildDist.js",
+    "test": "npm run test:build && jest",
+    "test:build": "node ./workspace-scripts/BuildDist.js --test"
   },
   "devDependencies": {
     "@swc/core": "^1.7.26",

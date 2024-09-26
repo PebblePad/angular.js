@@ -2115,7 +2115,7 @@ function MockXhr() {
   };
 
   this.abort = function() {
-    if (isFunction(this.onabort)) {
+    if (angular.isFunction(this.onabort)) {
       this.onabort();
     }
   };
@@ -2890,8 +2890,8 @@ angular.mock.$RootScopeDecorator = ['$delegate', function($delegate) {
     }
   };
 
-  module.$$beforeAllHook = (window.before || window.beforeAll);
-  module.$$afterAllHook = (window.after || window.afterAll);
+  module.$$beforeAllHook = beforeAll;
+  module.$$afterAllHook = afterAll;
 
   // purely for testing ngMock itself
   module.$$currentSpec = function(to) {
@@ -3040,8 +3040,8 @@ angular.mock.$RootScopeDecorator = ['$delegate', function($delegate) {
     angular.callbacks.$$counter = 0;
   };
 
-  (window.beforeEach || window.setup)(module.$$beforeEach);
-  (window.afterEach || window.teardown)(module.$$afterEach);
+  beforeEach(module.$$beforeEach);
+  afterEach(module.$$afterEach);
 
   /**
    * @ngdoc function
@@ -3218,4 +3218,8 @@ angular.mock.$RootScopeDecorator = ['$delegate', function($delegate) {
       return !this.shared || this.sharedError;
     };
   }
-})(window.jasmine || window.mocha || typeof jest !== 'undefined');
+
+  angular.mock.MockXhr = MockXhr;
+  angular.mock.MockHttpExpectation = MockHttpExpectation;
+  angular.mock.createMockXhr = createMockXhr;
+})(typeof jest !== 'undefined');

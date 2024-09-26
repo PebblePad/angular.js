@@ -2,13 +2,12 @@
 
 describe('$sniffer', function() {
   function sniffer($window, $document) {
-    /* global $SnifferProvider: false */
     $window.navigator = $window.navigator || {};
-    $document = jqLite($document || {});
+    $document = angular.element($document || {});
     if (!$document[0].body) {
       $document[0].body = window.document.body;
     }
-    return new $SnifferProvider().$get[2]($window, $document);
+    return new ngInternals.$SnifferProvider().$get[2]($window, $document);
   }
 
 
@@ -16,8 +15,8 @@ describe('$sniffer', function() {
     it('should be true if history.pushState defined', function() {
       var mockWindow = {
         history: {
-          pushState: noop,
-          replaceState: noop
+          pushState: angular.noop,
+          replaceState: angular.noop
         }
       };
 
@@ -34,7 +33,7 @@ describe('$sniffer', function() {
     it('should be false on Boxee box with an older version of Webkit', function() {
       var mockWindow = {
         history: {
-          pushState: noop
+          pushState: angular.noop
         },
         navigator: {
           userAgent: 'boxee (alpha/Darwin 8.7.1 i386 - 0.9.11.5591)'
@@ -48,7 +47,7 @@ describe('$sniffer', function() {
     it('should be true on NW.js apps (which look similar to Chrome Packaged Apps)', function() {
       var mockWindow = {
         history: {
-          pushState: noop
+          pushState: angular.noop
         },
         chrome: {
           app: {
@@ -76,7 +75,7 @@ describe('$sniffer', function() {
       function createMockWindow(isChrome, isPackagedApp) {
         var mockWindow = {
           history: {
-            pushState: noop
+            pushState: angular.noop
           }
         };
 
@@ -94,7 +93,7 @@ describe('$sniffer', function() {
       var pushStateAccessCount = 0;
 
       var mockHistory = Object.create(Object.prototype, {
-        pushState: {get: function() { pushStateAccessCount++; return noop; }}
+        pushState: {get: function() { pushStateAccessCount++; return angular.noop; }}
       });
       var mockWindow = {
         chrome: {
@@ -115,7 +114,7 @@ describe('$sniffer', function() {
         var pushStateAccessCount = 0;
 
         var mockHistory = Object.create(Object.prototype, {
-          pushState: {get: function() { pushStateAccessCount++; return noop; }}
+          pushState: {get: function() { pushStateAccessCount++; return angular.noop; }}
         });
         var mockWindow = {
           chrome: {
@@ -139,7 +138,7 @@ describe('$sniffer', function() {
 
     beforeEach(function() {
       var mockCreateElementFn = function(elm) { if (elm === 'div') return mockDivElement; };
-      var createElementSpy = jasmine.createSpy('createElement').and.callFake(mockCreateElementFn);
+      var createElementSpy = jest.fn(mockCreateElementFn);
 
       mockDocument = {createElement: createElementSpy};
       $sniffer = sniffer({}, mockDocument);
@@ -147,7 +146,7 @@ describe('$sniffer', function() {
 
 
     it('should return true if "onchange" is present in a div element', function() {
-      mockDivElement = {onchange: noop};
+      mockDivElement = {onchange: angular.noop};
 
       expect($sniffer.hasEvent('change')).toBe(true);
     });
@@ -167,7 +166,7 @@ describe('$sniffer', function() {
       $sniffer.hasEvent('change');
       $sniffer.hasEvent('change');
 
-      expect(mockDocument.createElement).toHaveBeenCalledOnce();
+      expect(mockDocument.createElement).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -175,7 +174,7 @@ describe('$sniffer', function() {
   describe('csp', function() {
     it('should have all rules set to false by default', function() {
       var csp = sniffer({}).csp;
-      forEach(Object.keys(csp), function(key) {
+      angular.forEach(Object.keys(csp), function(key) {
         expect(csp[key]).toEqual(false);
       });
     });
@@ -183,7 +182,7 @@ describe('$sniffer', function() {
 
 
   describe('animations', function() {
-    it('should be either true or false', inject(function($sniffer) {
+    it('should be either true or false', angular.mock.inject(function($sniffer) {
       expect($sniffer.animations).toBeDefined();
     }));
 
@@ -259,7 +258,7 @@ describe('$sniffer', function() {
 
 
   describe('transitions', function() {
-    it('should be either true or false', inject(function($sniffer) {
+    it('should be either true or false', angular.mock.inject(function($sniffer) {
       expect($sniffer.transitions).toBeOneOf(true, false);
     }));
 

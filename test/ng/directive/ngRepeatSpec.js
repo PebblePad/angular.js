@@ -3,16 +3,16 @@
 describe('ngRepeat', function() {
   var element, $compile, scope, $exceptionHandler, $compileProvider;
 
-  beforeEach(module(function(_$compileProvider_) {
+  beforeEach(angular.mock.module(function(_$compileProvider_) {
     $compileProvider = _$compileProvider_;
   }));
 
 
-  beforeEach(module(function($exceptionHandlerProvider) {
+  beforeEach(angular.mock.module(function($exceptionHandlerProvider) {
     $exceptionHandlerProvider.mode('log');
   }));
 
-  beforeEach(inject(function(_$compile_, $rootScope, _$exceptionHandler_) {
+  beforeEach(angular.mock.inject(function(_$compile_, $rootScope, _$exceptionHandler_) {
     $compile = _$compile_;
     $exceptionHandler = _$exceptionHandler_;
     scope = $rootScope.$new();
@@ -441,16 +441,16 @@ describe('ngRepeat', function() {
 
       scope.items = [1,2,3,4,5,6];
       scope.$digest();
-      expect(trim(element.text())).toEqual('123456');
+      expect(ngInternals.trim(element.text())).toEqual('123456');
 
       scope.x = '0';
       scope.$digest();
 
-      expect(trim(element.text())).toEqual('No results found...');
+      expect(ngInternals.trim(element.text())).toEqual('No results found...');
     });
 
 
-    it('should support alias identifiers containing reserved words', inject(function($exceptionHandler) {
+    it('should support alias identifiers containing reserved words', angular.mock.inject(function($exceptionHandler) {
       scope.x = 'bl';
       scope.items = [
         { name: 'red' },
@@ -460,7 +460,7 @@ describe('ngRepeat', function() {
         { name: 'orange' },
         { name: 'blonde' }
       ];
-      forEach([
+      angular.forEach([
         'null2',
         'qthis',
         'qthisq',
@@ -480,7 +480,7 @@ describe('ngRepeat', function() {
     }));
 
 
-    it('should throw if alias identifier is not a simple identifier', inject(function($exceptionHandler) {
+    it('should throw if alias identifier is not a simple identifier', angular.mock.inject(function($exceptionHandler) {
       scope.x = 'bl';
       scope.items = [
         { name: 'red' },
@@ -491,7 +491,7 @@ describe('ngRepeat', function() {
         { name: 'blonde' }
       ];
 
-      forEach([
+      angular.forEach([
         'null',
         'this',
         'undefined',
@@ -575,7 +575,7 @@ describe('ngRepeat', function() {
 
 
   it('should error on wrong parsing of ngRepeat', function() {
-    element = jqLite('<ul><li ng-repeat="i dont parse"></li></ul>');
+    element = angular.element('<ul><li ng-repeat="i dont parse"></li></ul>');
     $compile(element)(scope);
     expect($exceptionHandler.errors.shift()[0]).toEqualMinErr('ngRepeat', 'iexp',
         'Expected expression in form of \'_item_ in _collection_[ track by _id_]\' but got ' +
@@ -584,7 +584,7 @@ describe('ngRepeat', function() {
 
 
   it('should throw error when left-hand-side of ngRepeat can\'t be parsed', function() {
-    element = jqLite('<ul><li ng-repeat="i dont parse in foo"></li></ul>');
+    element = angular.element('<ul><li ng-repeat="i dont parse in foo"></li></ul>');
     $compile(element)(scope);
     expect($exceptionHandler.errors.shift()[0]).toEqualMinErr('ngRepeat', 'iidexp',
         '\'_item_\' in \'_item_ in _collection_\' should be an identifier or ' +
@@ -833,7 +833,7 @@ describe('ngRepeat', function() {
   describe('nesting in replaced directive templates', function() {
 
     it('should work when placed on a non-root element of attr directive with SYNC replaced template',
-        inject(function($templateCache, $compile, $rootScope) {
+        angular.mock.inject(function($templateCache, $compile, $rootScope) {
       $compileProvider.directive('rr', function() {
         return {
           restrict: 'A',
@@ -841,7 +841,7 @@ describe('ngRepeat', function() {
           template: '<div ng-repeat="i in items">{{i}}|</div>'
         };
       });
-      element = jqLite('<div><span rr>{{i}}|</span></div>');
+      element = angular.element('<div><span rr>{{i}}|</span></div>');
       $compile(element)($rootScope);
       $rootScope.$apply();
       expect(element.text()).toBe('');
@@ -862,7 +862,7 @@ describe('ngRepeat', function() {
 
 
     it('should work when placed on a non-root element of attr directive with ASYNC replaced template',
-        inject(function($templateCache, $compile, $rootScope) {
+        angular.mock.inject(function($templateCache, $compile, $rootScope) {
       $compileProvider.directive('rr', function() {
         return {
           restrict: 'A',
@@ -873,7 +873,7 @@ describe('ngRepeat', function() {
 
       $templateCache.put('rr.html', '<div ng-repeat="i in items">{{i}}|</div>');
 
-      element = jqLite('<div><span rr>{{i}}|</span></div>');
+      element = angular.element('<div><span rr>{{i}}|</span></div>');
       $compile(element)($rootScope);
       $rootScope.$apply();
       expect(element.text()).toBe('');
@@ -894,14 +894,14 @@ describe('ngRepeat', function() {
 
 
     it('should work when placed on a root element of attr directive with SYNC replaced template',
-        inject(function($templateCache, $compile, $rootScope) {
+        angular.mock.inject(function($templateCache, $compile, $rootScope) {
       $compileProvider.directive('replaceMeWithRepeater', function() {
         return {
           replace: true,
           template: '<span ng-repeat="i in items">{{log(i)}}</span>'
         };
       });
-      element = jqLite('<span replace-me-with-repeater></span>');
+      element = angular.element('<span replace-me-with-repeater></span>');
       $compile(element)($rootScope);
       expect(element.text()).toBe('');
       var logs = [];
@@ -923,7 +923,7 @@ describe('ngRepeat', function() {
 
 
     it('should work when placed on a root element of attr directive with ASYNC replaced template',
-        inject(function($templateCache, $compile, $rootScope) {
+        angular.mock.inject(function($templateCache, $compile, $rootScope) {
       $compileProvider.directive('replaceMeWithRepeater', function() {
         return {
           replace: true,
@@ -931,7 +931,7 @@ describe('ngRepeat', function() {
         };
       });
       $templateCache.put('replace-me-with-repeater.html', '<div ng-repeat="i in items">{{log(i)}}</div>');
-      element = jqLite('<span>-</span><span replace-me-with-repeater></span><span>-</span>');
+      element = angular.element('<span>-</span><span replace-me-with-repeater></span><span>-</span>');
       $compile(element)($rootScope);
       expect(element.text()).toBe('--');
       var logs = [];
@@ -953,7 +953,7 @@ describe('ngRepeat', function() {
 
 
     it('should work when placed on a root element of element directive with SYNC replaced template',
-        inject(function($templateCache, $compile, $rootScope) {
+        angular.mock.inject(function($templateCache, $compile, $rootScope) {
       $compileProvider.directive('replaceMeWithRepeater', function() {
         return {
           restrict: 'E',
@@ -969,7 +969,7 @@ describe('ngRepeat', function() {
 
 
     it('should work when placed on a root element of element directive with ASYNC replaced template',
-        inject(function($templateCache, $compile, $rootScope) {
+        angular.mock.inject(function($templateCache, $compile, $rootScope) {
       $compileProvider.directive('replaceMeWithRepeater', function() {
         return {
           restrict: 'E',
@@ -984,14 +984,14 @@ describe('ngRepeat', function() {
       expect(element.text()).toBe('123');
     }));
 
-    it('should work when combined with an ASYNC template that loads after the first digest', inject(function($httpBackend, $compile, $rootScope) {
+    it('should work when combined with an ASYNC template that loads after the first digest', angular.mock.inject(function($httpBackend, $compile, $rootScope) {
       $compileProvider.directive('test', function() {
         return {
           templateUrl: 'test.html'
         };
       });
       $httpBackend.whenGET('test.html').respond('hello');
-      element = jqLite('<div><div ng-repeat="i in items" test></div></div>');
+      element = angular.element('<div><div ng-repeat="i in items" test></div></div>');
       $compile(element)($rootScope);
       $rootScope.items = [1];
       $rootScope.$apply();
@@ -1008,7 +1008,7 @@ describe('ngRepeat', function() {
     }));
   });
 
-  it('should add separator comments after each item', inject(function($compile, $rootScope) {
+  it('should add separator comments after each item', angular.mock.inject(function($compile, $rootScope) {
     var check = function() {
       var children = element.find('div');
       expect(children.length).toBe(3);
@@ -1040,7 +1040,7 @@ describe('ngRepeat', function() {
   }));
 
 
-  it('should remove whole block even if the number of elements inside it changes', inject(
+  it('should remove whole block even if the number of elements inside it changes', angular.mock.inject(
       function($compile, $rootScope) {
 
     $rootScope.values = [1, 2, 3];
@@ -1073,7 +1073,7 @@ describe('ngRepeat', function() {
   }));
 
 
-  it('should move whole block even if the number of elements inside it changes', inject(
+  it('should move whole block even if the number of elements inside it changes', angular.mock.inject(
       function($compile, $rootScope) {
 
     $rootScope.values = [1, 2, 3];
@@ -1239,7 +1239,7 @@ describe('ngRepeat', function() {
   describe('compatibility', function() {
 
     it('should allow mixing ngRepeat and another element transclusion directive', function() {
-      $compileProvider.directive('elmTrans', valueFn({
+      $compileProvider.directive('elmTrans', ngInternals.valueFn({
         transclude: 'element',
         controller: function($transclude, $scope, $element) {
           $transclude(function(transcludedNodes) {
@@ -1248,7 +1248,7 @@ describe('ngRepeat', function() {
         }
       }));
 
-      inject(function($compile, $rootScope) {
+      angular.mock.inject(function($compile, $rootScope) {
         element = $compile('<div><div ng-repeat="i in [1,2]" elm-trans>{{i}}</div></div>')($rootScope);
         $rootScope.$digest();
         expect(element.text()).toBe('[[1]][[2]]');
@@ -1256,7 +1256,7 @@ describe('ngRepeat', function() {
     });
 
 
-    it('should allow mixing ngRepeat with ngInclude', inject(function($compile, $rootScope, $httpBackend) {
+    it('should allow mixing ngRepeat with ngInclude', angular.mock.inject(function($compile, $rootScope, $httpBackend) {
       $httpBackend.whenGET('someTemplate.html').respond('<p>some template; </p>');
       element = $compile('<div><div ng-repeat="i in [1,2]" ng-include="\'someTemplate.html\'"></div></div>')($rootScope);
       $rootScope.$digest();
@@ -1265,7 +1265,7 @@ describe('ngRepeat', function() {
     }));
 
 
-    it('should allow mixing ngRepeat with ngIf', inject(function($compile, $rootScope) {
+    it('should allow mixing ngRepeat with ngIf', angular.mock.inject(function($compile, $rootScope) {
       element = $compile('<div><div ng-repeat="i in [1,2,3,4]" ng-if="i % 2 === 0">{{i}};</div></div>')($rootScope);
       $rootScope.$digest();
       expect(element.text()).toBe('2;4;');
@@ -1274,7 +1274,7 @@ describe('ngRepeat', function() {
 
 
   describe('ngRepeatStart', function() {
-    it('should grow multi-node repeater', inject(function($compile, $rootScope) {
+    it('should grow multi-node repeater', angular.mock.inject(function($compile, $rootScope) {
       $rootScope.show = false;
       $rootScope.books = [
         {title:'T1', description: 'D1'},
@@ -1294,7 +1294,7 @@ describe('ngRepeat', function() {
     }));
 
 
-    it('should not clobber ng-if when updating collection', inject(function($compile, $rootScope) {
+    it('should not clobber ng-if when updating collection', angular.mock.inject(function($compile, $rootScope) {
       $rootScope.values = [1, 2, 3];
       $rootScope.showMe = true;
 
@@ -1321,23 +1321,23 @@ describe('ngRepeat', function() {
 describe('ngRepeat and transcludes', function() {
   it('should allow access to directive controller from children when used in a replace template', function() {
     var controller;
-    module(function($compileProvider) {
+    angular.mock.module(function($compileProvider) {
       var directive = $compileProvider.directive;
-      directive('template', valueFn({
+      directive('template', ngInternals.valueFn({
         template: '<div ng-repeat="l in [1]"><span test></span></div>',
         replace: true,
         controller: function() {
           this.flag = true;
         }
       }));
-      directive('test', valueFn({
+      directive('test', ngInternals.valueFn({
         require: '^template',
         link: function(scope, el, attr, ctrl) {
           controller = ctrl;
         }
       }));
     });
-    inject(function($compile, $rootScope) {
+    angular.mock.inject(function($compile, $rootScope) {
       var element = $compile('<div><div template></div></div>')($rootScope);
       $rootScope.$apply();
       expect(controller.flag).toBe(true);
@@ -1347,33 +1347,33 @@ describe('ngRepeat and transcludes', function() {
 
 
   it('should use the correct transcluded scope', function() {
-    module(function($compileProvider) {
-      $compileProvider.directive('iso', valueFn({
+    angular.mock.module(function($compileProvider) {
+      $compileProvider.directive('iso', ngInternals.valueFn({
         restrict: 'E',
         transclude: true,
         template: '<div ng-repeat="a in [1]"><div ng-transclude></div></div>',
         scope: {}
       }));
     });
-    inject(function($compile, $rootScope) {
+    angular.mock.inject(function($compile, $rootScope) {
       $rootScope.val = 'transcluded content';
       var element = $compile('<iso><span ng-bind="val"></span></iso>')($rootScope);
       $rootScope.$digest();
-      expect(trim(element.text())).toEqual('transcluded content');
+      expect(ngInternals.trim(element.text())).toEqual('transcluded content');
       dealoc(element);
     });
   });
 
 
   it('should set the state before linking', function() {
-    module(function($compileProvider) {
-      $compileProvider.directive('assertA', valueFn(function(scope) {
+    angular.mock.module(function($compileProvider) {
+      $compileProvider.directive('assertA', ngInternals.valueFn(function(scope) {
         // This linking function asserts that a is set.
         // If we only test this by asserting binding, it will work even if the value is set later.
         expect(scope.a).toBeDefined();
       }));
     });
-    inject(function($compile, $rootScope) {
+    angular.mock.inject(function($compile, $rootScope) {
       var element = $compile('<div><span ng-repeat="a in [1]"><span assert-a></span></span></div>')($rootScope);
       $rootScope.$digest();
       dealoc(element);
@@ -1382,7 +1382,7 @@ describe('ngRepeat and transcludes', function() {
 
 
   it('should work with svg elements when the svg container is transcluded', function() {
-    module(function($compileProvider) {
+    angular.mock.module(function($compileProvider) {
       $compileProvider.directive('svgContainer', function() {
         return {
           template: '<svg ng-transclude></svg>',
@@ -1391,7 +1391,7 @@ describe('ngRepeat and transcludes', function() {
         };
       });
     });
-    inject(function($compile, $rootScope) {
+    angular.mock.inject(function($compile, $rootScope) {
       var element = $compile('<svg-container><circle ng-repeat="r in rows"></circle></svg-container>')($rootScope);
       $rootScope.rows = [1];
       $rootScope.$apply();
@@ -1412,14 +1412,14 @@ describe('ngRepeat animations', function() {
     return element;
   }
 
-  beforeEach(module('ngAnimate'));
-  beforeEach(module('ngAnimateMock'));
+  beforeEach(angular.mock.module('ngAnimate'));
+  beforeEach(angular.mock.module('ngAnimateMock'));
 
-  beforeEach(module(function() {
+  beforeEach(angular.mock.module(function() {
     // we need to run animation on attached elements;
     return function(_$rootElement_) {
       $rootElement = _$rootElement_;
-      body = jqLite(window.document.body);
+      body = angular.element(window.document.body);
       body.append($rootElement);
     };
   }));
@@ -1429,7 +1429,7 @@ describe('ngRepeat animations', function() {
   });
 
   it('should fire off the enter animation',
-    inject(function($compile, $rootScope, $animate) {
+    angular.mock.inject(function($compile, $rootScope, $animate) {
 
     var item;
 
@@ -1459,7 +1459,7 @@ describe('ngRepeat animations', function() {
   }));
 
   it('should fire off the leave animation',
-    inject(function($compile, $rootScope, $animate) {
+    angular.mock.inject(function($compile, $rootScope, $animate) {
 
     var item;
 
@@ -1494,7 +1494,7 @@ describe('ngRepeat animations', function() {
   }));
 
   it('should not change the position of the block that is being animated away via a leave animation',
-    inject(function($compile, $rootScope, $animate, $document, $sniffer, $timeout) {
+    angular.mock.inject(function($compile, $rootScope, $animate, $document, $sniffer, $timeout) {
       if (!$sniffer.transitions) return;
 
       var item;
@@ -1529,7 +1529,7 @@ describe('ngRepeat animations', function() {
   );
 
   it('should fire off the move animation',
-    inject(function($compile, $rootScope, $animate) {
+    angular.mock.inject(function($compile, $rootScope, $animate) {
 
       var item;
 

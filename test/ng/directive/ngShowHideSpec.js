@@ -5,7 +5,7 @@ describe('ngShow / ngHide', function() {
 
   function expectVisibility(exprs, ngShowOrNgHide, shownOrHidden) {
     element = $compile('<div></div>')($scope);
-    forEach(exprs, function(expr) {
+    angular.forEach(exprs, function(expr) {
       var childElem = $compile('<div ' + ngShowOrNgHide + '="' + expr + '"></div>')($scope);
       element.append(childElem);
       $scope.$digest();
@@ -13,7 +13,7 @@ describe('ngShow / ngHide', function() {
     });
   }
 
-  beforeEach(inject(function($rootScope, _$compile_) {
+  beforeEach(angular.mock.inject(function($rootScope, _$compile_) {
     $scope = $rootScope.$new();
     $compile = _$compile_;
   }));
@@ -32,7 +32,7 @@ describe('ngShow / ngHide', function() {
     }
 
     it('should show and hide an element', function() {
-      element = jqLite('<div ng-show="exp"></div>');
+      element = angular.element('<div ng-show="exp"></div>');
       element = $compile(element)($scope);
       $scope.$digest();
       expect(element).toBeHidden();
@@ -43,7 +43,7 @@ describe('ngShow / ngHide', function() {
 
     // https://github.com/angular/angular.js/issues/5414
     it('should show if the expression is a function with a no arguments', function() {
-      element = jqLite('<div ng-show="exp"></div>');
+      element = angular.element('<div ng-show="exp"></div>');
       element = $compile(element)($scope);
       $scope.exp = function() {};
       $scope.$digest();
@@ -51,7 +51,7 @@ describe('ngShow / ngHide', function() {
     });
 
     it('should make hidden element visible', function() {
-      element = jqLite('<div class="ng-hide" ng-show="exp"></div>');
+      element = angular.element('<div class="ng-hide" ng-show="exp"></div>');
       element = $compile(element)($scope);
       expect(element).toBeHidden();
       $scope.exp = true;
@@ -82,7 +82,7 @@ describe('ngShow / ngHide', function() {
     }
 
     it('should hide an element', function() {
-      element = jqLite('<div ng-hide="exp"></div>');
+      element = angular.element('<div ng-hide="exp"></div>');
       element = $compile(element)($scope);
       expect(element).toBeShown();
       $scope.exp = true;
@@ -116,7 +116,7 @@ describe('ngShow / ngHide animations', function() {
 
   beforeEach(function() {
     // we need to run animation on attached elements;
-    body = jqLite(window.document.body);
+    body = angular.element(window.document.body);
   });
 
   afterEach(function() {
@@ -125,16 +125,16 @@ describe('ngShow / ngHide animations', function() {
     body.removeAttr('ng-animation-running');
   });
 
-  beforeEach(module('ngAnimateMock'));
+  beforeEach(angular.mock.module('ngAnimateMock'));
 
-  beforeEach(module(function($animateProvider, $provide) {
+  beforeEach(angular.mock.module(function($animateProvider, $provide) {
     return function(_$rootElement_) {
       $rootElement = _$rootElement_;
     };
   }));
 
   describe('ngShow', function() {
-    it('should fire off the $animate.show and $animate.hide animation', inject(function($compile, $rootScope, $animate) {
+    it('should fire off the $animate.show and $animate.hide animation', angular.mock.inject(function($compile, $rootScope, $animate) {
       var item;
       var $scope = $rootScope.$new();
       $scope.on = true;
@@ -158,7 +158,7 @@ describe('ngShow / ngHide animations', function() {
     }));
 
     it('should apply the temporary `.ng-hide-animate` class to the element',
-      inject(function($compile, $rootScope, $animate) {
+      angular.mock.inject(function($compile, $rootScope, $animate) {
 
       var item;
       var $scope = $rootScope.$new();
@@ -181,7 +181,7 @@ describe('ngShow / ngHide animations', function() {
   });
 
   describe('ngHide', function() {
-    it('should fire off the $animate.show and $animate.hide animation', inject(function($compile, $rootScope, $animate) {
+    it('should fire off the $animate.show and $animate.hide animation', angular.mock.inject(function($compile, $rootScope, $animate) {
       var item;
       var $scope = $rootScope.$new();
       $scope.off = true;
@@ -205,7 +205,7 @@ describe('ngShow / ngHide animations', function() {
     }));
 
     it('should apply the temporary `.ng-hide-animate` class to the element',
-      inject(function($compile, $rootScope, $animate) {
+      angular.mock.inject(function($compile, $rootScope, $animate) {
 
       var item;
       var $scope = $rootScope.$new();

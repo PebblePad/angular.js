@@ -120,7 +120,7 @@
     /* loader.js */
     "setupModuleLoader": false,
 
-    /* jqLite.js */
+    /* angular.element.js */
     "BOOLEAN_ATTR": false,
     "jqNextId": false,
     "kebabToCamel": false,

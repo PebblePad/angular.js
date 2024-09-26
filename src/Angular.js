@@ -211,7 +211,7 @@ var
     /** @name angular */
     angular           = window.angular || (window.angular = {}),
     angularModule,
-    uid               = 0;
+    uid               = { current: 0 };
 
 
 /**
@@ -348,7 +348,7 @@ function reverseParams(iteratorFn) {
  * @returns {number} an unique alpha-numeric string
  */
 function nextUid() {
-  return ++uid;
+  return ++uid.current;
 }
 
 

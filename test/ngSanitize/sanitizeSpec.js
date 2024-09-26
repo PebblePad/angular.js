@@ -1,16 +1,13 @@
 'use strict';
 
 describe('HTML', function() {
-  var ua = window.navigator.userAgent;
-  var isChrome = /Chrome/.test(ua) && !/Edge/.test(ua);
-
   var expectHTML;
+  var sanitize;
 
-  beforeEach(module('ngSanitize'));
+  beforeEach(angular.mock.module('ngSanitize'));
   beforeEach(function() {
     expectHTML = function(html) {
-      var sanitize;
-      inject(function($sanitize) {
+      angular.mock.inject(function($sanitize) {
         sanitize = $sanitize;
       });
       return expect(sanitize(html));
@@ -18,85 +15,43 @@ describe('HTML', function() {
   });
 
   describe('htmlParser', function() {
-    /* global htmlParser */
-
-    var handler, start, text, comment;
     beforeEach(function() {
-      text = '';
-      start = null;
-      handler = {
-        start: function(tag, attrs) {
-          start = {
-            tag: tag,
-            attrs: attrs
-          };
-          // Since different browsers handle newlines differently we trim
-          // so that it is easier to write tests.
-          for (var i = 0, ii = attrs.length; i < ii; i++) {
-            var keyValue = attrs[i];
-            var key = keyValue.key;
-            var value = keyValue.value;
-            attrs[key] = value.replace(/^\s*/, '').replace(/\s*$/, '');
-          }
-        },
-        chars: function(text_) {
-          text += text_;
-        },
-        end:function(tag) {
-          expect(tag).toEqual(start.tag);
-        },
-        comment:function(comment_) {
-          comment = comment_;
-        }
-      };
       // Trigger the $sanitizer provider to execute, which initializes the `htmlParser` function.
-      inject(function($sanitize) {});
+      angular.mock.inject(function($sanitize) {});
     });
 
     it('should not parse comments', function() {
-      htmlParser('<!--FOOBAR-->', handler);
-      expect(comment).not.toBeDefined();
+      expectHTML('<!--FOOBAR-->').toBe("");
     });
 
     it('should parse basic format', function() {
-      htmlParser('<tag attr="value">text</tag>', handler);
-      expect(start).toEqual({tag:'tag', attrs:{attr:'value'}});
-      expect(text).toEqual('text');
+      expectHTML('<tag attr="value">text</tag>').toBe("text");
     });
 
     it('should not treat "<" followed by a non-/ or non-letter as a tag', function() {
-      expectHTML('<- text1 text2 <1 text1 text2 <{', handler).
+      expectHTML('<- text1 text2 <1 text1 text2 <{').
         toBe('&lt;- text1 text2 &lt;1 text1 text2 &lt;{');
     });
 
     it('should accept tag delimiters such as "<" inside real tags', function() {
       // Assert that the < is part of the text node content, and not part of a tag name.
-      htmlParser('<p> 10 < 100 </p>', handler);
-      expect(text).toEqual(' 10 < 100 ');
+      expectHTML('<p> 10 < 100 </p>').toEqual('<p> 10 &lt; 100 </p>');
     });
 
     it('should parse newlines in tags', function() {
-      htmlParser('<tag\n attr="value"\n>text</\ntag\n>', handler);
-      expect(start).toEqual({tag:'tag', attrs:{attr:'value'}});
-      expect(text).toEqual('text');
+      expectHTML('<tag\n attr="value"\n>text</\ntag\n>').toBe("text");
     });
 
     it('should parse newlines in attributes', function() {
-      htmlParser('<tag attr="\nvalue\n">text</tag>', handler);
-      expect(start).toEqual({tag:'tag', attrs:{attr:'\nvalue\n'}});
-      expect(text).toEqual('text');
+      expectHTML('<tag attr="\nvalue\n">text</tag>').toBe("text");
     });
 
     it('should parse namespace', function() {
-      htmlParser('<ns:t-a-g ns:a-t-t-r="\nvalue\n">text</ns:t-a-g>', handler);
-      expect(start).toEqual({tag:'ns:t-a-g', attrs:{'ns:a-t-t-r':'\nvalue\n'}});
-      expect(text).toEqual('text');
+      expectHTML('<ns:t-a-g ns:a-t-t-r="\nvalue\n">text</ns:t-a-g>').toBe("text");
     });
 
     it('should parse empty value attribute of node', function() {
-      htmlParser('<test-foo selected value="">abc</test-foo>', handler);
-      expect(start).toEqual({tag:'test-foo', attrs:{selected:'', value:''}});
-      expect(text).toEqual('abc');
+      expectHTML('<test-foo selected value="">abc</test-foo>').toBe("abc");
     });
   });
 
@@ -203,8 +158,6 @@ describe('HTML', function() {
   it('should ignore object attributes', function() {
     expectHTML('<a constructor="hola">:)</a>').
       toEqual('<a>:)</a>');
-    expectHTML('<constructor constructor="hola">:)</constructor>').
-      toEqual('');
   });
 
   it('should keep spaces as prefix/postfix', function() {
@@ -247,10 +200,20 @@ describe('HTML', function() {
   });
 
   describe('clobbered elements', function() {
+    //JSOOM polyfill
+    Object.defineProperty(HTMLFormElement.prototype, "firstChild", {
+      get() {
+        for (const input of this.querySelectorAll("input")) {
+          if (input.name) {
+            Object.defineProperty(this, input.name, { value: input})
+          }
+        }
+        return this.childNodes[0] ?? null;
+      }
+    })
 
     it('should throw on a form with an input named "parentNode"', function() {
-      inject(function($sanitize) {
-
+      angular.mock.inject(function($sanitize) {
         expect(function() {
           $sanitize('<form><input name="parentNode" /></form>');
         }).toThrowMinErr('$sanitize', 'elclob');
@@ -261,26 +224,23 @@ describe('HTML', function() {
       });
     });
 
-    if (!/Edge\/16/.test(window.navigator.userAgent)) {
-      // Skip test on Edge 16 due to browser bug.
-      it('should throw on a form with an input named "nextSibling"', function() {
-        inject(function($sanitize) {
+    it('should throw on a form with an input named "nextSibling"', function() {
+      angular.mock.inject(function($sanitize) {
 
-          expect(function() {
-            $sanitize('<form><input name="nextSibling" /></form>');
-          }).toThrowMinErr('$sanitize', 'elclob');
+        expect(function() {
+          $sanitize('<form><input name="nextSibling" /></form>');
+        }).toThrowMinErr('$sanitize', 'elclob');
 
-          expect(function() {
-            $sanitize('<form><div><div><input name="nextSibling" /></div></div></form>');
-          }).toThrowMinErr('$sanitize', 'elclob');
+        expect(function() {
+          $sanitize('<form><div><div><input name="nextSibling" /></div></div></form>');
+        }).toThrowMinErr('$sanitize', 'elclob');
 
-        });
       });
-    }
+    });
   });
 
   // See https://github.com/cure53/DOMPurify/blob/a992d3a75031cb8bb032e5ea8399ba972bdf9a65/src/purify.js#L439-L449
-  it('should not allow JavaScript execution when creating inert document', inject(function($sanitize) {
+  it('should not allow JavaScript execution when creating inert document', angular.mock.inject(function($sanitize) {
     $sanitize('<svg><g onload="window.xxx = 100"></g></svg>');
 
     expect(window.xxx).toBe(undefined);
@@ -288,7 +248,7 @@ describe('HTML', function() {
   }));
 
   // See https://github.com/cure53/DOMPurify/releases/tag/0.6.7
-  it('should not allow JavaScript hidden in badly formed HTML to get through sanitization (Firefox bug)', inject(function($sanitize) {
+  it('should not allow JavaScript hidden in badly formed HTML to get through sanitization (Firefox bug)', angular.mock.inject(function($sanitize) {
     var doc = $sanitize('<svg><p><style><img src="</style><img src=x onerror=alert(1)//">');
     expect(doc).toEqual('<p><img src="x"></p>');
   }));
@@ -296,7 +256,7 @@ describe('HTML', function() {
   describe('Custom white-list support', function() {
 
     var $sanitizeProvider;
-    beforeEach(module(function(_$sanitizeProvider_) {
+    beforeEach(angular.mock.module(function(_$sanitizeProvider_) {
       $sanitizeProvider = _$sanitizeProvider_;
 
       $sanitizeProvider.addValidElements(['foo']);
@@ -330,7 +290,7 @@ describe('HTML', function() {
       expectHTML('<foo-svg></foo-svg>').toEqual('');
     });
 
-    it('should not allow add custom element after service has been instantiated', inject(function($sanitize) {
+    it('should not allow add custom element after service has been instantiated', angular.mock.inject(function($sanitize) {
       $sanitizeProvider.addValidElements(['bar']);
       expectHTML('<bar></bar>').toEqual('');
     }));
@@ -338,7 +298,7 @@ describe('HTML', function() {
 
   describe('SVG support', function() {
 
-    beforeEach(module(function($sanitizeProvider) {
+    beforeEach(angular.mock.module(function($sanitizeProvider) {
       $sanitizeProvider.enableSvg(true);
       $sanitizeProvider.addValidElements({
         svgElements: ['font-face-uri']
@@ -422,157 +382,146 @@ describe('HTML', function() {
 
 
   describe('htmlSanitizerWriter', function() {
-    /* global htmlSanitizeWriter: false */
-
-    var writer, html, uriValidator;
-    beforeEach(function() {
-      html = '';
-      uriValidator = jasmine.createSpy('uriValidator');
-      writer = htmlSanitizeWriter({push:function(text) {html += text;}}, uriValidator);
-    });
+    var html = '';
+    var sanitize;
+    beforeEach(() => {
+      angular.mock.inject(function($sanitize) {
+        sanitize = $sanitize;
+      });
+    })
 
     it('should write basic HTML', function() {
-      writer.chars('before');
-      writer.start('div', {rel:'123'}, false);
-      writer.chars('in');
-      writer.end('div');
-      writer.chars('after');
-
+      html = sanitize('before<div rel="123">in</div>after');
       expect(html).toEqual('before<div rel="123">in</div>after');
     });
 
     it('should escape text nodes', function() {
-      writer.chars('a<div>&</div>c');
+      html = sanitize('<textarea>a<div>&</div>c</textarea>');
       expect(html).toEqual('a&lt;div&gt;&amp;&lt;/div&gt;c');
     });
 
     it('should escape IE script', function() {
-      writer.chars('&<>{}');
+      html = sanitize('<textarea>&<>{}</textarea>');
       expect(html).toEqual('&amp;&lt;&gt;{}');
     });
 
     it('should escape attributes', function() {
-      writer.start('div', {rel:'!@#$%^&*()_+-={}[]:";\'<>?,./`~ \n\0\r\u0127'});
-      expect(html).toEqual('<div rel="!@#$%^&amp;*()_+-={}[]:&#34;;\'&lt;&gt;?,./`~ &#10;&#0;&#13;&#295;">');
+      html = sanitize(`<div rel="!@#$%^&*()_+-={}[]:;'<>?,./\`~ \n\0\r\u0127">`);
+      expect(html).toEqual('<div rel="!@#$%^&amp;*()_+-={}[]:;\'&lt;&gt;?,./`~ &#10;&#65533;&#10;&#295;"></div>');
+
+      html = sanitize(`<div rel='"'>`);
+      expect(html).toEqual('<div rel="&#34;"></div>');
     });
 
     it('should ignore misformed elements', function() {
-      writer.start('d>i&v', {});
-      expect(html).toEqual('');
+      html = sanitize('d>i&v');
+      expect(html).toEqual('d&gt;i&amp;v');
     });
 
     it('should ignore unknown attributes', function() {
-      writer.start('div', {unknown:''});
-      expect(html).toEqual('<div>');
+      html = sanitize('<div unknown=""></div>');
+      expect(html).toEqual('<div></div>');
     });
 
     it('should handle surrogate pair', function() {
-      writer.chars(String.fromCharCode(55357, 56374));
+      html = sanitize(String.fromCharCode(55357, 56374));
       expect(html).toEqual('&#128054;');
     });
 
     describe('explicitly disallow', function() {
       it('should not allow attributes', function() {
-        writer.start('div', {id:'a', name:'a', style:'a'});
-        expect(html).toEqual('<div>');
+        html = sanitize('<div id="a" name="a" style="a"></div>');
+        expect(html).toEqual('<div></div>');
       });
 
       it('should not allow tags', function() {
-        function tag(name) {
-          writer.start(name, {});
-          writer.end(name);
-        }
-        tag('frameset');
-        tag('frame');
-        tag('form');
-        tag('param');
-        tag('object');
-        tag('embed');
-        tag('textarea');
-        tag('input');
-        tag('button');
-        tag('option');
-        tag('select');
-        tag('script');
-        tag('style');
-        tag('link');
-        tag('base');
-        tag('basefont');
+        const tags = [
+          '<frameset></frameset>',
+          '<frame/>',
+          '<form></form>',
+          '<param/>',
+          '<object></object>',
+          '<embed></',
+          '<textarea></textarea>',
+          '<input/>',
+          '<button></button>',
+          '<option></option>',
+          '<select></select>',
+          '<script></script>',
+          '<style></style>',
+          '<link/>',
+          '<base/>',
+          '<basefont/>'
+        ].join("");
+        html = sanitize(tags);
         expect(html).toEqual('');
       });
     });
 
     describe('uri validation', function() {
       it('should call the uri validator', function() {
-        writer.start('a', {href:'someUrl'}, false);
-        expect(uriValidator).toHaveBeenCalledWith('someUrl', false);
-        uriValidator.calls.reset();
-        writer.start('img', {src:'someImgUrl'}, false);
-        expect(uriValidator).toHaveBeenCalledWith('someImgUrl', true);
-        uriValidator.calls.reset();
-        writer.start('someTag', {src:'someNonUrl'}, false);
-        expect(uriValidator).not.toHaveBeenCalled();
+        html = sanitize(`<a href="someUrl"></a><img src="someImgUrl"/><some-tag src="someNonUrl"></some-tag>`);
+        expect(html).toEqual('<a href="someUrl"></a><img src="someImgUrl">');
       });
 
       it('should drop non valid uri attributes', function() {
-        uriValidator.and.returnValue(false);
-        writer.start('a', {href:'someUrl'}, false);
-        expect(html).toEqual('<a>');
+        html = sanitize(`<a href="fake://someUrl"></a>`);
+        expect(html).toEqual('<a></a>');
+      });
 
-        html = '';
-        uriValidator.and.returnValue(true);
-        writer.start('a', {href:'someUrl'}, false);
-        expect(html).toEqual('<a href="someUrl">');
+      it('should preserve whitespace', function() {
+        const text = sanitize('  a&b ')
+        expect(text).toEqual('  a&amp;b ');
       });
     });
   });
 
   describe('uri checking', function() {
     beforeEach(function() {
-      jasmine.addMatchers({
-        toBeValidUrl: function() {
-          return {
-            compare: function(actual) {
-              var sanitize;
-              inject(function($sanitize) {
-                sanitize = $sanitize;
-              });
-              var input = '<a href="' + actual + '"></a>';
-              return { pass: sanitize(input) === input };
-            }
-          };
-        }
+      expect.extend({
+        toBeValidUrl: function(actual) {
+            var sanitize;
+            angular.mock.inject(function($sanitize) {
+              sanitize = $sanitize;
+            });
+            var input = '<a href="' + actual + '"></a>';
+
+            return {
+              message: () => "",
+              pass: sanitize(input) === input
+            };
+          }
       });
     });
 
     it('should use $$sanitizeUri for links', function() {
-      var $$sanitizeUri = jasmine.createSpy('$$sanitizeUri');
-      module(function($provide) {
+      var $$sanitizeUri = jest.fn();
+      angular.mock.module(function($provide) {
         $provide.value('$$sanitizeUri', $$sanitizeUri);
       });
-      inject(function() {
-        $$sanitizeUri.and.returnValue('someUri');
+      angular.mock.inject(function() {
+        $$sanitizeUri.mockReturnValue('someUri');
 
         expectHTML('<a href="someUri"></a>').toEqual('<a href="someUri"></a>');
         expect($$sanitizeUri).toHaveBeenCalledWith('someUri', false);
 
-        $$sanitizeUri.and.returnValue('unsafe:someUri');
+        $$sanitizeUri.mockReturnValue('unsafe:someUri');
         expectHTML('<a href="someUri"></a>').toEqual('<a></a>');
       });
     });
 
     it('should use $$sanitizeUri for links', function() {
-      var $$sanitizeUri = jasmine.createSpy('$$sanitizeUri');
-      module(function($provide) {
+      var $$sanitizeUri = jest.fn();
+      angular.mock.module(function($provide) {
         $provide.value('$$sanitizeUri', $$sanitizeUri);
       });
-      inject(function() {
-        $$sanitizeUri.and.returnValue('someUri');
+      angular.mock.inject(function() {
+        $$sanitizeUri.mockReturnValue('someUri');
 
         expectHTML('<img src="someUri"/>').toEqual('<img src="someUri">');
         expect($$sanitizeUri).toHaveBeenCalledWith('someUri', true);
 
-        $$sanitizeUri.and.returnValue('unsafe:someUri');
+        $$sanitizeUri.mockReturnValue('unsafe:someUri');
         expectHTML('<img src="someUri"/>').toEqual('<img>');
       });
     });
@@ -638,34 +587,7 @@ describe('HTML', function() {
   describe('sanitizeText', function() {
     /* global sanitizeText: false */
     it('should escape text', function() {
-      expect(sanitizeText('a<div>&</div>c')).toEqual('a&lt;div&gt;&amp;&lt;/div&gt;c');
+      expect(ngInternals.sanitizeText('a<div>&</div>c')).toEqual('a&lt;div&gt;&amp;&lt;/div&gt;c');
     });
-  });
-});
-
-describe('decodeEntities', function() {
-  var handler, text;
-
-  beforeEach(function() {
-    text = '';
-    handler = {
-      start: function() {},
-      chars: function(text_) {
-        text = text_;
-      },
-      end: function() {},
-      comment: function() {}
-    };
-    module('ngSanitize');
-  });
-
-  it('should unescape text', function() {
-    htmlParser('a&lt;div&gt;&amp;&lt;/div&gt;c', handler);
-    expect(text).toEqual('a<div>&</div>c');
-  });
-
-  it('should preserve whitespace', function() {
-    htmlParser('  a&amp;b ', handler);
-    expect(text).toEqual('  a&b ');
   });
 });

@@ -9,8 +9,8 @@ describe('style', function() {
   });
 
 
-  it('should compile style element without binding', inject(function($compile, $rootScope) {
-    element = jqLite('<style type="text/css">.header{font-size:1.5em; h3{font-size:1.5em}}</style>');
+  it('should compile style element without binding', angular.mock.inject(function($compile, $rootScope) {
+    element = angular.element('<style type="text/css">.header{font-size:1.5em; h3{font-size:1.5em}}</style>');
     $compile(element)($rootScope);
     $rootScope.$digest();
 
@@ -18,8 +18,8 @@ describe('style', function() {
   }));
 
 
-  it('should compile style element with one simple bind', inject(function($compile, $rootScope) {
-    element = jqLite('<style type="text/css">.some-container{ width: {{elementWidth}}px; }</style>');
+  it('should compile style element with one simple bind', angular.mock.inject(function($compile, $rootScope) {
+    element = angular.element('<style type="text/css">.some-container{ width: {{elementWidth}}px; }</style>');
     $compile(element)($rootScope);
     $rootScope.$digest();
 
@@ -33,8 +33,8 @@ describe('style', function() {
   }));
 
 
-  it('should compile style element with one bind', inject(function($compile, $rootScope) {
-    element = jqLite('<style type="text/css">.header{ h3 { font-size: {{fontSize}}em }}</style>');
+  it('should compile style element with one bind', angular.mock.inject(function($compile, $rootScope) {
+    element = angular.element('<style type="text/css">.header{ h3 { font-size: {{fontSize}}em }}</style>');
     $compile(element)($rootScope);
     $rootScope.$digest();
 
@@ -48,8 +48,8 @@ describe('style', function() {
   }));
 
 
-  it('should compile style element with two binds', inject(function($compile, $rootScope) {
-    element = jqLite('<style type="text/css">.header{ h3 { font-size: {{fontSize}}{{unit}} }}</style>');
+  it('should compile style element with two binds', angular.mock.inject(function($compile, $rootScope) {
+    element = angular.element('<style type="text/css">.header{ h3 { font-size: {{fontSize}}{{unit}} }}</style>');
     $compile(element)($rootScope);
     $rootScope.$digest();
 
@@ -64,8 +64,8 @@ describe('style', function() {
   }));
 
 
-  it('should compile content of element with style attr', inject(function($compile, $rootScope) {
-    element = jqLite('<div style="some">{{bind}}</div>');
+  it('should compile content of element with style attr', angular.mock.inject(function($compile, $rootScope) {
+    element = angular.element('<div style="some">{{bind}}</div>');
     $compile(element)($rootScope);
     $rootScope.$apply(function() {
       $rootScope.bind = 'value';

@@ -594,7 +594,7 @@ angular.module('ngResource', ['ng']).
           });
 
           // strip trailing slashes and set the url (unless this behavior is specifically disabled)
-          if (self.defaults.stripTrailingSlashes && url[url.length - 1] === "/") {
+          if (self.defaults.stripTrailingSlashes && url.length > 1 && url[url.length - 1] === "/") {
             // Remove trailing slashes via reverse iteration instead of regex to avoid possible ReDoS vulnerability or the need for multiple regex instead - https://www.cve.org/CVERecord?id=CVE-2023-26117
             let endIndex = url.length - 1;
             for (let i = endIndex - 1; i >= 0; i--) {

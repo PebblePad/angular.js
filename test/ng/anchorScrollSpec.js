@@ -1,17 +1,18 @@
 'use strict';
 
 describe('$anchorScroll', function() {
-
+  jest.useFakeTimers();
+  Element.prototype.scrollIntoView = () => {};
   var elmSpy;
 
   function createMockWindow() {
     return function() {
-      module(function($provide) {
+      angular.mock.module(function($provide) {
         elmSpy = {};
 
         var mockedWin = {
-          scrollTo: jasmine.createSpy('$window.scrollTo'),
-          scrollBy: jasmine.createSpy('$window.scrollBy'),
+          scrollTo: jest.fn(),
+          scrollBy: jest.fn(),
           document: window.document,
           getComputedStyle: function(elem) {
             return window.getComputedStyle(elem);
@@ -23,18 +24,16 @@ describe('$anchorScroll', function() {
     };
   }
 
-  function addElements() {
-    var elements = sliceArgs(arguments);
-
+  function addElements(...elements) {
     return function($window) {
-      forEach(elements, function(identifier) {
+      angular.forEach(elements, function(identifier) {
         var match = identifier.match(/(?:(\w*) )?(\w*)=(\w*)/),
             nodeName = match[1] || 'a',
             tmpl = '<' + nodeName + ' ' + match[2] + '="' + match[3] + '">' +
                       match[3] +   // add some content or else Firefox and IE place the element
                                    // in weird ways that break yOffset-testing.
                    '</' + nodeName + '>',
-            jqElm = jqLite(tmpl),
+            jqElm = angular.element(tmpl),
             elm = jqElm[0];
             // Inline elements cause Firefox to report an unexpected value for
             // `getBoundingClientRect().top` on some platforms (depending on the default font and
@@ -42,8 +41,8 @@ describe('$anchorScroll', function() {
             // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1014738
             elm.style.display = 'inline-block';
 
-        elmSpy[identifier] = spyOn(elm, 'scrollIntoView');
-        jqLite($window.document.body).append(jqElm);
+        elmSpy[identifier] = jest.spyOn(elm, 'scrollIntoView');
+        angular.element($window.document.body).append(jqElm);
       });
     };
   }
@@ -61,11 +60,28 @@ describe('$anchorScroll', function() {
     };
   }
 
-  function changeHashTo(hash) {
-    return function($anchorScroll, $location, $rootScope) {
+  function initHash(hash = "", flush = false) {
+    return function($anchorScroll, $location, $rootScope,$browser) {
       $rootScope.$apply(function() {
         $location.hash(hash);
       });
+      jest.runAllTimers();
+      if (flush) {
+        $browser.defer.flush();
+      }
+    };
+  }
+
+  function changeHashTo(hash, flush = true) {
+    return function($anchorScroll, $location, $rootScope, $browser) {
+      $rootScope.$apply(function() {
+        $location.hash(hash);
+      });
+
+      jest.runAllTimers();
+      if (flush) {
+        $browser.defer.flush();
+      }
     };
   }
 
@@ -75,10 +91,10 @@ describe('$anchorScroll', function() {
 
   function expectScrollingTo(identifierCountMap) {
     var map = {};
-    if (isString(identifierCountMap)) {
+    if (angular.isString(identifierCountMap)) {
       map[identifierCountMap] = 1;
-    } else if (isArray(identifierCountMap)) {
-      forEach(identifierCountMap, function(identifier) {
+    } else if (angular.isArray(identifierCountMap)) {
+      angular.forEach(identifierCountMap, function(identifier) {
         map[identifier] = 1;
       });
     } else {
@@ -86,7 +102,7 @@ describe('$anchorScroll', function() {
     }
 
     return function($window) {
-      forEach(elmSpy, function(spy, id) {
+      angular.forEach(elmSpy, function(spy, id) {
         expect(spy).toHaveBeenCalledTimes(map[id] || 0);
       });
       expect($window.scrollTo).not.toHaveBeenCalled();
@@ -94,41 +110,14 @@ describe('$anchorScroll', function() {
   }
 
   function expectScrollingToTop($window) {
-    forEach(elmSpy, function(spy, id) {
+    angular.forEach(elmSpy, function(spy, id) {
       expect(spy).not.toHaveBeenCalled();
     });
 
     expect($window.scrollTo).toHaveBeenCalledWith(0, 0);
   }
 
-  function spyOnJQLiteDocumentLoaded(fake) {
-    return function() {
-      spyOn(window, 'jqLiteDocumentLoaded');
-      if (fake) {
-        window.jqLiteDocumentLoaded.and.callFake(fake);
-      }
-    };
-  }
-
-  function unspyOnJQLiteDocumentLoaded() {
-    return function() {
-      window.jqLiteDocumentLoaded = window.jqLiteDocumentLoaded.originalValue;
-    };
-  }
-
-  function simulateDocumentLoaded() {
-    return spyOnJQLiteDocumentLoaded(function(callback) { callback(); });
-  }
-
-  function fireWindowLoadEvent() {
-    return function($browser) {
-      var callback = window.jqLiteDocumentLoaded.calls.mostRecent().args[0];
-      callback();
-      $browser.defer.flush();
-    };
-  }
-
-  afterEach(inject(function($browser, $document) {
+  afterEach(angular.mock.inject(function($browser, $document) {
     expect($browser.deferredFns.length).toBe(0);
     dealoc($document);
   }));
@@ -141,47 +130,47 @@ describe('$anchorScroll', function() {
 
     describe('and implicitly using `$location.hash()`', function() {
 
-      it('should scroll to top of the window if empty hash', inject(
+      it('should scroll to top of the window if empty hash', angular.mock.inject(
         changeHashAndScroll(''),
         expectScrollingToTop));
 
 
-      it('should not scroll if hash does not match any element', inject(
+      it('should not scroll if hash does not match any element', angular.mock.inject(
         addElements('id=one', 'id=two'),
         changeHashAndScroll('non-existing'),
         expectNoScrolling()));
 
 
-      it('should scroll to anchor element with name', inject(
+      it('should scroll to anchor element with name', angular.mock.inject(
         addElements('a name=abc'),
         changeHashAndScroll('abc'),
         expectScrollingTo('a name=abc')));
 
 
-      it('should not scroll to other than anchor element with name', inject(
+      it('should not scroll to other than anchor element with name', angular.mock.inject(
         addElements('input name=xxl', 'select name=xxl', 'form name=xxl'),
         changeHashAndScroll('xxl'),
         expectNoScrolling()));
 
 
-      it('should scroll to anchor even if other element with given name exist', inject(
+      it('should scroll to anchor even if other element with given name exist', angular.mock.inject(
         addElements('input name=some', 'a name=some'),
         changeHashAndScroll('some'),
         expectScrollingTo('a name=some')));
 
 
-      it('should scroll to element with id with precedence over name', inject(
+      it('should scroll to element with id with precedence over name', angular.mock.inject(
         addElements('name=abc', 'id=abc'),
         changeHashAndScroll('abc'),
         expectScrollingTo('id=abc')));
 
 
-      it('should scroll to top if hash === "top" and no matching element', inject(
+      it('should scroll to top if hash === "top" and no matching element', angular.mock.inject(
         changeHashAndScroll('top'),
         expectScrollingToTop));
 
 
-      it('should scroll to element with id "top" if present', inject(
+      it('should scroll to element with id "top" if present', angular.mock.inject(
         addElements('id=top'),
         changeHashAndScroll('top'),
         expectScrollingTo('id=top')));
@@ -190,77 +179,73 @@ describe('$anchorScroll', function() {
 
     describe('and specifying a hash', function() {
 
-      it('should ignore the `hash` argument if not a string', inject(
-        spyOnJQLiteDocumentLoaded(),
+      it('should ignore the `hash` argument if not a string', angular.mock.inject(
+        initHash('one', true),
         addElements('id=one', 'id=two'),
-        changeHashTo('one'),   // won't scroll since `jqLiteDocumentLoaded()` is spied upon
         callAnchorScroll({}),
-        expectScrollingTo('id=one'),
-        unspyOnJQLiteDocumentLoaded()));
+        expectScrollingTo('id=one')));
 
 
-      it('should ignore `$location.hash()` if `hash` is passed as argument', inject(
-        spyOnJQLiteDocumentLoaded(),
+      it('should ignore `$location.hash()` if `hash` is passed as argument', angular.mock.inject(
+        initHash('one', true),
         addElements('id=one', 'id=two'),
-        changeHashTo('one'),   // won't scroll since `jqLiteDocumentLoaded()` is spied upon
         callAnchorScroll('two'),
-        expectScrollingTo('id=two'),
-        unspyOnJQLiteDocumentLoaded()));
+        expectScrollingTo('id=two')));
 
 
-      it('should scroll to top of the window if empty hash', inject(
+      it('should scroll to top of the window if empty hash', angular.mock.inject(
         callAnchorScroll(''),
         expectScrollingToTop));
 
 
-      it('should not scroll if hash does not match any element', inject(
+      it('should not scroll if hash does not match any element', angular.mock.inject(
         addElements('id=one', 'id=two'),
         callAnchorScroll('non-existing'),
         expectNoScrolling()));
 
 
-      it('should scroll to anchor element with name', inject(
+      it('should scroll to anchor element with name', angular.mock.inject(
         addElements('a name=abc'),
         callAnchorScroll('abc'),
         expectScrollingTo('a name=abc')));
 
 
-      it('should not scroll to other than anchor element with name', inject(
+      it('should not scroll to other than anchor element with name', angular.mock.inject(
         addElements('input name=xxl', 'select name=xxl', 'form name=xxl'),
         callAnchorScroll('xxl'),
         expectNoScrolling()));
 
 
-      it('should scroll to anchor even if other element with given name exist', inject(
+      it('should scroll to anchor even if other element with given name exist', angular.mock.inject(
         addElements('input name=some', 'a name=some'),
         callAnchorScroll('some'),
         expectScrollingTo('a name=some')));
 
 
-      it('should scroll to element with id with precedence over name', inject(
+      it('should scroll to element with id with precedence over name', angular.mock.inject(
         addElements('name=abc', 'id=abc'),
         callAnchorScroll('abc'),
         expectScrollingTo('id=abc')));
 
 
-      it('should scroll to top if hash === "top" and no matching element', inject(
+      it('should scroll to top if hash === "top" and no matching element', angular.mock.inject(
         callAnchorScroll('top'),
         expectScrollingToTop));
 
 
-      it('should scroll to element with id "top" if present', inject(
+      it('should scroll to element with id "top" if present', angular.mock.inject(
         addElements('id=top'),
         callAnchorScroll('top'),
         expectScrollingTo('id=top')));
 
 
-      it('should scroll to element with id "7" if present, with a given hash of type number', inject(
+      it('should scroll to element with id "7" if present, with a given hash of type number', angular.mock.inject(
         addElements('id=7'),
         callAnchorScroll(7),
         expectScrollingTo('id=7')));
 
 
-      it('should scroll to element with id "7" if present, with a given hash of type string', inject(
+      it('should scroll to element with id "7" if present, with a given hash of type string', angular.mock.inject(
         addElements('id=7'),
         callAnchorScroll('7'),
         expectScrollingTo('id=7')));
@@ -288,12 +273,10 @@ describe('$anchorScroll', function() {
 
     describe('when document has completed loading', function() {
 
-      beforeEach(simulateDocumentLoaded());
-      afterEach(unspyOnJQLiteDocumentLoaded());
-
       it('should scroll to element when hash change in hashbang mode', function() {
-        module(initLocation({html5Mode: false, historyApi: true}));
-        inject(
+        angular.mock.module(initLocation({html5Mode: false, historyApi: true}));
+        angular.mock.inject(
+          initHash(),
           addElements('id=some'),
           changeHashTo('some'),
           expectScrollingTo('id=some')
@@ -302,8 +285,8 @@ describe('$anchorScroll', function() {
 
 
       it('should scroll to element when hash change in html5 mode with no history api', function() {
-        module(initLocation({html5Mode: true, historyApi: false}));
-        inject(
+        angular.mock.module(initLocation({html5Mode: true, historyApi: false}));
+        angular.mock.inject(
           addElements('id=some'),
           changeHashTo('some'),
           expectScrollingTo('id=some')
@@ -312,14 +295,14 @@ describe('$anchorScroll', function() {
 
 
       it('should not scroll to the top if $anchorScroll is initializing and location hash is empty',
-        inject(
+        angular.mock.inject(
           expectNoScrolling())
       );
 
 
       it('should not scroll when element does not exist', function() {
-        module(initLocation({html5Mode: false, historyApi: false}));
-        inject(
+        angular.mock.module(initLocation({html5Mode: false, historyApi: false}));
+        angular.mock.inject(
           addElements('id=some'),
           changeHashTo('other'),
           expectNoScrolling()
@@ -328,8 +311,8 @@ describe('$anchorScroll', function() {
 
 
       it('should scroll when html5 mode with history api', function() {
-        module(initLocation({html5Mode: true, historyApi: true}));
-        inject(
+        angular.mock.module(initLocation({html5Mode: true, historyApi: true}));
+        angular.mock.inject(
           addElements('id=some'),
           changeHashTo('some'),
           expectScrollingTo('id=some')
@@ -338,65 +321,48 @@ describe('$anchorScroll', function() {
 
 
       it('should not scroll when auto-scrolling is disabled', function() {
-        module(
+        angular.mock.module(
             disableAutoScrolling(),
             initLocation({html5Mode: false, historyApi: false})
         );
-        inject(
+        angular.mock.inject(
+          initHash(),
           addElements('id=fake'),
-          changeHashTo('fake'),
+          changeHashTo('fake', false),
           expectNoScrolling()
         );
       });
 
 
       it('should scroll when called explicitly (even if auto-scrolling is disabled)', function() {
-        module(
+        angular.mock.module(
             disableAutoScrolling(),
             initLocation({html5Mode: false, historyApi: false})
         );
-        inject(
+        angular.mock.inject(
+          initHash(),
           addElements('id=fake'),
-          changeHashTo('fake'),
+          changeHashTo('fake', false),
           expectNoScrolling(),
           callAnchorScroll(),
           expectScrollingTo('id=fake')
         );
       });
     });
-
-    describe('when document has not completed loading', function() {
-
-      beforeEach(spyOnJQLiteDocumentLoaded());
-      afterEach(unspyOnJQLiteDocumentLoaded());
-
-      it('should wait for the document to be completely loaded before auto-scrolling', inject(
-          addElements('id=some'),
-          changeHashTo('some'),
-          expectNoScrolling('id=some'),
-          fireWindowLoadEvent(),
-          expectScrollingTo('id=some')
-      ));
-
-    });
-
   });
 
 
   describe('yOffset', function() {
 
-    beforeEach(simulateDocumentLoaded());
-    afterEach(unspyOnJQLiteDocumentLoaded);
-
     function expectScrollingWithOffset(identifierCountMap, offsetList) {
-      var list = isArray(offsetList) ? offsetList : [offsetList];
+      var list = angular.isArray(offsetList) ? offsetList : [offsetList];
 
       return function($rootScope, $window) {
-        inject(expectScrollingTo(identifierCountMap));
+        angular.mock.inject(expectScrollingTo(identifierCountMap));
         expect($window.scrollBy).toHaveBeenCalledTimes(list.length);
-        forEach(list, function(offset, idx) {
+        angular.forEach(list, function(offset, idx) {
           // Due to sub-pixel rendering, there is a +/-1 error margin in the actual offset
-          var args = $window.scrollBy.calls.argsFor(idx);
+          var args = $window.scrollBy.mock.calls[idx];
           expect(args[0]).toBe(0);
           expect(Math.abs(offset + args[1])).toBeLessThan(1);
         });
@@ -410,7 +376,7 @@ describe('$anchorScroll', function() {
     function mockBoundingClientRect(childValuesMap) {
       return function($window) {
         var children = $window.document.body.children;
-        forEach(childValuesMap, function(valuesList, childIdx) {
+        angular.forEach(childValuesMap, function(valuesList, childIdx) {
           var elem = children[childIdx];
           elem.getBoundingClientRect = function() {
             var val = valuesList.shift();
@@ -438,10 +404,10 @@ describe('$anchorScroll', function() {
 
         var yOffsetNumber = 50;
 
-        beforeEach(inject(setYOffset(yOffsetNumber)));
+        beforeEach(angular.mock.inject(setYOffset(yOffsetNumber)));
 
 
-        it('should scroll with vertical offset', inject(
+        it('should scroll with vertical offset', angular.mock.inject(
           addElements('id=some'),
           mockBoundingClientRect({0: [0]}),
           changeHashTo('some'),
@@ -449,7 +415,7 @@ describe('$anchorScroll', function() {
         ));
 
 
-        it('should use the correct vertical offset when changing `yOffset` at runtime', inject(
+        it('should use the correct vertical offset when changing `yOffset` at runtime', angular.mock.inject(
           addElements('id=some'),
           mockBoundingClientRect({0: [0, 0]}),
           changeHashTo('some'),
@@ -462,7 +428,7 @@ describe('$anchorScroll', function() {
 
           var targetAdjustedOffset = 20;
 
-          inject(
+          angular.mock.inject(
             addElements('id=some1', 'id=some2'),
             mockBoundingClientRect({1: [yOffsetNumber - targetAdjustedOffset]}),
             changeHashTo('some2'),
@@ -483,7 +449,7 @@ describe('$anchorScroll', function() {
             return val;
           }
 
-          inject(
+          angular.mock.inject(
             addElements('id=id1', 'name=name2'),
             mockBoundingClientRect({
               0: [0, 0, 0],
@@ -512,17 +478,17 @@ describe('$anchorScroll', function() {
         var elemBottom = 50;
 
         function createAndSetYOffsetElement(position) {
-          var jqElem = jqLite('<div></div>');
+          var jqElem = angular.element('<div></div>');
           jqElem[0].style.position = position;
 
           return function($anchorScroll, $window) {
-            jqLite($window.document.body).append(jqElem);
+            angular.element($window.document.body).append(jqElem);
             $anchorScroll.yOffset = jqElem;
           };
         }
 
 
-        it('should scroll with vertical offset when `position === fixed`', inject(
+        it('should scroll with vertical offset when `position === fixed`', angular.mock.inject(
           createAndSetYOffsetElement('fixed'),
           addElements('id=some'),
           mockBoundingClientRect({0: [elemBottom], 1: [0]}),
@@ -530,7 +496,7 @@ describe('$anchorScroll', function() {
           expectScrollingWithOffset('id=some', elemBottom)));
 
 
-        it('should scroll without vertical offset when `position !== fixed`', inject(
+        it('should scroll without vertical offset when `position !== fixed`', angular.mock.inject(
           createAndSetYOffsetElement('absolute', elemBottom),
           expectScrollingWithoutOffset('id=some')));
       });
@@ -545,17 +511,17 @@ describe('$anchorScroll', function() {
       var yOffsetNumber = 50;
       var necessaryYOffset = yOffsetNumber - borderWidth - marginWidth - paddingWidth;
 
-      beforeEach(inject(setYOffset(yOffsetNumber)));
+      beforeEach(angular.mock.inject(setYOffset(yOffsetNumber)));
 
 
-      it('should scroll with vertical offset', inject(
+      it('should scroll with vertical offset', angular.mock.inject(
         addElements('id=some'),
         mockBoundingClientRect({0: [yOffsetNumber - necessaryYOffset]}),
         changeHashTo('some'),
         expectScrollingWithOffset('id=some', necessaryYOffset)));
 
 
-      it('should use the correct vertical offset when changing `yOffset` at runtime', inject(
+      it('should use the correct vertical offset when changing `yOffset` at runtime', angular.mock.inject(
         addElements('id=some'),
         mockBoundingClientRect({0: [
           yOffsetNumber - necessaryYOffset,
@@ -571,7 +537,7 @@ describe('$anchorScroll', function() {
 
         var targetAdjustedOffset = 20;
 
-        inject(
+        angular.mock.inject(
           addElements('id=some1', 'id=some2'),
           mockBoundingClientRect({1: [yOffsetNumber - targetAdjustedOffset]}),
           changeHashTo('some2'),
@@ -588,17 +554,17 @@ describe('$anchorScroll', function() {
       var yOffsetNumber = 50;
       var necessaryYOffset = yOffsetNumber - borderWidth - marginWidth - paddingWidth;
 
-      beforeEach(inject(setYOffset(yOffsetNumber)));
+      beforeEach(angular.mock.inject(setYOffset(yOffsetNumber)));
 
 
-      it('should scroll with vertical offset', inject(
+      it('should scroll with vertical offset', angular.mock.inject(
         addElements('id=some'),
         mockBoundingClientRect({0: [yOffsetNumber - necessaryYOffset]}),
         changeHashTo('some'),
         expectScrollingWithOffset('id=some', necessaryYOffset)));
 
 
-      it('should use the correct vertical offset when changing `yOffset` at runtime', inject(
+      it('should use the correct vertical offset when changing `yOffset` at runtime', angular.mock.inject(
         addElements('id=some'),
         mockBoundingClientRect({0: [
           yOffsetNumber - necessaryYOffset,
@@ -614,7 +580,7 @@ describe('$anchorScroll', function() {
 
         var targetAdjustedOffset = 20;
 
-        inject(
+        angular.mock.inject(
           addElements('id=some1', 'id=some2'),
           mockBoundingClientRect({1: [yOffsetNumber - targetAdjustedOffset]}),
           changeHashTo('some2'),

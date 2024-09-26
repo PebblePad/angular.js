@@ -71,3 +71,5 @@ function createMockStyleSheet(doc) {
     }
   };
 }
+
+window.createMockStyleSheet = createMockStyleSheet;

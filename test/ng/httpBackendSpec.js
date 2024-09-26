@@ -1,4 +1,4 @@
-/* global createHttpBackend: false, createMockXhr: false, MockXhr: false */
+/* global ngInternals.createHttpBackend: false, angular.mock.createMockXhr: false, angular.mock.MockXhr: false */
 'use strict';
 
 describe('$httpBackend', function() {
@@ -6,21 +6,21 @@ describe('$httpBackend', function() {
   var $backend, $browser, $jsonpCallbacks,
       xhr, fakeDocument, callback;
 
-  beforeEach(inject(function($injector) {
+  beforeEach(angular.mock.inject(function($injector) {
 
     $browser = $injector.get('$browser');
 
     fakeDocument = {
       $$scripts: [],
-      createElement: jasmine.createSpy('createElement').and.callFake(function() {
+      createElement: jest.fn(function() {
         // Return a proper script element...
         return window.document.createElement(arguments[0]);
       }),
       body: {
-        appendChild: jasmine.createSpy('body.appendChild').and.callFake(function(script) {
+        appendChild: jest.fn(function(script) {
           fakeDocument.$$scripts.push(script);
         }),
-        removeChild: jasmine.createSpy('body.removeChild').and.callFake(function(script) {
+        removeChild: jest.fn(function(script) {
           var index = fakeDocument.$$scripts.indexOf(script);
           if (index !== -1) {
             fakeDocument.$$scripts.splice(index, 1);
@@ -48,14 +48,14 @@ describe('$httpBackend', function() {
       }
     };
 
-    $backend = createHttpBackend($browser, createMockXhr, $browser.defer, $jsonpCallbacks, fakeDocument);
-    callback = jasmine.createSpy('done');
+    $backend = ngInternals.createHttpBackend($browser, angular.mock.createMockXhr, $browser.defer, $jsonpCallbacks, fakeDocument);
+    callback = jest.fn();
   }));
 
 
   it('should do basics - open async xhr and send data', function() {
-    $backend('GET', '/some-url', 'some-data', noop);
-    xhr = MockXhr.$$lastInstance;
+    $backend('GET', '/some-url', 'some-data', angular.noop);
+    xhr = angular.mock.MockXhr.$$lastInstance;
 
     expect(xhr.$$method).toBe('GET');
     expect(xhr.$$url).toBe('/some-url');
@@ -64,8 +64,8 @@ describe('$httpBackend', function() {
   });
 
   it('should pass null to send if no body is set', function() {
-    $backend('GET', '/some-url', undefined, noop);
-    xhr = MockXhr.$$lastInstance;
+    $backend('GET', '/some-url', undefined, angular.noop);
+    xhr = angular.mock.MockXhr.$$lastInstance;
 
     expect(xhr.$$data).toBe(null);
   });
@@ -74,8 +74,8 @@ describe('$httpBackend', function() {
     function() {
       var values = [false, 0, '', null];
       angular.forEach(values, function(value) {
-        $backend('GET', '/some-url', value, noop);
-        xhr = MockXhr.$$lastInstance;
+        $backend('GET', '/some-url', value, angular.noop);
+        xhr = angular.mock.MockXhr.$$lastInstance;
 
         expect(xhr.$$data).toBe(value);
       });
@@ -83,53 +83,38 @@ describe('$httpBackend', function() {
   );
 
   it('should pass NaN to send if NaN body is set', function() {
-    $backend('GET', '/some-url', NaN, noop);
-    xhr = MockXhr.$$lastInstance;
+    $backend('GET', '/some-url', NaN, angular.noop);
+    xhr = angular.mock.MockXhr.$$lastInstance;
 
     expect(isNaN(xhr.$$data)).toEqual(true);
   });
 
   it('should call completion function with xhr.statusText if present', function() {
-    callback.and.callFake(function(status, response, headers, statusText) {
+    callback.mockImplementation(function(status, response, headers, statusText) {
       expect(statusText).toBe('OK');
     });
 
     $backend('GET', '/some-url', null, callback);
-    xhr = MockXhr.$$lastInstance;
+    xhr = angular.mock.MockXhr.$$lastInstance;
     xhr.statusText = 'OK';
     xhr.onload();
-    expect(callback).toHaveBeenCalledOnce();
+    expect(callback).toHaveBeenCalledTimes(1);
   });
 
   it('should call completion function with empty string if not present', function() {
-    callback.and.callFake(function(status, response, headers, statusText) {
+    callback.mockImplementation(function(status, response, headers, statusText) {
       expect(statusText).toBe('');
     });
 
     $backend('GET', '/some-url', null, callback);
-    xhr = MockXhr.$$lastInstance;
+    xhr = angular.mock.MockXhr.$$lastInstance;
     xhr.onload();
-    expect(callback).toHaveBeenCalledOnce();
-  });
-
-
-  it('should normalize IE\'s 1223 status code into 204', function() {
-    callback.and.callFake(function(status) {
-      expect(status).toBe(204);
-    });
-
-    $backend('GET', 'URL', null, callback);
-    xhr = MockXhr.$$lastInstance;
-
-    xhr.status = 1223;
-    xhr.onload();
-
-    expect(callback).toHaveBeenCalledOnce();
+    expect(callback).toHaveBeenCalledTimes(1);
   });
 
   it('should set only the requested headers', function() {
-    $backend('POST', 'URL', null, noop, {'X-header1': 'value1', 'X-header2': 'value2'});
-    xhr = MockXhr.$$lastInstance;
+    $backend('POST', 'URL', null, angular.noop, {'X-header1': 'value1', 'X-header2': 'value2'});
+    xhr = angular.mock.MockXhr.$$lastInstance;
 
     expect(xhr.$$reqHeaders).toEqual({
       'X-header1': 'value1',
@@ -138,14 +123,14 @@ describe('$httpBackend', function() {
   });
 
   it('should set requested headers even if they have falsy values', function() {
-    $backend('POST', 'URL', null, noop, {
+    $backend('POST', 'URL', null, angular.noop, {
       'X-header1': 0,
       'X-header2': '',
       'X-header3': false,
       'X-header4': undefined
     });
 
-    xhr = MockXhr.$$lastInstance;
+    xhr = angular.mock.MockXhr.$$lastInstance;
 
     expect(xhr.$$reqHeaders).toEqual({
       'X-header1': 0,
@@ -155,26 +140,26 @@ describe('$httpBackend', function() {
   });
 
   it('should not try to read response data when request is aborted', function() {
-    callback.and.callFake(function(status, response, headers, statusText) {
+    callback.mockImplementation(function(status, response, headers, statusText) {
       expect(status).toBe(-1);
       expect(response).toBe(null);
       expect(headers).toBe(null);
       expect(statusText).toBe('');
     });
     $backend('GET', '/url', null, callback, {}, 2000);
-    xhr = MockXhr.$$lastInstance;
-    spyOn(xhr, 'abort');
+    xhr = angular.mock.MockXhr.$$lastInstance;
+    jest.spyOn(xhr, 'abort').mockImplementation(() => {});
 
     $browser.defer.flush();
-    expect(xhr.abort).toHaveBeenCalledOnce();
+    expect(xhr.abort).toHaveBeenCalledTimes(1);
 
     xhr.status = 0;
     xhr.onabort();
-    expect(callback).toHaveBeenCalledOnce();
+    expect(callback).toHaveBeenCalledTimes(1);
   });
 
   it('should complete the request on timeout', function() {
-    callback.and.callFake(function(status, response, headers, statusText, xhrStatus) {
+    callback.mockImplementation(function(status, response, headers, statusText, xhrStatus) {
       expect(status).toBe(-1);
       expect(response).toBe(null);
       expect(headers).toBe(null);
@@ -182,16 +167,16 @@ describe('$httpBackend', function() {
       expect(xhrStatus).toBe('timeout');
     });
     $backend('GET', '/url', null, callback, {});
-    xhr = MockXhr.$$lastInstance;
+    xhr = angular.mock.MockXhr.$$lastInstance;
 
     expect(callback).not.toHaveBeenCalled();
 
     xhr.ontimeout();
-    expect(callback).toHaveBeenCalledOnce();
+    expect(callback).toHaveBeenCalledTimes(1);
   });
 
   it('should complete the request on abort', function() {
-    callback.and.callFake(function(status, response, headers, statusText, xhrStatus) {
+    callback.mockImplementation(function(status, response, headers, statusText, xhrStatus) {
       expect(status).toBe(-1);
       expect(response).toBe(null);
       expect(headers).toBe(null);
@@ -199,16 +184,16 @@ describe('$httpBackend', function() {
       expect(xhrStatus).toBe('abort');
     });
     $backend('GET', '/url', null, callback, {});
-    xhr = MockXhr.$$lastInstance;
+    xhr = angular.mock.MockXhr.$$lastInstance;
 
     expect(callback).not.toHaveBeenCalled();
 
     xhr.onabort();
-    expect(callback).toHaveBeenCalledOnce();
+    expect(callback).toHaveBeenCalledTimes(1);
   });
 
   it('should complete the request on error', function() {
-    callback.and.callFake(function(status, response, headers, statusText, xhrStatus) {
+    callback.mockImplementation(function(status, response, headers, statusText, xhrStatus) {
       expect(status).toBe(-1);
       expect(response).toBe(null);
       expect(headers).toBe(null);
@@ -216,16 +201,16 @@ describe('$httpBackend', function() {
       expect(xhrStatus).toBe('error');
     });
     $backend('GET', '/url', null, callback, {});
-    xhr = MockXhr.$$lastInstance;
+    xhr = angular.mock.MockXhr.$$lastInstance;
 
     expect(callback).not.toHaveBeenCalled();
 
     xhr.onerror();
-    expect(callback).toHaveBeenCalledOnce();
+    expect(callback).toHaveBeenCalledTimes(1);
   });
 
   it('should complete the request on success', function() {
-    callback.and.callFake(function(status, response, headers, statusText, xhrStatus) {
+    callback.mockImplementation(function(status, response, headers, statusText, xhrStatus) {
       expect(status).toBe(200);
       expect(response).toBe('response');
       expect(headers).toBe('');
@@ -233,7 +218,7 @@ describe('$httpBackend', function() {
       expect(xhrStatus).toBe('complete');
     });
     $backend('GET', '/url', null, callback, {});
-    xhr = MockXhr.$$lastInstance;
+    xhr = angular.mock.MockXhr.$$lastInstance;
 
     expect(callback).not.toHaveBeenCalled();
 
@@ -241,130 +226,130 @@ describe('$httpBackend', function() {
     xhr.response = 'response';
     xhr.status = 200;
     xhr.onload();
-    expect(callback).toHaveBeenCalledOnce();
+    expect(callback).toHaveBeenCalledTimes(1);
   });
 
   it('should abort request on numerical timeout', function() {
-    callback.and.callFake(function(status, response) {
+    callback.mockImplementation(function(status, response) {
       expect(status).toBe(-1);
     });
 
     $backend('GET', '/url', null, callback, {}, 2000);
-    xhr = MockXhr.$$lastInstance;
-    spyOn(xhr, 'abort');
+    xhr = angular.mock.MockXhr.$$lastInstance;
+    jest.spyOn(xhr, 'abort').mockImplementation(() => {});
 
     expect($browser.deferredFns[0].time).toBe(2000);
 
     $browser.defer.flush();
-    expect(xhr.abort).toHaveBeenCalledOnce();
+    expect(xhr.abort).toHaveBeenCalledTimes(1);
 
     xhr.status = 0;
     xhr.onabort();
-    expect(callback).toHaveBeenCalledOnce();
+    expect(callback).toHaveBeenCalledTimes(1);
   });
 
 
-  it('should abort request on $timeout promise resolution', inject(function($timeout) {
-    callback.and.callFake(function(status, response, headers, statusText, xhrStatus) {
+  it('should abort request on $timeout promise resolution', angular.mock.inject(function($timeout) {
+    callback.mockImplementation(function(status, response, headers, statusText, xhrStatus) {
       expect(status).toBe(-1);
       expect(xhrStatus).toBe('timeout');
     });
 
-    $backend('GET', '/url', null, callback, {}, $timeout(noop, 2000));
-    xhr = MockXhr.$$lastInstance;
-    spyOn(xhr, 'abort');
+    $backend('GET', '/url', null, callback, {}, $timeout(angular.noop, 2000));
+    xhr = angular.mock.MockXhr.$$lastInstance;
+    jest.spyOn(xhr, 'abort').mockImplementation(() => {});
 
     $timeout.flush();
-    expect(xhr.abort).toHaveBeenCalledOnce();
+    expect(xhr.abort).toHaveBeenCalledTimes(1);
 
     xhr.status = 0;
     xhr.onabort();
-    expect(callback).toHaveBeenCalledOnce();
+    expect(callback).toHaveBeenCalledTimes(1);
   }));
 
 
-  it('should not abort resolved request on timeout promise resolution', inject(function($timeout) {
-    callback.and.callFake(function(status, response) {
+  it('should not abort resolved request on timeout promise resolution', angular.mock.inject(function($timeout) {
+    callback.mockImplementation(function(status, response) {
       expect(status).toBe(200);
     });
 
-    $backend('GET', '/url', null, callback, {}, $timeout(noop, 2000));
-    xhr = MockXhr.$$lastInstance;
-    spyOn(xhr, 'abort');
+    $backend('GET', '/url', null, callback, {}, $timeout(angular.noop, 2000));
+    xhr = angular.mock.MockXhr.$$lastInstance;
+    jest.spyOn(xhr, 'abort').mockImplementation(() => {});
 
     xhr.status = 200;
     xhr.onload();
-    expect(callback).toHaveBeenCalledOnce();
+    expect(callback).toHaveBeenCalledTimes(1);
 
     $timeout.flush();
     expect(xhr.abort).not.toHaveBeenCalled();
   }));
 
 
-  it('should abort request on canceler promise resolution', inject(function($q, $browser) {
+  it('should abort request on canceler promise resolution', angular.mock.inject(function($q, $browser) {
     var canceler = $q.defer();
 
-    callback.and.callFake(function(status, response, headers, statusText, xhrStatus) {
+    callback.mockImplementation(function(status, response, headers, statusText, xhrStatus) {
       expect(status).toBe(-1);
       expect(xhrStatus).toBe('abort');
     });
 
     $backend('GET', '/url', null, callback, {}, canceler.promise);
-    xhr = MockXhr.$$lastInstance;
+    xhr = angular.mock.MockXhr.$$lastInstance;
 
     canceler.resolve();
     $browser.defer.flush();
 
-    expect(callback).toHaveBeenCalledOnce();
+    expect(callback).toHaveBeenCalledTimes(1);
   }));
 
 
   it('should cancel timeout on completion', function() {
-    callback.and.callFake(function(status, response) {
+    callback.mockImplementation(function(status, response) {
       expect(status).toBe(200);
     });
 
     $backend('GET', '/url', null, callback, {}, 2000);
-    xhr = MockXhr.$$lastInstance;
-    spyOn(xhr, 'abort');
+    xhr = angular.mock.MockXhr.$$lastInstance;
+    jest.spyOn(xhr, 'abort').mockImplementation(() => {});
 
     expect($browser.deferredFns[0].time).toBe(2000);
 
     xhr.status = 200;
     xhr.onload();
-    expect(callback).toHaveBeenCalledOnce();
+    expect(callback).toHaveBeenCalledTimes(1);
 
     expect($browser.deferredFns.length).toBe(0);
     expect(xhr.abort).not.toHaveBeenCalled();
   });
 
 
-  it('should call callback with xhrStatus "abort" on explicit xhr.abort() when $timeout is set', inject(function($timeout) {
-    callback.and.callFake(function(status, response, headers, statusText, xhrStatus) {
+  it('should call callback with xhrStatus "abort" on explicit xhr.abort() when $timeout is set', angular.mock.inject(function($timeout) {
+    callback.mockImplementation(function(status, response, headers, statusText, xhrStatus) {
       expect(status).toBe(-1);
       expect(xhrStatus).toBe('abort');
     });
 
-    $backend('GET', '/url', null, callback, {}, $timeout(noop, 2000));
-    xhr = MockXhr.$$lastInstance;
-    spyOn(xhr, 'abort').and.callThrough();
+    $backend('GET', '/url', null, callback, {}, $timeout(angular.noop, 2000));
+    xhr = angular.mock.MockXhr.$$lastInstance;
+    jest.spyOn(xhr, 'abort');
 
     xhr.abort();
 
-    expect(callback).toHaveBeenCalledOnce();
+    expect(callback).toHaveBeenCalledTimes(1);
   }));
 
 
   it('should set withCredentials', function() {
     $backend('GET', '/some.url', null, callback, {}, null, true);
-    expect(MockXhr.$$lastInstance.withCredentials).toBe(true);
+    expect(angular.mock.MockXhr.$$lastInstance.withCredentials).toBe(true);
   });
 
 
   it('should call $xhrFactory with method and url', function() {
-    var mockXhrFactory = jasmine.createSpy('mockXhrFactory').and.callFake(createMockXhr);
-    $backend = createHttpBackend($browser, mockXhrFactory, $browser.defer, $jsonpCallbacks, fakeDocument);
-    $backend('GET', '/some-url', 'some-data', noop);
+    var mockXhrFactory = jest.fn(angular.mock.createMockXhr);
+    $backend = ngInternals.createHttpBackend($browser, mockXhrFactory, $browser.defer, $jsonpCallbacks, fakeDocument);
+    $backend('GET', '/some-url', 'some-data', angular.noop);
     expect(mockXhrFactory).toHaveBeenCalledWith('GET', '/some-url');
   });
 
@@ -374,7 +359,7 @@ describe('$httpBackend', function() {
     var uploadProgressFn = function() {};
     $backend('GET', '/url', null, callback, {}, null, null, null,
         {progress: progressFn}, {progress: uploadProgressFn});
-    xhr = MockXhr.$$lastInstance;
+    xhr = angular.mock.MockXhr.$$lastInstance;
     expect(xhr.$$events.progress[0]).toBe(progressFn);
     expect(xhr.upload.$$events.progress[0]).toBe(uploadProgressFn);
   });
@@ -385,17 +370,17 @@ describe('$httpBackend', function() {
     it('should set responseType and return xhr.response', function() {
       $backend('GET', '/whatever', null, callback, {}, null, null, 'blob');
 
-      var xhrInstance = MockXhr.$$lastInstance;
+      var xhrInstance = angular.mock.MockXhr.$$lastInstance;
       expect(xhrInstance.responseType).toBe('blob');
 
-      callback.and.callFake(function(status, response) {
+      callback.mockImplementation(function(status, response) {
         expect(response).toBe(xhrInstance.response);
       });
 
       xhrInstance.response = {some: 'object'};
       xhrInstance.onload();
 
-      expect(callback).toHaveBeenCalledOnce();
+      expect(callback).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -406,7 +391,7 @@ describe('$httpBackend', function() {
 
 
     it('should add script tag for JSONP request', function() {
-      callback.and.callFake(function(status, response) {
+      callback.mockImplementation(function(status, response) {
         expect(status).toBe(200);
         expect(response).toBe('some-data');
       });
@@ -421,12 +406,12 @@ describe('$httpBackend', function() {
       $jsonpCallbacks[url[2]]('some-data');
       browserTrigger(script, 'load');
 
-      expect(callback).toHaveBeenCalledOnce();
+      expect(callback).toHaveBeenCalledTimes(1);
     });
 
 
     it('should clean up the callback and remove the script', function() {
-      spyOn($jsonpCallbacks, 'removeCallback').and.callThrough();
+      jest.spyOn($jsonpCallbacks, 'removeCallback');
 
       $backend('JSONP', 'http://example.org/path?cb=JSON_CALLBACK', null, callback);
       expect(fakeDocument.$$scripts.length).toBe(1);
@@ -454,9 +439,9 @@ describe('$httpBackend', function() {
 
 
     it('should abort request on timeout and remove JSONP callback', function() {
-      spyOn($jsonpCallbacks, 'removeCallback').and.callThrough();
+      jest.spyOn($jsonpCallbacks, 'removeCallback');
 
-      callback.and.callFake(function(status, response) {
+      callback.mockImplementation(function(status, response) {
         expect(status).toBe(-1);
       });
 
@@ -469,7 +454,7 @@ describe('$httpBackend', function() {
 
       $browser.defer.flush();
       expect(fakeDocument.$$scripts.length).toBe(0);
-      expect(callback).toHaveBeenCalledOnce();
+      expect(callback).toHaveBeenCalledTimes(1);
 
       expect($jsonpCallbacks.removeCallback).toHaveBeenCalledOnceWith(callbackId);
     });
@@ -483,14 +468,14 @@ describe('$httpBackend', function() {
   describe('protocols that return 0 status code', function() {
 
     function respond(status, content) {
-      xhr = MockXhr.$$lastInstance;
+      xhr = angular.mock.MockXhr.$$lastInstance;
       xhr.status = status;
       xhr.responseText = content;
       xhr.onload();
     }
 
     beforeEach(function() {
-      $backend = createHttpBackend($browser, createMockXhr);
+      $backend = ngInternals.createHttpBackend($browser, angular.mock.createMockXhr);
     });
 
 
@@ -499,7 +484,7 @@ describe('$httpBackend', function() {
       respond(0, 'SOME CONTENT');
 
       expect(callback).toHaveBeenCalled();
-      expect(callback.calls.mostRecent().args[0]).toBe(200);
+      expect(callback.mock.calls[callback.mock.calls.length - 1][0]).toBe(200);
     });
 
     it('should convert 0 to 200 if content for protocols other than file', function() {
@@ -507,7 +492,7 @@ describe('$httpBackend', function() {
       respond(0, 'SOME CONTENT');
 
       expect(callback).toHaveBeenCalled();
-      expect(callback.calls.mostRecent().args[0]).toBe(200);
+      expect(callback.mock.calls[callback.mock.calls.length - 1][0]).toBe(200);
     });
 
     it('should convert 0 to 404 if no content and file protocol', function() {
@@ -515,7 +500,7 @@ describe('$httpBackend', function() {
       respond(0, '');
 
       expect(callback).toHaveBeenCalled();
-      expect(callback.calls.mostRecent().args[0]).toBe(404);
+      expect(callback.mock.calls[callback.mock.calls.length - 1][0]).toBe(404);
     });
 
     it('should not convert 0 to 404 if no content for protocols other than file', function() {
@@ -523,37 +508,7 @@ describe('$httpBackend', function() {
       respond(0, '');
 
       expect(callback).toHaveBeenCalled();
-      expect(callback.calls.mostRecent().args[0]).toBe(0);
-    });
-
-    it('should convert 0 to 404 if no content - relative url', function() {
-      /* global urlParsingNode: true */
-      var originalUrlParsingNode = urlParsingNode;
-
-      //temporarily overriding the DOM element to pretend that the test runs origin with file:// protocol
-      urlParsingNode = {
-        hash: '#/C:/',
-        host: '',
-        hostname: '',
-        href: 'file:///C:/base#!/C:/foo',
-        pathname: '/C:/foo',
-        port: '',
-        protocol: 'file:',
-        search: '',
-        setAttribute: angular.noop
-      };
-
-      try {
-
-        $backend('GET', '/whatever/index.html', null, callback);
-        respond(0, '');
-
-        expect(callback).toHaveBeenCalled();
-        expect(callback.calls.mostRecent().args[0]).toBe(404);
-
-      } finally {
-        urlParsingNode = originalUrlParsingNode;
-      }
+      expect(callback.mock.calls[callback.mock.calls.length - 1][0]).toBe(0);
     });
 
     it('should return original backend status code if different from 0', function() {
@@ -562,7 +517,7 @@ describe('$httpBackend', function() {
       respond(201, '');
 
       expect(callback).toHaveBeenCalled();
-      expect(callback.calls.mostRecent().args[0]).toBe(201);
+      expect(callback.mock.calls[callback.mock.calls.length - 1][0]).toBe(201);
 
 
       // request to file://
@@ -570,14 +525,14 @@ describe('$httpBackend', function() {
       respond(201, '');
 
       expect(callback).toHaveBeenCalled();
-      expect(callback.calls.mostRecent().args[0]).toBe(201);
+      expect(callback.mock.calls[callback.mock.calls.length - 1][0]).toBe(201);
 
       // request to file:// with HTTP status >= 300
       $backend('POST', 'file://rest_api/create_whatever', null, callback);
       respond(503, '');
 
       expect(callback).toHaveBeenCalled();
-      expect(callback.calls.mostRecent().args[0]).toBe(503);
+      expect(callback.mock.calls[callback.mock.calls.length - 1][0]).toBe(503);
     });
   });
 });

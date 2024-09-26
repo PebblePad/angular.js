@@ -4,8 +4,13 @@ import { minify } from "@swc/core"
 import { modules } from "./config/Modules.js";
 import { version } from "./config/Version.js";
 
+const buildForTestEnv = process.argv.slice(2).some((a) => a === "--test");
+const fileWrapperKey = buildForTestEnv ? "test" : "dist";
+const outputDirectory = buildForTestEnv ? "./test/.build" : "./dist";
+//TODO: VERSION! - NG_VERSION_FULL replacements or manual?
+
 console.log("Cleaning up previous build: In progress ⌚");
-await fsp.rm("./dist", { force: true, recursive: true });
+await fsp.rm(outputDirectory, { force: true, recursive: true });
 console.log("Cleaning up previous build: Done ✅");
 
 console.log("Building all modules: In progress");
@@ -17,7 +22,7 @@ console.log("Building all modules: Done ✅");
 
 async function buildModule(moduleDetails) {
   console.log(` ↳ Building ${moduleDetails.name}: In progress ⌚`);
-  const directoryPath = `dist/${moduleDetails.name}`;
+  const directoryPath = `${outputDirectory}/${moduleDetails.name}`;
   await fsp.mkdir(directoryPath, { recursive: true });
 
   const modulePackageJson = structuredClone(packageJsonTemplate);
@@ -39,8 +44,17 @@ async function buildModule(moduleDetails) {
 async function buildModuleFiles(moduleDetails, directoryPath) {
   for (const file of moduleDetails.jsFiles) {
     const fileReads = [];
+    const segments = file.segments;
 
-    for (const segment of file.segments) {
+    if (file.prefix[fileWrapperKey] !== null) {
+      segments.unshift(file.prefix[fileWrapperKey]);
+    }
+
+    if (file.suffix[fileWrapperKey] !== null) {
+      segments.push(file.suffix[fileWrapperKey]);
+    }
+
+    for (const segment of segments) {
       fileReads.push(fsp.readFile(segment, "utf8"));
     }
 

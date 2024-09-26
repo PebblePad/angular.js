@@ -3,12 +3,11 @@
 /* globals generateInputCompilerHelper: false */
 
 describe('validators', function() {
-
   var helper = {}, $rootScope;
 
   generateInputCompilerHelper(helper);
 
-  beforeEach(inject(function(_$rootScope_) {
+  beforeEach(angular.mock.inject(function(_$rootScope_) {
     $rootScope = _$rootScope_;
   }));
 
@@ -214,7 +213,7 @@ describe('validators', function() {
     });
 
 
-    it('should validate on non-input elements', inject(function($compile) {
+    it('should validate on non-input elements', angular.mock.inject(function($compile) {
       $rootScope.pattern = '\\d{4}';
       var elm = $compile('<span ng-model="value" pattern="\\d{4}"></span>')($rootScope);
       var elmNg = $compile('<span ng-model="value" ng-pattern="pattern"></span>')($rootScope);
@@ -229,6 +228,8 @@ describe('validators', function() {
 
       expect(ctrl.$error.pattern).toBe(true);
       expect(ctrlNg.$error.pattern).toBe(true);
+      dealoc(elm);
+      dealoc(elmNg);
     }));
   });
 
@@ -250,7 +251,7 @@ describe('validators', function() {
       var value = 0;
       var inputElm = helper.compileInput('<input type="text" ng-model="value" ng-minlength="min" attr-capture />');
       helper.attrs.$observe('minlength', function(v) {
-        value = toInt(helper.attrs.minlength);
+        value = ngInternals.toInt(helper.attrs.minlength);
       });
 
       $rootScope.$apply('min = 5');
@@ -285,7 +286,7 @@ describe('validators', function() {
       var inputElm = helper.compileInput('<input type="text" name="input" ng-model="value" minlength="3" />');
 
       var ctrl = inputElm.controller('ngModel');
-      spyOn(ctrl, '$isEmpty').and.callThrough();
+      jest.spyOn(ctrl, '$isEmpty');
 
       ctrl.$parsers.push(function(value) {
         return value + '678';
@@ -296,7 +297,7 @@ describe('validators', function() {
     });
 
 
-    it('should validate on non-input elements', inject(function($compile) {
+    it('should validate on non-input elements', angular.mock.inject(function($compile) {
       $rootScope.min = 3;
       var elm = $compile('<span ng-model="value" minlength="{{min}}"></span>')($rootScope);
       var elmNg = $compile('<span ng-model="value" ng-minlength="min"></span>')($rootScope);
@@ -311,6 +312,8 @@ describe('validators', function() {
 
       expect(ctrl.$error.minlength).toBe(true);
       expect(ctrlNg.$error.minlength).toBe(true);
+      dealoc(elm);
+      dealoc(elmNg);
     }));
   });
 
@@ -376,9 +379,10 @@ describe('validators', function() {
       var value = 0;
       var inputElm = helper.compileInput('<input type="text" ng-model="value" ng-maxlength="max" attr-capture />');
       helper.attrs.$observe('maxlength', function(v) {
-        value = toInt(helper.attrs.maxlength);
+        value = ngInternals.toInt(helper.attrs.maxlength);
       });
 
+      $rootScope.$apply('max = 10');
       $rootScope.$apply('max = 10');
 
       expect(value).toBe(10);
@@ -448,7 +452,7 @@ describe('validators', function() {
       $rootScope.$apply('max = 1');
       helper.changeInputValueTo('12345');
 
-      $rootScope.ngChangeSpy = jasmine.createSpy();
+      $rootScope.ngChangeSpy = jest.fn();
       $rootScope.$apply('max = 3');
 
       expect($rootScope.ngChangeSpy).not.toHaveBeenCalled();
@@ -473,7 +477,7 @@ describe('validators', function() {
       var inputElm = helper.compileInput('<input type="text" name="input" ng-model="value" maxlength="10" />');
 
       var ctrl = inputElm.controller('ngModel');
-      spyOn(ctrl, '$isEmpty').and.callThrough();
+      jest.spyOn(ctrl, '$isEmpty');
 
       ctrl.$parsers.push(function(value) {
         return value + '678';
@@ -484,7 +488,7 @@ describe('validators', function() {
     });
 
 
-    it('should validate on non-input elements', inject(function($compile) {
+    it('should validate on non-input elements', angular.mock.inject(function($compile) {
       $rootScope.max = 3;
       var elm = $compile('<span ng-model="value" maxlength="{{max}}"></span>')($rootScope);
       var elmNg = $compile('<span ng-model="value" ng-maxlength="max"></span>')($rootScope);
@@ -499,6 +503,8 @@ describe('validators', function() {
 
       expect(ctrl.$error.maxlength).toBe(true);
       expect(ctrlNg.$error.maxlength).toBe(true);
+      dealoc(elm);
+      dealoc(elmNg);
     }));
   });
 
@@ -599,7 +605,7 @@ describe('validators', function() {
       var inputElm = helper.compileInput('<input type="text" name="input" ng-model="value" required />');
 
       var ctrl = inputElm.controller('ngModel');
-      spyOn(ctrl, '$isEmpty').and.callThrough();
+      jest.spyOn(ctrl, '$isEmpty');
 
       ctrl.$parsers.push(function(value) {
         return value + '678';
@@ -610,7 +616,7 @@ describe('validators', function() {
     });
 
 
-    it('should validate on non-input elements', inject(function($compile) {
+    it('should validate on non-input elements', angular.mock.inject(function($compile) {
       $rootScope.value = '12';
       var elm = $compile('<span ng-model="value" required></span>')($rootScope);
       var elmNg = $compile('<span ng-model="value" ng-required="true"></span>')($rootScope);
@@ -625,6 +631,8 @@ describe('validators', function() {
 
       expect(ctrl.$error.required).toBe(true);
       expect(ctrlNg.$error.required).toBe(true);
+      dealoc(elm);
+      dealoc(elmNg);
     }));
   });
 });

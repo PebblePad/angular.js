@@ -4,7 +4,7 @@
 describe('form', function() {
   var doc, control, scope, $compile, changeInputValue;
 
-  beforeEach(module(function($compileProvider) {
+  beforeEach(angular.mock.module(function($compileProvider) {
     $compileProvider.directive('storeModelCtrl', function() {
       return {
         require: 'ngModel',
@@ -15,7 +15,7 @@ describe('form', function() {
     });
   }));
 
-  beforeEach(inject(function($injector, $sniffer) {
+  beforeEach(angular.mock.inject(function($injector, $sniffer) {
     $compile = $injector.get('$compile');
     scope = $injector.get('$rootScope');
 
@@ -33,7 +33,7 @@ describe('form', function() {
   it('should instantiate form and attach it to DOM', function() {
     doc = $compile('<form>')(scope);
     expect(doc.data('$formController')).toBeTruthy();
-    expect(doc.data('$formController') instanceof FormController).toBe(true);
+    expect(doc.data('$formController').$$element[0] instanceof HTMLFormElement).toBe(true);
   });
 
 
@@ -264,7 +264,7 @@ describe('form', function() {
 
 
   it('should publish widgets', function() {
-    doc = jqLite('<form name="form"><input type="text" name="w1" ng-model="some" /></form>');
+    doc = angular.element('<form name="form"><input type="text" name="w1" ng-model="some" /></form>');
     $compile(doc)(scope);
 
     var widget = scope.form.w1;
@@ -277,7 +277,7 @@ describe('form', function() {
 
 
   it('should throw an exception if an input has name="hasOwnProperty"', function() {
-    doc = jqLite(
+    doc = angular.element(
       '<form name="form">' +
         '<input name="hasOwnProperty" ng-model="some" />' +
         '<input name="other" ng-model="someOther" />' +
@@ -330,7 +330,7 @@ describe('form', function() {
 
       var inputElm = form.find('input').eq(0);
       changeInputValue(inputElm, 'a');
-      scope.submit = jasmine.createSpy('submit').and.callFake(function() {
+      scope.submit = jest.fn(function() {
         expect(scope.name).toEqual('a');
       });
       browserTrigger(form, 'submit');
@@ -383,7 +383,7 @@ describe('form', function() {
           submitted = false,
           reloadPrevented;
 
-      doc = jqLite('<form ng-submit="submitMe()">' +
+      doc = angular.element('<form ng-submit="submitMe()">' +
                      '<input type="submit" value="submit">' +
                    '</form>');
       // Support: Chrome 60+ (on Windows)
@@ -420,8 +420,8 @@ describe('form', function() {
 
 
     it('should prevent the default when the form is destroyed by a submission via a click event', function(done) {
-      inject(function($timeout) {
-        doc = jqLite('<div>' +
+      angular.mock.inject(function($timeout) {
+        doc = angular.element('<div>' +
                         '<form ng-submit="submitMe()">' +
                           '<button type="submit" ng-click="destroy()"></button>' +
                         '</form>' +
@@ -488,7 +488,7 @@ describe('form', function() {
 
 
     it('should NOT prevent form submission if action attribute present', function() {
-      var callback = jasmine.createSpy('submit').and.callFake(function(event) {
+      var callback = jest.fn(function(event) {
         expect(event.isDefaultPrevented()).toBe(false);
         event.preventDefault();
       });
@@ -497,7 +497,7 @@ describe('form', function() {
       doc.on('submit', callback);
 
       browserTrigger(doc, 'submit');
-      expect(callback).toHaveBeenCalledOnce();
+      expect(callback).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -505,7 +505,7 @@ describe('form', function() {
   describe('nested forms', function() {
 
     it('should chain nested forms', function() {
-      doc = jqLite(
+      doc = angular.element(
           '<ng:form name="parent">' +
             '<ng:form name="child">' +
               '<input ng:model="modelA" name="inputA">' +
@@ -541,7 +541,7 @@ describe('form', function() {
 
 
     it('should deregister a child form when its DOM is removed', function() {
-      doc = jqLite(
+      doc = angular.element(
         '<form name="parent">' +
           '<div class="ng-form" name="child">' +
           '<input ng:model="modelA" name="inputA" required>' +
@@ -565,7 +565,7 @@ describe('form', function() {
 
 
     it('should deregister a child form whose name is an expression when its DOM is removed', function() {
-      doc = jqLite(
+      doc = angular.element(
         '<form name="parent">' +
           '<div class="ng-form" name="child.form">' +
           '<input ng:model="modelA" name="inputA" required>' +
@@ -589,7 +589,7 @@ describe('form', function() {
 
 
     it('should deregister a input when it is removed from DOM', function() {
-      doc = jqLite(
+      doc = angular.element(
         '<form name="parent">' +
           '<div class="ng-form" name="child">' +
             '<input ng-if="inputPresent" ng-model="modelA" name="inputA" required maxlength="10">' +
@@ -642,7 +642,7 @@ describe('form', function() {
     });
 
     it('should deregister a input that is $pending when it is removed from DOM', function() {
-      doc = jqLite(
+      doc = angular.element(
         '<form name="parent">' +
           '<div class="ng-form" name="child">' +
             '<input ng-if="inputPresent" ng-model="modelA" name="inputA">' +
@@ -678,7 +678,7 @@ describe('form', function() {
 
 
     it('should leave the parent form invalid when deregister a removed input', function() {
-      doc = jqLite(
+      doc = angular.element(
         '<form name="parent">' +
           '<div class="ng-form" name="child">' +
             '<input ng-if="inputPresent" ng-model="modelA" name="inputA" required>' +
@@ -825,7 +825,7 @@ describe('form', function() {
 
 
     it('should chain nested forms in repeater', function() {
-      doc = jqLite(
+      doc = angular.element(
          '<ng:form name=parent>' +
           '<ng:form ng:repeat="f in forms" name=child>' +
             '<input type=text ng:model=text name=text>' +
@@ -926,7 +926,7 @@ describe('form', function() {
       scope.$digest();
     });
 
-    it('should set valid and invalid to undefined when a validation error state is set as pending', inject(function($q, $rootScope) {
+    it('should set valid and invalid to undefined when a validation error state is set as pending', angular.mock.inject(function($q, $rootScope) {
       var defer, form = doc.data('$formController');
 
       var ctrl = {};
@@ -1128,8 +1128,8 @@ describe('form', function() {
 
 
   it('should rename forms with no parent when interpolated name changes', function() {
-    var element = $compile('<form name="name{{nameID}}"></form>')(scope);
-    var element2 = $compile('<div ng-form="ngform{{nameID}}"></div>')(scope);
+    var element = compileForTest('<form name="name{{nameID}}"></form>', scope);
+    var element2 = compileForTest('<div ng-form="ngform{{nameID}}"></div>', scope);
     scope.nameID = 'A';
     scope.$digest();
     var form = element.controller('form');
@@ -1150,7 +1150,7 @@ describe('form', function() {
   });
 
   it('should rename forms with an initially blank name', function() {
-    var element = $compile('<form name="{{name}}"></form>')(scope);
+    var element = compileForTest('<form name="{{name}}"></form>', scope);
     scope.$digest();
     var form = element.controller('form');
     expect(scope['']).toBe(form);
@@ -1191,7 +1191,7 @@ describe('form', function() {
 });
 
 describe('form animations', function() {
-  beforeEach(module('ngAnimateMock'));
+  beforeEach(angular.mock.module('ngAnimateMock'));
 
   function assertValidAnimation(animation, event, classNameAdded, classNameRemoved) {
     expect(animation.event).toBe(event);
@@ -1200,9 +1200,9 @@ describe('form animations', function() {
   }
 
   var doc, scope, form;
-  beforeEach(inject(function($rootScope, $compile, $rootElement, $animate) {
+  beforeEach(angular.mock.inject(function($rootScope, $compile, $rootElement, $animate) {
     scope = $rootScope.$new();
-    doc = jqLite('<form name="myForm"></form>');
+    doc = angular.element('<form name="myForm"></form>');
     $rootElement.append(doc);
     $compile(doc)(scope);
     $animate.queue = [];
@@ -1213,7 +1213,7 @@ describe('form animations', function() {
     dealoc(doc);
   });
 
-  it('should trigger an animation when invalid', inject(function($animate) {
+  it('should trigger an animation when invalid', angular.mock.inject(function($animate) {
     form.$setValidity('required', false);
 
     assertValidAnimation($animate.queue[0], 'removeClass', 'ng-valid');
@@ -1221,7 +1221,7 @@ describe('form animations', function() {
     assertValidAnimation($animate.queue[2], 'addClass', 'ng-invalid-required');
   }));
 
-  it('should trigger an animation when valid', inject(function($animate) {
+  it('should trigger an animation when valid', angular.mock.inject(function($animate) {
     form.$setValidity('required', false);
 
     $animate.queue = [];
@@ -1233,14 +1233,14 @@ describe('form animations', function() {
     assertValidAnimation($animate.queue[2], 'addClass', 'ng-valid-required');
   }));
 
-  it('should trigger an animation when dirty', inject(function($animate) {
+  it('should trigger an animation when dirty', angular.mock.inject(function($animate) {
     form.$setDirty();
 
     assertValidAnimation($animate.queue[0], 'removeClass', 'ng-pristine');
     assertValidAnimation($animate.queue[1], 'addClass', 'ng-dirty');
   }));
 
-  it('should trigger an animation when pristine', inject(function($animate) {
+  it('should trigger an animation when pristine', angular.mock.inject(function($animate) {
     form.$setDirty();
 
     $animate.queue = [];
@@ -1250,7 +1250,7 @@ describe('form animations', function() {
     assertValidAnimation($animate.queue[0], 'setClass', 'ng-pristine', 'ng-dirty ng-submitted');
   }));
 
-  it('should trigger custom errors as addClass/removeClass when invalid/valid', inject(function($animate) {
+  it('should trigger custom errors as addClass/removeClass when invalid/valid', angular.mock.inject(function($animate) {
     form.$setValidity('custom-error', false);
 
     assertValidAnimation($animate.queue[0], 'removeClass', 'ng-valid');

@@ -3,12 +3,12 @@
 describe('$controller', function() {
   var $controllerProvider, $controller;
 
-  beforeEach(module(function(_$controllerProvider_) {
+  beforeEach(angular.mock.module(function(_$controllerProvider_) {
     $controllerProvider = _$controllerProvider_;
   }));
 
 
-  beforeEach(inject(function(_$controller_) {
+  beforeEach(angular.mock.inject(function(_$controller_) {
     $controller = _$controller_;
   }));
 
@@ -79,11 +79,11 @@ describe('$controller', function() {
 
 
     it('should allow checking the availability of a controller', function() {
-      $controllerProvider.register('FooCtrl', noop);
-      $controllerProvider.register('BarCtrl', ['dep1', 'dep2', noop]);
+      $controllerProvider.register('FooCtrl', angular.noop);
+      $controllerProvider.register('BarCtrl', ['dep1', 'dep2', angular.noop]);
       $controllerProvider.register({
-        'BazCtrl': noop,
-        'QuxCtrl': ['dep1', 'dep2', noop]
+        'BazCtrl': angular.noop,
+        'QuxCtrl': ['dep1', 'dep2', angular.noop]
       });
 
       expect($controllerProvider.has('FooCtrl')).toBe(true);
@@ -96,7 +96,7 @@ describe('$controller', function() {
 
 
     it('should instantiate a controller defined on window if allowGlobals is set',
-      inject(function($window) {
+      angular.mock.inject(function($window) {
         var scope = {};
         var Foo = function() {};
 
@@ -128,7 +128,7 @@ describe('$controller', function() {
     expect(ctrl instanceof MyClass).toBe(true);
   });
 
-  it('should inject arguments', inject(function($http) {
+  it('should inject arguments', angular.mock.inject(function($http) {
     var MyClass = function($http) {
       this.$http = $http;
     };
@@ -150,7 +150,7 @@ describe('$controller', function() {
   });
 
 
-  it('should not instantiate a controller defined on window', inject(function($window) {
+  it('should not instantiate a controller defined on window', angular.mock.inject(function($window) {
     var scope = {};
     var Foo = function() {};
 

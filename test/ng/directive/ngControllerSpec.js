@@ -3,7 +3,7 @@
 describe('ngController', function() {
   var element;
 
-  beforeEach(module(function($controllerProvider) {
+  beforeEach(angular.mock.module(function($controllerProvider) {
     $controllerProvider.register('PublicModule', function() {
       this.mark = 'works';
     });
@@ -19,7 +19,7 @@ describe('ngController', function() {
         return ctrl.prefix + name + ctrl.suffix;
       };
 
-      $scope.protoGreet = bind(this, this.protoGreet);
+      $scope.protoGreet = this.protoGreet.bind(this);
     };
     Greeter.prototype = {
       suffix: '!',
@@ -48,61 +48,61 @@ describe('ngController', function() {
   });
 
 
-  it('should instantiate controller and bind methods', inject(function($compile, $rootScope) {
+  it('should instantiate controller and bind methods', angular.mock.inject(function($compile, $rootScope) {
     element = $compile('<div ng-controller="Greeter">{{greet(name)}}</div>')($rootScope);
     $rootScope.$digest();
     expect(element.text()).toBe('Hello Misko!');
   }));
 
-  it('should instantiate bound constructor functions', inject(function($compile, $rootScope) {
+  it('should instantiate bound constructor functions', angular.mock.inject(function($compile, $rootScope) {
     element = $compile('<div ng-controller="BoundFoo">{{mark}}</div>')($rootScope);
     $rootScope.$digest();
     expect(element.text()).toBe('foo');
   }));
 
-  it('should publish controller into scope', inject(function($compile, $rootScope) {
+  it('should publish controller into scope', angular.mock.inject(function($compile, $rootScope) {
     element = $compile('<div ng-controller="Public as p">{{p.mark}}</div>')($rootScope);
     $rootScope.$digest();
     expect(element.text()).toBe('works');
   }));
 
 
-  it('should publish controller into scope from module', inject(function($compile, $rootScope) {
+  it('should publish controller into scope from module', angular.mock.inject(function($compile, $rootScope) {
     element = $compile('<div ng-controller="PublicModule as p">{{p.mark}}</div>')($rootScope);
     $rootScope.$digest();
     expect(element.text()).toBe('works');
   }));
 
 
-  it('should allow nested controllers', inject(function($compile, $rootScope) {
-    element = $compile('<div ng-controller="Greeter"><div ng-controller="Child">{{greet(name)}}</div></div>')($rootScope);
+  it('should allow nested controllers', angular.mock.inject(function($compile, $rootScope) {
+    element = compileForTest('<div ng-controller="Greeter"><div ng-controller="Child">{{greet(name)}}</div></div>');
     $rootScope.$digest();
     expect(element.text()).toBe('Hello Adam!');
     dealoc(element);
 
-    element = $compile('<div ng-controller="Greeter"><div ng-controller="Child">{{protoGreet(name)}}</div></div>')($rootScope);
+    element = compileForTest('<div ng-controller="Greeter"><div ng-controller="Child">{{protoGreet(name)}}</div></div>');
     $rootScope.$digest();
     expect(element.text()).toBe('Hello Adam!');
   }));
 
 
-  it('should instantiate controller defined on scope', inject(function($compile, $rootScope) {
+  it('should instantiate controller defined on scope', angular.mock.inject(function($compile, $rootScope) {
     $rootScope.VojtaGreeter = function($scope) {
       $scope.name = 'Vojta';
     };
 
-    element = $compile('<div ng-controller="VojtaGreeter">{{name}}</div>')($rootScope);
+    element = compileForTest('<div ng-controller="VojtaGreeter">{{name}}</div>');
     $rootScope.$digest();
     expect(element.text()).toBe('Vojta');
   }));
 
 
-  it('should work with ngInclude on the same element', inject(function($compile, $rootScope, $httpBackend) {
+  it('should work with ngInclude on the same element', angular.mock.inject(function($compile, $rootScope, $httpBackend) {
     $rootScope.GreeterController = function($scope) {
       $scope.name = 'Vojta';
     };
 
-    element = $compile('<div><div ng-controller="GreeterController" ng-include="\'url\'"></div></div>')($rootScope);
+    element = compileForTest('<div><div ng-controller="GreeterController" ng-include="\'url\'"></div></div>');
     $httpBackend.expect('GET', 'url').respond('{{name}}');
     $rootScope.$digest();
     $httpBackend.flush();
@@ -111,7 +111,7 @@ describe('ngController', function() {
 
 
   it('should only instantiate the controller once with ngInclude on the same element',
-      inject(function($compile, $rootScope, $httpBackend) {
+      angular.mock.inject(function($compile, $rootScope, $httpBackend) {
 
     var count = 0;
 
@@ -119,7 +119,7 @@ describe('ngController', function() {
       count += 1;
     };
 
-    element = $compile('<div><div ng-controller="CountController" ng-include="url"></div></div>')($rootScope);
+    element = compileForTest('<div><div ng-controller="CountController" ng-include="url"></div></div>');
 
     $httpBackend.expect('GET', 'first').respond('first');
     $rootScope.url = 'first';
@@ -136,7 +136,7 @@ describe('ngController', function() {
 
 
   it('when ngInclude is on the same element, the content included content should get a child scope of the controller',
-      inject(function($compile, $rootScope, $httpBackend) {
+      angular.mock.inject(function($compile, $rootScope, $httpBackend) {
 
     var controllerScope;
 
@@ -144,7 +144,7 @@ describe('ngController', function() {
       controllerScope = $scope;
     };
 
-    element = $compile('<div><div ng-controller="ExposeScopeController" ng-include="\'url\'"></div></div>')($rootScope);
+    element = compileForTest('<div><div ng-controller="ExposeScopeController" ng-include="\'url\'"></div></div>');
     $httpBackend.expect('GET', 'url').respond('<div ng-init="name=\'Vojta\'"></div>');
     $rootScope.$digest();
     $httpBackend.flush();
