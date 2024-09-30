@@ -52,7 +52,7 @@
  * {@link guide/accessibility Developer Guide}.
  */
 var ngAriaModule = angular.module('ngAria', ['ng']).
-                        info({ angularVersion: '"NG_VERSION_FULL"' }).
+                        info({ angularVersion: 'NG_VERSION_FULL' }).
                         provider('$aria', $AriaProvider);
 
 /**

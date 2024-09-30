@@ -106,6 +106,14 @@ export const modules = [
       {
         name: "ngComponent",
         module: true,
+        prefix: {
+          dist: null,
+          test: null
+        },
+        suffix: {
+          dist: null,
+          test: null
+        },
         segments: [
           'src/es6Bindings/ngComponent.js'
         ],

@@ -98,32 +98,6 @@
 */
 
 
-/**
- * @ngdoc object
- * @name angular.version
- * @module ng
- * @description
- * An object that contains information about the current AngularJS version.
- *
- * This object has the following properties:
- *
- * - `full` – `{string}` – Full version string, such as "0.9.18".
- * - `major` – `{number}` – Major version number, such as "0".
- * - `minor` – `{number}` – Minor version number, such as "9".
- * - `dot` – `{number}` – Dot version number, such as "18".
- * - `codeName` – `{string}` – Code name of the release, such as "jiggling-armfat".
- */
-var version = {
-  // These placeholder strings will be replaced by grunt's `build` task.
-  // They need to be double- or single-quoted.
-  full: '"NG_VERSION_FULL"',
-  major: 'NG_VERSION_MAJOR',
-  minor: 'NG_VERSION_MINOR',
-  dot: 'NG_VERSION_DOT',
-  codeName: '"NG_VERSION_CODENAME"'
-};
-
-
 function publishExternalAPI(angular) {
   extend(angular, {
     'errorHandlingConfig': errorHandlingConfig,
@@ -150,7 +124,6 @@ function publishExternalAPI(angular) {
     'isElement': isElement,
     'isArray': isArray,
     'isRegExp': isRegExp,
-    'version': version,
     'isDate': isDate,
     'lowercase': lowercase,
     'uppercase': uppercase,
@@ -270,5 +243,5 @@ function publishExternalAPI(angular) {
       });
     }
   ])
-  .info({ angularVersion: '"NG_VERSION_FULL"' });
+  .info({ angularVersion: 'NG_VERSION_FULL' });
 }

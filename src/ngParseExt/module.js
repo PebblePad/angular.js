@@ -40,4 +40,4 @@ angular.module('ngParseExt', [])
   .config(['$parseProvider', function($parseProvider) {
     $parseProvider.setIdentifierFns(isValidIdentifierStart, isValidIdentifierContinue);
   }])
-  .info({ angularVersion: '"NG_VERSION_FULL"' });
+  .info({ angularVersion: 'NG_VERSION_FULL' });

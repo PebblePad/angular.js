@@ -222,13 +222,6 @@ It's a quick process, we promise!
 [coc]: https://github.com/angular/code-of-conduct/blob/master/CODE_OF_CONDUCT.md
 [Common Locale Data Repository (CLDR)]: http://cldr.unicode.org
 [corporate-cla]: http://code.google.com/legal/corporate-cla-v1.0.html
-[developers]: DEVELOPERS.md
-[developers.commits]: DEVELOPERS.md#commits
-[developers.documentation]: DEVELOPERS.md#documentation
-[developers.rules]: DEVELOPERS.md#rules
-[developers.setup]: DEVELOPERS.md#setup
-[developers.tests-e2e]: DEVELOPERS.md#e2e-tests
-[developers.tests-unit]: DEVELOPERS.md#unit-tests
 [github-issues]: https://github.com/angular/angular.js/issues
 [github-new-issue]: https://github.com/angular/angular.js/issues/new
 [github]: https://github.com/angular/angular.js

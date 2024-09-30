@@ -16,8 +16,6 @@
 
 
 **Please check if the PR fulfills these requirements**
-- [ ] The commit message follows our [guidelines](../DEVELOPERS.md#commits)
-- [ ] Fix/Feature: [Docs](../DEVELOPERS.md#documentation) have been added/updated
 - [ ] Fix/Feature: Tests have been added; existing tests pass
 
 **Other information**:

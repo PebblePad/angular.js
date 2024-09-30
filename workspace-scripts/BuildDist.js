@@ -7,6 +7,16 @@ import { version } from "./config/Version.js";
 const buildForTestEnv = process.argv.slice(2).some((a) => a === "--test");
 const fileWrapperKey = buildForTestEnv ? "test" : "dist";
 const outputDirectory = buildForTestEnv ? "./test/.build" : "./dist";
+
+const inlineLicense = `
+/**
+ * @license AngularJS v${version}
+ * (c) 2010-2020 Google, Inc. http://angularjs.org
+ * License: MIT
+ * Forked maintenance by PebblePad
+ */
+`;
+
 //TODO: VERSION! - NG_VERSION_FULL replacements or manual?
 
 console.log("Cleaning up previous build: In progress ⌚");
@@ -30,6 +40,10 @@ async function buildModule(moduleDetails) {
   modulePackageJson.description = moduleDetails.description;
   modulePackageJson.main = moduleDetails.jsFiles.length === 0 ? "" : `${moduleDetails.jsFiles[0].name}.js`;
   modulePackageJson.version = version;
+
+  if (moduleDetails.peerDependencies !== undefined) {
+    modulePackageJson.peerDependencies = Object.fromEntries(moduleDetails.peerDependencies.map((p) => [p, `^${version}`]));
+  }
 
   await Promise.all([
     buildModuleFiles(moduleDetails, directoryPath),
@@ -59,7 +73,7 @@ async function buildModuleFiles(moduleDetails, directoryPath) {
     }
 
     const fileContents = await Promise.all(fileReads);
-    const srcContent = fileContents.join("");
+    const srcContent = inlineLicense + fileContents.join("").replaceAll("NG_VERSION_FULL", version);
 
     const minified = await minify(srcContent, {
       format: {
@@ -71,7 +85,7 @@ async function buildModuleFiles(moduleDetails, directoryPath) {
     })
 
     const baseFilename = `${directoryPath}/${file.name}`;
-    return Promise.all([
+    await Promise.all([
       fsp.writeFile(`${baseFilename}.js`, srcContent, "utf8"),
       fsp.writeFile(`${baseFilename}.min.js`, minified.code, "utf8"),
       fsp.writeFile(`${baseFilename}.min.js.map`, minified.map, "utf8")

@@ -1702,18 +1702,6 @@ describe('angular', function() {
     });
   });
 
-
-  describe('version', function() {
-    it('version should have full/major/minor/dot/codeName properties', function() {
-      expect(angular.version).toBeDefined();
-      expect(angular.version.full).toBe('"NG_VERSION_FULL"');
-      expect(angular.version.major).toBe('NG_VERSION_MAJOR');
-      expect(angular.version.minor).toBe('NG_VERSION_MINOR');
-      expect(angular.version.dot).toBe('NG_VERSION_DOT');
-      expect(angular.version.codeName).toBe('"NG_VERSION_CODENAME"');
-    });
-  });
-
   describe('bootstrap', function() {
     beforeEach(() => {
       window.name = "";
