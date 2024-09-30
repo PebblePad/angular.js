@@ -1286,8 +1286,8 @@ function baseInputType(scope, element, attr, ctrl, $sniffer, $browser) {
       timeout = null;
     }
     if (composing) return;
-    var value = element.val(),
-        event = ev && ev.type;
+    var value = element.val();
+    var event = ev && ev.type;
 
     // By default we will trim the value
     // If the attribute ng-trim exists we will avoid trimming
@@ -1347,14 +1347,14 @@ function weekParser(isoWeek, existingDate) {
     WEEK_REGEXP.lastIndex = 0;
     var parts = WEEK_REGEXP.exec(isoWeek);
     if (parts) {
-      var year = +parts[1],
-          week = +parts[2],
-          hours = 0,
-          minutes = 0,
-          seconds = 0,
-          milliseconds = 0,
-          firstThurs = getFirstThursdayOfYear(year),
-          addDays = (week - 1) * 7;
+      var year = +parts[1];
+      var week = +parts[2];
+      var hours = 0;
+      var minutes = 0;
+      var seconds = 0;
+      var milliseconds = 0;
+      var firstThurs = getFirstThursdayOfYear(year);
+      var addDays = (week - 1) * 7;
 
       if (existingDate) {
         hours = existingDate.getHours();
@@ -1372,7 +1372,8 @@ function weekParser(isoWeek, existingDate) {
 
 function createDateParser(regexp, mapping) {
   return function(iso, date) {
-    var parts, map;
+    var parts;
+    var map;
 
     if (isDate(iso)) {
       return iso;
@@ -1657,14 +1658,14 @@ function rangeInputType(scope, element, attr, ctrl, $sniffer, $browser) {
   numberFormatterParser(ctrl);
   baseInputType(scope, element, attr, ctrl, $sniffer, $browser);
 
-  var supportsRange = ctrl.$$hasNativeValidators && element[0].type === 'range',
-      minVal = supportsRange ? 0 : undefined,
-      maxVal = supportsRange ? 100 : undefined,
-      stepVal = supportsRange ? 1 : undefined,
-      validity = element[0].validity,
-      hasMinAttr = isDefined(attr.min),
-      hasMaxAttr = isDefined(attr.max),
-      hasStepAttr = isDefined(attr.step);
+  var supportsRange = ctrl.$$hasNativeValidators && element[0].type === 'range';
+  var minVal = supportsRange ? 0 : undefined;
+  var maxVal = supportsRange ? 100 : undefined;
+  var stepVal = supportsRange ? 1 : undefined;
+  var validity = element[0].validity;
+  var hasMinAttr = isDefined(attr.min);
+  var hasMaxAttr = isDefined(attr.max);
+  var hasStepAttr = isDefined(attr.step);
 
   var originalRender = ctrl.$render;
 
@@ -2066,7 +2067,7 @@ var inputDirective = ['$browser', '$sniffer', '$filter', '$parse',
     restrict: 'E',
     require: ['?ngModel'],
     link: {
-      pre: function(scope, element, attr, ctrls) {
+      pre(scope, element, attr, ctrls) {
         if (ctrls[0]) {
           (inputType[lowercase(attr.type)] || inputType.text)(scope, element, attr, ctrls[0], $sniffer,
                                                               $browser, $filter, $parse);
@@ -2152,7 +2153,7 @@ var ngValueDirective = function() {
   return {
     restrict: 'A',
     priority: 100,
-    compile: function(tpl, tplAttr) {
+    compile(tpl, tplAttr) {
       if (CONSTANT_VALUE_REGEXP.test(tplAttr.ngValue)) {
         return function ngValueConstantLink(scope, elm, attr) {
           var value = scope.$eval(attr.ngValue);

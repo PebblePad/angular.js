@@ -51,7 +51,7 @@ function adjustMatcher(matcher) {
     // '*' matches any character except those from the set ':/.?&'.
     // '**' matches any character (like .* in a RegExp).
     // More than 2 *'s raises an error as it's ill defined.
-    if (matcher.indexOf('***') > -1) {
+    if (matcher.includes('***')) {
       throw $sceMinErr('iwcard',
           'Illegal sequence *** in string matcher.  String: {0}', matcher);
     }
@@ -176,8 +176,9 @@ function $SceDelegateProvider() {
   this.SCE_CONTEXTS = SCE_CONTEXTS;
 
   // Resource URLs can also be trusted by policy.
-  var resourceUrlWhitelist = ['self'],
-      resourceUrlBlacklist = [];
+  var resourceUrlWhitelist = ['self'];
+
+  var resourceUrlBlacklist = [];
 
   /**
    * @ngdoc method
@@ -243,7 +244,6 @@ function $SceDelegateProvider() {
   };
 
   this.$get = ['$injector', function($injector) {
-
     var htmlSanitizer = function htmlSanitizer(html) {
       throw $sceMinErr('unsafe', 'Attempting to use an unsafe value in a safe context.');
     };
@@ -264,7 +264,9 @@ function $SceDelegateProvider() {
 
     function isResourceUrlAllowedByPolicy(url) {
       var parsedUrl = urlResolve(url.toString());
-      var i, n, allowed = false;
+      var i;
+      var n;
+      var allowed = false;
       // Ensure that at least one item from the whitelist allows this url.
       for (i = 0, n = resourceUrlWhitelist.length; i < n; i++) {
         if (matchUrl(resourceUrlWhitelist[i], parsedUrl)) {
@@ -302,8 +304,8 @@ function $SceDelegateProvider() {
       return holderType;
     }
 
-    var trustedValueHolderBase = generateHolderType(),
-        byType = {};
+    var trustedValueHolderBase = generateHolderType();
+    var byType = {};
 
     byType[SCE_CONTEXTS.HTML] = generateHolderType(trustedValueHolderBase);
     byType[SCE_CONTEXTS.CSS] = generateHolderType(trustedValueHolderBase);
@@ -1116,9 +1118,10 @@ function $SceProvider() {
      */
 
     // Shorthand delegations.
-    var parse = sce.parseAs,
-        getTrusted = sce.getTrusted,
-        trustAs = sce.trustAs;
+    var parse = sce.parseAs;
+
+    var getTrusted = sce.getTrusted;
+    var trustAs = sce.trustAs;
 
     forEach(SCE_CONTEXTS, function(enumValue, name) {
       var lName = lowercase(name);

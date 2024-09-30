@@ -17,7 +17,7 @@ function serializeObject(obj, maxDepth) {
     val = toJsonReplacer(key, val);
     if (isObject(val)) {
 
-      if (seen.indexOf(val) >= 0) return '...';
+      if (seen.includes(val)) return '...';
 
       seen.push(val);
     }

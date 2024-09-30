@@ -201,12 +201,17 @@ var ngTouchClickDirectiveFactory = ['$parse', '$timeout', '$rootElement',
 
   // Actual linking function.
   return function(scope, element, attr) {
-    var clickHandler = $parse(attr.ngClick),
-        tapping = false,
-        tapElement,  // Used to blur the element after a tap.
-        startTime,   // Used to check if the tap was held too long.
-        touchStartX,
-        touchStartY;
+    var clickHandler = $parse(attr.ngClick);
+    var tapping = false;
+
+    var // Used to blur the element after a tap.
+    tapElement;
+
+    var // Used to check if the tap was held too long.
+    startTime;
+
+    var touchStartX;
+    var touchStartY;
 
     function resetState() {
       tapping = false;
@@ -292,7 +297,6 @@ var ngTouchClickDirectiveFactory = ['$parse', '$timeout', '$rootElement',
     element.on('mousemove mouseup', function(event) {
       element.removeClass(ACTIVE_CLASS_NAME);
     });
-
   };
 }];
 

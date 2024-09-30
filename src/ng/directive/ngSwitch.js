@@ -145,12 +145,12 @@ var ngSwitchDirective = ['$animate', '$compile', function($animate, $compile) {
     controller: ['$scope', function NgSwitchController() {
      this.cases = {};
     }],
-    link: function(scope, element, attr, ngSwitchController) {
-      var watchExpr = attr.ngSwitch || attr.on,
-          selectedTranscludes = [],
-          selectedElements = [],
-          previousLeaveAnimations = [],
-          selectedScopes = [];
+    link(scope, element, attr, ngSwitchController) {
+      var watchExpr = attr.ngSwitch || attr.on;
+      var selectedTranscludes = [];
+      var selectedElements = [];
+      var previousLeaveAnimations = [];
+      var selectedScopes = [];
 
       var spliceFactory = function(array, index) {
           return function(response) {
@@ -159,7 +159,8 @@ var ngSwitchDirective = ['$animate', '$compile', function($animate, $compile) {
       };
 
       scope.$watch(watchExpr, function ngSwitchWatchAction(value) {
-        var i, ii;
+        var i;
+        var ii;
 
         // Start with the last, in case the array is modified during the loop
         while (previousLeaveAnimations.length) {
@@ -199,7 +200,7 @@ var ngSwitchWhenDirective = ngDirective({
   priority: 1200,
   require: '^ngSwitch',
   multiElement: true,
-  link: function(scope, element, attrs, ctrl, $transclude) {
+  link(scope, element, attrs, ctrl, $transclude) {
 
     var cases = attrs.ngSwitchWhen.split(attrs.ngSwitchWhenSeparator).sort().filter(
       // Filter duplicate cases
@@ -218,7 +219,7 @@ var ngSwitchDefaultDirective = ngDirective({
   priority: 1200,
   require: '^ngSwitch',
   multiElement: true,
-  link: function(scope, element, attr, ctrl, $transclude) {
+  link(scope, element, attr, ctrl, $transclude) {
     ctrl.cases['?'] = (ctrl.cases['?'] || []);
     ctrl.cases['?'].push({ transclude: $transclude, element: element });
    }

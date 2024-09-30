@@ -88,13 +88,16 @@ function minErr(module, ErrorConstructor) {
   var errRegExp = new RegExp(regex, 'g');
 
   return function() {
-    var code = arguments[0],
-      template = arguments[1],
-      message = '[' + (module ? module + ':' : '') + code + '] ',
-      templateArgs = sliceArgs(arguments, 2).map(function(arg) {
-        return toDebugString(arg, minErrConfig.objectMaxDepth);
-      }),
-      paramPrefix, i;
+    var code = arguments[0];
+    var template = arguments[1];
+    var message = '[' + (module ? module + ':' : '') + code + '] ';
+
+    var templateArgs = sliceArgs(arguments, 2).map(function(arg) {
+      return toDebugString(arg, minErrConfig.objectMaxDepth);
+    });
+
+    var paramPrefix;
+    var i;
 
     // A minErr message has two parts: the message itself and the url that contains the
     // encoded message.

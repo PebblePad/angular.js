@@ -55,8 +55,8 @@
  * Use the `$logProvider` to configure how the application logs messages
  */
 function $LogProvider() {
-  var debug = true,
-      self = this;
+  var debug = true;
+  var self = this;
 
   /**
    * @ngdoc method
@@ -142,7 +142,7 @@ function $LogProvider() {
     function formatError(arg) {
       if (isError(arg)) {
         if (arg.stack && formatStackTrace) {
-          arg = (arg.message && arg.stack.indexOf(arg.message) === -1)
+          arg = (arg.message && !arg.stack.includes(arg.message))
               ? 'Error: ' + arg.message + '\n' + arg.stack
               : arg.stack;
         } else if (arg.sourceURL) {
@@ -153,8 +153,8 @@ function $LogProvider() {
     }
 
     function consoleLog(type) {
-      var console = $window.console || {},
-          logFn = console[type] || console.log || noop;
+      var console = $window.console || {};
+      var logFn = console[type] || console.log || noop;
 
       return function() {
         var args = [];

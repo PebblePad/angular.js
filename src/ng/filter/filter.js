@@ -197,7 +197,7 @@ function createPredicateFn(expression, comparator, anyPropertyKey, matchAgainstA
 
       actual = lowercase('' + actual);
       expected = lowercase('' + expected);
-      return actual.indexOf(expected) !== -1;
+      return actual.includes(expected);
     };
   }
 

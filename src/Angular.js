@@ -198,20 +198,24 @@ if ('i' !== 'I'.toLowerCase()) {
 }
 
 
-var
-    jqLite,           // delay binding since jQuery could be loaded after us.
-    jQuery,           // delay binding
-    slice             = [].slice,
-    splice            = [].splice,
-    push              = [].push,
-    toString          = Object.prototype.toString,
-    getPrototypeOf    = Object.getPrototypeOf,
-    ngMinErr          = minErr('ng'),
+var // delay binding since jQuery could be loaded after us.
+jqLite;
 
-    /** @name angular */
-    angular           = window.angular || (window.angular = {}),
-    angularModule,
-    uid               = { current: 0 };
+var // delay binding
+jQuery;
+
+var slice             = [].slice;
+var splice            = [].splice;
+var push              = [].push;
+var toString          = Object.prototype.toString;
+var getPrototypeOf    = Object.getPrototypeOf;
+var ngMinErr          = minErr('ng');
+
+var /** @name angular */
+angular           = window.angular || (window.angular = {});
+
+var angularModule;
+var uid               = { current: 0 };
 
 
 /**
@@ -278,7 +282,8 @@ function isArrayLike(obj) {
  */
 
 function forEach(obj, iterator, context) {
-  var key, length;
+  var key;
+  var length;
   if (obj) {
     if (isFunction(obj)) {
       for (key in obj) {
@@ -797,7 +802,9 @@ function isElement(node) {
  * @returns {object} in the form of {key1:true, key2:true, ...}
  */
 function makeMap(str) {
-  var obj = {}, items = str.split(','), i;
+  var obj = {};
+  var items = str.split(',');
+  var i;
   for (i = 0; i < items.length; i++) {
     obj[items[i]] = true;
   }
@@ -1095,7 +1102,11 @@ function equals(o1, o2) {
   if (o1 === null || o2 === null) return false;
   // eslint-disable-next-line no-self-compare
   if (o1 !== o1 && o2 !== o2) return true; // NaN === NaN
-  var t1 = typeof o1, t2 = typeof o2, length, key, keySet;
+  var t1 = typeof o1;
+  var t2 = typeof o2;
+  var length;
+  var key;
+  var keySet;
   if (t1 === t2 && t1 === 'object') {
     if (isArray(o1)) {
       if (!isArray(o2)) return false;
@@ -1143,8 +1154,8 @@ var csp = function() {
       var ngCspAttribute = ngCspElement.getAttribute('ng-csp') ||
                     ngCspElement.getAttribute('data-ng-csp');
       csp.rules = {
-        noUnsafeEval: !ngCspAttribute || (ngCspAttribute.indexOf('no-unsafe-eval') !== -1),
-        noInlineStyle: !ngCspAttribute || (ngCspAttribute.indexOf('no-inline-style') !== -1)
+        noUnsafeEval: !ngCspAttribute || (ngCspAttribute.includes('no-unsafe-eval')),
+        noInlineStyle: !ngCspAttribute || (ngCspAttribute.includes('no-inline-style'))
       };
     } else {
       csp.rules = {
@@ -1208,7 +1219,10 @@ var csp = function() {
 var jq = function() {
   if (isDefined(jq.name_)) return jq.name_;
   var el;
-  var i, ii = ngAttrPrefixes.length, prefix, name;
+  var i;
+  var ii = ngAttrPrefixes.length;
+  var prefix;
+  var name;
   for (i = 0; i < ii; ++i) {
     prefix = ngAttrPrefixes[i];
     el = window.document.querySelector('[' + prefix.replace(':', '\\:') + 'jq]');
@@ -1418,7 +1432,9 @@ function tryDecodeURIComponent(value) {
 function parseKeyValue(/**string*/keyValue) {
   var obj = {};
   forEach((keyValue || '').split('&'), function(keyValue) {
-    var splitPoint, key, val;
+    var splitPoint;
+    var key;
+    var val;
     if (keyValue) {
       key = keyValue = keyValue.replace(/\+/g,'%20');
       splitPoint = keyValue.indexOf('=');
@@ -1502,7 +1518,9 @@ function encodeUriQuery(val, pctEncodeSpaces) {
 var ngAttrPrefixes = ['ng-', 'data-ng-', 'ng:', 'x-ng-'];
 
 function getNgAttribute(element, ngAttr) {
-  var attr, i, ii = ngAttrPrefixes.length;
+  var attr;
+  var i;
+  var ii = ngAttrPrefixes.length;
   for (i = 0; i < ii; ++i) {
     attr = ngAttrPrefixes[i] + ngAttr;
     if (isString(attr = element.getAttribute(attr))) {
@@ -1700,9 +1718,9 @@ var isAutoBootstrapAllowed = allowAutoBootstrap(window.document);
  </example>
  */
 function angularInit(element, bootstrap) {
-  var appElement,
-      module,
-      config = {};
+  var appElement;
+  var module;
+  var config = {};
 
   // The element `element` has priority over any other element.
   forEach(ngAttrPrefixes, function(prefix) {

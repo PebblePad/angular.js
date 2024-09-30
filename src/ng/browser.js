@@ -23,12 +23,12 @@
  * @param {object} $sniffer $sniffer service
  */
 function Browser(window, document, $log, $sniffer) {
-  var self = this,
-      location = window.location,
-      history = window.history,
-      setTimeout = window.setTimeout,
-      clearTimeout = window.clearTimeout,
-      pendingDeferIds = {};
+  var self = this;
+  var location = window.location;
+  var history = window.history;
+  var setTimeout = window.setTimeout;
+  var clearTimeout = window.clearTimeout;
+  var pendingDeferIds = {};
 
   self.isMock = false;
 
@@ -45,7 +45,7 @@ function Browser(window, document, $log, $sniffer) {
    */
   function completeOutstandingRequest(fn) {
     try {
-      fn.apply(null, sliceArgs(arguments, 1));
+      fn(...sliceArgs(arguments, 1));
     } finally {
       outstandingRequestCount--;
       if (outstandingRequestCount === 0) {
@@ -82,15 +82,18 @@ function Browser(window, document, $log, $sniffer) {
   // URL API
   //////////////////////////////////////////////////////////////
 
-  var cachedState, lastHistoryState,
-      lastBrowserUrl = location.href,
-      baseElement = document.find('base'),
-      pendingLocation = null,
-      getCurrentState = !$sniffer.history ? noop : function getCurrentState() {
-        try {
-          return history.state;
-        } catch (e) { /**/ }
-      };
+  var cachedState;
+
+  var lastHistoryState;
+  var lastBrowserUrl = location.href;
+  var baseElement = document.find('base');
+  var pendingLocation = null;
+
+  var getCurrentState = !$sniffer.history ? noop : function getCurrentState() {
+    try {
+      return history.state;
+    } catch (e) { /**/ }
+  };
 
   cacheState();
 
@@ -189,8 +192,8 @@ function Browser(window, document, $log, $sniffer) {
     return cachedState;
   };
 
-  var urlChangeListeners = [],
-      urlChangeInit = false;
+  var urlChangeListeners = [];
+  var urlChangeInit = false;
 
   function cacheStateAndFireUrlChange() {
     pendingLocation = null;
@@ -348,7 +351,6 @@ function Browser(window, document, $log, $sniffer) {
     }
     return false;
   };
-
 }
 
 /** @this */

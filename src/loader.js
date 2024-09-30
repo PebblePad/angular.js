@@ -147,7 +147,7 @@ function setupModuleLoader(window) {
            * var version = $injector.modules['myModule'].info().version;
            * ```
            */
-          info: function(value) {
+          info(value) {
             if (isDefined(value)) {
               if (!isObject(value)) throw ngMinErr('aobj', 'Argument \'{0}\' must be an object', 'value');
               info = value;
@@ -366,7 +366,7 @@ function setupModuleLoader(window) {
            * Use this method to register work which should be performed when the injector is done
            * loading all modules.
            */
-          run: function(block) {
+          run(block) {
             runBlocks.push(block);
             return this;
           }

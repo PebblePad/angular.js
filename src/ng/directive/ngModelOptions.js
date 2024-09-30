@@ -24,7 +24,7 @@ ModelOptions.prototype = {
    * @description
    * Returns the value of the given option
    */
-  getOption: function(name) {
+  getOption(name) {
     return this.$$options[name];
   },
 
@@ -34,7 +34,7 @@ ModelOptions.prototype = {
    * @param {Object} options a hash of options for the new child that will override the parent's options
    * @return {ModelOptions} a new `ModelOptions` object initialized with the given options.
    */
-  createChild: function(options) {
+  createChild(options) {
     var inheritAll = false;
 
     // make a shallow copy
@@ -367,7 +367,7 @@ var ngModelOptionsDirective = function() {
     this.$$scope = $scope;
   }
   NgModelOptionsController.prototype = {
-    $onInit: function() {
+    $onInit() {
       var parentOptions = this.parentCtrl ? this.parentCtrl.$options : defaultModelOptions;
       var modelOptionsDefinition = this.$$scope.$eval(this.$$attrs.ngModelOptions);
 

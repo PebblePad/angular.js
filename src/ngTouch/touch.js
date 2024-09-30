@@ -117,7 +117,7 @@ function $TouchProvider($provide, $compileProvider) {
        *
        * @kind function
        */
-      ngClickOverrideEnabled: function() {
+      ngClickOverrideEnabled() {
         return ngClickOverrideEnabled;
       }
     };

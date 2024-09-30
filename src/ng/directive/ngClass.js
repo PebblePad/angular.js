@@ -13,7 +13,7 @@ function classDirective(name, selector) {
   return ['$parse', function($parse) {
     return {
       restrict: 'AC',
-      link: function(scope, element, attr) {
+      link(scope, element, attr) {
         var expression = attr[name].trim();
         var isOneTime = (expression.charAt(0) === ':') && (expression.charAt(1) === ':');
 

@@ -44,7 +44,7 @@ angular.module('ngCookies').
        * @param {string} key Id to use for lookup.
        * @returns {Object} Deserialized cookie value, undefined if the cookie does not exist.
        */
-      get: function(key) {
+      get(key) {
         return $cookies.getObject(key);
       },
 
@@ -58,7 +58,7 @@ angular.module('ngCookies').
        * @param {string} key Id for the `value`.
        * @param {Object} value Value to be stored.
        */
-      put: function(key, value) {
+      put(key, value) {
         $cookies.putObject(key, value);
       },
 
@@ -71,7 +71,7 @@ angular.module('ngCookies').
        *
        * @param {string} key Id of the key-value pair to delete.
        */
-      remove: function(key) {
+      remove(key) {
         $cookies.remove(key);
       }
     };

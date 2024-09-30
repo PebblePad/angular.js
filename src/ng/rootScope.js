@@ -225,7 +225,7 @@ function $RootScopeProvider() {
        * @returns {Object} The newly created child scope.
        *
        */
-      $new: function(isolate, parent) {
+      $new(isolate, parent) {
         var child;
 
         parent = parent || this;
@@ -378,22 +378,23 @@ function $RootScopeProvider() {
        *     comparing for reference equality.
        * @returns {function()} Returns a deregistration function for this listener.
        */
-      $watch: function(watchExp, listener, objectEquality, prettyPrintExpression) {
+      $watch(watchExp, listener, objectEquality, prettyPrintExpression) {
         var get = $parse(watchExp);
         var fn = isFunction(listener) ? listener : noop;
 
         if (get.$$watchDelegate) {
           return get.$$watchDelegate(this, fn, objectEquality, get, watchExp);
         }
-        var scope = this,
-            array = scope.$$watchers,
-            watcher = {
-              fn: fn,
-              last: initWatchVal,
-              get: get,
-              exp: prettyPrintExpression || watchExp,
-              eq: !!objectEquality
-            };
+        var scope = this;
+        var array = scope.$$watchers;
+
+        var watcher = {
+          fn: fn,
+          last: initWatchVal,
+          get: get,
+          exp: prettyPrintExpression || watchExp,
+          eq: !!objectEquality
+        };
 
         lastDirtyWatch = null;
 
@@ -477,7 +478,7 @@ function $RootScopeProvider() {
        *    The `scope` refers to the current scope.
        * @returns {function()} Returns a de-registration function for all listeners.
        */
-      $watchGroup: function(watchExpressions, listener) {
+      $watchGroup(watchExpressions, listener) {
         var oldValues = new Array(watchExpressions.length);
         var newValues = new Array(watchExpressions.length);
         var deregisterFns = [];
@@ -591,7 +592,7 @@ function $RootScopeProvider() {
        * @returns {function()} Returns a de-registration function for this listener. When the
        *    de-registration function is executed, the internal watch operation is terminated.
        */
-      $watchCollection: function(obj, listener) {
+      $watchCollection(obj, listener) {
         $watchCollectionInterceptor.$stateful = true;
 
         var self = this;
@@ -613,7 +614,11 @@ function $RootScopeProvider() {
 
         function $watchCollectionInterceptor(_value) {
           newValue = _value;
-          var newLength, key, bothNaN, newItem, oldItem;
+          var newLength;
+          var key;
+          var bothNaN;
+          var newItem;
+          var oldItem;
 
           // If the new value is undefined, then return undefined as the watch may be a one-time watch
           if (isUndefined(newValue)) return;
@@ -776,13 +781,21 @@ function $RootScopeProvider() {
        * ```
        *
        */
-      $digest: function() {
-        var watch, value, last, fn, get,
-            watchers,
-            dirty, ttl = TTL,
-            next, current, target = this,
-            watchLog = [],
-            logIdx, asyncTask;
+      $digest() {
+        var watch;
+        var value;
+        var last;
+        var fn;
+        var get;
+        var watchers;
+        var dirty;
+        var ttl = TTL;
+        var next;
+        var current;
+        var target = this;
+        var watchLog = [];
+        var logIdx;
+        var asyncTask;
 
         beginPhase('$digest');
         // Check for changes to browser url that happened in sync before the call to $digest
@@ -944,7 +957,7 @@ function $RootScopeProvider() {
        *   against the `$rootScope` and so will still trigger a global digest even if the promise was
        *   initiated by a component that lives on a suspended scope.
        */
-      $suspend: function() {
+      $suspend() {
         this.$$suspended = true;
       },
 
@@ -973,7 +986,7 @@ function $RootScopeProvider() {
        *
        * @returns true if the current scope has been suspended.
        */
-      $isSuspended: function() {
+      $isSuspended() {
         return this.$$suspended;
       },
 
@@ -987,7 +1000,7 @@ function $RootScopeProvider() {
        *
        * See {@link $rootScope.Scope#$suspend} for information about the dangers of using this approach.
        */
-      $resume: function() {
+      $resume() {
         this.$$suspended = false;
       },
 
@@ -1025,7 +1038,7 @@ function $RootScopeProvider() {
        * Note that, in AngularJS, there is also a `$destroy` jQuery event, which can be used to
        * clean up DOM bindings before an element is removed from the DOM.
        */
-      $destroy: function() {
+      $destroy() {
         // We can't destroy a scope that has been already destroyed.
         if (this.$$destroyed) return;
         var parent = this.$parent;
@@ -1088,7 +1101,7 @@ function $RootScopeProvider() {
        * @param {(object)=} locals Local variables object, useful for overriding values in scope.
        * @returns {*} The result of evaluating the expression.
        */
-      $eval: function(expr, locals) {
+      $eval(expr, locals) {
         return $parse(expr)(this, locals);
       },
 
@@ -1122,7 +1135,7 @@ function $RootScopeProvider() {
        *
        * @param {(object)=} locals Local variables object, useful for overriding values in scope.
        */
-      $evalAsync: function(expr, locals) {
+      $evalAsync(expr, locals) {
         // if we are outside of an $digest loop and this is the first time we are scheduling async
         // task also schedule async auto-flush
         if (!$rootScope.$$phase && !asyncQueue.length) {
@@ -1136,7 +1149,7 @@ function $RootScopeProvider() {
         asyncQueue.push({scope: this, fn: $parse(expr), locals: locals});
       },
 
-      $$postDigest: function(fn) {
+      $$postDigest(fn) {
         postDigestQueue.push(fn);
       },
 
@@ -1184,7 +1197,7 @@ function $RootScopeProvider() {
        *
        * @returns {*} The result of evaluating the expression.
        */
-      $apply: function(expr) {
+      $apply(expr) {
         try {
           beginPhase('$apply');
           try {
@@ -1222,7 +1235,7 @@ function $RootScopeProvider() {
        *    - `string`: execute using the rules as defined in {@link guide/expression expression}.
        *    - `function(scope)`: execute the function with current `scope` parameter.
        */
-      $applyAsync: function(expr) {
+      $applyAsync(expr) {
         var scope = this;
         if (expr) {
           applyAsyncQueue.push($applyAsyncExpression);
@@ -1262,7 +1275,7 @@ function $RootScopeProvider() {
        * @param {function(event, ...args)} listener Function to call when the event is emitted.
        * @returns {function()} Returns a deregistration function for this listener.
        */
-      $on: function(name, listener) {
+      $on(name, listener) {
         var namedListeners = this.$$listeners[name];
         if (!namedListeners) {
           this.$$listeners[name] = namedListeners = [];
@@ -1313,22 +1326,25 @@ function $RootScopeProvider() {
        * @param {...*} args Optional one or more arguments which will be passed onto the event listeners.
        * @return {Object} Event object (see {@link ng.$rootScope.Scope#$on}).
        */
-      $emit: function(name, args) {
-        var empty = [],
-            namedListeners,
-            scope = this,
-            stopPropagation = false,
-            event = {
-              name: name,
-              targetScope: scope,
-              stopPropagation: function() {stopPropagation = true;},
-              preventDefault: function() {
-                event.defaultPrevented = true;
-              },
-              defaultPrevented: false
-            },
-            listenerArgs = concat([event], arguments, 1),
-            i, length;
+      $emit(name, args) {
+        var empty = [];
+        var namedListeners;
+        var scope = this;
+        var stopPropagation = false;
+
+        var event = {
+          name: name,
+          targetScope: scope,
+          stopPropagation() {stopPropagation = true;},
+          preventDefault() {
+            event.defaultPrevented = true;
+          },
+          defaultPrevented: false
+        };
+
+        var listenerArgs = concat([event], arguments, 1);
+        var i;
+        var length;
 
         do {
           namedListeners = scope.$$listeners[name] || empty;
@@ -1384,23 +1400,26 @@ function $RootScopeProvider() {
        * @param {...*} args Optional one or more arguments which will be passed onto the event listeners.
        * @return {Object} Event object, see {@link ng.$rootScope.Scope#$on}
        */
-      $broadcast: function(name, args) {
-        var target = this,
-            current = target,
-            next = target,
-            event = {
-              name: name,
-              targetScope: target,
-              preventDefault: function() {
-                event.defaultPrevented = true;
-              },
-              defaultPrevented: false
-            };
+      $broadcast(name, args) {
+        var target = this;
+        var current = target;
+        var next = target;
+
+        var event = {
+          name: name,
+          targetScope: target,
+          preventDefault() {
+            event.defaultPrevented = true;
+          },
+          defaultPrevented: false
+        };
 
         if (!target.$$listenerCount[name]) return event;
 
-        var listenerArgs = concat([event], arguments, 1),
-            listeners, i, length;
+        var listenerArgs = concat([event], arguments, 1);
+        var listeners;
+        var i;
+        var length;
 
         //down while you can, then up and next sibling or up and next sibling until back at root
         while ((current = next)) {

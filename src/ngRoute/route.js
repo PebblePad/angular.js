@@ -251,12 +251,14 @@ function $RouteProvider() {
     * Inspired by pathRexp in visionmedia/express/lib/utils.js.
     */
   function pathRegExp(path, opts) {
-    var insensitive = opts.caseInsensitiveMatch,
-        ret = {
-          originalPath: path,
-          regexp: path
-        },
-        keys = ret.keys = [];
+    var insensitive = opts.caseInsensitiveMatch;
+
+    var ret = {
+      originalPath: path,
+      regexp: path
+    };
+
+    var keys = ret.keys = [];
 
     path = path
       .replace(/([().])/g, '\\$1')
@@ -351,210 +353,211 @@ function $RouteProvider() {
                '$sce',
                '$browser',
       function($rootScope, $location, $routeParams, $q, $injector, $templateRequest, $sce, $browser) {
+        /**
+         * @ngdoc service
+         * @name $route
+         * @requires $location
+         * @requires $routeParams
+         *
+         * @property {Object} current Reference to the current route definition.
+         * The route definition contains:
+         *
+         *   - `controller`: The controller constructor as defined in the route definition.
+         *   - `locals`: A map of locals which is used by {@link ng.$controller $controller} service for
+         *     controller instantiation. The `locals` contain
+         *     the resolved values of the `resolve` map. Additionally the `locals` also contain:
+         *
+         *     - `$scope` - The current route scope.
+         *     - `$template` - The current route template HTML.
+         *
+         *     The `locals` will be assigned to the route scope's `$resolve` property. You can override
+         *     the property name, using `resolveAs` in the route definition. See
+         *     {@link ngRoute.$routeProvider $routeProvider} for more info.
+         *
+         * @property {Object} routes Object with all route configuration Objects as its properties.
+         *
+         * @description
+         * `$route` is used for deep-linking URLs to controllers and views (HTML partials).
+         * It watches `$location.url()` and tries to map the path to an existing route definition.
+         *
+         * Requires the {@link ngRoute `ngRoute`} module to be installed.
+         *
+         * You can define routes through {@link ngRoute.$routeProvider $routeProvider}'s API.
+         *
+         * The `$route` service is typically used in conjunction with the
+         * {@link ngRoute.directive:ngView `ngView`} directive and the
+         * {@link ngRoute.$routeParams `$routeParams`} service.
+         *
+         * @example
+         * This example shows how changing the URL hash causes the `$route` to match a route against the
+         * URL, and the `ngView` pulls in the partial.
+         *
+         * <example name="$route-service" module="ngRouteExample"
+         *          deps="angular-route.js" fixBase="true">
+         *   <file name="index.html">
+         *     <div ng-controller="MainController">
+         *       Choose:
+         *       <a href="Book/Moby">Moby</a> |
+         *       <a href="Book/Moby/ch/1">Moby: Ch1</a> |
+         *       <a href="Book/Gatsby">Gatsby</a> |
+         *       <a href="Book/Gatsby/ch/4?key=value">Gatsby: Ch4</a> |
+         *       <a href="Book/Scarlet">Scarlet Letter</a><br/>
+         *
+         *       <div ng-view></div>
+         *
+         *       <hr />
+         *
+         *       <pre>$location.path() = {{$location.path()}}</pre>
+         *       <pre>$route.current.templateUrl = {{$route.current.templateUrl}}</pre>
+         *       <pre>$route.current.params = {{$route.current.params}}</pre>
+         *       <pre>$route.current.scope.name = {{$route.current.scope.name}}</pre>
+         *       <pre>$routeParams = {{$routeParams}}</pre>
+         *     </div>
+         *   </file>
+         *
+         *   <file name="book.html">
+         *     controller: {{name}}<br />
+         *     Book Id: {{params.bookId}}<br />
+         *   </file>
+         *
+         *   <file name="chapter.html">
+         *     controller: {{name}}<br />
+         *     Book Id: {{params.bookId}}<br />
+         *     Chapter Id: {{params.chapterId}}
+         *   </file>
+         *
+         *   <file name="script.js">
+         *     angular.module('ngRouteExample', ['ngRoute'])
+         *
+         *      .controller('MainController', function($scope, $route, $routeParams, $location) {
+         *          $scope.$route = $route;
+         *          $scope.$location = $location;
+         *          $scope.$routeParams = $routeParams;
+         *      })
+         *
+         *      .controller('BookController', function($scope, $routeParams) {
+         *          $scope.name = 'BookController';
+         *          $scope.params = $routeParams;
+         *      })
+         *
+         *      .controller('ChapterController', function($scope, $routeParams) {
+         *          $scope.name = 'ChapterController';
+         *          $scope.params = $routeParams;
+         *      })
+         *
+         *     .config(function($routeProvider, $locationProvider) {
+         *       $routeProvider
+         *        .when('/Book/:bookId', {
+         *         templateUrl: 'book.html',
+         *         controller: 'BookController',
+         *         resolve: {
+         *           // I will cause a 1 second delay
+         *           delay: function($q, $timeout) {
+         *             var delay = $q.defer();
+         *             $timeout(delay.resolve, 1000);
+         *             return delay.promise;
+         *           }
+         *         }
+         *       })
+         *       .when('/Book/:bookId/ch/:chapterId', {
+         *         templateUrl: 'chapter.html',
+         *         controller: 'ChapterController'
+         *       });
+         *
+         *       // configure html5 to get links working on jsfiddle
+         *       $locationProvider.html5Mode(true);
+         *     });
+         *
+         *   </file>
+         *
+         *   <file name="protractor.js" type="protractor">
+         *     it('should load and compile correct template', function() {
+         *       element(by.linkText('Moby: Ch1')).click();
+         *       var content = element(by.css('[ng-view]')).getText();
+         *       expect(content).toMatch(/controller: ChapterController/);
+         *       expect(content).toMatch(/Book Id: Moby/);
+         *       expect(content).toMatch(/Chapter Id: 1/);
+         *
+         *       element(by.partialLinkText('Scarlet')).click();
+         *
+         *       content = element(by.css('[ng-view]')).getText();
+         *       expect(content).toMatch(/controller: BookController/);
+         *       expect(content).toMatch(/Book Id: Scarlet/);
+         *     });
+         *   </file>
+         * </example>
+         */
 
-    /**
-     * @ngdoc service
-     * @name $route
-     * @requires $location
-     * @requires $routeParams
-     *
-     * @property {Object} current Reference to the current route definition.
-     * The route definition contains:
-     *
-     *   - `controller`: The controller constructor as defined in the route definition.
-     *   - `locals`: A map of locals which is used by {@link ng.$controller $controller} service for
-     *     controller instantiation. The `locals` contain
-     *     the resolved values of the `resolve` map. Additionally the `locals` also contain:
-     *
-     *     - `$scope` - The current route scope.
-     *     - `$template` - The current route template HTML.
-     *
-     *     The `locals` will be assigned to the route scope's `$resolve` property. You can override
-     *     the property name, using `resolveAs` in the route definition. See
-     *     {@link ngRoute.$routeProvider $routeProvider} for more info.
-     *
-     * @property {Object} routes Object with all route configuration Objects as its properties.
-     *
-     * @description
-     * `$route` is used for deep-linking URLs to controllers and views (HTML partials).
-     * It watches `$location.url()` and tries to map the path to an existing route definition.
-     *
-     * Requires the {@link ngRoute `ngRoute`} module to be installed.
-     *
-     * You can define routes through {@link ngRoute.$routeProvider $routeProvider}'s API.
-     *
-     * The `$route` service is typically used in conjunction with the
-     * {@link ngRoute.directive:ngView `ngView`} directive and the
-     * {@link ngRoute.$routeParams `$routeParams`} service.
-     *
-     * @example
-     * This example shows how changing the URL hash causes the `$route` to match a route against the
-     * URL, and the `ngView` pulls in the partial.
-     *
-     * <example name="$route-service" module="ngRouteExample"
-     *          deps="angular-route.js" fixBase="true">
-     *   <file name="index.html">
-     *     <div ng-controller="MainController">
-     *       Choose:
-     *       <a href="Book/Moby">Moby</a> |
-     *       <a href="Book/Moby/ch/1">Moby: Ch1</a> |
-     *       <a href="Book/Gatsby">Gatsby</a> |
-     *       <a href="Book/Gatsby/ch/4?key=value">Gatsby: Ch4</a> |
-     *       <a href="Book/Scarlet">Scarlet Letter</a><br/>
-     *
-     *       <div ng-view></div>
-     *
-     *       <hr />
-     *
-     *       <pre>$location.path() = {{$location.path()}}</pre>
-     *       <pre>$route.current.templateUrl = {{$route.current.templateUrl}}</pre>
-     *       <pre>$route.current.params = {{$route.current.params}}</pre>
-     *       <pre>$route.current.scope.name = {{$route.current.scope.name}}</pre>
-     *       <pre>$routeParams = {{$routeParams}}</pre>
-     *     </div>
-     *   </file>
-     *
-     *   <file name="book.html">
-     *     controller: {{name}}<br />
-     *     Book Id: {{params.bookId}}<br />
-     *   </file>
-     *
-     *   <file name="chapter.html">
-     *     controller: {{name}}<br />
-     *     Book Id: {{params.bookId}}<br />
-     *     Chapter Id: {{params.chapterId}}
-     *   </file>
-     *
-     *   <file name="script.js">
-     *     angular.module('ngRouteExample', ['ngRoute'])
-     *
-     *      .controller('MainController', function($scope, $route, $routeParams, $location) {
-     *          $scope.$route = $route;
-     *          $scope.$location = $location;
-     *          $scope.$routeParams = $routeParams;
-     *      })
-     *
-     *      .controller('BookController', function($scope, $routeParams) {
-     *          $scope.name = 'BookController';
-     *          $scope.params = $routeParams;
-     *      })
-     *
-     *      .controller('ChapterController', function($scope, $routeParams) {
-     *          $scope.name = 'ChapterController';
-     *          $scope.params = $routeParams;
-     *      })
-     *
-     *     .config(function($routeProvider, $locationProvider) {
-     *       $routeProvider
-     *        .when('/Book/:bookId', {
-     *         templateUrl: 'book.html',
-     *         controller: 'BookController',
-     *         resolve: {
-     *           // I will cause a 1 second delay
-     *           delay: function($q, $timeout) {
-     *             var delay = $q.defer();
-     *             $timeout(delay.resolve, 1000);
-     *             return delay.promise;
-     *           }
-     *         }
-     *       })
-     *       .when('/Book/:bookId/ch/:chapterId', {
-     *         templateUrl: 'chapter.html',
-     *         controller: 'ChapterController'
-     *       });
-     *
-     *       // configure html5 to get links working on jsfiddle
-     *       $locationProvider.html5Mode(true);
-     *     });
-     *
-     *   </file>
-     *
-     *   <file name="protractor.js" type="protractor">
-     *     it('should load and compile correct template', function() {
-     *       element(by.linkText('Moby: Ch1')).click();
-     *       var content = element(by.css('[ng-view]')).getText();
-     *       expect(content).toMatch(/controller: ChapterController/);
-     *       expect(content).toMatch(/Book Id: Moby/);
-     *       expect(content).toMatch(/Chapter Id: 1/);
-     *
-     *       element(by.partialLinkText('Scarlet')).click();
-     *
-     *       content = element(by.css('[ng-view]')).getText();
-     *       expect(content).toMatch(/controller: BookController/);
-     *       expect(content).toMatch(/Book Id: Scarlet/);
-     *     });
-     *   </file>
-     * </example>
-     */
+        /**
+         * @ngdoc event
+         * @name $route#$routeChangeStart
+         * @eventType broadcast on root scope
+         * @description
+         * Broadcasted before a route change. At this  point the route services starts
+         * resolving all of the dependencies needed for the route change to occur.
+         * Typically this involves fetching the view template as well as any dependencies
+         * defined in `resolve` route property. Once  all of the dependencies are resolved
+         * `$routeChangeSuccess` is fired.
+         *
+         * The route change (and the `$location` change that triggered it) can be prevented
+         * by calling `preventDefault` method of the event. See {@link ng.$rootScope.Scope#$on}
+         * for more details about event object.
+         *
+         * @param {Object} angularEvent Synthetic event object.
+         * @param {Route} next Future route information.
+         * @param {Route} current Current route information.
+         */
 
-    /**
-     * @ngdoc event
-     * @name $route#$routeChangeStart
-     * @eventType broadcast on root scope
-     * @description
-     * Broadcasted before a route change. At this  point the route services starts
-     * resolving all of the dependencies needed for the route change to occur.
-     * Typically this involves fetching the view template as well as any dependencies
-     * defined in `resolve` route property. Once  all of the dependencies are resolved
-     * `$routeChangeSuccess` is fired.
-     *
-     * The route change (and the `$location` change that triggered it) can be prevented
-     * by calling `preventDefault` method of the event. See {@link ng.$rootScope.Scope#$on}
-     * for more details about event object.
-     *
-     * @param {Object} angularEvent Synthetic event object.
-     * @param {Route} next Future route information.
-     * @param {Route} current Current route information.
-     */
+        /**
+         * @ngdoc event
+         * @name $route#$routeChangeSuccess
+         * @eventType broadcast on root scope
+         * @description
+         * Broadcasted after a route change has happened successfully.
+         * The `resolve` dependencies are now available in the `current.locals` property.
+         *
+         * {@link ngRoute.directive:ngView ngView} listens for the directive
+         * to instantiate the controller and render the view.
+         *
+         * @param {Object} angularEvent Synthetic event object.
+         * @param {Route} current Current route information.
+         * @param {Route|Undefined} previous Previous route information, or undefined if current is
+         * first route entered.
+         */
 
-    /**
-     * @ngdoc event
-     * @name $route#$routeChangeSuccess
-     * @eventType broadcast on root scope
-     * @description
-     * Broadcasted after a route change has happened successfully.
-     * The `resolve` dependencies are now available in the `current.locals` property.
-     *
-     * {@link ngRoute.directive:ngView ngView} listens for the directive
-     * to instantiate the controller and render the view.
-     *
-     * @param {Object} angularEvent Synthetic event object.
-     * @param {Route} current Current route information.
-     * @param {Route|Undefined} previous Previous route information, or undefined if current is
-     * first route entered.
-     */
+        /**
+         * @ngdoc event
+         * @name $route#$routeChangeError
+         * @eventType broadcast on root scope
+         * @description
+         * Broadcasted if a redirection function fails or any redirection or resolve promises are
+         * rejected.
+         *
+         * @param {Object} angularEvent Synthetic event object
+         * @param {Route} current Current route information.
+         * @param {Route} previous Previous route information.
+         * @param {Route} rejection The thrown error or the rejection reason of the promise. Usually
+         * the rejection reason is the error that caused the promise to get rejected.
+         */
 
-    /**
-     * @ngdoc event
-     * @name $route#$routeChangeError
-     * @eventType broadcast on root scope
-     * @description
-     * Broadcasted if a redirection function fails or any redirection or resolve promises are
-     * rejected.
-     *
-     * @param {Object} angularEvent Synthetic event object
-     * @param {Route} current Current route information.
-     * @param {Route} previous Previous route information.
-     * @param {Route} rejection The thrown error or the rejection reason of the promise. Usually
-     * the rejection reason is the error that caused the promise to get rejected.
-     */
+        /**
+         * @ngdoc event
+         * @name $route#$routeUpdate
+         * @eventType broadcast on root scope
+         * @description
+         * The `reloadOnSearch` property has been set to false, and we are reusing the same
+         * instance of the Controller.
+         *
+         * @param {Object} angularEvent Synthetic event object
+         * @param {Route} current Current/previous route information.
+         */
 
-    /**
-     * @ngdoc event
-     * @name $route#$routeUpdate
-     * @eventType broadcast on root scope
-     * @description
-     * The `reloadOnSearch` property has been set to false, and we are reusing the same
-     * instance of the Controller.
-     *
-     * @param {Object} angularEvent Synthetic event object
-     * @param {Route} current Current/previous route information.
-     */
+        var forceReload = false;
 
-    var forceReload = false,
-        preparedRoute,
-        preparedRouteIsUpdateOnly,
-        $route = {
+        var preparedRoute;
+        var preparedRouteIsUpdateOnly;
+
+        var $route = {
           routes: routes,
 
           /**
@@ -568,7 +571,7 @@ function $RouteProvider() {
            * As a result of that, {@link ngRoute.directive:ngView ngView}
            * creates new scope and reinstantiates the controller.
            */
-          reload: function() {
+          reload() {
             forceReload = true;
 
             var fakeLocationEvent = {
@@ -598,7 +601,7 @@ function $RouteProvider() {
            *
            * @param {!Object<string, string>} newParams mapping of URL parameter names to values
            */
-          updateParams: function(newParams) {
+          updateParams(newParams) {
             if (this.current && this.current.$$route) {
               newParams = angular.extend({}, this.current.params, newParams);
               $location.path(interpolate(this.current.$$route.originalPath, newParams));
@@ -610,250 +613,253 @@ function $RouteProvider() {
           }
         };
 
-    $rootScope.$on('$locationChangeStart', prepareRoute);
-    $rootScope.$on('$locationChangeSuccess', commitRoute);
+        $rootScope.$on('$locationChangeStart', prepareRoute);
+        $rootScope.$on('$locationChangeSuccess', commitRoute);
 
-    return $route;
+        return $route;
 
-    /////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////
 
-    /**
-     * @param on {string} current url
-     * @param route {Object} route regexp to match the url against
-     * @return {?Object}
-     *
-     * @description
-     * Check if the route matches the current url.
-     *
-     * Inspired by match in
-     * visionmedia/express/lib/router/router.js.
-     */
-    function switchRouteMatcher(on, route) {
-      var keys = route.keys,
-          params = {};
+        /**
+         * @param on {string} current url
+         * @param route {Object} route regexp to match the url against
+         * @return {?Object}
+         *
+         * @description
+         * Check if the route matches the current url.
+         *
+         * Inspired by match in
+         * visionmedia/express/lib/router/router.js.
+         */
+        function switchRouteMatcher(on, route) {
+          var keys = route.keys;
+          var params = {};
 
-      if (!route.regexp) return null;
+          if (!route.regexp) return null;
 
-      var m = route.regexp.exec(on);
-      if (!m) return null;
+          var m = route.regexp.exec(on);
+          if (!m) return null;
 
-      for (var i = 1, len = m.length; i < len; ++i) {
-        var key = keys[i - 1];
+          for (var i = 1, len = m.length; i < len; ++i) {
+            var key = keys[i - 1];
 
-        var val = m[i];
+            var val = m[i];
 
-        if (key && val) {
-          params[key.name] = val;
-        }
-      }
-      return params;
-    }
-
-    function prepareRoute($locationEvent) {
-      var lastRoute = $route.current;
-
-      preparedRoute = parseRoute();
-      preparedRouteIsUpdateOnly = preparedRoute && lastRoute && preparedRoute.$$route === lastRoute.$$route
-          && angular.equals(preparedRoute.pathParams, lastRoute.pathParams)
-          && !preparedRoute.reloadOnSearch && !forceReload;
-
-      if (!preparedRouteIsUpdateOnly && (lastRoute || preparedRoute)) {
-        if ($rootScope.$broadcast('$routeChangeStart', preparedRoute, lastRoute).defaultPrevented) {
-          if ($locationEvent) {
-            $locationEvent.preventDefault();
-          }
-        }
-      }
-    }
-
-    function commitRoute() {
-      var lastRoute = $route.current;
-      var nextRoute = preparedRoute;
-
-      if (preparedRouteIsUpdateOnly) {
-        lastRoute.params = nextRoute.params;
-        angular.copy(lastRoute.params, $routeParams);
-        $rootScope.$broadcast('$routeUpdate', lastRoute);
-      } else if (nextRoute || lastRoute) {
-        forceReload = false;
-        $route.current = nextRoute;
-
-        var nextRoutePromise = $q.resolve(nextRoute);
-
-        $browser.$$incOutstandingRequestCount();
-
-        nextRoutePromise.
-          then(getRedirectionData).
-          then(handlePossibleRedirection).
-          then(function(keepProcessingRoute) {
-            return keepProcessingRoute && nextRoutePromise.
-              then(resolveLocals).
-              then(function(locals) {
-                // after route change
-                if (nextRoute === $route.current) {
-                  if (nextRoute) {
-                    nextRoute.locals = locals;
-                    angular.copy(nextRoute.params, $routeParams);
-                  }
-                  $rootScope.$broadcast('$routeChangeSuccess', nextRoute, lastRoute);
-                }
-              });
-          }).catch(function(error) {
-            if (nextRoute === $route.current) {
-              $rootScope.$broadcast('$routeChangeError', nextRoute, lastRoute, error);
-            }
-          }).finally(function() {
-            // Because `commitRoute()` is called from a `$rootScope.$evalAsync` block (see
-            // `$locationWatch`), this `$$completeOutstandingRequest()` call will not cause
-            // `outstandingRequestCount` to hit zero.  This is important in case we are redirecting
-            // to a new route which also requires some asynchronous work.
-
-            $browser.$$completeOutstandingRequest(noop);
-          });
-      }
-    }
-
-    function getRedirectionData(route) {
-      var data = {
-        route: route,
-        hasRedirection: false
-      };
-
-      if (route) {
-        if (route.redirectTo) {
-          if (angular.isString(route.redirectTo)) {
-            data.path = interpolate(route.redirectTo, route.params);
-            data.search = route.params;
-            data.hasRedirection = true;
-          } else {
-            var oldPath = $location.path();
-            var oldSearch = $location.search();
-            var newUrl = route.redirectTo(route.pathParams, oldPath, oldSearch);
-
-            if (angular.isDefined(newUrl)) {
-              data.url = newUrl;
-              data.hasRedirection = true;
+            if (key && val) {
+              params[key.name] = val;
             }
           }
-        } else if (route.resolveRedirectTo) {
-          return $q.
-            resolve($injector.invoke(route.resolveRedirectTo)).
-            then(function(newUrl) {
-              if (angular.isDefined(newUrl)) {
-                data.url = newUrl;
-                data.hasRedirection = true;
+          return params;
+        }
+
+        function prepareRoute($locationEvent) {
+          var lastRoute = $route.current;
+
+          preparedRoute = parseRoute();
+          preparedRouteIsUpdateOnly = preparedRoute && lastRoute && preparedRoute.$$route === lastRoute.$$route
+              && angular.equals(preparedRoute.pathParams, lastRoute.pathParams)
+              && !preparedRoute.reloadOnSearch && !forceReload;
+
+          if (!preparedRouteIsUpdateOnly && (lastRoute || preparedRoute)) {
+            if ($rootScope.$broadcast('$routeChangeStart', preparedRoute, lastRoute).defaultPrevented) {
+              if ($locationEvent) {
+                $locationEvent.preventDefault();
               }
+            }
+          }
+        }
 
-              return data;
+        function commitRoute() {
+          var lastRoute = $route.current;
+          var nextRoute = preparedRoute;
+
+          if (preparedRouteIsUpdateOnly) {
+            lastRoute.params = nextRoute.params;
+            angular.copy(lastRoute.params, $routeParams);
+            $rootScope.$broadcast('$routeUpdate', lastRoute);
+          } else if (nextRoute || lastRoute) {
+            forceReload = false;
+            $route.current = nextRoute;
+
+            var nextRoutePromise = $q.resolve(nextRoute);
+
+            $browser.$$incOutstandingRequestCount();
+
+            nextRoutePromise.
+              then(getRedirectionData).
+              then(handlePossibleRedirection).
+              then(function(keepProcessingRoute) {
+                return keepProcessingRoute && nextRoutePromise.
+                  then(resolveLocals).
+                  then(function(locals) {
+                    // after route change
+                    if (nextRoute === $route.current) {
+                      if (nextRoute) {
+                        nextRoute.locals = locals;
+                        angular.copy(nextRoute.params, $routeParams);
+                      }
+                      $rootScope.$broadcast('$routeChangeSuccess', nextRoute, lastRoute);
+                    }
+                  });
+              }).catch(function(error) {
+                if (nextRoute === $route.current) {
+                  $rootScope.$broadcast('$routeChangeError', nextRoute, lastRoute, error);
+                }
+              }).finally(function() {
+                // Because `commitRoute()` is called from a `$rootScope.$evalAsync` block (see
+                // `$locationWatch`), this `$$completeOutstandingRequest()` call will not cause
+                // `outstandingRequestCount` to hit zero.  This is important in case we are redirecting
+                // to a new route which also requires some asynchronous work.
+
+                $browser.$$completeOutstandingRequest(noop);
+              });
+          }
+        }
+
+        function getRedirectionData(route) {
+          var data = {
+            route: route,
+            hasRedirection: false
+          };
+
+          if (route) {
+            if (route.redirectTo) {
+              if (angular.isString(route.redirectTo)) {
+                data.path = interpolate(route.redirectTo, route.params);
+                data.search = route.params;
+                data.hasRedirection = true;
+              } else {
+                var oldPath = $location.path();
+                var oldSearch = $location.search();
+                var newUrl = route.redirectTo(route.pathParams, oldPath, oldSearch);
+
+                if (angular.isDefined(newUrl)) {
+                  data.url = newUrl;
+                  data.hasRedirection = true;
+                }
+              }
+            } else if (route.resolveRedirectTo) {
+              return $q.
+                resolve($injector.invoke(route.resolveRedirectTo)).
+                then(function(newUrl) {
+                  if (angular.isDefined(newUrl)) {
+                    data.url = newUrl;
+                    data.hasRedirection = true;
+                  }
+
+                  return data;
+                });
+            }
+          }
+
+          return data;
+        }
+
+        function handlePossibleRedirection(data) {
+          var keepProcessingRoute = true;
+
+          if (data.route !== $route.current) {
+            keepProcessingRoute = false;
+          } else if (data.hasRedirection) {
+            var oldUrl = $location.url();
+            var newUrl = data.url;
+
+            if (newUrl) {
+              $location.
+                url(newUrl).
+                replace();
+            } else {
+              newUrl = $location.
+                path(data.path).
+                search(data.search).
+                replace().
+                url();
+            }
+
+            if (newUrl !== oldUrl) {
+              // Exit out and don't process current next value,
+              // wait for next location change from redirect
+              keepProcessingRoute = false;
+            }
+          }
+
+          return keepProcessingRoute;
+        }
+
+        function resolveLocals(route) {
+          if (route) {
+            var locals = angular.extend({}, route.resolve);
+            angular.forEach(locals, function(value, key) {
+              locals[key] = angular.isString(value) ?
+                  $injector.get(value) :
+                  $injector.invoke(value, null, null, key);
             });
-        }
-      }
-
-      return data;
-    }
-
-    function handlePossibleRedirection(data) {
-      var keepProcessingRoute = true;
-
-      if (data.route !== $route.current) {
-        keepProcessingRoute = false;
-      } else if (data.hasRedirection) {
-        var oldUrl = $location.url();
-        var newUrl = data.url;
-
-        if (newUrl) {
-          $location.
-            url(newUrl).
-            replace();
-        } else {
-          newUrl = $location.
-            path(data.path).
-            search(data.search).
-            replace().
-            url();
+            var template = getTemplateFor(route);
+            if (angular.isDefined(template)) {
+              locals['$template'] = template;
+            }
+            return $q.all(locals);
+          }
         }
 
-        if (newUrl !== oldUrl) {
-          // Exit out and don't process current next value,
-          // wait for next location change from redirect
-          keepProcessingRoute = false;
+        function getTemplateFor(route) {
+          var template;
+          var templateUrl;
+          if (angular.isDefined(template = route.template)) {
+            if (angular.isFunction(template)) {
+              template = template(route.params);
+            }
+          } else if (angular.isDefined(templateUrl = route.templateUrl)) {
+            if (angular.isFunction(templateUrl)) {
+              templateUrl = templateUrl(route.params);
+            }
+            if (angular.isDefined(templateUrl)) {
+              route.loadedTemplateUrl = $sce.valueOf(templateUrl);
+              template = $templateRequest(templateUrl);
+            }
+          }
+          return template;
         }
-      }
 
-      return keepProcessingRoute;
-    }
+        /**
+         * @returns {Object} the current active route, by matching it against the URL
+         */
+        function parseRoute() {
+          // Match a route
+          var params;
 
-    function resolveLocals(route) {
-      if (route) {
-        var locals = angular.extend({}, route.resolve);
-        angular.forEach(locals, function(value, key) {
-          locals[key] = angular.isString(value) ?
-              $injector.get(value) :
-              $injector.invoke(value, null, null, key);
-        });
-        var template = getTemplateFor(route);
-        if (angular.isDefined(template)) {
-          locals['$template'] = template;
+          var match;
+          angular.forEach(routes, function(route, path) {
+            if (!match && (params = switchRouteMatcher($location.path(), route))) {
+              match = inherit(route, {
+                params: angular.extend({}, $location.search(), params),
+                pathParams: params});
+              match.$$route = route;
+            }
+          });
+          // No route matched; fallback to "otherwise" route
+          return match || routes[null] && inherit(routes[null], {params: {}, pathParams:{}});
         }
-        return $q.all(locals);
-      }
-    }
 
-    function getTemplateFor(route) {
-      var template, templateUrl;
-      if (angular.isDefined(template = route.template)) {
-        if (angular.isFunction(template)) {
-          template = template(route.params);
+        /**
+         * @returns {string} interpolation of the redirect path with the parameters
+         */
+        function interpolate(string, params) {
+          var result = [];
+          angular.forEach((string || '').split(':'), function(segment, i) {
+            if (i === 0) {
+              result.push(segment);
+            } else {
+              var segmentMatch = segment.match(/(\w+)(?:[?*])?(.*)/);
+              var key = segmentMatch[1];
+              result.push(params[key]);
+              result.push(segmentMatch[2] || '');
+              delete params[key];
+            }
+          });
+          return result.join('');
         }
-      } else if (angular.isDefined(templateUrl = route.templateUrl)) {
-        if (angular.isFunction(templateUrl)) {
-          templateUrl = templateUrl(route.params);
-        }
-        if (angular.isDefined(templateUrl)) {
-          route.loadedTemplateUrl = $sce.valueOf(templateUrl);
-          template = $templateRequest(templateUrl);
-        }
-      }
-      return template;
-    }
-
-    /**
-     * @returns {Object} the current active route, by matching it against the URL
-     */
-    function parseRoute() {
-      // Match a route
-      var params, match;
-      angular.forEach(routes, function(route, path) {
-        if (!match && (params = switchRouteMatcher($location.path(), route))) {
-          match = inherit(route, {
-            params: angular.extend({}, $location.search(), params),
-            pathParams: params});
-          match.$$route = route;
-        }
-      });
-      // No route matched; fallback to "otherwise" route
-      return match || routes[null] && inherit(routes[null], {params: {}, pathParams:{}});
-    }
-
-    /**
-     * @returns {string} interpolation of the redirect path with the parameters
-     */
-    function interpolate(string, params) {
-      var result = [];
-      angular.forEach((string || '').split(':'), function(segment, i) {
-        if (i === 0) {
-          result.push(segment);
-        } else {
-          var segmentMatch = segment.match(/(\w+)(?:[?*])?(.*)/);
-          var key = segmentMatch[1];
-          result.push(params[key]);
-          result.push(segmentMatch[2] || '');
-          delete params[key];
-        }
-      });
-      return result.join('');
-    }
-  }];
+      }];
 }
 
 instantiateRoute.$inject = ['$injector'];

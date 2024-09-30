@@ -172,7 +172,7 @@ angular.mock.$Browser.prototype = {
     });
   },
 
-  url: function(url, replace, state) {
+  url(url, replace, state) {
     if (angular.isUndefined(state)) {
       state = null;
     }
@@ -186,7 +186,7 @@ angular.mock.$Browser.prototype = {
     return this.$$url;
   },
 
-  state: function() {
+  state() {
     return this.$$state;
   }
 };
@@ -315,11 +315,11 @@ angular.mock.$LogProvider = function() {
 
   this.$get = function() {
     var $log = {
-      log: function() { $log.log.logs.push(concat([], arguments, 0)); },
-      warn: function() { $log.warn.logs.push(concat([], arguments, 0)); },
-      info: function() { $log.info.logs.push(concat([], arguments, 0)); },
-      error: function() { $log.error.logs.push(concat([], arguments, 0)); },
-      debug: function() {
+      log() { $log.log.logs.push(concat([], arguments, 0)); },
+      warn() { $log.warn.logs.push(concat([], arguments, 0)); },
+      info() { $log.info.logs.push(concat([], arguments, 0)); },
+      error() { $log.error.logs.push(concat([], arguments, 0)); },
+      debug() {
         if (debug) {
           $log.debug.logs.push(concat([], arguments, 0));
         }
@@ -461,118 +461,118 @@ angular.mock.$LogProvider = function() {
 angular.mock.$IntervalProvider = function() {
   this.$get = ['$browser', '$rootScope', '$q', '$$q',
        function($browser,   $rootScope,   $q,   $$q) {
-    var repeatFns = [],
-        nextRepeatId = 0,
-        now = 0;
+         var repeatFns = [];
+         var nextRepeatId = 0;
+         var now = 0;
 
-    var $interval = function(fn, delay, count, invokeApply) {
-      var hasParams = arguments.length > 4,
-          args = hasParams ? Array.prototype.slice.call(arguments, 4) : [],
-          iteration = 0,
-          skipApply = (angular.isDefined(invokeApply) && !invokeApply),
-          deferred = (skipApply ? $$q : $q).defer(),
-          promise = deferred.promise;
+         var $interval = function(fn, delay, count, invokeApply) {
+           var hasParams = arguments.length > 4;
+           var args = hasParams ? Array.prototype.slice.call(arguments, 4) : [];
+           var iteration = 0;
+           var skipApply = (angular.isDefined(invokeApply) && !invokeApply);
+           var deferred = (skipApply ? $$q : $q).defer();
+           var promise = deferred.promise;
 
-      count = (angular.isDefined(count)) ? count : 0;
-      promise.then(null, function() {}, (!hasParams) ? fn : function() {
-        fn.apply(null, args);
-      });
+           count = (angular.isDefined(count)) ? count : 0;
+           promise.then(null, function() {}, (!hasParams) ? fn : function() {
+             fn(...args);
+           });
 
-      promise.$$intervalId = nextRepeatId;
+           promise.$$intervalId = nextRepeatId;
 
-      function tick() {
-        deferred.notify(iteration++);
+           function tick() {
+             deferred.notify(iteration++);
 
-        if (count > 0 && iteration >= count) {
-          var fnIndex;
-          deferred.resolve(iteration);
+             if (count > 0 && iteration >= count) {
+               var fnIndex;
+               deferred.resolve(iteration);
 
-          angular.forEach(repeatFns, function(fn, index) {
-            if (fn.id === promise.$$intervalId) fnIndex = index;
-          });
+               angular.forEach(repeatFns, function(fn, index) {
+                 if (fn.id === promise.$$intervalId) fnIndex = index;
+               });
 
-          if (angular.isDefined(fnIndex)) {
-            repeatFns.splice(fnIndex, 1);
-          }
-        }
+               if (angular.isDefined(fnIndex)) {
+                 repeatFns.splice(fnIndex, 1);
+               }
+             }
 
-        if (skipApply) {
-          $browser.defer.flush();
-        } else {
-          $rootScope.$apply();
-        }
-      }
+             if (skipApply) {
+               $browser.defer.flush();
+             } else {
+               $rootScope.$apply();
+             }
+           }
 
-      repeatFns.push({
-        nextTime: (now + (delay || 0)),
-        delay: delay || 1,
-        fn: tick,
-        id: nextRepeatId,
-        deferred: deferred
-      });
-      repeatFns.sort(function(a, b) { return a.nextTime - b.nextTime;});
+           repeatFns.push({
+             nextTime: (now + (delay || 0)),
+             delay: delay || 1,
+             fn: tick,
+             id: nextRepeatId,
+             deferred: deferred
+           });
+           repeatFns.sort(function(a, b) { return a.nextTime - b.nextTime;});
 
-      nextRepeatId++;
-      return promise;
-    };
-    /**
-     * @ngdoc method
-     * @name $interval#cancel
-     *
-     * @description
-     * Cancels a task associated with the `promise`.
-     *
-     * @param {promise} promise A promise from calling the `$interval` function.
-     * @returns {boolean} Returns `true` if the task was successfully cancelled.
-     */
-    $interval.cancel = function(promise) {
-      if (!promise) return false;
-      var fnIndex;
+           nextRepeatId++;
+           return promise;
+         };
+         /**
+          * @ngdoc method
+          * @name $interval#cancel
+          *
+          * @description
+          * Cancels a task associated with the `promise`.
+          *
+          * @param {promise} promise A promise from calling the `$interval` function.
+          * @returns {boolean} Returns `true` if the task was successfully cancelled.
+          */
+         $interval.cancel = function(promise) {
+           if (!promise) return false;
+           var fnIndex;
 
-      angular.forEach(repeatFns, function(fn, index) {
-        if (fn.id === promise.$$intervalId) fnIndex = index;
-      });
+           angular.forEach(repeatFns, function(fn, index) {
+             if (fn.id === promise.$$intervalId) fnIndex = index;
+           });
 
-      if (angular.isDefined(fnIndex)) {
-        repeatFns[fnIndex].deferred.promise.then(undefined, function() {});
-        repeatFns[fnIndex].deferred.reject('canceled');
-        repeatFns.splice(fnIndex, 1);
-        return true;
-      }
+           if (angular.isDefined(fnIndex)) {
+             repeatFns[fnIndex].deferred.promise.then(undefined, function() {});
+             repeatFns[fnIndex].deferred.reject('canceled');
+             repeatFns.splice(fnIndex, 1);
+             return true;
+           }
 
-      return false;
-    };
+           return false;
+         };
 
-    /**
-     * @ngdoc method
-     * @name $interval#flush
-     * @description
-     *
-     * Runs interval tasks scheduled to be run in the next `millis` milliseconds.
-     *
-     * @param {number=} millis maximum timeout amount to flush up until.
-     *
-     * @return {number} The amount of time moved forward.
-     */
-    $interval.flush = function(millis) {
-      var before = now;
-      now += millis;
-      while (repeatFns.length && repeatFns[0].nextTime <= now) {
-        var task = repeatFns[0];
-        task.fn();
-        if (task.nextTime === before) {
-          // this can only happen the first time
-          // a zero-delay interval gets triggered
-          task.nextTime++;
-        }
-        task.nextTime += task.delay;
-        repeatFns.sort(function(a, b) { return a.nextTime - b.nextTime;});
-      }
-      return millis;
-    };
+         /**
+          * @ngdoc method
+          * @name $interval#flush
+          * @description
+          *
+          * Runs interval tasks scheduled to be run in the next `millis` milliseconds.
+          *
+          * @param {number=} millis maximum timeout amount to flush up until.
+          *
+          * @return {number} The amount of time moved forward.
+          */
+         $interval.flush = function(millis) {
+           var before = now;
+           now += millis;
+           while (repeatFns.length && repeatFns[0].nextTime <= now) {
+             var task = repeatFns[0];
+             task.fn();
+             if (task.nextTime === before) {
+               // this can only happen the first time
+               // a zero-delay interval gets triggered
+               task.nextTime++;
+             }
+             task.nextTime += task.delay;
+             repeatFns.sort(function(a, b) { return a.nextTime - b.nextTime;});
+           }
+           return millis;
+         };
 
-    return $interval;
-  }];
+         return $interval;
+       }];
 };
 
 
@@ -583,9 +583,9 @@ function jsonStringToDate(string) {
 
   var match;
   if ((match = string.match(R_ISO8061_STR))) {
-    var date = new Date(0),
-        tzHour = 0,
-        tzMin  = 0;
+    var date = new Date(0);
+    var tzHour = 0;
+    var tzMin  = 0;
     if (match[9]) {
       tzHour = toInt(match[9] + match[10]);
       tzMin = toInt(match[9] + match[11]);
@@ -891,7 +891,7 @@ angular.mock.animate = angular.module('ngAnimateMock', ['ng'])
          * This method will close all pending animations (both {@link ngAnimate#javascript-based-animations Javascript}
          * and {@link ngAnimate.$animateCss CSS}) and it will also flush any remaining animation frames and/or callbacks.
          */
-        closeAndFlush: function() {
+        closeAndFlush() {
           // we allow the flush command to swallow the errors
           // because depending on whether CSS or JS animations are
           // used, there may not be a RAF flush. The primary flush
@@ -911,10 +911,11 @@ angular.mock.animate = angular.module('ngAnimateMock', ['ng'])
          * an animation or conclude an animation. Note that this will not actually close an
          * actively running animation (see {@link ngMock.$animate#closeAndFlush `closeAndFlush()`} for that).
          */
-        flush: function(hideErrors) {
+        flush(hideErrors) {
           $rootScope.$digest();
 
-          var doNextRun, somethingFlushed = false;
+          var doNextRun;
+          var somethingFlushed = false;
           do {
             doNextRun = false;
 
@@ -945,7 +946,7 @@ angular.mock.animate = angular.module('ngAnimateMock', ['ng'])
             options: arguments[arguments.length - 1],
             args: arguments
           });
-          return $delegate[method].apply($delegate, arguments);
+          return $delegate[method](...arguments);
         };
       });
 
@@ -1340,14 +1341,15 @@ angular.mock.$httpBackendDecorator =
  * @return {Object} Instance of $httpBackend mock
  */
 function createHttpBackendMock($rootScope, $timeout, $delegate, $browser) {
-  var definitions = [],
-      expectations = [],
-      responses = [],
-      responsesPush = angular.bind(responses, responses.push),
-      copy = angular.copy,
-      // We cache the original backend so that if both ngMock and ngMockE2E override the
-      // service the ngMockE2E version can pass through to the real backend
-      originalHttpBackend = $delegate.$$originalHttpBackend || $delegate;
+  var definitions = [];
+  var expectations = [];
+  var responses = [];
+  var responsesPush = angular.bind(responses, responses.push);
+  var copy = angular.copy;
+
+  var // We cache the original backend so that if both ngMock and ngMockE2E override the
+  // service the ngMockE2E version can pass through to the real backend
+  originalHttpBackend = $delegate.$$originalHttpBackend || $delegate;
 
   function createResponse(status, data, headers, statusText) {
     if (angular.isFunction(status)) return status;
@@ -1361,10 +1363,9 @@ function createHttpBackendMock($rootScope, $timeout, $delegate, $browser) {
 
   // TODO(vojta): change params to: method, url, data, headers, callback
   function $httpBackend(method, url, data, callback, headers, timeout, withCredentials, responseType, eventHandlers, uploadEventHandlers) {
-
-    var xhr = new MockXhr(),
-        expectation = expectations[0],
-        wasExpected = false;
+    var xhr = new MockXhr();
+    var expectation = expectations[0];
+    var wasExpected = false;
 
     xhr.$$events = eventHandlers;
     xhr.upload.$$events = uploadEventHandlers;
@@ -1430,7 +1431,8 @@ function createHttpBackendMock($rootScope, $timeout, $delegate, $browser) {
       wasExpected = true;
     }
 
-    var i = -1, definition;
+    var i = -1;
+    var definition;
     while ((definition = definitions[++i])) {
       if (definition.match(method, url, data, headers || {})) {
         if (definition.response) {
@@ -1483,17 +1485,17 @@ function createHttpBackendMock($rootScope, $timeout, $delegate, $browser) {
    *    the `requestHandler` object for possible overrides.
    */
   $httpBackend.when = function(method, url, data, headers, keys) {
-
     assertArgDefined(arguments, 1, 'url');
 
-    var definition = new MockHttpExpectation(method, url, data, headers, keys),
-        chain = {
-          respond: function(status, data, headers, statusText) {
-            definition.passThrough = undefined;
-            definition.response = createResponse(status, data, headers, statusText);
-            return chain;
-          }
-        };
+    var definition = new MockHttpExpectation(method, url, data, headers, keys);
+
+    var chain = {
+      respond(status, data, headers, statusText) {
+        definition.passThrough = undefined;
+        definition.response = createResponse(status, data, headers, statusText);
+        return chain;
+      }
+    };
 
     if ($browser) {
       chain.passThrough = function() {
@@ -1621,8 +1623,9 @@ function createHttpBackendMock($rootScope, $timeout, $delegate, $browser) {
   function parseRoute(url) {
     var ret = {
       regexp: url
-    },
-    keys = ret.keys = [];
+    };
+
+    var keys = ret.keys = [];
 
     if (!url || !angular.isString(url)) return ret;
 
@@ -1678,16 +1681,16 @@ function createHttpBackendMock($rootScope, $timeout, $delegate, $browser) {
    *    the `requestHandler` object for possible overrides.
    */
   $httpBackend.expect = function(method, url, data, headers, keys) {
-
     assertArgDefined(arguments, 1, 'url');
 
-    var expectation = new MockHttpExpectation(method, url, data, headers, keys),
-        chain = {
-          respond: function(status, data, headers, statusText) {
-            expectation.response = createResponse(status, data, headers, statusText);
-            return chain;
-          }
-        };
+    var expectation = new MockHttpExpectation(method, url, data, headers, keys);
+
+    var chain = {
+      respond(status, data, headers, statusText) {
+        expectation.response = createResponse(status, data, headers, statusText);
+        return chain;
+      }
+    };
 
     expectations.push(expectation);
     return chain;
@@ -2030,10 +2033,13 @@ function MockHttpExpectation(method, url, data, headers, keys) {
     }
 
     function parseQuery() {
-      var obj = {}, key_value, key,
-          queryStr = u.indexOf('?') > -1
-          ? u.substring(u.indexOf('?') + 1)
-          : '';
+      var obj = {};
+      var key_value;
+      var key;
+
+      var queryStr = u.includes('?')
+      ? u.substring(u.indexOf('?') + 1)
+      : '';
 
       angular.forEach(queryStr.split('&'), function(keyValue) {
         if (keyValue) {
@@ -2821,17 +2827,17 @@ angular.mock.$RootScopeDecorator = ['$delegate', function($delegate) {
 
 
 (function(isUsingSupportedTestingFramework) {
-
   if (!isUsingSupportedTestingFramework) {
     return;
   }
 
-  var currentSpec = null,
-      injectorState = new InjectorState(),
-      annotatedFunctions = [],
-      wasInjectorCreated = function() {
-        return !!currentSpec;
-      };
+  var currentSpec = null;
+  var injectorState = new InjectorState();
+  var annotatedFunctions = [];
+
+  var wasInjectorCreated = function() {
+    return !!currentSpec;
+  };
 
   angular.mock.$$annotate = angular.injector.$$annotate;
   angular.injector.$$annotate = function(fn) {
@@ -2869,7 +2875,8 @@ angular.mock.$RootScopeDecorator = ['$delegate', function($delegate) {
       if (currentSpec.$injector) {
         throw new Error('Injector already created, can not register a module!');
       } else {
-        var fn, modules = currentSpec.$modules || (currentSpec.$modules = []);
+        var fn;
+        var modules = currentSpec.$modules || (currentSpec.$modules = []);
         angular.forEach(moduleFns, function(module) {
           if (angular.isObject(module) && !angular.isArray(module)) {
             fn = ['$provide', function($provide) {

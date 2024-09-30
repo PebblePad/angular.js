@@ -356,7 +356,8 @@ angular.module('ngMessages', [], function initAngularHelpers() {
         this.getAttachId = function getAttachId() { return nextAttachId++; };
 
         var messages = this.messages = {};
-        var renderLater, cachedCollection;
+        var renderLater;
+        var cachedCollection;
 
         this.render = function(collection) {
           collection = collection || {};
@@ -460,7 +461,7 @@ angular.module('ngMessages', [], function initAngularHelpers() {
 
             // dive deeper into the DOM and examine its children for any ngMessage
             // comments that may be in an element that appears deeper in the list
-            if (prevNode.childNodes.length && parentLookup.indexOf(prevNode) === -1) {
+            if (prevNode.childNodes.length && !parentLookup.includes(prevNode)) {
               parentLookup.push(prevNode);
               prevNode = prevNode.childNodes[prevNode.childNodes.length - 1];
             } else if (prevNode.previousSibling) {
@@ -550,7 +551,7 @@ angular.module('ngMessages', [], function initAngularHelpers() {
     return {
       restrict: 'AE',
       require: '^^ngMessages', // we only require this for validation sake
-      link: function($scope, element, attrs) {
+      link($scope, element, attrs) {
         var src = attrs.ngMessagesInclude || attrs.src;
         $templateRequest(src).then(function(html) {
           if ($scope.$$destroyed) return;
@@ -657,7 +658,7 @@ function ngMessageDirectiveFactory() {
       priority: 1, // must run before ngBind, otherwise the text is set on the comment
       terminal: true,
       require: '^^ngMessages',
-      link: function(scope, element, attrs, ngMessagesCtrl, $transclude) {
+      link(scope, element, attrs, ngMessagesCtrl, $transclude) {
         var commentNode = element[0];
 
         var records;
@@ -679,12 +680,13 @@ function ngMessageDirectiveFactory() {
           assignRecords(staticExp);
         }
 
-        var currentElement, messageCtrl;
+        var currentElement;
+        var messageCtrl;
         ngMessagesCtrl.register(commentNode, messageCtrl = {
-          test: function(name) {
+          test(name) {
             return contains(records, name);
           },
-          attach: function() {
+          attach() {
             if (!currentElement) {
               $transclude(function(elm, newScope) {
                 $animate.enter(elm, null, element);
@@ -709,7 +711,7 @@ function ngMessageDirectiveFactory() {
               });
             }
           },
-          detach: function() {
+          detach() {
             if (currentElement) {
               var elm = currentElement;
               currentElement = null;
@@ -732,7 +734,7 @@ function ngMessageDirectiveFactory() {
   function contains(collection, key) {
     if (collection) {
       return isArray(collection)
-          ? collection.indexOf(key) >= 0
+          ? collection.includes(key)
           : collection.hasOwnProperty(key);
     }
   }

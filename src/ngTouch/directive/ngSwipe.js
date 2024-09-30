@@ -83,7 +83,8 @@ function makeSwipeDirective(directiveName, direction, eventName) {
     return function(scope, element, attr) {
       var swipeHandler = $parse(attr[directiveName]);
 
-      var startCoords, valid;
+      var startCoords;
+      var valid;
 
       function validSwipe(coords) {
         // Check that it's within the coordinates.

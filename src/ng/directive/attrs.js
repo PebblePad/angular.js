@@ -381,7 +381,7 @@ forEach(ALIASED_ATTR, function(htmlAttr, ngAttr) {
   ngAttributeAliasDirectives[ngAttr] = function() {
     return {
       priority: 100,
-      link: function(scope, element, attr) {
+      link(scope, element, attr) {
         //special case ngPattern when a literal regular expression value
         //is used as the expression (this way we don't have to watch anything).
         if (ngAttr === 'ngPattern' && attr.ngPattern.charAt(0) === '/') {
@@ -406,9 +406,9 @@ forEach(['src', 'srcset', 'href'], function(attrName) {
   ngAttributeAliasDirectives[normalized] = function() {
     return {
       priority: 99, // it needs to run after the attributes are interpolated
-      link: function(scope, element, attr) {
-        var propName = attrName,
-            name = attrName;
+      link(scope, element, attr) {
+        var propName = attrName;
+        var name = attrName;
 
         if (attrName === 'href' &&
             toString.call(element.prop('href')) === '[object SVGAnimatedString]') {

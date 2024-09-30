@@ -26,8 +26,8 @@ function identifierForController(controller, ident) {
  * {@link ng.$controllerProvider#register register} method.
  */
 function $ControllerProvider() {
-  var controllers = {},
-      globals = false;
+  var controllers = {};
+  var globals = false;
 
   /**
    * @ngdoc method
@@ -107,7 +107,11 @@ function $ControllerProvider() {
       //                     callback is invoked.
       //   param `ident` --- An optional label which overrides the label parsed from the controller
       //                     expression, if any.
-      var instance, match, constructor, identifier;
+      var instance;
+
+      var match;
+      var constructor;
+      var identifier;
       later = later === true;
       if (ident && isString(ident)) {
         identifier = ident;

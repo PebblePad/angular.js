@@ -205,7 +205,7 @@ var ngShowDirective = ['$animate', function($animate) {
   return {
     restrict: 'A',
     multiElement: true,
-    link: function(scope, element, attr) {
+    link(scope, element, attr) {
       scope.$watch(attr.ngShow, function ngShowWatchAction(value) {
         // we're adding a temporary, animation-specific class for ng-hide since this way
         // we can control when the element is actually displayed on screen without having
@@ -423,7 +423,7 @@ var ngHideDirective = ['$animate', function($animate) {
   return {
     restrict: 'A',
     multiElement: true,
-    link: function(scope, element, attr) {
+    link(scope, element, attr) {
       scope.$watch(attr.ngHide, function ngHideWatchAction(value) {
         // The comment inside of the ngShowDirective explains why we add and
         // remove a temporary class for the show/hide animation

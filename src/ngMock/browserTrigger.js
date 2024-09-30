@@ -63,8 +63,8 @@
     var x = eventData.x;
     var y = eventData.y;
 
-    var inputType = (element.type) ? element.type.toLowerCase() : null,
-        nodeName = element.nodeName.toLowerCase();
+    var inputType = (element.type) ? element.type.toLowerCase() : null;
+    var nodeName = element.nodeName.toLowerCase();
     if (!eventType) {
       eventType = {
         'text':            'change',
@@ -91,7 +91,7 @@
 
     keys = keys || [];
     function pressed(key) {
-      return keys.indexOf(key) !== -1;
+      return keys.includes(key);
     }
 
     var evnt;
@@ -164,11 +164,11 @@
 
     if (!evnt) return;
 
-    var originalPreventDefault = evnt.preventDefault,
-        appWindow = element.ownerDocument.defaultView,
-        fakeProcessDefault = true,
-        finalProcessDefault,
-        angular = appWindow.angular || {};
+    var originalPreventDefault = evnt.preventDefault;
+    var appWindow = element.ownerDocument.defaultView;
+    var fakeProcessDefault = true;
+    var finalProcessDefault;
+    var angular = appWindow.angular || {};
 
     // igor: temporary fix for https://bugzilla.mozilla.org/show_bug.cgi?id=684208
     angular['ff-684208-preventDefault'] = false;
@@ -228,8 +228,8 @@
     supportsEventBubblingInDetachedTree._cached = false;
     var doc = window.document;
     if (doc) {
-      var parent = doc.createElement('div'),
-          child = parent.cloneNode();
+      var parent = doc.createElement('div');
+      var child = parent.cloneNode();
       parent.appendChild(child);
       parent.addEventListener('e', function() {
         supportsEventBubblingInDetachedTree._cached = true;
@@ -258,7 +258,7 @@
 
   function patchEventTargetForBubbling(event, target) {
     event._target = target;
-    Object.defineProperty(event, 'target', {get: function() { return this._target;}});
+    Object.defineProperty(event, 'target', {get() { return this._target;}});
   }
 
   function isAttachedToDocument(element) {

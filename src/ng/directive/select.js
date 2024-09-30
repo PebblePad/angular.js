@@ -153,334 +153,335 @@ function setOptionSelectedStatus(optionEl, value) {
  */
 var SelectController =
         ['$element', '$scope', /** @this */ function($element, $scope) {
+          var self = this;
+          var optionsMap = new NgMap();
 
-  var self = this,
-      optionsMap = new NgMap();
+          self.selectValueMap = {}; // Keys are the hashed values, values the original values
 
-  self.selectValueMap = {}; // Keys are the hashed values, values the original values
+          // If the ngModel doesn't get provided then provide a dummy noop version to prevent errors
+          self.ngModelCtrl = noopNgModelController;
+          self.multiple = false;
 
-  // If the ngModel doesn't get provided then provide a dummy noop version to prevent errors
-  self.ngModelCtrl = noopNgModelController;
-  self.multiple = false;
+          // The "unknown" option is one that is prepended to the list if the viewValue
+          // does not match any of the options. When it is rendered the value of the unknown
+          // option is '? XXX ?' where XXX is the hashKey of the value that is not known.
+          //
+          // Support: IE 9 only
+          // We can't just jqLite('<option>') since jqLite is not smart enough
+          // to create it in <select> and IE barfs otherwise.
+          self.unknownOption = jqLite(window.document.createElement('option'));
 
-  // The "unknown" option is one that is prepended to the list if the viewValue
-  // does not match any of the options. When it is rendered the value of the unknown
-  // option is '? XXX ?' where XXX is the hashKey of the value that is not known.
-  //
-  // Support: IE 9 only
-  // We can't just jqLite('<option>') since jqLite is not smart enough
-  // to create it in <select> and IE barfs otherwise.
-  self.unknownOption = jqLite(window.document.createElement('option'));
-
-  // The empty option is an option with the value '' that the application developer can
-  // provide inside the select. It is always selectable and indicates that a "null" selection has
-  // been made by the user.
-  // If the select has an empty option, and the model of the select is set to "undefined" or "null",
-  // the empty option is selected.
-  // If the model is set to a different unmatched value, the unknown option is rendered and
-  // selected, i.e both are present, because a "null" selection and an unknown value are different.
-  self.hasEmptyOption = false;
-  self.emptyOption = undefined;
-
-  self.renderUnknownOption = function(val) {
-    var unknownVal = self.generateUnknownOptionValue(val);
-    self.unknownOption.val(unknownVal);
-    $element.prepend(self.unknownOption);
-    setOptionSelectedStatus(self.unknownOption, true);
-    $element.val(unknownVal);
-  };
-
-  self.updateUnknownOption = function(val) {
-    var unknownVal = self.generateUnknownOptionValue(val);
-    self.unknownOption.val(unknownVal);
-    setOptionSelectedStatus(self.unknownOption, true);
-    $element.val(unknownVal);
-  };
-
-  self.generateUnknownOptionValue = function(val) {
-    return '? ' + hashKey(val) + ' ?';
-  };
-
-  self.removeUnknownOption = function() {
-    if (self.unknownOption.parent()) self.unknownOption.remove();
-  };
-
-  self.selectEmptyOption = function() {
-    if (self.emptyOption) {
-      $element.val('');
-      setOptionSelectedStatus(self.emptyOption, true);
-    }
-  };
-
-  self.unselectEmptyOption = function() {
-    if (self.hasEmptyOption) {
-      setOptionSelectedStatus(self.emptyOption, false);
-    }
-  };
-
-  $scope.$on('$destroy', function() {
-    // disable unknown option so that we don't do work when the whole select is being destroyed
-    self.renderUnknownOption = noop;
-  });
-
-  // Read the value of the select control, the implementation of this changes depending
-  // upon whether the select can have multiple values and whether ngOptions is at work.
-  self.readValue = function readSingleValue() {
-    var val = $element.val();
-    // ngValue added option values are stored in the selectValueMap, normal interpolations are not
-    var realVal = val in self.selectValueMap ? self.selectValueMap[val] : val;
-
-    if (self.hasOption(realVal)) {
-      return realVal;
-    }
-
-    return null;
-  };
-
-
-  // Write the value to the select control, the implementation of this changes depending
-  // upon whether the select can have multiple values and whether ngOptions is at work.
-  self.writeValue = function writeSingleValue(value) {
-    // Make sure to remove the selected attribute from the previously selected option
-    // Otherwise, screen readers might get confused
-    var currentlySelectedOption = $element[0].options[$element[0].selectedIndex];
-    if (currentlySelectedOption) setOptionSelectedStatus(jqLite(currentlySelectedOption), false);
-
-    if (self.hasOption(value)) {
-      self.removeUnknownOption();
-
-      var hashedVal = hashKey(value);
-      $element.val(hashedVal in self.selectValueMap ? hashedVal : value);
-
-      // Set selected attribute and property on selected option for screen readers
-      var selectedOption = $element[0].options[$element[0].selectedIndex];
-      setOptionSelectedStatus(jqLite(selectedOption), true);
-    } else {
-      self.selectUnknownOrEmptyOption(value);
-    }
-  };
-
-
-  // Tell the select control that an option, with the given value, has been added
-  self.addOption = function(value, element) {
-    // Skip comment nodes, as they only pollute the `optionsMap`
-    if (element[0].nodeType === NODE_TYPE_COMMENT) return;
-
-    assertNotHasOwnProperty(value, '"option value"');
-    if (value === '') {
-      self.hasEmptyOption = true;
-      self.emptyOption = element;
-    }
-    var count = optionsMap.get(value) || 0;
-    optionsMap.set(value, count + 1);
-    // Only render at the end of a digest. This improves render performance when many options
-    // are added during a digest and ensures all relevant options are correctly marked as selected
-    scheduleRender();
-  };
-
-  // Tell the select control that an option, with the given value, has been removed
-  self.removeOption = function(value) {
-    var count = optionsMap.get(value);
-    if (count) {
-      if (count === 1) {
-        optionsMap.delete(value);
-        if (value === '') {
+          // The empty option is an option with the value '' that the application developer can
+          // provide inside the select. It is always selectable and indicates that a "null" selection has
+          // been made by the user.
+          // If the select has an empty option, and the model of the select is set to "undefined" or "null",
+          // the empty option is selected.
+          // If the model is set to a different unmatched value, the unknown option is rendered and
+          // selected, i.e both are present, because a "null" selection and an unknown value are different.
           self.hasEmptyOption = false;
           self.emptyOption = undefined;
-        }
-      } else {
-        optionsMap.set(value, count - 1);
-      }
-    }
-  };
 
-  // Check whether the select control has an option matching the given value
-  self.hasOption = function(value) {
-    return !!optionsMap.get(value);
-  };
+          self.renderUnknownOption = function(val) {
+            var unknownVal = self.generateUnknownOptionValue(val);
+            self.unknownOption.val(unknownVal);
+            $element.prepend(self.unknownOption);
+            setOptionSelectedStatus(self.unknownOption, true);
+            $element.val(unknownVal);
+          };
 
-  /**
-   * @ngdoc method
-   * @name select.SelectController#$hasEmptyOption
-   *
-   * @description
-   *
-   * Returns `true` if the select element currently has an empty option
-   * element, i.e. an option that signifies that the select is empty / the selection is null.
-   *
-   */
-  self.$hasEmptyOption = function() {
-    return self.hasEmptyOption;
-  };
+          self.updateUnknownOption = function(val) {
+            var unknownVal = self.generateUnknownOptionValue(val);
+            self.unknownOption.val(unknownVal);
+            setOptionSelectedStatus(self.unknownOption, true);
+            $element.val(unknownVal);
+          };
 
-  /**
-   * @ngdoc method
-   * @name select.SelectController#$isUnknownOptionSelected
-   *
-   * @description
-   *
-   * Returns `true` if the select element's unknown option is selected. The unknown option is added
-   * and automatically selected whenever the select model doesn't match any option.
-   *
-   */
-  self.$isUnknownOptionSelected = function() {
-    // Presence of the unknown option means it is selected
-    return $element[0].options[0] === self.unknownOption[0];
-  };
+          self.generateUnknownOptionValue = function(val) {
+            return '? ' + hashKey(val) + ' ?';
+          };
 
-  /**
-   * @ngdoc method
-   * @name select.SelectController#$isEmptyOptionSelected
-   *
-   * @description
-   *
-   * Returns `true` if the select element has an empty option and this empty option is currently
-   * selected. Returns `false` if the select element has no empty option or it is not selected.
-   *
-   */
-  self.$isEmptyOptionSelected = function() {
-    return self.hasEmptyOption && $element[0].options[$element[0].selectedIndex] === self.emptyOption[0];
-  };
+          self.removeUnknownOption = function() {
+            if (self.unknownOption.parent()) self.unknownOption.remove();
+          };
 
-  self.selectUnknownOrEmptyOption = function(value) {
-    if (value == null && self.emptyOption) {
-      self.removeUnknownOption();
-      self.selectEmptyOption();
-    } else if (self.unknownOption.parent().length) {
-      self.updateUnknownOption(value);
-    } else {
-      self.renderUnknownOption(value);
-    }
-  };
+          self.selectEmptyOption = function() {
+            if (self.emptyOption) {
+              $element.val('');
+              setOptionSelectedStatus(self.emptyOption, true);
+            }
+          };
 
-  var renderScheduled = false;
-  function scheduleRender() {
-    if (renderScheduled) return;
-    renderScheduled = true;
-    $scope.$$postDigest(function() {
-      renderScheduled = false;
-      self.ngModelCtrl.$render();
-    });
-  }
+          self.unselectEmptyOption = function() {
+            if (self.hasEmptyOption) {
+              setOptionSelectedStatus(self.emptyOption, false);
+            }
+          };
 
-  var updateScheduled = false;
-  function scheduleViewValueUpdate(renderAfter) {
-    if (updateScheduled) return;
+          $scope.$on('$destroy', function() {
+            // disable unknown option so that we don't do work when the whole select is being destroyed
+            self.renderUnknownOption = noop;
+          });
 
-    updateScheduled = true;
+          // Read the value of the select control, the implementation of this changes depending
+          // upon whether the select can have multiple values and whether ngOptions is at work.
+          self.readValue = function readSingleValue() {
+            var val = $element.val();
+            // ngValue added option values are stored in the selectValueMap, normal interpolations are not
+            var realVal = val in self.selectValueMap ? self.selectValueMap[val] : val;
 
-    $scope.$$postDigest(function() {
-      if ($scope.$$destroyed) return;
+            if (self.hasOption(realVal)) {
+              return realVal;
+            }
 
-      updateScheduled = false;
-      self.ngModelCtrl.$setViewValue(self.readValue());
-      if (renderAfter) self.ngModelCtrl.$render();
-    });
-  }
+            return null;
+          };
 
 
-  self.registerOption = function(optionScope, optionElement, optionAttrs, interpolateValueFn, interpolateTextFn) {
+          // Write the value to the select control, the implementation of this changes depending
+          // upon whether the select can have multiple values and whether ngOptions is at work.
+          self.writeValue = function writeSingleValue(value) {
+            // Make sure to remove the selected attribute from the previously selected option
+            // Otherwise, screen readers might get confused
+            var currentlySelectedOption = $element[0].options[$element[0].selectedIndex];
+            if (currentlySelectedOption) setOptionSelectedStatus(jqLite(currentlySelectedOption), false);
 
-    if (optionAttrs.$attr.ngValue) {
-      // The value attribute is set by ngValue
-      var oldVal, hashedVal = NaN;
-      optionAttrs.$observe('value', function valueAttributeObserveAction(newVal) {
+            if (self.hasOption(value)) {
+              self.removeUnknownOption();
 
-        var removal;
-        var previouslySelected = optionElement.prop('selected');
+              var hashedVal = hashKey(value);
+              $element.val(hashedVal in self.selectValueMap ? hashedVal : value);
 
-        if (isDefined(hashedVal)) {
-          self.removeOption(oldVal);
-          delete self.selectValueMap[hashedVal];
-          removal = true;
-        }
-
-        hashedVal = hashKey(newVal);
-        oldVal = newVal;
-        self.selectValueMap[hashedVal] = newVal;
-        self.addOption(newVal, optionElement);
-        // Set the attribute directly instead of using optionAttrs.$set - this stops the observer
-        // from firing a second time. Other $observers on value will also get the result of the
-        // ngValue expression, not the hashed value
-        optionElement.attr('value', hashedVal);
-
-        if (removal && previouslySelected) {
-          scheduleViewValueUpdate();
-        }
-
-      });
-    } else if (interpolateValueFn) {
-      // The value attribute is interpolated
-      optionAttrs.$observe('value', function valueAttributeObserveAction(newVal) {
-        // This method is overwritten in ngOptions and has side-effects!
-        self.readValue();
-
-        var removal;
-        var previouslySelected = optionElement.prop('selected');
-
-        if (isDefined(oldVal)) {
-          self.removeOption(oldVal);
-          removal = true;
-        }
-        oldVal = newVal;
-        self.addOption(newVal, optionElement);
-
-        if (removal && previouslySelected) {
-          scheduleViewValueUpdate();
-        }
-      });
-    } else if (interpolateTextFn) {
-      // The text content is interpolated
-      optionScope.$watch(interpolateTextFn, function interpolateWatchAction(newVal, oldVal) {
-        optionAttrs.$set('value', newVal);
-        var previouslySelected = optionElement.prop('selected');
-        if (oldVal !== newVal) {
-          self.removeOption(oldVal);
-        }
-        self.addOption(newVal, optionElement);
-
-        if (oldVal && previouslySelected) {
-          scheduleViewValueUpdate();
-        }
-      });
-    } else {
-      // The value attribute is static
-      self.addOption(optionAttrs.value, optionElement);
-    }
+              // Set selected attribute and property on selected option for screen readers
+              var selectedOption = $element[0].options[$element[0].selectedIndex];
+              setOptionSelectedStatus(jqLite(selectedOption), true);
+            } else {
+              self.selectUnknownOrEmptyOption(value);
+            }
+          };
 
 
-    optionAttrs.$observe('disabled', function(newVal) {
+          // Tell the select control that an option, with the given value, has been added
+          self.addOption = function(value, element) {
+            // Skip comment nodes, as they only pollute the `optionsMap`
+            if (element[0].nodeType === NODE_TYPE_COMMENT) return;
 
-      // Since model updates will also select disabled options (like ngOptions),
-      // we only have to handle options becoming disabled, not enabled
+            assertNotHasOwnProperty(value, '"option value"');
+            if (value === '') {
+              self.hasEmptyOption = true;
+              self.emptyOption = element;
+            }
+            var count = optionsMap.get(value) || 0;
+            optionsMap.set(value, count + 1);
+            // Only render at the end of a digest. This improves render performance when many options
+            // are added during a digest and ensures all relevant options are correctly marked as selected
+            scheduleRender();
+          };
 
-      if (newVal === 'true' || newVal && optionElement.prop('selected')) {
-        if (self.multiple) {
-          scheduleViewValueUpdate(true);
-        } else {
-          self.ngModelCtrl.$setViewValue(null);
-          self.ngModelCtrl.$render();
-        }
-      }
-    });
+          // Tell the select control that an option, with the given value, has been removed
+          self.removeOption = function(value) {
+            var count = optionsMap.get(value);
+            if (count) {
+              if (count === 1) {
+                optionsMap.delete(value);
+                if (value === '') {
+                  self.hasEmptyOption = false;
+                  self.emptyOption = undefined;
+                }
+              } else {
+                optionsMap.set(value, count - 1);
+              }
+            }
+          };
 
-    optionElement.on('$destroy', function() {
-      var currentValue = self.readValue();
-      var removeValue = optionAttrs.value;
+          // Check whether the select control has an option matching the given value
+          self.hasOption = function(value) {
+            return !!optionsMap.get(value);
+          };
 
-      self.removeOption(removeValue);
-      scheduleRender();
+          /**
+           * @ngdoc method
+           * @name select.SelectController#$hasEmptyOption
+           *
+           * @description
+           *
+           * Returns `true` if the select element currently has an empty option
+           * element, i.e. an option that signifies that the select is empty / the selection is null.
+           *
+           */
+          self.$hasEmptyOption = function() {
+            return self.hasEmptyOption;
+          };
 
-      if (self.multiple && currentValue && currentValue.indexOf(removeValue) !== -1 ||
-          currentValue === removeValue
-      ) {
-        // When multiple (selected) options are destroyed at the same time, we don't want
-        // to run a model update for each of them. Instead, run a single update in the $$postDigest
-        scheduleViewValueUpdate(true);
-      }
-    });
-  };
-}];
+          /**
+           * @ngdoc method
+           * @name select.SelectController#$isUnknownOptionSelected
+           *
+           * @description
+           *
+           * Returns `true` if the select element's unknown option is selected. The unknown option is added
+           * and automatically selected whenever the select model doesn't match any option.
+           *
+           */
+          self.$isUnknownOptionSelected = function() {
+            // Presence of the unknown option means it is selected
+            return $element[0].options[0] === self.unknownOption[0];
+          };
+
+          /**
+           * @ngdoc method
+           * @name select.SelectController#$isEmptyOptionSelected
+           *
+           * @description
+           *
+           * Returns `true` if the select element has an empty option and this empty option is currently
+           * selected. Returns `false` if the select element has no empty option or it is not selected.
+           *
+           */
+          self.$isEmptyOptionSelected = function() {
+            return self.hasEmptyOption && $element[0].options[$element[0].selectedIndex] === self.emptyOption[0];
+          };
+
+          self.selectUnknownOrEmptyOption = function(value) {
+            if (value == null && self.emptyOption) {
+              self.removeUnknownOption();
+              self.selectEmptyOption();
+            } else if (self.unknownOption.parent().length) {
+              self.updateUnknownOption(value);
+            } else {
+              self.renderUnknownOption(value);
+            }
+          };
+
+          var renderScheduled = false;
+          function scheduleRender() {
+            if (renderScheduled) return;
+            renderScheduled = true;
+            $scope.$$postDigest(function() {
+              renderScheduled = false;
+              self.ngModelCtrl.$render();
+            });
+          }
+
+          var updateScheduled = false;
+          function scheduleViewValueUpdate(renderAfter) {
+            if (updateScheduled) return;
+
+            updateScheduled = true;
+
+            $scope.$$postDigest(function() {
+              if ($scope.$$destroyed) return;
+
+              updateScheduled = false;
+              self.ngModelCtrl.$setViewValue(self.readValue());
+              if (renderAfter) self.ngModelCtrl.$render();
+            });
+          }
+
+
+          self.registerOption = function(optionScope, optionElement, optionAttrs, interpolateValueFn, interpolateTextFn) {
+
+            if (optionAttrs.$attr.ngValue) {
+              // The value attribute is set by ngValue
+              var oldVal;
+
+              var hashedVal = NaN;
+              optionAttrs.$observe('value', function valueAttributeObserveAction(newVal) {
+
+                var removal;
+                var previouslySelected = optionElement.prop('selected');
+
+                if (isDefined(hashedVal)) {
+                  self.removeOption(oldVal);
+                  delete self.selectValueMap[hashedVal];
+                  removal = true;
+                }
+
+                hashedVal = hashKey(newVal);
+                oldVal = newVal;
+                self.selectValueMap[hashedVal] = newVal;
+                self.addOption(newVal, optionElement);
+                // Set the attribute directly instead of using optionAttrs.$set - this stops the observer
+                // from firing a second time. Other $observers on value will also get the result of the
+                // ngValue expression, not the hashed value
+                optionElement.attr('value', hashedVal);
+
+                if (removal && previouslySelected) {
+                  scheduleViewValueUpdate();
+                }
+
+              });
+            } else if (interpolateValueFn) {
+              // The value attribute is interpolated
+              optionAttrs.$observe('value', function valueAttributeObserveAction(newVal) {
+                // This method is overwritten in ngOptions and has side-effects!
+                self.readValue();
+
+                var removal;
+                var previouslySelected = optionElement.prop('selected');
+
+                if (isDefined(oldVal)) {
+                  self.removeOption(oldVal);
+                  removal = true;
+                }
+                oldVal = newVal;
+                self.addOption(newVal, optionElement);
+
+                if (removal && previouslySelected) {
+                  scheduleViewValueUpdate();
+                }
+              });
+            } else if (interpolateTextFn) {
+              // The text content is interpolated
+              optionScope.$watch(interpolateTextFn, function interpolateWatchAction(newVal, oldVal) {
+                optionAttrs.$set('value', newVal);
+                var previouslySelected = optionElement.prop('selected');
+                if (oldVal !== newVal) {
+                  self.removeOption(oldVal);
+                }
+                self.addOption(newVal, optionElement);
+
+                if (oldVal && previouslySelected) {
+                  scheduleViewValueUpdate();
+                }
+              });
+            } else {
+              // The value attribute is static
+              self.addOption(optionAttrs.value, optionElement);
+            }
+
+
+            optionAttrs.$observe('disabled', function(newVal) {
+
+              // Since model updates will also select disabled options (like ngOptions),
+              // we only have to handle options becoming disabled, not enabled
+
+              if (newVal === 'true' || newVal && optionElement.prop('selected')) {
+                if (self.multiple) {
+                  scheduleViewValueUpdate(true);
+                } else {
+                  self.ngModelCtrl.$setViewValue(null);
+                  self.ngModelCtrl.$render();
+                }
+              }
+            });
+
+            optionElement.on('$destroy', function() {
+              var currentValue = self.readValue();
+              var removeValue = optionAttrs.value;
+
+              self.removeOption(removeValue);
+              scheduleRender();
+
+              if (self.multiple && currentValue && currentValue.includes(removeValue) ||
+                  currentValue === removeValue
+              ) {
+                // When multiple (selected) options are destroyed at the same time, we don't want
+                // to run a model update for each of them. Instead, run a single update in the $$postDigest
+                scheduleViewValueUpdate(true);
+              }
+            });
+          };
+        }];
 
 /**
  * @ngdoc directive
@@ -831,7 +832,9 @@ var selectDirective = function() {
 
         // we have to do it on each watch since ngModel watches reference, but
         // we need to work of an array, so we need to see if anything was inserted/removed
-        var lastView, lastViewRef = NaN;
+        var lastView;
+
+        var lastViewRef = NaN;
         scope.$watch(function selectMultipleWatch() {
           if (lastViewRef === ngModelCtrl.$viewValue && !equals(lastView, ngModelCtrl.$viewValue)) {
             lastView = shallowCopy(ngModelCtrl.$viewValue);
@@ -845,7 +848,6 @@ var selectDirective = function() {
         ngModelCtrl.$isEmpty = function(value) {
           return !value || value.length === 0;
         };
-
       }
     }
 
@@ -875,8 +877,9 @@ var optionDirective = ['$interpolate', function($interpolate) {
   return {
     restrict: 'E',
     priority: 100,
-    compile: function(element, attr) {
-      var interpolateValueFn, interpolateTextFn;
+    compile(element, attr) {
+      var interpolateValueFn;
+      var interpolateTextFn;
 
       if (isDefined(attr.ngValue)) {
         // Will be handled by registerOption
@@ -895,10 +898,12 @@ var optionDirective = ['$interpolate', function($interpolate) {
       return function(scope, element, attr) {
         // This is an optimization over using ^^ since we don't want to have to search
         // all the way to the root of the DOM for every single option element
-        var selectCtrlName = '$selectController',
-            parent = element.parent(),
-            selectCtrl = parent.data(selectCtrlName) ||
-              parent.parent().data(selectCtrlName); // in case we are in optgroup
+        var selectCtrlName = '$selectController'; // in case we are in optgroup
+
+        var parent = element.parent();
+
+        var selectCtrl = parent.data(selectCtrlName) ||
+          parent.parent().data(selectCtrlName);
 
         if (selectCtrl) {
           selectCtrl.registerOption(scope, element, attr, interpolateValueFn, interpolateTextFn);
