@@ -2,12 +2,7 @@ export const modules = [
   {
     name: "angular",
     description: "HTML enhanced for web apps",
-    copy: [
-      {
-        from: "css/angular.css",
-        to: "angular-csp.css"
-      }
-    ],
+    copy: [],
     jsFiles: [
       {
         name: "angular",
@@ -100,7 +95,8 @@ export const modules = [
           "src/ng/directive/validators.js",
           "src/angular.bind.js",
           "src/publishExternalApis.js",
-          "prebuilt-locales/angular-locale_en-us.js"
+          "prebuilt-locales/angular-locale_en-us.js",
+          "src/ng/injectStyles.js"
         ]
       },
       {

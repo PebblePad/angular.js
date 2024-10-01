@@ -553,6 +553,7 @@ function jqLiteDocumentLoaded(action, win) {
 function jqLiteReady(fn) {
   function trigger() {
     window.document.removeEventListener('DOMContentLoaded', trigger);
+    window.removeEventListener('load', trigger);
     fn();
   }
 
@@ -561,6 +562,7 @@ function jqLiteReady(fn) {
     window.setTimeout(fn);
   } else {
     window.document.addEventListener('DOMContentLoaded', trigger);
+    window.addEventListener('load', trigger);
   }
 }
 

@@ -1154,13 +1154,11 @@ var csp = function() {
       var ngCspAttribute = ngCspElement.getAttribute('ng-csp') ||
                     ngCspElement.getAttribute('data-ng-csp');
       csp.rules = {
-        noUnsafeEval: !ngCspAttribute || (ngCspAttribute.includes('no-unsafe-eval')),
-        noInlineStyle: !ngCspAttribute || (ngCspAttribute.includes('no-inline-style'))
+        noUnsafeEval: !ngCspAttribute || (ngCspAttribute.includes('no-unsafe-eval'))
       };
     } else {
       csp.rules = {
-        noUnsafeEval: noUnsafeEval(),
-        noInlineStyle: false
+        noUnsafeEval: noUnsafeEval()
       };
     }
   }
@@ -1532,6 +1530,10 @@ function getNgAttribute(element, ngAttr) {
 
 function allowAutoBootstrap(document) {
   var script = document.currentScript;
+  if (!script) {
+    return true;
+  }
+
   // If the `currentScript` property has been clobbered just return false, since this indicates a probable attack
   if (!(script instanceof window.HTMLScriptElement || script instanceof window.SVGScriptElement)) {
     return false;
