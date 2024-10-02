@@ -857,8 +857,8 @@ function $LocationProvider() {
         var $location;
         var LocationMode;
 
-        var // if base[href] is undefined, it defaults to ''
-        baseHref = $browser.baseHref();
+        // if base[href] is undefined, it defaults to ''
+        var baseHref = $browser.baseHref();
 
         var initialUrl = $browser.url();
         var appBase;

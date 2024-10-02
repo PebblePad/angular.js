@@ -25,6 +25,6 @@ const jestConfig = {
     '<rootDir>/test/helpers/testabilityPatch.js',
 
   ]
-}
+};
 
-export default jestConfig
+export default jestConfig;

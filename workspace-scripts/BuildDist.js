@@ -17,8 +17,6 @@ const inlineLicense = `
  */
 `;
 
-//TODO: VERSION! - NG_VERSION_FULL replacements or manual?
-
 console.log("Cleaning up previous build: In progress ⌚");
 await fsp.rm(outputDirectory, { force: true, recursive: true });
 console.log("Cleaning up previous build: Done ✅");

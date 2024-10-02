@@ -4,7 +4,6 @@
 /* exported
   angular,
   jqLite,
-  jQuery,
   slice,
   splice,
   push,
@@ -197,25 +196,18 @@ if ('i' !== 'I'.toLowerCase()) {
   uppercase = manualUppercase;
 }
 
+var jqLite;
+var slice = [].slice;
+var splice = [].splice;
+var push = [].push;
+var toString = Object.prototype.toString;
+var getPrototypeOf = Object.getPrototypeOf;
+var ngMinErr = minErr('ng');
 
-var // delay binding since jQuery could be loaded after us.
-jqLite;
-
-var // delay binding
-jQuery;
-
-var slice             = [].slice;
-var splice            = [].splice;
-var push              = [].push;
-var toString          = Object.prototype.toString;
-var getPrototypeOf    = Object.getPrototypeOf;
-var ngMinErr          = minErr('ng');
-
-var /** @name angular */
-angular           = window.angular || (window.angular = {});
-
+/** @name angular */
+var angular = window.angular || (window.angular = {});
 var angularModule;
-var uid               = { current: 0 };
+var uid = { current: 0 };
 
 
 /**
@@ -1176,63 +1168,6 @@ var csp = function() {
   }
 };
 
-/**
- * @ngdoc directive
- * @module ng
- * @name ngJq
- *
- * @element ANY
- * @param {string=} ngJq the name of the library available under `window`
- * to be used for angular.element
- * @description
- * Use this directive to force the angular.element library.  This should be
- * used to force either jqLite by leaving ng-jq blank or setting the name of
- * the jquery variable under window (eg. jQuery).
- *
- * Since AngularJS looks for this directive when it is loaded (doesn't wait for the
- * DOMContentLoaded event), it must be placed on an element that comes before the script
- * which loads angular. Also, only the first instance of `ng-jq` will be used and all
- * others ignored.
- *
- * @example
- * This example shows how to force jqLite using the `ngJq` directive to the `html` tag.
- ```html
- <!doctype html>
- <html ng-app ng-jq>
- ...
- ...
- </html>
- ```
- * @example
- * This example shows how to use a jQuery based library of a different name.
- * The library name must be available at the top most 'window'.
- ```html
- <!doctype html>
- <html ng-app ng-jq="jQueryLib">
- ...
- ...
- </html>
- ```
- */
-var jq = function() {
-  if (isDefined(jq.name_)) return jq.name_;
-  var el;
-  var i;
-  var ii = ngAttrPrefixes.length;
-  var prefix;
-  var name;
-  for (i = 0; i < ii; ++i) {
-    prefix = ngAttrPrefixes[i];
-    el = window.document.querySelector('[' + prefix.replace(':', '\\:') + 'jq]');
-    if (el) {
-      name = el.getAttribute(prefix + 'jq');
-      break;
-    }
-  }
-
-  return (jq.name_ = name);
-};
-
 function concat(array1, array2, index) {
   return array1.concat(slice.call(array2, index));
 }
@@ -1928,46 +1863,8 @@ function bindJQuery() {
     return;
   }
 
-  // bind to jQuery if present;
-  var jqName = jq();
-  jQuery = isUndefined(jqName) ? window.jQuery :   // use jQuery (if present)
-           !jqName             ? undefined     :   // use jqLite
-                                 window[jqName];   // use jQuery specified by `ngJq`
-
-  // Use jQuery if it exists with proper functionality, otherwise default to us.
-  // AngularJS 1.2+ requires jQuery 1.7+ for on()/off() support.
-  // AngularJS 1.3+ technically requires at least jQuery 2.1+ but it may work with older
-  // versions. It will not work for sure with jQuery <1.7, though.
-  if (jQuery && jQuery.fn.on) {
-    jqLite = jQuery;
-    extend(jQuery.fn, {
-      scope: JQLitePrototype.scope,
-      isolateScope: JQLitePrototype.isolateScope,
-      controller: /** @type {?} */ (JQLitePrototype).controller,
-      injector: JQLitePrototype.injector,
-      inheritedData: JQLitePrototype.inheritedData
-    });
-
-    // All nodes removed from the DOM via various jQuery APIs like .remove()
-    // are passed through jQuery.cleanData. Monkey-patch this method to fire
-    // the $destroy event on all removed nodes.
-    originalCleanData = jQuery.cleanData;
-    jQuery.cleanData = function(elems) {
-      var events;
-      for (var i = 0, elem; (elem = elems[i]) != null; i++) {
-        events = jQuery._data(elem, 'events');
-        if (events && events.$destroy) {
-          jQuery(elem).triggerHandler('$destroy');
-        }
-      }
-      originalCleanData(elems);
-    };
-  } else {
-    jqLite = JQLite;
-  }
-
+  jqLite = JQLite;
   angular.element = jqLite;
-
   // Prevent double-proxying.
   bindJQueryFired = true;
 }

@@ -537,28 +537,28 @@ var ngRepeatDirective = ['$parse', '$animate', '$compile', function($parse, $ani
           var index;
           var length;
 
-          var // node that cloned nodes should be inserted after
+          // node that cloned nodes should be inserted after
           // initialized to the comment node anchor
-          previousNode = $element[0];
+          var previousNode = $element[0];
 
           var nextNode;
 
-          var // Same as lastBlockMap but it has the current state. It will become the
+          // Same as lastBlockMap but it has the current state. It will become the
           // lastBlockMap on the next iteration.
-          nextBlockMap = createMap();
+          var nextBlockMap = createMap();
 
           var collectionLength;
           var key;
 
-          var // key/value of iteration
-          value;
+          // key/value of iteration
+          var value;
 
           var trackById;
           var trackByIdFn;
           var collectionKeys;
 
-          var // last object information {scope, element, id}
-          block;
+          // last object information {scope, element, id}
+          var block;
 
           var nextBlockOrder;
           var elementsToRemove;
