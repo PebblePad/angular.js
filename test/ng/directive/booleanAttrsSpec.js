@@ -8,7 +8,7 @@ describe('boolean attr directives', function() {
   });
 
 
-  it('should properly evaluate 0 as false', angular.mock.inject(function($rootScope, $compile) {
+  it('should properly evaluate 0 as false', angular.mock.inject(function($rootScope) {
     // jQuery does not treat 0 as false, when setting attr()
     element = compileForTest('<button ng-disabled="isDisabled">Button</button>');
     $rootScope.isDisabled = 0;
@@ -20,7 +20,7 @@ describe('boolean attr directives', function() {
   }));
 
 
-  it('should bind disabled', angular.mock.inject(function($rootScope, $compile) {
+  it('should bind disabled', angular.mock.inject(function($rootScope) {
     element = compileForTest('<button ng-disabled="isDisabled">Button</button>');
     $rootScope.isDisabled = false;
     $rootScope.$digest();
@@ -31,7 +31,7 @@ describe('boolean attr directives', function() {
   }));
 
 
-  it('should bind checked', angular.mock.inject(function($rootScope, $compile) {
+  it('should bind checked', angular.mock.inject(function($rootScope) {
     element = compileForTest('<input type="checkbox" ng-checked="isChecked" />');
     $rootScope.isChecked = false;
     $rootScope.$digest();
@@ -42,7 +42,7 @@ describe('boolean attr directives', function() {
   }));
 
 
-  it('should not bind checked when ngModel is present', angular.mock.inject(function($rootScope, $compile) {
+  it('should not bind checked when ngModel is present', angular.mock.inject(function($rootScope) {
     // test for https://github.com/angular/angular.js/issues/10662
     element = compileForTest('<input type="checkbox" ng-model="value" ng-false-value="\'false\'" ' +
       'ng-true-value="\'true\'" ng-checked="value" />');
@@ -58,7 +58,7 @@ describe('boolean attr directives', function() {
   }));
 
 
-  it('should bind selected', angular.mock.inject(function($rootScope, $compile) {
+  it('should bind selected', angular.mock.inject(function($rootScope) {
     element = compileForTest('<select><option value=""></option><option ng-selected="isSelected">Greetings!</option></select>');
     angular.element(window.document.body).append(element);
     $rootScope.isSelected = false;
@@ -70,7 +70,7 @@ describe('boolean attr directives', function() {
   }));
 
 
-  it('should bind readonly', angular.mock.inject(function($rootScope, $compile) {
+  it('should bind readonly', angular.mock.inject(function($rootScope) {
     element = compileForTest('<input type="text" ng-readonly="isReadonly" />');
     $rootScope.isReadonly = false;
     $rootScope.$digest();
@@ -81,7 +81,7 @@ describe('boolean attr directives', function() {
   }));
 
 
-  it('should bind open', angular.mock.inject(function($rootScope, $compile) {
+  it('should bind open', angular.mock.inject(function($rootScope) {
     element = compileForTest('<details ng-open="isOpen"></details>');
     $rootScope.isOpen = false;
     $rootScope.$digest();
@@ -93,7 +93,7 @@ describe('boolean attr directives', function() {
 
 
   describe('multiple', function() {
-    it('should NOT bind to multiple via ngMultiple', angular.mock.inject(function($rootScope, $compile) {
+    it('should NOT bind to multiple via ngMultiple', angular.mock.inject(function($rootScope) {
       element = compileForTest('<select ng-multiple="isMultiple"></select>');
       $rootScope.isMultiple = false;
       $rootScope.$digest();
@@ -147,7 +147,7 @@ describe('ngSrc', function() {
   }));
 
 
-  it('should NOT interpolate a multi-part expression for non-img src attribute', angular.mock.inject(function($compile, $rootScope) {
+  it('should NOT interpolate a multi-part expression for non-img src attribute', angular.mock.inject(function() {
     expect(function() {
       var element = compileForTest('<div ng-src="some/{{id}}"></div>');
       dealoc(element);
@@ -220,7 +220,7 @@ describe('ngHref', function() {
   }));
 
 
-  it('should bind href and merge with other attrs', angular.mock.inject(function($rootScope, $compile) {
+  it('should bind href and merge with other attrs', angular.mock.inject(function($rootScope) {
     element = compileForTest('<a ng-href="{{url}}" rel="{{rel}}"></a>');
     $rootScope.url = 'http://server';
     $rootScope.rel = 'REL';
@@ -230,20 +230,20 @@ describe('ngHref', function() {
   }));
 
 
-  it('should bind href even if no interpolation', angular.mock.inject(function($rootScope, $compile) {
+  it('should bind href even if no interpolation', angular.mock.inject(function($rootScope) {
     element = compileForTest('<a ng-href="http://server"></a>');
     $rootScope.$digest();
     expect(element.attr('href')).toEqual('http://server');
   }));
 
-  it('should not set the href if ng-href is empty', angular.mock.inject(function($rootScope, $compile) {
+  it('should not set the href if ng-href is empty', angular.mock.inject(function($rootScope) {
     $rootScope.url = null;
     element = compileForTest('<a ng-href="{{url}}">');
     $rootScope.$digest();
     expect(element.attr('href')).toEqual(undefined);
   }));
 
-  it('should remove the href if ng-href changes to empty', angular.mock.inject(function($rootScope, $compile) {
+  it('should remove the href if ng-href changes to empty', angular.mock.inject(function($rootScope) {
     $rootScope.url = 'http://www.google.com/';
     element = compileForTest('<a ng-href="{{url}}">');
     $rootScope.$digest();
@@ -257,7 +257,7 @@ describe('ngHref', function() {
   if (/\bEdge\/[\d.]+\b/.test(window.navigator.userAgent)) {
     // Edge fail when setting a href to a URL containing a % that isn't a valid escape sequence
     // See https://github.com/angular/angular.js/issues/13388
-    it('should throw error if ng-href contains a non-escaped percent symbol', angular.mock.inject(function($rootScope, $compile) {
+    it('should throw error if ng-href contains a non-escaped percent symbol', angular.mock.inject(function($rootScope) {
       element = compileForTest('<a ng-href="http://www.google.com/{{\'a%link\'}}">');
 
       expect(function() {
@@ -280,7 +280,7 @@ describe('ngHref', function() {
     }));
 
 
-    it('should bind xlink:href even if no interpolation', angular.mock.inject(function($rootScope, $compile) {
+    it('should bind xlink:href even if no interpolation', angular.mock.inject(function($rootScope) {
       element = compileForTest('<svg><a ng-href="http://server"></a></svg>');
       var child = element.children('a');
       $rootScope.$digest();

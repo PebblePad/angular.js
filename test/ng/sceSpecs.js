@@ -106,8 +106,8 @@ describe('SCE', function() {
     }));
 
     it('should implement toString on trusted values', angular.mock.inject(function($sce) {
-      var originalValue = '123',
-          wrappedValue = $sce.trustAsHtml(originalValue);
+      var originalValue = '123';
+      var wrappedValue = $sce.trustAsHtml(originalValue);
       expect($sce.getTrustedHtml(wrappedValue)).toBe(originalValue);
       expect(wrappedValue.toString()).toBe(originalValue.toString());
     }));
@@ -118,9 +118,9 @@ describe('SCE', function() {
     it('should override the default $sce.trustAs/valueOf/etc.', function() {
       angular.mock.module(function($provide) {
         $provide.value('$sceDelegate', {
-          trustAs: function(type, value) { return 'wrapped:'   + value; },
-          getTrusted: function(type, value) { return 'unwrapped:' + value; },
-          valueOf: function(value) { return 'valueOf:' + value; }
+          trustAs(type, value) { return 'wrapped:'   + value; },
+          getTrusted(type, value) { return 'unwrapped:' + value; },
+          valueOf(value) { return 'valueOf:' + value; }
         });
       });
 
@@ -229,7 +229,7 @@ describe('SCE', function() {
       };
     }
 
-    it('should default to "self" which allows relative urls', runTest({}, function($sce, $document) {
+    it('should default to "self" which allows relative urls', runTest({}, function($sce) {
       expect($sce.getTrustedResourceUrl('foo/bar')).toEqual('foo/bar');
     }));
 

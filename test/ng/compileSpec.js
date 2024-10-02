@@ -36,7 +36,10 @@ describe('$compile', function () {
     return children;
   }
 
-  var element, directive, $compile, $rootScope;
+  var element;
+  var directive;
+  var $compile;
+  var $rootScope;
 
   beforeEach(angular.mock.module(provideLog, function ($provide, $compileProvider) {
     element = null;
@@ -108,7 +111,7 @@ describe('$compile', function () {
       return {
         template: '<svg width="400" height="400"></svg>',
         transclude: true,
-        link: function (scope, element, attr, ctrls, $transclude) {
+        link(scope, element, attr, ctrls, $transclude) {
           var futureParent = element.children().eq(0);
           $transclude(function (clone) {
             futureParent.append(clone);
@@ -224,14 +227,14 @@ describe('$compile', function () {
         directive('div', function (log) {
           return {
             restrict: 'ECA',
-            link: function (scope, element) {
+            link(scope, element) {
               log('OK');
               element.text('SUCCESS');
             }
           };
         });
       });
-      angular.mock.inject(function ($compile, $rootScope, log) {
+      angular.mock.inject(function ($rootScope, log) {
         element = compileForTest('<div></div>');
         expect(element.text()).toEqual('SUCCESS');
         expect(log).toEqual('OK');
@@ -259,7 +262,7 @@ describe('$compile', function () {
           };
         });
       });
-      angular.mock.inject(function ($compile, $rootScope, log) {
+      angular.mock.inject(function ($rootScope, log) {
         element = compileForTest('<div></div>');
         expect(log).toEqual('pre1; pre2; post2; post1');
       });
@@ -352,10 +355,10 @@ describe('$compile', function () {
         directive('ff', function (log) {
           var declaration = {
             restrict: 'E',
-            template: function () {
+            template() {
               log('ff template: ' + (this === declaration));
             },
-            compile: function () {
+            compile() {
               log('ff compile: ' + (this === declaration));
               return function () {
                 log('ff post: ' + (this === declaration));
@@ -369,10 +372,10 @@ describe('$compile', function () {
           var declaration = {
             restrict: 'E',
             link: {
-              pre: function () {
+              pre() {
                 log('fff pre: ' + (this === declaration));
               },
-              post: function () {
+              post() {
                 log('fff post: ' + (this === declaration));
               }
             }
@@ -383,12 +386,12 @@ describe('$compile', function () {
         directive('ffff', function (log) {
           var declaration = {
             restrict: 'E',
-            compile: function () {
+            compile() {
               return {
-                pre: function () {
+                pre() {
                   log('ffff pre: ' + (this === declaration));
                 },
-                post: function () {
+                post() {
                   log('ffff post: ' + (this === declaration));
                 }
               };
@@ -400,11 +403,11 @@ describe('$compile', function () {
         directive('fffff', function (log) {
           var declaration = {
             restrict: 'E',
-            templateUrl: function () {
+            templateUrl() {
               log('fffff templateUrl: ' + (this === declaration));
               return 'fffff.html';
             },
-            link: function () {
+            link() {
               log('fffff post: ' + (this === declaration));
             }
           };
@@ -590,7 +593,7 @@ describe('$compile', function () {
           templateNamespace: 'SVG'
         }));
       });
-      angular.mock.inject(function ($compile, $rootScope, $httpBackend) {
+      angular.mock.inject(function ($rootScope, $httpBackend) {
         $httpBackend.expect('GET', 'template.html').respond('<circle></circle>');
         element = compileForTest('<svg><g ng-repeat="l in list"><svg-circle-url></svg-circle-url></g></svg>');
 
@@ -684,7 +687,7 @@ describe('$compile', function () {
 
 
     it('should not blow up when elements with no childNodes property are compiled', angular.mock.inject(
-      function ($compile, $rootScope) {
+      function ($rootScope) {
         // it turns out that when a browser plugin is bound to a DOM element (typically <object>),
         // the plugin's context rather than the usual DOM apis are exposed on this element, so
         // childNodes might not exist.
@@ -707,7 +710,7 @@ describe('$compile', function () {
         expect(element.html()).toBe('3');
       }));
 
-    it('should detect anchor elements with the string "SVG" in the `href` attribute as an anchor', angular.mock.inject(function ($compile, $rootScope) {
+    it('should detect anchor elements with the string "SVG" in the `href` attribute as an anchor', angular.mock.inject(function ($rootScope) {
       element = angular.element('<div><a href="/ID_SVG_ID">' +
         '<span ng-if="true">Should render</span>' +
         '</a></div>');
@@ -719,27 +722,27 @@ describe('$compile', function () {
     }));
 
     describe('multiple directives per element', function () {
-      it('should allow multiple directives per element', angular.mock.inject(function ($compile, $rootScope, log) {
+      it('should allow multiple directives per element', angular.mock.inject(function ($rootScope, log) {
         element = compileForTest('<span greet="angular" log="L" x-high-log="H" data-medium-log="M"></span>');
         expect(element.text()).toEqual('Hello angular');
         expect(log).toEqual('L; M; H');
       }));
 
 
-      it('should recurse to children', angular.mock.inject(function ($compile, $rootScope) {
+      it('should recurse to children', angular.mock.inject(function () {
         element = compileForTest('<div>0<a set="hello">1</a>2<b set="angular">3</b>4</div>');
         expect(element.text()).toEqual('0hello2angular4');
       }));
 
 
-      it('should allow directives in classes', angular.mock.inject(function ($compile, $rootScope, log) {
+      it('should allow directives in classes', angular.mock.inject(function (log) {
         element = compileForTest('<div class="greet: angular; log:123;"></div>');
         expect(element.html()).toEqual('Hello angular');
         expect(log).toEqual('123');
       }));
 
 
-      it('should allow directives in SVG element classes', angular.mock.inject(function ($compile, $rootScope, log) {
+      it('should allow directives in SVG element classes', angular.mock.inject(function (log) {
         if (!window.SVGElement) return;
         element = compileForTest('<svg><text class="greet: angular; log:123;"></text></svg>');
         var text = element.children().eq(0);
@@ -750,7 +753,7 @@ describe('$compile', function () {
       }));
 
 
-      it('should ignore not set CSS classes on SVG elements', angular.mock.inject(function ($compile, $rootScope, log) {
+      it('should ignore not set CSS classes on SVG elements', angular.mock.inject(function ($rootScope) {
         if (!window.SVGElement) return;
         // According to spec SVG element className property is readonly, but only FF
         // implements it this way which causes compile exceptions.
@@ -767,7 +770,7 @@ describe('$compile', function () {
             injector = $injector;
             return {
               restrict: 'CA',
-              compile: function (element, templateAttr) {
+              compile(element, templateAttr) {
                 expect(typeof templateAttr.$normalize).toBe('function');
                 expect(typeof templateAttr.$set).toBe('function');
                 expect(angular.isElement(templateAttr.$$element)).toBeTruthy();
@@ -786,7 +789,7 @@ describe('$compile', function () {
             };
           });
         });
-        angular.mock.inject(function ($rootScope, $compile, $injector) {
+        angular.mock.inject(function ($injector) {
           element = compileForTest(
             '<div class="log" exp="abc" aa="A" x-Bb="B" daTa-cC="C">unlinked</div>');
           expect(element.text()).toEqual('worked');
@@ -805,7 +808,7 @@ describe('$compile', function () {
           });
           directive('templateError',
             ngInternals.valueFn({
-              compile: function () {
+              compile() {
                 throw 'TemplateError';
               }
             }));
@@ -814,7 +817,7 @@ describe('$compile', function () {
               throw 'LinkingError';
             }));
         });
-        angular.mock.inject(function ($rootScope, $compile, $exceptionHandler) {
+        angular.mock.inject(function ($exceptionHandler) {
           element = compileForTest('<div factory-error template-error linking-error></div>');
           expect($exceptionHandler.errors[0]).toEqual('FactoryError');
           expect($exceptionHandler.errors[1][0]).toEqual('TemplateError');
@@ -825,7 +828,8 @@ describe('$compile', function () {
           // Support: Edge 15+
           // Edge sort attributes in a different order.
           function sortTag(text) {
-            var parts, elementName;
+            var parts;
+            var elementName;
 
             parts = text
               .replace('<', '')
@@ -844,12 +848,12 @@ describe('$compile', function () {
       it('should allow changing the template structure after the current node', function () {
         angular.mock.module(function () {
           directive('after', ngInternals.valueFn({
-            compile: function (element) {
+            compile(element) {
               element.after('<span log>B</span>');
             }
           }));
         });
-        angular.mock.inject(function ($compile, $rootScope, log) {
+        angular.mock.inject(function (log) {
           element = angular.element('<div><div after>A</div></div>');
           toDealoc.push(element);
           compileForTest(element);
@@ -862,12 +866,12 @@ describe('$compile', function () {
       it('should allow changing the template structure after the current node inside ngRepeat', function () {
         angular.mock.module(function () {
           directive('after', ngInternals.valueFn({
-            compile: function (element) {
+            compile(element) {
               element.after('<span log>B</span>');
             }
           }));
         });
-        angular.mock.inject(function ($compile, $rootScope, log) {
+        angular.mock.inject(function ($rootScope, log) {
           element = angular.element('<div><div ng-repeat="i in [1,2]"><div after>A</div></div></div>');
           toDealoc.push(element);
           compileForTest(element);
@@ -881,12 +885,12 @@ describe('$compile', function () {
       it('should allow modifying the DOM structure in post link fn', function () {
         angular.mock.module(function () {
           directive('removeNode', ngInternals.valueFn({
-            link: function ($scope, $element) {
+            link($scope, $element) {
               $element.remove();
             }
           }));
         });
-        angular.mock.inject(function ($compile, $rootScope) {
+        angular.mock.inject(function ($rootScope) {
           element = angular.element('<div><div remove-node></div><div>{{test}}</div></div>');
           toDealoc.push(element);
           $rootScope.test = 'Hello';
@@ -900,7 +904,7 @@ describe('$compile', function () {
 
     describe('compiler control', function () {
       describe('priority', function () {
-        it('should honor priority', angular.mock.inject(function ($compile, $rootScope, log) {
+        it('should honor priority', angular.mock.inject(function (log) {
           element = compileForTest(
             '<span log="L" x-high-log="H" data-medium-log="M"></span>');
           expect(log).toEqual('L; M; H');
@@ -910,7 +914,7 @@ describe('$compile', function () {
 
       describe('terminal', function () {
 
-        it('should prevent further directives from running', angular.mock.inject(function ($rootScope, $compile) {
+        it('should prevent further directives from running', angular.mock.inject(function () {
             element = compileForTest('<div negative-stop><a set="FAIL">OK</a></div>');
             expect(element.text()).toEqual('OK');
           }
@@ -918,7 +922,7 @@ describe('$compile', function () {
 
 
         it('should prevent further directives from running, but finish current priority level',
-          angular.mock.inject(function ($rootScope, $compile, log) {
+          angular.mock.inject(function (log) {
             // class is processed after attrs, so putting log in class will put it after
             // the stop in the current level. This proves that the log runs after stop
             element = compileForTest(
@@ -946,7 +950,7 @@ describe('$compile', function () {
                 });
               });
           });
-          angular.mock.inject(function ($rootScope, $compile, log) {
+          angular.mock.inject(function (log) {
             dealoc(compileForTest('<span div class="div"></span>'));
             expect(log).toEqual('');
             log.reset();
@@ -985,13 +989,13 @@ describe('$compile', function () {
           angular.mock.module(function () {
             directive('defaultDir', function (log) {
               return {
-                compile: function () {
+                compile() {
                   log('defaultDir');
                 }
               };
             });
           });
-          angular.mock.inject(function ($rootScope, $compile, log) {
+          angular.mock.inject(function (log) {
             dealoc(compileForTest('<span default-dir ></span>'));
             expect(log).toEqual('defaultDir');
             log.reset();
@@ -1015,7 +1019,7 @@ describe('$compile', function () {
             restrict: 'CAM',
             replace: true,
             template: '<div class="log" style="width: 10px" high-log>Replace!</div>',
-            compile: function (element, attr) {
+            compile(element, attr) {
               attr.$set('compiled', 'COMPILED');
               expect(element).toBe(attr.$$element);
             }
@@ -1024,7 +1028,7 @@ describe('$compile', function () {
             restrict: 'CAM',
             replace: true,
             template: '<div class="log" id="myid" high-log>No Merge!</div>',
-            compile: function (element, attr) {
+            compile(element, attr) {
               attr.$set('compiled', 'COMPILED');
               expect(element).toBe(attr.$$element);
             }
@@ -1032,7 +1036,7 @@ describe('$compile', function () {
           directive('append', ngInternals.valueFn({
             restrict: 'CAM',
             template: '<div class="log" style="width: 10px" high-log>Append!</div>',
-            compile: function (element, attr) {
+            compile(element, attr) {
               attr.$set('compiled', 'COMPILED');
               expect(element).toBe(attr.$$element);
             }
@@ -1040,7 +1044,7 @@ describe('$compile', function () {
           directive('replaceWithInterpolatedClass', ngInternals.valueFn({
             replace: true,
             template: '<div class="class_{{1+1}}">Replace with interpolated class!</div>',
-            compile: function (element, attr) {
+            compile(element, attr) {
               attr.$set('compiled', 'COMPILED');
               expect(element).toBe(attr.$$element);
             }
@@ -1048,7 +1052,7 @@ describe('$compile', function () {
           directive('replaceWithInterpolatedStyle', ngInternals.valueFn({
             replace: true,
             template: '<div style="width:{{1+1}}px">Replace with interpolated style!</div>',
-            compile: function (element, attr) {
+            compile(element, attr) {
               attr.$set('compiled', 'COMPILED');
               expect(element).toBe(attr.$$element);
             }
@@ -1088,21 +1092,21 @@ describe('$compile', function () {
         }));
 
 
-        it('should replace element with template', angular.mock.inject(function ($compile, $rootScope) {
+        it('should replace element with template', angular.mock.inject(function () {
           element = compileForTest('<div><div replace>ignore</div><div>');
           expect(element.text()).toEqual('Replace!');
           expect(element.find('div').attr('compiled')).toEqual('COMPILED');
         }));
 
 
-        it('should append element with template', angular.mock.inject(function ($compile, $rootScope) {
+        it('should append element with template', angular.mock.inject(function () {
           element = compileForTest('<div><div append>ignore</div><div>');
           expect(element.text()).toEqual('Append!');
           expect(element.find('div').attr('compiled')).toEqual('COMPILED');
         }));
 
 
-        it('should compile template when replacing', angular.mock.inject(function ($compile, $rootScope, log) {
+        it('should compile template when replacing', angular.mock.inject(function ($rootScope, log) {
           element = compileForTest('<div><div replace medium-log>ignore</div><div>');
           $rootScope.$digest();
           expect(element.text()).toEqual('Replace!');
@@ -1110,7 +1114,7 @@ describe('$compile', function () {
         }));
 
 
-        it('should compile template when appending', angular.mock.inject(function ($compile, $rootScope, log) {
+        it('should compile template when appending', angular.mock.inject(function ($rootScope, log) {
           element = compileForTest('<div><div append medium-log>ignore</div><div>');
           $rootScope.$digest();
           expect(element.text()).toEqual('Append!');
@@ -1118,7 +1122,7 @@ describe('$compile', function () {
         }));
 
 
-        it('should merge attributes including style attr', angular.mock.inject(function ($compile, $rootScope) {
+        it('should merge attributes including style attr', angular.mock.inject(function () {
           element = compileForTest(
             '<div><div replace class="medium-log" style="height: 20px" ></div><div>');
           var div = element.find('div');
@@ -1130,7 +1134,7 @@ describe('$compile', function () {
           expect(div.attr('high-log')).toEqual('');
         }));
 
-        it('should not merge attributes if they are the same', angular.mock.inject(function ($compile, $rootScope) {
+        it('should not merge attributes if they are the same', angular.mock.inject(function () {
           element = compileForTest(
             '<div><div nomerge class="medium-log" id="myid"></div><div>');
           var div = element.find('div');
@@ -1140,7 +1144,7 @@ describe('$compile', function () {
         }));
 
 
-        it('should correctly merge attributes that contain special characters', angular.mock.inject(function ($compile, $rootScope) {
+        it('should correctly merge attributes that contain special characters', angular.mock.inject(function () {
           element = compileForTest(
             '<div><div replace (click)="doSomething()" [value]="someExpression" ω="omega"></div><div>');
           var div = element.find('div');
@@ -1151,7 +1155,7 @@ describe('$compile', function () {
 
 
         it('should not add white-space when merging an attribute that is "" in the replaced element',
-          angular.mock.inject(function ($compile, $rootScope) {
+          angular.mock.inject(function () {
             element = compileForTest(
               '<div><div replace class=""></div><div>');
             var div = element.find('div');
@@ -1167,14 +1171,14 @@ describe('$compile', function () {
           angular.mock.module(function () {
             directive('logAttrs', function () {
               return {
-                link: function ($scope, $element, $attrs) {
+                link($scope, $element, $attrs) {
                   attrs = $attrs;
                 }
               };
             });
           });
 
-          angular.mock.inject(function ($compile, $rootScope) {
+          angular.mock.inject(function () {
             element = compileForTest(
               '<div><div log-attrs replace class="myLog"></div><div>');
             var div = element.find('div');
@@ -1184,7 +1188,7 @@ describe('$compile', function () {
         });
 
 
-        it('should prevent multiple templates per element', angular.mock.inject(function ($compile) {
+        it('should prevent multiple templates per element', angular.mock.inject(function () {
           try {
             compileForTest('<div><span replace class="replace"></span></div>');
             this.fail(new Error('should have thrown Multiple directives error'));
@@ -1193,7 +1197,7 @@ describe('$compile', function () {
           }
         }));
 
-        it('should play nice with repeater when replacing', angular.mock.inject(function ($compile, $rootScope) {
+        it('should play nice with repeater when replacing', angular.mock.inject(function ($rootScope) {
           element = compileForTest(
             '<div>' +
             '<div ng-repeat="i in [1,2]" replace></div>' +
@@ -1203,7 +1207,7 @@ describe('$compile', function () {
         }));
 
 
-        it('should play nice with repeater when appending', angular.mock.inject(function ($compile, $rootScope) {
+        it('should play nice with repeater when appending', angular.mock.inject(function ($rootScope) {
           element = compileForTest(
             '<div>' +
             '<div ng-repeat="i in [1,2]" append></div>' +
@@ -1214,21 +1218,21 @@ describe('$compile', function () {
 
 
         it('should handle interpolated css class from replacing directive', angular.mock.inject(
-          function ($compile, $rootScope) {
+          function ($rootScope) {
             element = compileForTest('<div replace-with-interpolated-class></div>');
             $rootScope.$digest();
             expect(element).toHaveClass('class_2');
           }));
 
         it('should handle interpolated css style from replacing directive', angular.mock.inject(
-          function ($compile, $rootScope) {
+          function ($rootScope) {
             element = compileForTest('<div replace-with-interpolated-style></div>');
             $rootScope.$digest();
             expect(element.css('width')).toBe('2px');
           }
         ));
 
-        it('should merge interpolated css class', angular.mock.inject(function ($compile, $rootScope) {
+        it('should merge interpolated css class', angular.mock.inject(function ($rootScope) {
           element = compileForTest('<div class="one {{cls}} three" replace></div>');
 
           $rootScope.$apply(function () {
@@ -1243,7 +1247,7 @@ describe('$compile', function () {
 
 
         it('should merge interpolated css class with ngRepeat',
-          angular.mock.inject(function ($compile, $rootScope) {
+          angular.mock.inject(function ($rootScope) {
             element = compileForTest(
               '<div>' +
               '<div ng-repeat="i in [1]" class="one {{cls}} three" replace></div>' +
@@ -1261,7 +1265,7 @@ describe('$compile', function () {
           }));
 
         it('should interpolate the values once per digest',
-          angular.mock.inject(function ($compile, $rootScope, log) {
+          angular.mock.inject(function ($rootScope, log) {
             element = compileForTest('<div>{{log("A")}} foo {{::log("B")}}</div>');
             $rootScope.log = log;
             $rootScope.$digest();
@@ -1278,12 +1282,10 @@ describe('$compile', function () {
             });
           });
 
-          angular.mock.inject(function ($compile, $rootScope) {
+          angular.mock.inject(function () {
             element = angular.element(document.createElement('span')).attr('foo', '');
             toDealoc.push(element);
             expect(ngInternals.nodeName_(element)).toBe('span');
-
-            var preCompiledNode = element[0];
 
             var linked = compileForTest(element);
             expect(linked).toBe(element);
@@ -1301,7 +1303,7 @@ describe('$compile', function () {
             directive('template', function () {
               return {
                 replace: true,
-                template: function () {
+                template() {
                   return templateVar;
                 }
               };
@@ -1313,7 +1315,7 @@ describe('$compile', function () {
             ['multiple root elements', '<div></div><div></div>'],
           ])('should throw if: %s', function (_, directiveTemplate) {
 
-            angular.mock.inject(function ($compile) {
+            angular.mock.inject(function () {
               templateVar = directiveTemplate;
               expect(function () {
                 compileForTest('<p template></p>');
@@ -1329,7 +1331,7 @@ describe('$compile', function () {
             ['comments + whitespace', '  <!-- oh hi -->  <div>Hello World!</div>  <!-- oh hi -->\n']
           ])('should not throw if the root element is accompanied by: %s', function (_, directiveTemplate) {
 
-            angular.mock.inject(function ($compile, $rootScope) {
+            angular.mock.inject(function () {
               templateVar = directiveTemplate;
               var element;
               expect(function () {
@@ -1341,56 +1343,56 @@ describe('$compile', function () {
           });
         });
 
-        it('should support templates with root <tr> tags', angular.mock.inject(function ($compile, $rootScope) {
+        it('should support templates with root <tr> tags', angular.mock.inject(function () {
           expect(function () {
             element = compileForTest('<div replace-with-tr></div>');
           }).not.toThrow();
           expect(ngInternals.nodeName_(element)).toMatch(/tr/i);
         }));
 
-        it('should support templates with root <td> tags', angular.mock.inject(function ($compile, $rootScope) {
+        it('should support templates with root <td> tags', angular.mock.inject(function () {
           expect(function () {
             element = compileForTest('<div replace-with-td></div>');
           }).not.toThrow();
           expect(ngInternals.nodeName_(element)).toMatch(/td/i);
         }));
 
-        it('should support templates with root <th> tags', angular.mock.inject(function ($compile, $rootScope) {
+        it('should support templates with root <th> tags', angular.mock.inject(function () {
           expect(function () {
             element = compileForTest('<div replace-with-th></div>');
           }).not.toThrow();
           expect(ngInternals.nodeName_(element)).toMatch(/th/i);
         }));
 
-        it('should support templates with root <thead> tags', angular.mock.inject(function ($compile, $rootScope) {
+        it('should support templates with root <thead> tags', angular.mock.inject(function () {
           expect(function () {
             element = compileForTest('<div replace-with-thead></div>');
           }).not.toThrow();
           expect(ngInternals.nodeName_(element)).toMatch(/thead/i);
         }));
 
-        it('should support templates with root <tbody> tags', angular.mock.inject(function ($compile, $rootScope) {
+        it('should support templates with root <tbody> tags', angular.mock.inject(function () {
           expect(function () {
             element = compileForTest('<div replace-with-tbody></div>');
           }).not.toThrow();
           expect(ngInternals.nodeName_(element)).toMatch(/tbody/i);
         }));
 
-        it('should support templates with root <tfoot> tags', angular.mock.inject(function ($compile, $rootScope) {
+        it('should support templates with root <tfoot> tags', angular.mock.inject(function () {
           expect(function () {
             element = compileForTest('<div replace-with-tfoot></div>');
           }).not.toThrow();
           expect(ngInternals.nodeName_(element)).toMatch(/tfoot/i);
         }));
 
-        it('should support templates with root <option> tags', angular.mock.inject(function ($compile, $rootScope) {
+        it('should support templates with root <option> tags', angular.mock.inject(function () {
           expect(function () {
             element = compileForTest('<div replace-with-option></div>');
           }).not.toThrow();
           expect(ngInternals.nodeName_(element)).toMatch(/option/i);
         }));
 
-        it('should support templates with root <optgroup> tags', angular.mock.inject(function ($compile, $rootScope) {
+        it('should support templates with root <optgroup> tags', angular.mock.inject(function () {
           expect(function () {
             element = compileForTest('<div replace-with-optgroup></div>');
           }).not.toThrow();
@@ -1409,7 +1411,7 @@ describe('$compile', function () {
               }
             }));
           });
-          angular.mock.inject(function ($compile, $rootScope) {
+          angular.mock.inject(function ($rootScope) {
             element = compileForTest('<svg><g svg-anchor="/foo/bar" text="foo/bar!"></g></svg>');
             var child = element.children().eq(0);
             $rootScope.$digest();
@@ -1432,14 +1434,14 @@ describe('$compile', function () {
                 scope: {
                   pow: '@pow'
                 },
-                link: function (scope, elm, attr, ctrl, transclude) {
+                link(scope, elm, attr, ctrl, transclude) {
                   transclude(function (node) {
                     elm.prepend(node[0]);
                   });
                 }
               }));
             });
-            angular.mock.inject(function ($compile, $rootScope) {
+            angular.mock.inject(function ($rootScope) {
               element = compileForTest('<math><mn pow="2"><mn>8</mn></mn></math>');
               $rootScope.$digest();
               var child = element.children().eq(0);
@@ -1466,7 +1468,7 @@ describe('$compile', function () {
             directive('templateUrlWithPrototype', ngInternals.valueFn(new DirectiveClass()));
           });
 
-          angular.mock.inject(function ($compile, $rootScope) {
+          angular.mock.inject(function ($rootScope) {
             element = compileForTest('<template-url-with-prototype><template-url-with-prototype>');
             $rootScope.$digest();
             expect(element.find('p')[0].innerHTML).toEqual('Test Value');
@@ -1480,12 +1482,12 @@ describe('$compile', function () {
         beforeEach(angular.mock.module(function () {
           directive('myDirective', ngInternals.valueFn({
             replace: true,
-            template: function ($element, $attrs) {
+            template($element, $attrs) {
               expect($element.text()).toBe('original content');
               expect($attrs.myDirective).toBe('some value');
               return '<div id="templateContent">template content</div>';
             },
-            compile: function ($element, $attrs) {
+            compile($element, $attrs) {
               expect($element.text()).toBe('template content');
               expect($attrs.id).toBe('templateContent');
             }
@@ -1494,7 +1496,7 @@ describe('$compile', function () {
 
 
         it('should evaluate `template` when defined as fn and use returned string as template', angular.mock.inject(
-          function ($compile, $rootScope) {
+          function () {
             element = compileForTest('<div my-directive="some value">original content<div>');
             expect(element.text()).toEqual('template content');
           }));
@@ -1521,7 +1523,7 @@ describe('$compile', function () {
             directive('trustedTemplate', function ($sce) {
               return {
                 restrict: 'CAM',
-                templateUrl: function () {
+                templateUrl() {
                   return $sce.trustAsResourceUrl('http://example.com/trusted-template.html');
                 }
               };
@@ -1529,14 +1531,14 @@ describe('$compile', function () {
             directive('cError', ngInternals.valueFn({
               restrict: 'CAM',
               templateUrl: 'error.html',
-              compile: function () {
+              compile() {
                 throw new Error('cError');
               }
             }));
             directive('lError', ngInternals.valueFn({
               restrict: 'CAM',
               templateUrl: 'error.html',
-              compile: function () {
+              compile() {
                 throw new Error('lError');
               }
             }));
@@ -1557,7 +1559,7 @@ describe('$compile', function () {
               restrict: 'CAM',
               replace: true,
               templateUrl: 'error.html',
-              compile: function () {
+              compile() {
                 throw new Error('cError');
               }
             }));
@@ -1565,7 +1567,7 @@ describe('$compile', function () {
               restrict: 'CAM',
               replace: true,
               templateUrl: 'error.html',
-              compile: function () {
+              compile() {
                 throw new Error('lError');
               }
             }));
@@ -1611,7 +1613,7 @@ describe('$compile', function () {
         ));
 
         it('should not load cross domain templates by default', angular.mock.inject(
-          function ($compile, $rootScope) {
+          function () {
             expect(function () {
               compileForTest('<div class="crossDomainTemplate"></div>');
             }).toThrowMinErr('$sce', 'insecurl', 'Blocked loading resource from url not allowed by $sceDelegate policy.  URL: http://example.com/should-not-load.html');
@@ -1619,7 +1621,7 @@ describe('$compile', function () {
         ));
 
         it('should trust what is already in the template cache', angular.mock.inject(
-          function ($compile, $httpBackend, $rootScope, $templateCache) {
+          function ($httpBackend, $rootScope, $templateCache) {
             $httpBackend.expect('GET', 'http://example.com/should-not-load.html').respond('<span>example.com/remote-version</span>');
             $templateCache.put('http://example.com/should-not-load.html', '<span>example.com/cached-version</span>');
             element = compileForTest('<div class="crossDomainTemplate"></div>');
@@ -1630,7 +1632,7 @@ describe('$compile', function () {
         ));
 
         it('should load cross domain templates when trusted', angular.mock.inject(
-          function ($compile, $httpBackend, $rootScope, $sce) {
+          function ($httpBackend, $sce) {
             $httpBackend.expect('GET', 'http://example.com/trusted-template.html').respond('<span>example.com/trusted_template_contents</span>');
             element = compileForTest('<div class="trustedTemplate"></div>');
             expect(sortedHtml(element)).toEqual('<div class="trustedTemplate"></div>');
@@ -1640,7 +1642,7 @@ describe('$compile', function () {
         ));
 
         it('should append template via $http and cache it in $templateCache', angular.mock.inject(
-          function ($compile, $httpBackend, $templateCache, $rootScope, $browser) {
+          function ($httpBackend, $templateCache, $rootScope) {
             $httpBackend.expect('GET', 'hello.html').respond('<span>Hello!</span> World!');
             $templateCache.put('cau.html', '<span>Cau!</span>');
             element = compileForTest('<div><b class="hello">ignore</b><b class="cau">ignore</b></div>');
@@ -1662,7 +1664,7 @@ describe('$compile', function () {
 
 
         it('should inline template via $http and cache it in $templateCache', angular.mock.inject(
-          function ($compile, $httpBackend, $templateCache, $rootScope) {
+          function ($httpBackend, $templateCache, $rootScope) {
             $httpBackend.expect('GET', 'hello.html').respond('<span>Hello!</span>');
             $templateCache.put('cau.html', '<span>Cau!</span>');
             element = compileForTest('<div><b class=i-hello>ignore</b><b class=i-cau>ignore</b></div>');
@@ -1680,7 +1682,7 @@ describe('$compile', function () {
 
 
         it('should compile, link and flush the template append', angular.mock.inject(
-          function ($compile, $templateCache, $rootScope, $browser) {
+          function ($templateCache, $rootScope) {
             $templateCache.put('hello.html', '<span>Hello, {{name}}!</span>');
             $rootScope.name = 'Elvis';
             element = compileForTest('<div><b class="hello"></b></div>');
@@ -1693,7 +1695,7 @@ describe('$compile', function () {
 
 
         it('should compile, link and flush the template inline', angular.mock.inject(
-          function ($compile, $templateCache, $rootScope) {
+          function ($templateCache, $rootScope) {
             $templateCache.put('hello.html', '<span>Hello, {{name}}!</span>');
             $rootScope.name = 'Elvis';
             element = compileForTest('<div><b class=i-hello></b></div>');
@@ -1706,7 +1708,7 @@ describe('$compile', function () {
 
 
         it('should compile, flush and link the template append', angular.mock.inject(
-          function ($compile, $templateCache, $rootScope) {
+          function ($templateCache, $rootScope) {
             $templateCache.put('hello.html', '<span>Hello, {{name}}!</span>');
             $rootScope.name = 'Elvis';
             element = compileForTest('<div><b class="hello"></b></div>');
@@ -1718,7 +1720,7 @@ describe('$compile', function () {
 
 
         it('should compile, flush and link the template inline', angular.mock.inject(
-          function ($compile, $templateCache, $rootScope) {
+          function ($templateCache, $rootScope) {
             $templateCache.put('hello.html', '<span>Hello, {{name}}!</span>');
             $rootScope.name = 'Elvis';
             element = compileForTest('<div><b class=i-hello></b></div>');
@@ -1730,7 +1732,7 @@ describe('$compile', function () {
 
 
         it('should compile template when replacing element in another template',
-          angular.mock.inject(function ($compile, $templateCache, $rootScope) {
+          angular.mock.inject(function ($templateCache, $rootScope) {
             $templateCache.put('hello.html', '<div replace></div>');
             $rootScope.name = 'Elvis';
             element = compileForTest('<div><b class="hello"></b></div>');
@@ -1742,7 +1744,7 @@ describe('$compile', function () {
 
 
         it('should compile template when replacing root element',
-          angular.mock.inject(function ($compile, $templateCache, $rootScope) {
+          angular.mock.inject(function ($templateCache, $rootScope) {
             $rootScope.name = 'Elvis';
             element = compileForTest('<div replace></div>');
 
@@ -1756,7 +1758,7 @@ describe('$compile', function () {
           angular.mock.module(function ($exceptionHandlerProvider) {
             $exceptionHandlerProvider.mode('log');
           });
-          angular.mock.inject(function ($compile, $templateCache, $rootScope, $httpBackend, $browser,
+          angular.mock.inject(function ($templateCache, $rootScope, $httpBackend, $browser,
                                         $exceptionHandler) {
             $httpBackend.expect('GET', 'hello.html').respond('<span>{{greeting}} </span>');
             $httpBackend.expect('GET', 'error.html').respond('<div></div>');
@@ -1796,7 +1798,7 @@ describe('$compile', function () {
           angular.mock.module(function ($exceptionHandlerProvider) {
             $exceptionHandlerProvider.mode('log');
           });
-          angular.mock.inject(function ($compile, $templateCache, $rootScope, $httpBackend, $browser,
+          angular.mock.inject(function ($templateCache, $rootScope, $httpBackend, $browser,
                                         $exceptionHandler) {
             $httpBackend.expect('GET', 'cau.html').respond('<span>{{name}}</span>');
             $rootScope.name = 'Elvis';
@@ -1823,7 +1825,7 @@ describe('$compile', function () {
           angular.mock.module(function ($exceptionHandlerProvider) {
             $exceptionHandlerProvider.mode('log');
           });
-          angular.mock.inject(function ($compile, $templateCache, $rootScope, $httpBackend, $browser,
+          angular.mock.inject(function ($templateCache, $rootScope, $httpBackend, $browser,
                                         $exceptionHandler) {
             $httpBackend.expect('GET', 'hello.html').respond('<span>{{greeting}} </span>');
             $httpBackend.expect('GET', 'error.html').respond('<div></div>');
@@ -1863,7 +1865,7 @@ describe('$compile', function () {
           angular.mock.module(function ($exceptionHandlerProvider) {
             $exceptionHandlerProvider.mode('log');
           });
-          angular.mock.inject(function ($compile, $templateCache, $rootScope, $httpBackend, $browser,
+          angular.mock.inject(function ($templateCache, $rootScope, $httpBackend, $browser,
                                         $exceptionHandler) {
             $httpBackend.expect('GET', 'cau.html').respond('<span>{{name}}</span>');
             $rootScope.name = 'Elvis';
@@ -1888,7 +1890,7 @@ describe('$compile', function () {
 
 
         it('should be implicitly terminal and not compile placeholder content in append', angular.mock.inject(
-          function ($compile, $templateCache, $rootScope, log) {
+          function ($templateCache, $rootScope, log) {
             // we can't compile the contents because that would result in a memory leak
 
             $templateCache.put('hello.html', 'Hello!');
@@ -1900,7 +1902,7 @@ describe('$compile', function () {
 
 
         it('should be implicitly terminal and not compile placeholder content in inline', angular.mock.inject(
-          function ($compile, $templateCache, $rootScope, log) {
+          function ($templateCache, $rootScope, log) {
             // we can't compile the contents because that would result in a memory leak
 
             $templateCache.put('hello.html', 'Hello!');
@@ -1912,7 +1914,7 @@ describe('$compile', function () {
 
 
         it('should throw an error and clear element content if the template fails to load',
-          angular.mock.inject(function ($compile, $httpBackend, $rootScope) {
+          angular.mock.inject(function ($httpBackend) {
             $httpBackend.expect('GET', 'hello.html').respond(404, 'Not Found!');
             element = compileForTest('<div><b class="hello">content</b></div>');
 
@@ -1935,7 +1937,7 @@ describe('$compile', function () {
               templateUrl: 'template.html'
             }));
           });
-          angular.mock.inject(function ($compile, $httpBackend) {
+          angular.mock.inject(function ($httpBackend) {
             $httpBackend.whenGET('template.html').respond('<p>template.html</p>');
 
             expect(function () {
@@ -1955,7 +1957,7 @@ describe('$compile', function () {
               replace: true
             }));
           });
-          angular.mock.inject(function ($compile, $templateCache, $rootScope) {
+          angular.mock.inject(function ($templateCache, $rootScope) {
             var child;
             $templateCache.put('test.html', '<p class="template-class">Hello</p>');
             element = generateTestCompiler('<div test></div>')($rootScope, function (node) {
@@ -1973,20 +1975,20 @@ describe('$compile', function () {
           beforeEach(angular.mock.module(function () {
             function logDirective(name, priority, options) {
               directive(name, function (log) {
-                return (angular.extend({
+                return angular.extend({
                   priority: priority,
-                  compile: function () {
+                  compile() {
                     log(name + '-C');
                     return {
-                      pre: function () {
+                      pre() {
                         log(name + '-PreL');
                       },
-                      post: function () {
+                      post() {
                         log(name + '-PostL');
                       }
                     };
                   }
-                }, options || {}));
+                }, options || {});
               });
             }
 
@@ -2002,7 +2004,7 @@ describe('$compile', function () {
           }));
 
           it('should flush after link append', angular.mock.inject(
-            function ($compile, $rootScope, $httpBackend, log) {
+            function ($rootScope, $httpBackend, log) {
               $httpBackend.expect('GET', 'second.html').respond('<div third>{{1+2}}</div>');
               element = compileForTest('<div><span first second last></span></div>');
               expect(log).toEqual('first-C');
@@ -2026,7 +2028,7 @@ describe('$compile', function () {
 
 
           it('should flush after link inline', angular.mock.inject(
-            function ($compile, $rootScope, $httpBackend, log) {
+            function ($rootScope, $httpBackend, log) {
               $httpBackend.expect('GET', 'second.html').respond('<div i-third>{{1+2}}</div>');
               element = compileForTest('<div><span i-first i-second i-last></span></div>');
               expect(log).toEqual('iFirst-C');
@@ -2050,7 +2052,7 @@ describe('$compile', function () {
 
 
           it('should flush before link append', angular.mock.inject(
-            function ($compile, $rootScope, $httpBackend, log) {
+            function ($rootScope, $httpBackend, log) {
               $httpBackend.expect('GET', 'second.html').respond('<div third>{{1+2}}</div>');
               template = generateTestCompiler('<div><span first second last></span></div>');
               expect(log).toEqual('first-C');
@@ -2076,7 +2078,7 @@ describe('$compile', function () {
 
 
           it('should flush before link inline', angular.mock.inject(
-            function ($compile, $rootScope, $httpBackend, log) {
+            function ($rootScope, $httpBackend, log) {
               $httpBackend.expect('GET', 'second.html').respond('<div i-third>{{1+2}}</div>');
               template = generateTestCompiler('<div><span i-first i-second i-last></span></div>');
               expect(log).toEqual('iFirst-C');
@@ -2102,7 +2104,7 @@ describe('$compile', function () {
         });
 
 
-        it('should allow multiple elements in template', angular.mock.inject(function ($compile, $httpBackend) {
+        it('should allow multiple elements in template', angular.mock.inject(function ($httpBackend) {
           $httpBackend.expect('GET', 'hello.html').respond('before <b>mid</b> after');
           element = angular.element('<div hello></div>');
           toDealoc.push(element);
@@ -2113,7 +2115,7 @@ describe('$compile', function () {
 
 
         it('should work when directive is on the root element', angular.mock.inject(
-          function ($compile, $httpBackend, $rootScope) {
+          function ($httpBackend) {
             $httpBackend.expect('GET', 'hello.html').respond('<span>3==<span ng-transclude></span></span>');
             element = angular.element('<b class="hello">{{1+2}}</b>');
             toDealoc.push(element);
@@ -2132,7 +2134,7 @@ describe('$compile', function () {
           });
 
           function runTest() {
-            angular.mock.inject(function ($compile, $httpBackend, $rootScope) {
+            angular.mock.inject(function ($httpBackend) {
               $httpBackend.expect('GET', 'hello.html').respond('<span>i=<span ng-transclude></span>;</span>');
               element = angular.element('<div><b class=hello ng-repeat="i in [' + is + ']">{{i}}</b></div>');
               toDealoc.push(element);
@@ -2184,7 +2186,7 @@ describe('$compile', function () {
             ['multiple root elements', '<div></div><div></div>']
           ])('should throw if: %s', function (_, directiveTemplate) {
 
-            angular.mock.inject(function ($compile, $templateCache, $rootScope) {
+            angular.mock.inject(function ($templateCache, $rootScope) {
               $templateCache.put('template.html', directiveTemplate);
 
               expect(function () {
@@ -2202,7 +2204,7 @@ describe('$compile', function () {
             ['comments + whitespace', '  <!-- oh hi -->  <div>Hello World!</div>  <!-- oh hi -->\n']
           ])('should not throw if the root element is accompanied by: %s', function (_, directiveTemplate) {
 
-            angular.mock.inject(function ($compile, $templateCache, $rootScope) {
+            angular.mock.inject(function ($templateCache, $rootScope) {
               $templateCache.put('template.html', directiveTemplate);
               element = compileForTest('<p template></p>');
               expect(function () {
@@ -2232,7 +2234,7 @@ describe('$compile', function () {
             }));
           });
 
-          angular.mock.inject(function ($templateCache, $compile, $rootScope) {
+          angular.mock.inject(function ($templateCache, $rootScope) {
             $rootScope.coolTitle = 'boom!';
             $templateCache.put('delayed.html', '<div>{{title}}</div>');
             element = compileForTest(
@@ -2258,7 +2260,7 @@ describe('$compile', function () {
             });
           });
 
-          angular.mock.inject(function ($templateCache, $rootScope, $compile) {
+          angular.mock.inject(function ($templateCache, $rootScope) {
             $templateCache.put('/some.html',
               '<div ng-switch="i">' +
               '<div ng-switch-when="1">i = 1</div>' +
@@ -2275,7 +2277,7 @@ describe('$compile', function () {
           });
         });
 
-        it('should support templates with root <tr> tags', angular.mock.inject(function ($compile, $rootScope, $templateCache) {
+        it('should support templates with root <tr> tags', angular.mock.inject(function ($rootScope, $templateCache) {
           $templateCache.put('tr.html', '<tr><td>TR</td></tr>');
           expect(function () {
             element = compileForTest('<div replace-with-tr></div>');
@@ -2284,7 +2286,7 @@ describe('$compile', function () {
           expect(ngInternals.nodeName_(element)).toMatch(/tr/i);
         }));
 
-        it('should support templates with root <td> tags', angular.mock.inject(function ($compile, $rootScope, $templateCache) {
+        it('should support templates with root <td> tags', angular.mock.inject(function ($rootScope, $templateCache) {
           $templateCache.put('td.html', '<td>TD</td>');
           expect(function () {
             element = compileForTest('<div replace-with-td></div>');
@@ -2293,7 +2295,7 @@ describe('$compile', function () {
           expect(ngInternals.nodeName_(element)).toMatch(/td/i);
         }));
 
-        it('should support templates with root <th> tags', angular.mock.inject(function ($compile, $rootScope, $templateCache) {
+        it('should support templates with root <th> tags', angular.mock.inject(function ($rootScope, $templateCache) {
           $templateCache.put('th.html', '<th>TH</th>');
           expect(function () {
             element = compileForTest('<div replace-with-th></div>');
@@ -2302,7 +2304,7 @@ describe('$compile', function () {
           expect(ngInternals.nodeName_(element)).toMatch(/th/i);
         }));
 
-        it('should support templates with root <thead> tags', angular.mock.inject(function ($compile, $rootScope, $templateCache) {
+        it('should support templates with root <thead> tags', angular.mock.inject(function ($rootScope, $templateCache) {
           $templateCache.put('thead.html', '<thead><tr><td>TD</td></tr></thead>');
           expect(function () {
             element = compileForTest('<div replace-with-thead></div>');
@@ -2311,7 +2313,7 @@ describe('$compile', function () {
           expect(ngInternals.nodeName_(element)).toMatch(/thead/i);
         }));
 
-        it('should support templates with root <tbody> tags', angular.mock.inject(function ($compile, $rootScope, $templateCache) {
+        it('should support templates with root <tbody> tags', angular.mock.inject(function ($rootScope, $templateCache) {
           $templateCache.put('tbody.html', '<tbody><tr><td>TD</td></tr></tbody>');
           expect(function () {
             element = compileForTest('<div replace-with-tbody></div>');
@@ -2320,7 +2322,7 @@ describe('$compile', function () {
           expect(ngInternals.nodeName_(element)).toMatch(/tbody/i);
         }));
 
-        it('should support templates with root <tfoot> tags', angular.mock.inject(function ($compile, $rootScope, $templateCache) {
+        it('should support templates with root <tfoot> tags', angular.mock.inject(function ($rootScope, $templateCache) {
           $templateCache.put('tfoot.html', '<tfoot><tr><td>TD</td></tr></tfoot>');
           expect(function () {
             element = compileForTest('<div replace-with-tfoot></div>');
@@ -2329,7 +2331,7 @@ describe('$compile', function () {
           expect(ngInternals.nodeName_(element)).toMatch(/tfoot/i);
         }));
 
-        it('should support templates with root <option> tags', angular.mock.inject(function ($compile, $rootScope, $templateCache) {
+        it('should support templates with root <option> tags', angular.mock.inject(function ($rootScope, $templateCache) {
           $templateCache.put('option.html', '<option>OPTION</option>');
           expect(function () {
             element = compileForTest('<div replace-with-option></div>');
@@ -2338,7 +2340,7 @@ describe('$compile', function () {
           expect(ngInternals.nodeName_(element)).toMatch(/option/i);
         }));
 
-        it('should support templates with root <optgroup> tags', angular.mock.inject(function ($compile, $rootScope, $templateCache) {
+        it('should support templates with root <optgroup> tags', angular.mock.inject(function ($rootScope, $templateCache) {
           $templateCache.put('optgroup.html', '<optgroup>OPTGROUP</optgroup>');
           expect(function () {
             element = compileForTest('<div replace-with-optgroup></div>');
@@ -2359,7 +2361,7 @@ describe('$compile', function () {
               }
             }));
           });
-          angular.mock.inject(function ($compile, $rootScope, $templateCache) {
+          angular.mock.inject(function ($rootScope, $templateCache) {
             $templateCache.put('template.html', '<a xlink:href="{{linkurl}}">{{text}}</a>');
             element = compileForTest('<svg><g svg-anchor="/foo/bar" text="foo/bar!"></g></svg>');
             $rootScope.$digest();
@@ -2383,14 +2385,14 @@ describe('$compile', function () {
                 scope: {
                   pow: '@pow'
                 },
-                link: function (scope, elm, attr, ctrl, transclude) {
+                link(scope, elm, attr, ctrl, transclude) {
                   transclude(function (node) {
                     elm.prepend(node[0]);
                   });
                 }
               }));
             });
-            angular.mock.inject(function ($compile, $rootScope, $templateCache) {
+            angular.mock.inject(function ($rootScope, $templateCache) {
               $templateCache.put('template.html', '<msup><mn>{{pow}}</mn></msup>');
               element = compileForTest('<math><mn pow="2"><mn>8</mn></mn></math>');
               $rootScope.$digest();
@@ -2418,7 +2420,7 @@ describe('$compile', function () {
             directive('templateUrlWithPrototype', ngInternals.valueFn(new DirectiveClass()));
           });
 
-          angular.mock.inject(function ($compile, $rootScope, $httpBackend) {
+          angular.mock.inject(function ($rootScope, $httpBackend) {
             $httpBackend.whenGET('test.html').respond('<p>{{value}}</p>');
             element = compileForTest('<template-url-with-prototype><template-url-with-prototype>');
             $httpBackend.flush();
@@ -2435,12 +2437,12 @@ describe('$compile', function () {
         beforeEach(angular.mock.module(function () {
           directive('myDirective', ngInternals.valueFn({
             replace: true,
-            templateUrl: function ($element, $attrs) {
+            templateUrl($element, $attrs) {
               expect($element.text()).toBe('original content');
               expect($attrs.myDirective).toBe('some value');
               return 'my-directive.html';
             },
-            compile: function ($element, $attrs) {
+            compile($element, $attrs) {
               expect($element.text()).toBe('template content');
               expect($attrs.id).toBe('templateContent');
             }
@@ -2449,7 +2451,7 @@ describe('$compile', function () {
 
 
         it('should evaluate `templateUrl` when defined as fn and use returned value as url', angular.mock.inject(
-          function ($compile, $rootScope, $templateCache) {
+          function ($rootScope, $templateCache) {
             $templateCache.put('my-directive.html', '<div id="templateContent">template content</span>');
             element = compileForTest('<div my-directive="some value">original content<div>');
             expect(element.text()).toEqual('');
@@ -2470,9 +2472,9 @@ describe('$compile', function () {
               return {
                 scope: true,
                 restrict: 'CA',
-                compile: function () {
+                compile() {
                   return {
-                    pre: function (scope, element) {
+                    pre(scope, element) {
                       log(scope.$id);
                       expect(element.data('$scope')).toBe(scope);
                     }
@@ -2484,7 +2486,7 @@ describe('$compile', function () {
               return {
                 scope: {},
                 restrict: 'CA',
-                compile: function () {
+                compile() {
                   return function (scope, element) {
                     iscope = scope;
                     log(scope.$id);
@@ -2498,7 +2500,7 @@ describe('$compile', function () {
                 scope: true,
                 restrict: 'CA',
                 templateUrl: 'tscope.html',
-                compile: function () {
+                compile() {
                   return function (scope, element) {
                     log(scope.$id);
                     expect(element.data('$scope')).toBe(scope);
@@ -2511,7 +2513,7 @@ describe('$compile', function () {
                 scope: true,
                 restrict: 'CA',
                 template: '<span></span>',
-                compile: function () {
+                compile() {
                   return function (scope, element) {
                     log(scope.$id);
                     expect(element.data('$scope')).toBe(scope);
@@ -2525,7 +2527,7 @@ describe('$compile', function () {
                 replace: true,
                 restrict: 'CA',
                 templateUrl: 'trscope.html',
-                compile: function () {
+                compile() {
                   return function (scope, element) {
                     log(scope.$id);
                     expect(element.data('$scope')).toBe(scope);
@@ -2538,7 +2540,7 @@ describe('$compile', function () {
                 scope: {},
                 restrict: 'CA',
                 templateUrl: 'tiscope.html',
-                compile: function () {
+                compile() {
                   return function (scope, element) {
                     iscope = scope;
                     log(scope.$id);
@@ -2552,7 +2554,7 @@ describe('$compile', function () {
                 scope: {},
                 restrict: 'CA',
                 template: '<span></span>',
-                compile: function () {
+                compile() {
                   return function (scope, element) {
                     iscope = scope;
                     log(scope.$id);
@@ -2566,7 +2568,7 @@ describe('$compile', function () {
             return {
               restrict: 'CA',
               link: {
-                pre: function (scope) {
+                pre(scope) {
                   log('log-' + scope.$id + '-' + (scope.$parent && scope.$parent.$id || 'no-parent'));
                 }
               }
@@ -2624,7 +2626,7 @@ describe('$compile', function () {
         }));
 
 
-        it('should allow creation of new scopes', angular.mock.inject(function ($rootScope, $compile, log) {
+        it('should allow creation of new scopes', angular.mock.inject(function (log) {
           element = compileForTest('<div><span scope><a log></a></span></div>');
           expect(log).toEqual('2; log-2-1; LOG');
           expect(element.find('span').hasClass('ng-scope')).toBe(true);
@@ -2632,7 +2634,7 @@ describe('$compile', function () {
 
 
         it('should allow creation of new isolated scopes for directives', angular.mock.inject(
-          function ($rootScope, $compile, log) {
+          function ($rootScope, log) {
             element = compileForTest('<div><span iscope><a log></a></span></div>');
             expect(log).toEqual('log-1-no-parent; LOG; 2');
             $rootScope.name = 'abc';
@@ -2642,7 +2644,7 @@ describe('$compile', function () {
 
 
         it('should allow creation of new scopes for directives with templates', angular.mock.inject(
-          function ($rootScope, $compile, log, $httpBackend) {
+          function ($rootScope, log, $httpBackend) {
             $httpBackend.expect('GET', 'tscope.html').respond('<a log>{{name}}; scopeId: {{$id}}</a>');
             element = compileForTest('<div><span tscope></span></div>');
             $httpBackend.flush();
@@ -2655,7 +2657,7 @@ describe('$compile', function () {
 
 
         it('should allow creation of new scopes for replace directives with templates', angular.mock.inject(
-          function ($rootScope, $compile, log, $httpBackend) {
+          function ($rootScope, log, $httpBackend) {
             $httpBackend.expect('GET', 'trscope.html').respond('<p><a log>{{name}}; scopeId: {{$id}}</a></p>');
             element = compileForTest('<div><span trscope></span></div>');
             $httpBackend.flush();
@@ -2668,7 +2670,7 @@ describe('$compile', function () {
 
 
         it('should allow creation of new scopes for replace directives with templates in a repeater',
-          angular.mock.inject(function ($rootScope, $compile, log, $httpBackend) {
+          angular.mock.inject(function ($rootScope, log, $httpBackend) {
             $httpBackend.expect('GET', 'trscope.html').respond('<p><a log>{{name}}; scopeId: {{$id}} |</a></p>');
             element = compileForTest('<div><span ng-repeat="i in [1,2,3]" trscope></span></div>');
             $httpBackend.flush();
@@ -2682,7 +2684,7 @@ describe('$compile', function () {
 
 
         it('should allow creation of new isolated scopes for directives with templates', angular.mock.inject(
-          function ($rootScope, $compile, log, $httpBackend) {
+          function ($rootScope, log, $httpBackend) {
             $httpBackend.expect('GET', 'tiscope.html').respond('<a log></a>');
             element = compileForTest('<div><span tiscope></span></div>');
             $httpBackend.flush();
@@ -2694,7 +2696,7 @@ describe('$compile', function () {
 
 
         it('should correctly create the scope hierarchy', angular.mock.inject(
-          function ($rootScope, $compile, log) {
+          function ($rootScope, log) {
             element = compileForTest(
               '<div>' + //1
               '<b class=scope>' + //2
@@ -2713,14 +2715,14 @@ describe('$compile', function () {
 
         it('should allow more than one new scope directives per element, but directives should share' +
           'the scope', angular.mock.inject(
-          function ($rootScope, $compile, log) {
+          function ($rootScope, log) {
             element = compileForTest('<div class="scope-a; scope-b"></div>');
             expect(log).toEqual('2; 2');
           })
         );
 
         it('should not allow more than one isolate scope creation per element', angular.mock.inject(
-          function ($rootScope, $compile) {
+          function () {
             expect(function () {
               compileForTest('<div class="iscope-a; scope-b"></div>');
             }).toThrowMinErr('$compile', 'multidir', 'Multiple directives [iscopeA, scopeB] asking for new/isolated scope on: ' +
@@ -2748,12 +2750,12 @@ describe('$compile', function () {
                 restrict: 'C',
                 priority: 1,
                 scope: true,
-                link: function () {
+                link() {
                 }
               };
             });
           });
-          angular.mock.inject(function ($compile) {
+          angular.mock.inject(function () {
             expect(function () {
               compileForTest('<div class="iscope-a; high-priority-scope"></div>');
             }).toThrowMinErr('$compile', 'multidir', 'Multiple directives [highPriorityScope, iscopeA] asking for new/isolated scope on: ' +
@@ -2763,7 +2765,7 @@ describe('$compile', function () {
 
 
         it('should create new scope even at the root of the template', angular.mock.inject(
-          function ($rootScope, $compile, log) {
+          function ($rootScope, log) {
             element = compileForTest('<div scope-a></div>');
             expect(log).toEqual('2');
           })
@@ -2771,7 +2773,7 @@ describe('$compile', function () {
 
 
         it('should create isolate scope even at the root of the template', angular.mock.inject(
-          function ($rootScope, $compile, log) {
+          function ($rootScope, log) {
             element = compileForTest('<div iscope></div>');
             expect(log).toEqual('2');
           })
@@ -2783,7 +2785,7 @@ describe('$compile', function () {
           describe('with no directives', function () {
 
             it('should return the scope of the parent node', angular.mock.inject(
-              function ($rootScope, $compile) {
+              function () {
                 element = compileForTest('<div></div>');
                 expect(element.scope()).toBe;
               })
@@ -2794,7 +2796,7 @@ describe('$compile', function () {
           describe('with new scope directives', function () {
 
             it('should return the new scope at the directive element', angular.mock.inject(
-              function ($rootScope, $compile) {
+              function () {
                 element = compileForTest('<div scope></div>');
                 expect(element.scope().$parent).toBe;
               })
@@ -2802,7 +2804,7 @@ describe('$compile', function () {
 
 
             it('should return the new scope for children in the original template', angular.mock.inject(
-              function ($rootScope, $compile) {
+              function () {
                 element = compileForTest('<div scope><a></a></div>');
                 expect(element.find('a').scope().$parent).toBe;
               })
@@ -2810,7 +2812,7 @@ describe('$compile', function () {
 
 
             it('should return the new scope for children in the directive template', angular.mock.inject(
-              function ($rootScope, $compile, $httpBackend) {
+              function ($rootScope, $httpBackend) {
                 $httpBackend.expect('GET', 'tscope.html').respond('<a></a>');
                 element = compileForTest('<div tscope></div>');
                 $httpBackend.flush();
@@ -2819,7 +2821,7 @@ describe('$compile', function () {
             );
 
             it('should return the new scope for children in the directive sync template', angular.mock.inject(
-              function ($rootScope, $compile) {
+              function () {
                 element = compileForTest('<div stscope></div>');
                 expect(element.find('span').scope().$parent).toBe;
               })
@@ -2830,7 +2832,7 @@ describe('$compile', function () {
           describe('with isolate scope directives', function () {
 
             it('should return the root scope for directives at the root element', angular.mock.inject(
-              function ($rootScope, $compile) {
+              function () {
                 element = compileForTest('<div iscope></div>');
                 expect(element.scope()).toBe;
               })
@@ -2838,7 +2840,7 @@ describe('$compile', function () {
 
 
             it('should return the non-isolate scope at the directive element', angular.mock.inject(
-              function ($rootScope, $compile) {
+              function () {
                 var directiveElement;
                 element = compileForTest('<div><div iscope></div></div>');
                 directiveElement = element.children();
@@ -2849,7 +2851,7 @@ describe('$compile', function () {
 
 
             it('should return the isolate scope for children in the original template', angular.mock.inject(
-              function ($rootScope, $compile) {
+              function () {
                 element = compileForTest('<div iscope><a></a></div>');
                 expect(element.find('a').scope()).toBe; //xx
               })
@@ -2857,7 +2859,7 @@ describe('$compile', function () {
 
 
             it('should return the isolate scope for children in directive template', angular.mock.inject(
-              function ($rootScope, $compile, $httpBackend) {
+              function ($httpBackend) {
                 $httpBackend.expect('GET', 'tiscope.html').respond('<a></a>');
                 element = compileForTest('<div tiscope></div>');
                 expect(element.isolateScope()).toBeUndefined(); // this is the current behavior, not desired feature
@@ -2868,7 +2870,7 @@ describe('$compile', function () {
             );
 
             it('should return the isolate scope for children in directive sync template', angular.mock.inject(
-              function ($rootScope, $compile) {
+              function () {
                 element = compileForTest('<div stiscope></div>');
                 expect(element.find('span').scope()).toBe(element.isolateScope());
                 expect(element.isolateScope()).not.toBe;
@@ -2876,7 +2878,7 @@ describe('$compile', function () {
             );
 
             it('should handle "=" bindings with same method names in Object.prototype correctly when not present', angular.mock.inject(
-              function ($rootScope, $compile) {
+              function ($rootScope) {
                 var func = function () {
                   element = compileForTest(
                     '<div prototype-method-name-as-scope-var-a></div>'
@@ -2899,7 +2901,7 @@ describe('$compile', function () {
             );
 
             it('should handle "=" bindings with same method names in Object.prototype correctly when present', angular.mock.inject(
-              function ($rootScope, $compile) {
+              function ($rootScope) {
                 $rootScope.constructor = 'constructor';
                 $rootScope.valueOf = 'valueOf';
                 var func = function () {
@@ -2927,7 +2929,7 @@ describe('$compile', function () {
               });
 
               angular.mock.inject(
-                function ($rootScope, $compile) {
+                function () {
                   var func = function () {
                     element = compileForTest(
                       '<div prototype-method-name-as-scope-var-a></div>'
@@ -2946,7 +2948,7 @@ describe('$compile', function () {
                 $compileProvider.strictComponentBindingsEnabled(true);
               });
               angular.mock.inject(
-                function ($rootScope, $compile) {
+                function () {
                   var func = function () {
                     element = compileForTest(
                       '<div prototype-method-name-as-scope-var-a constructor="constructor" value-of="valueOf"></div>'
@@ -2962,7 +2964,7 @@ describe('$compile', function () {
                 $compileProvider.strictComponentBindingsEnabled(true);
               });
               angular.mock.inject(
-                function ($rootScope, $compile) {
+                function () {
                   var func = function () {
                     element = compileForTest(
                       '<div prototype-method-name-as-scope-var-a value-of="valueOf"></div>'
@@ -2973,7 +2975,7 @@ describe('$compile', function () {
             });
 
             it('should handle "@" bindings with same method names in Object.prototype correctly when not present', angular.mock.inject(
-              function ($rootScope, $compile) {
+              function ($rootScope) {
                 var func = function () {
                   element = compileForTest('<div prototype-method-name-as-scope-var-b></div>');
                 };
@@ -2994,7 +2996,7 @@ describe('$compile', function () {
             );
 
             it('should handle "@" bindings with same method names in Object.prototype correctly when present', angular.mock.inject(
-              function ($rootScope, $compile) {
+              function () {
                 var func = function () {
                   element = compileForTest(
                     '<div prototype-method-name-as-scope-var-b constructor="constructor" value-of="valueOf"></div>'
@@ -3015,7 +3017,7 @@ describe('$compile', function () {
                 $compileProvider.strictComponentBindingsEnabled(true);
               });
               angular.mock.inject(
-                function ($rootScope, $compile) {
+                function () {
                   var func = function () {
                     element = compileForTest(
                       '<div prototype-method-name-as-scope-var-b></div>'
@@ -3034,7 +3036,7 @@ describe('$compile', function () {
                 $compileProvider.strictComponentBindingsEnabled(true);
               });
               angular.mock.inject(
-                function ($rootScope, $compile) {
+                function () {
                   var func = function () {
                     element = compileForTest(
                       '<div prototype-method-name-as-scope-var-b constructor="constructor" value-of="valueOf"></div>'
@@ -3050,7 +3052,7 @@ describe('$compile', function () {
                 $compileProvider.strictComponentBindingsEnabled(true);
               });
               angular.mock.inject(
-                function ($rootScope, $compile) {
+                function () {
                   var func = function () {
                     element = compileForTest(
                       '<div prototype-method-name-as-scope-var-b value-of="valueOf"></div>'
@@ -3061,7 +3063,7 @@ describe('$compile', function () {
             });
 
             it('should handle "&" bindings with same method names in Object.prototype correctly when not present', angular.mock.inject(
-              function ($rootScope, $compile) {
+              function ($rootScope) {
                 var func = function () {
                   element = compileForTest('<div prototype-method-name-as-scope-var-c></div>');
                 };
@@ -3102,7 +3104,7 @@ describe('$compile', function () {
                 $compileProvider.strictComponentBindingsEnabled(true);
               });
               angular.mock.inject(
-                function ($rootScope, $compile) {
+                function () {
                   var func = function () {
                     element = compileForTest(
                       '<div prototype-method-name-as-scope-var-c></div>'
@@ -3121,7 +3123,7 @@ describe('$compile', function () {
                 $compileProvider.strictComponentBindingsEnabled(true);
               });
               angular.mock.inject(
-                function ($rootScope, $compile) {
+                function () {
                   var func = function () {
                     element = compileForTest(
                       '<div prototype-method-name-as-scope-var-c constructor="constructor" value-of="valueOf"></div>'
@@ -3137,7 +3139,7 @@ describe('$compile', function () {
                 $compileProvider.strictComponentBindingsEnabled(true);
               });
               angular.mock.inject(
-                function ($rootScope, $compile) {
+                function () {
                   var func = function () {
                     element = compileForTest(
                       '<div prototype-method-name-as-scope-var-c value-of="valueOf"></div>'
@@ -3153,7 +3155,7 @@ describe('$compile', function () {
                 $compileProvider.strictComponentBindingsEnabled(true);
               });
               angular.mock.inject(
-                function ($rootScope, $compile) {
+                function () {
                   var func = function () {
                     element = compileForTest(
                       '<div prototype-method-name-as-scope-var-d></div>'
@@ -3172,7 +3174,7 @@ describe('$compile', function () {
                 $compileProvider.strictComponentBindingsEnabled(true);
               });
               angular.mock.inject(
-                function ($rootScope, $compile) {
+                function () {
                   var func = function () {
                     element = compileForTest(
                       '<div prototype-method-name-as-scope-var-d constructor="constructor" value-of="valueOf"></div>'
@@ -3188,7 +3190,7 @@ describe('$compile', function () {
                 $compileProvider.strictComponentBindingsEnabled(true);
               });
               angular.mock.inject(
-                function ($rootScope, $compile) {
+                function () {
                   var func = function () {
                     element = compileForTest(
                       '<div prototype-method-name-as-scope-var-d value-of="valueOf"></div>'
@@ -3199,7 +3201,7 @@ describe('$compile', function () {
             });
 
             it('should not throw exception when using "watch" as binding in Firefox', angular.mock.inject(
-              function ($rootScope, $compile) {
+              function ($rootScope) {
                 $rootScope.watch = 'watch';
                 var func = function () {
                   element = compileForTest(
@@ -3220,13 +3222,13 @@ describe('$compile', function () {
                 $compileProvider.directive('test', function () {
                   return {
                     scope: { checked: '@' },
-                    link: function (scope, element, attrs) {
+                    link(scope, element, attrs) {
                       checkedVal = scope.checked;
                     }
                   };
                 });
               });
-              angular.mock.inject(function ($compile, $rootScope) {
+              angular.mock.inject(function () {
                 compileForTest('<input test checked="checked">');
                 expect(checkedVal).toEqual(true);
               });
@@ -3238,14 +3240,14 @@ describe('$compile', function () {
                 $compileProvider.directive('test', function () {
                   return {
                     scope: { checked: '@' },
-                    link: function (scope, element, attrs) {
+                    link(scope, element, attrs) {
                       componentScope = scope;
                       attrs.$set('checked', true);
                     }
                   };
                 });
               });
-              angular.mock.inject(function ($compile, $rootScope) {
+              angular.mock.inject(function () {
                 compileForTest('<test></test>');
                 expect(componentScope.checked).toBe(true);
               });
@@ -3256,7 +3258,7 @@ describe('$compile', function () {
           describe('with isolate scope directives and directives that manually create a new scope', function () {
 
             it('should return the new scope at the directive element', angular.mock.inject(
-              function ($rootScope, $compile) {
+              function ($rootScope) {
                 var directiveElement;
                 element = compileForTest('<div><a ng-if="true" iscope></a></div>');
                 $rootScope.$apply();
@@ -3268,8 +3270,9 @@ describe('$compile', function () {
 
 
             it('should return the isolate scope for child elements', angular.mock.inject(
-              function ($rootScope, $compile, $httpBackend) {
-                var directiveElement, child;
+              function ($rootScope, $httpBackend) {
+                var directiveElement;
+                var child;
                 $httpBackend.expect('GET', 'tiscope.html').respond('<span></span>');
                 element = compileForTest('<div><a ng-if="true" tiscope></a></div>');
                 $rootScope.$apply();
@@ -3281,8 +3284,9 @@ describe('$compile', function () {
             );
 
             it('should return the isolate scope for child elements in directive sync template', angular.mock.inject(
-              function ($rootScope, $compile) {
-                var directiveElement, child;
+              function ($rootScope) {
+                var directiveElement;
+                var child;
                 element = compileForTest('<div><a ng-if="true" stiscope></a></div>');
                 $rootScope.$apply();
                 directiveElement = element.find('a');
@@ -3299,9 +3303,9 @@ describe('$compile', function () {
               return {
                 scope: true,
                 restrict: 'CA',
-                compile: function () {
+                compile() {
                   return {
-                    pre: function (scope, element) {
+                    pre(scope, element) {
                       log(scope.$id);
                       expect(element.data('$scope')).toBe(scope);
                     }
@@ -3313,7 +3317,7 @@ describe('$compile', function () {
               return {
                 scope: {},
                 restrict: 'CA',
-                compile: function () {
+                compile() {
                   return function (scope, element) {
                     iscope = scope;
                     log(scope.$id);
@@ -3328,9 +3332,9 @@ describe('$compile', function () {
               return {
                 scope: true,
                 restrict: 'CA',
-                compile: function () {
+                compile() {
                   return {
-                    pre: function (scope, element) {
+                    pre(scope, element) {
                       log(scope.$id);
                       expect(element.data('$scope')).toBe(scope);
                     }
@@ -3341,7 +3345,7 @@ describe('$compile', function () {
           }));
 
           it('should add module name to multidir isolated scope message if directive defined through module', angular.mock.inject(
-            function ($rootScope, $compile) {
+            function () {
               expect(function () {
                 compileForTest('<div class="fake-scope; fake-i-scope"></div>');
               }).toThrowMinErr('$compile', 'multidir',
@@ -3351,7 +3355,7 @@ describe('$compile', function () {
           );
 
           it('shouldn\'t add module name to multidir isolated scope message if directive is defined directly with $compileProvider', angular.mock.inject(
-            function ($rootScope, $compile) {
+            function () {
               expect(function () {
                 compileForTest('<div class="anonym-module-scope-directive; fake-i-scope"></div>');
               }).toThrowMinErr('$compile', 'multidir',
@@ -3366,7 +3370,9 @@ describe('$compile', function () {
 
 
   describe('interpolation', function () {
-    var observeSpy, directiveAttrs, deregisterObserver;
+    var observeSpy;
+    var directiveAttrs;
+    var deregisterObserver;
 
     beforeEach(angular.mock.module(function () {
       directive('observer', function () {
@@ -3377,7 +3383,7 @@ describe('$compile', function () {
         };
       });
       directive('replaceSomeAttr', ngInternals.valueFn({
-        compile: function (element, attr) {
+        compile(element, attr) {
           attr.$set('someAttr', 'bar-{{1+1}}');
           expect(element).toBe(attr.$$element);
         }
@@ -3386,7 +3392,7 @@ describe('$compile', function () {
 
 
     it('should compile and link both attribute and text bindings', angular.mock.inject(
-      function ($rootScope, $compile) {
+      function ($rootScope) {
         $rootScope.name = 'angular';
         element = compileForTest('<div name="attr: {{name}}">text: {{name}}</div>');
         $rootScope.$digest();
@@ -3397,7 +3403,7 @@ describe('$compile', function () {
 
 
     it('should one-time bind if the expression starts with two colons', angular.mock.inject(
-      function ($rootScope, $compile) {
+      function ($rootScope) {
         $rootScope.name = 'angular';
         element = compileForTest('<div name="attr: {{::name}}">text: {{::name}}</div>');
         expect($rootScope.$$watchers.length).toBe(2);
@@ -3413,7 +3419,7 @@ describe('$compile', function () {
     );
 
     it('should one-time bind if the expression starts with a space and two colons', angular.mock.inject(
-      function ($rootScope, $compile) {
+      function ($rootScope) {
         $rootScope.name = 'angular';
         element = compileForTest('<div name="attr: {{::name}}">text: {{ ::name }}</div>');
         expect($rootScope.$$watchers.length).toBe(2);
@@ -3433,14 +3439,14 @@ describe('$compile', function () {
       angular.mock.module(function () {
         directive('attrLog', function (log) {
           return {
-            compile: function ($element, $attrs) {
+            compile($element, $attrs) {
               log('compile=' + $attrs.myName);
 
               return {
-                pre: function ($scope, $element, $attrs) {
+                pre($scope, $element, $attrs) {
                   log('preLinkP0=' + $attrs.myName);
                 },
-                post: function ($scope, $element, $attrs) {
+                post($scope, $element, $attrs) {
                   log('postLink=' + $attrs.myName);
                 }
               };
@@ -3452,9 +3458,9 @@ describe('$compile', function () {
         directive('attrLogHighPriority', function (log) {
           return {
             priority: 101,
-            compile: function () {
+            compile() {
               return {
-                pre: function ($scope, $element, $attrs) {
+                pre($scope, $element, $attrs) {
                   log('preLinkP101=' + $attrs.myName);
                 }
               };
@@ -3462,7 +3468,7 @@ describe('$compile', function () {
           };
         });
       });
-      angular.mock.inject(function ($rootScope, $compile, log) {
+      angular.mock.inject(function ($rootScope, log) {
         element = compileForTest('<div attr-log-high-priority attr-log my-name="{{name}}"></div>');
         $rootScope.name = 'angular';
         $rootScope.$apply();
@@ -3476,7 +3482,7 @@ describe('$compile', function () {
         directive('removeAttr', function () {
           return {
             restrict: 'A',
-            compile: function (tElement, tAttr) {
+            compile(tElement, tAttr) {
               tAttr.$set('removeAttr', null);
             }
           };
@@ -3492,7 +3498,7 @@ describe('$compile', function () {
 
     describe('SCE values', function () {
       it('should resolve compile and link both attribute and text bindings', angular.mock.inject(
-        function ($rootScope, $compile, $sce) {
+        function ($rootScope, $sce) {
           $rootScope.name = $sce.trustAsHtml('angular');
           element = compileForTest('<div name="attr: {{name}}">text: {{name}}</div>');
           $rootScope.$digest();
@@ -3508,7 +3514,7 @@ describe('$compile', function () {
           $compileProvider.debugInfoEnabled(false);
         });
 
-        angular.mock.inject(function ($compile, $rootScope) {
+        angular.mock.inject(function () {
           element = compileForTest('<div>{{1+2}}</div>');
           expect(element.hasClass('ng-binding')).toBe(false);
           expect(element.data('$binding')).toBeUndefined();
@@ -3521,7 +3527,7 @@ describe('$compile', function () {
           $compileProvider.debugInfoEnabled(true);
         });
 
-        angular.mock.inject(function ($compile, $rootScope) {
+        angular.mock.inject(function () {
           element = compileForTest('<div>{{1+2}}</div>');
           expect(element.hasClass('ng-binding')).toBe(true);
           expect(element.data('$binding')).toEqual(['1+2']);
@@ -3529,7 +3535,7 @@ describe('$compile', function () {
       });
     });
 
-    it('should observe interpolated attrs', angular.mock.inject(function ($rootScope, $compile) {
+    it('should observe interpolated attrs', angular.mock.inject(function ($rootScope) {
       compileForTest('<div some-attr="{{value}}" observer></div>');
 
       // should be async
@@ -3542,7 +3548,7 @@ describe('$compile', function () {
     }));
 
 
-    it('should return a deregistration function while observing an attribute', angular.mock.inject(function ($rootScope, $compile) {
+    it('should return a deregistration function while observing an attribute', angular.mock.inject(function ($rootScope) {
       compileForTest('<div some-attr="{{value}}" observer></div>');
 
       $rootScope.$apply('value = "first-value"');
@@ -3554,7 +3560,7 @@ describe('$compile', function () {
     }));
 
 
-    it('should set interpolated attrs to initial interpolation value', angular.mock.inject(function ($rootScope, $compile) {
+    it('should set interpolated attrs to initial interpolation value', angular.mock.inject(function ($rootScope) {
       // we need the interpolated attributes to be initialized so that linking fn in a component
       // can access the value during link
       $rootScope.whatever = 'test value';
@@ -3564,7 +3570,7 @@ describe('$compile', function () {
 
 
     it('should allow directive to replace interpolated attributes before attr interpolation compilation', angular.mock.inject(
-      function ($compile, $rootScope) {
+      function ($rootScope) {
         element = compileForTest('<div some-attr="foo-{{1+1}}" replace-some-attr></div>');
         $rootScope.$digest();
         expect(element.attr('some-attr')).toEqual('bar-2');
@@ -3572,7 +3578,7 @@ describe('$compile', function () {
 
 
     it('should call observer of non-interpolated attr through $evalAsync',
-      angular.mock.inject(function ($rootScope, $compile) {
+      angular.mock.inject(function ($rootScope) {
         compileForTest('<div some-attr="nonBound" observer></div>');
         expect(directiveAttrs.someAttr).toBe('nonBound');
 
@@ -3592,7 +3598,7 @@ describe('$compile', function () {
           };
         });
       });
-      angular.mock.inject(function ($rootScope, $compile) {
+      angular.mock.inject(function ($rootScope) {
         compileForTest('<observing-directive observer></observing-directive>');
         $rootScope.$digest();
         expect(observeSpy).not.toHaveBeenCalledWith(undefined);
@@ -3614,7 +3620,7 @@ describe('$compile', function () {
         });
       });
 
-      angular.mock.inject(function ($compile, $rootScope, $exceptionHandler) {
+      angular.mock.inject(function ($rootScope, $exceptionHandler) {
         compileForTest('<div some-attr="{{value}}" error></div>');
         $rootScope.$digest();
 
@@ -3625,7 +3631,7 @@ describe('$compile', function () {
     });
 
 
-    it('should translate {{}} in terminal nodes', angular.mock.inject(function ($rootScope, $compile) {
+    it('should translate {{}} in terminal nodes', angular.mock.inject(function ($rootScope) {
       element = compileForTest('<select ng:model="x"><option value="">Greet {{name}}!</option></select>');
       $rootScope.$digest();
       expect(sortedHtml(element).replace(' selected="selected"', '')).toEqual('<select ng:model="x">' +
@@ -3639,7 +3645,7 @@ describe('$compile', function () {
     }));
 
 
-    it('should handle consecutive text elements as a single text element', angular.mock.inject(function ($rootScope, $compile) {
+    it('should handle consecutive text elements as a single text element', angular.mock.inject(function ($rootScope) {
       // No point it running the test, if there is no MutationObserver
       if (!window.MutationObserver) return;
 
@@ -3658,7 +3664,7 @@ describe('$compile', function () {
     }));
 
 
-    it('should not process text nodes merged into their sibling', angular.mock.inject(function ($compile, $rootScope) {
+    it('should not process text nodes merged into their sibling', angular.mock.inject(function ($rootScope) {
       var div = document.createElement('div');
       div.appendChild(document.createTextNode('1{{ value }}'));
       div.appendChild(document.createTextNode('2{{ value }}'));
@@ -3690,7 +3696,7 @@ describe('$compile', function () {
           });
         });
 
-        angular.mock.inject(function ($compile, $rootScope) {
+        angular.mock.inject(function ($rootScope) {
           element = compileForTest('<div>##hello|uppercase]]|<div my-directive></div></div>');
           $rootScope.hello = 'ahoj';
           $rootScope.$digest();
@@ -3710,7 +3716,7 @@ describe('$compile', function () {
           });
         });
 
-        angular.mock.inject(function ($compile, $rootScope) {
+        angular.mock.inject(function ($rootScope) {
           var tmpl = '<div>[[ hello | uppercase }}|<div my-directive></div></div>';
           element = compileForTest(tmpl);
 
@@ -3734,7 +3740,7 @@ describe('$compile', function () {
           });
         });
 
-        angular.mock.inject(function ($compile, $rootScope) {
+        angular.mock.inject(function ($rootScope) {
           var tmpl = '<div>{{ hello | uppercase ]]|<div my-directive></div></div>';
           element = compileForTest(tmpl);
 
@@ -3758,7 +3764,7 @@ describe('$compile', function () {
           });
         });
 
-        angular.mock.inject(function ($compile, $rootScope, $templateCache) {
+        angular.mock.inject(function ($rootScope, $templateCache) {
           $templateCache.put('myDirective.html', '<span>{{hello}}|{{hello|uppercase}}</span>');
           element = compileForTest('<div>##hello|uppercase]]|<div my-directive></div></div>');
           $rootScope.hello = 'ahoj';
@@ -3773,7 +3779,7 @@ describe('$compile', function () {
         directive('myAttr', function (log) {
           return {
             terminal: true,
-            link: function (scope, element, attrs) {
+            link(scope, element, attrs) {
               attrs.$observe('myAttr', function (val) {
                 log(val);
               });
@@ -3782,7 +3788,7 @@ describe('$compile', function () {
         });
       });
 
-      angular.mock.inject(function ($compile, $rootScope, log) {
+      angular.mock.inject(function ($rootScope, log) {
         element = compileForTest('<div my-attr="{{myVal}}"></div>');
         expect(log).toEqual([]);
 
@@ -3802,7 +3808,7 @@ describe('$compile', function () {
       $compileProvider.directive('testCollect', function () {
         return {
           restrict: 'EACM',
-          link: function () {
+          link() {
             collected = true;
           }
         };
@@ -3828,13 +3834,13 @@ describe('$compile', function () {
     ], function (config) {
       describe('commentDirectivesEnabled(' + config.commentEnabled + ') ' +
         'cssClassDirectivesEnabled(' + config.cssEnabled + ')', function () {
-
         beforeEach(angular.mock.module(function ($compileProvider) {
           $compileProvider.commentDirectivesEnabled(config.commentEnabled);
           $compileProvider.cssClassDirectivesEnabled(config.cssEnabled);
         }));
 
-        var $compile, $rootScope;
+        var $compile;
+        var $rootScope;
         beforeEach(angular.mock.inject(function (_$compile_, _$rootScope_) {
           $compile = _$compile_;
           $rootScope = _$rootScope_;
@@ -3898,7 +3904,7 @@ describe('$compile', function () {
         $compileProvider.commentDirectivesEnabled(false);
       });
 
-      angular.mock.inject(function ($compile, $rootScope) {
+      angular.mock.inject(function () {
         $compileProvider.commentDirectivesEnabled(true);
         var html = '<!-- directive: test-collect -->';
         element = compileForTest('<div>' + html + '</div>');
@@ -3927,7 +3933,7 @@ describe('$compile', function () {
         $compileProvider.cssClassDirectivesEnabled(false);
       });
 
-      angular.mock.inject(function ($compile, $rootScope) {
+      angular.mock.inject(function () {
         $compileProvider.cssClassDirectivesEnabled(true);
         element = compileForTest('<div class="test-collect"></div>');
         expect(collected).toBe(false);
@@ -3943,10 +3949,10 @@ describe('$compile', function () {
         directive(name, function (log) {
           return {
             restrict: 'ECA',
-            compile: function () {
+            compile() {
               log('t' + angular.uppercase(name));
               return {
-                pre: function () {
+                pre() {
                   log('pre' + angular.uppercase(name));
                 },
                 post: function linkFn() {
@@ -3960,7 +3966,7 @@ describe('$compile', function () {
     }));
 
 
-    it('should not store linkingFns for noop branches', angular.mock.inject(function ($rootScope, $compile) {
+    it('should not store linkingFns for noop branches', angular.mock.inject(function () {
       element = angular.element('<div name="{{a}}"><span>ignore</span></div>');
       toDealoc.push(element);
       var linkingFn = compileForTest(element);
@@ -3973,7 +3979,7 @@ describe('$compile', function () {
 
 
     it('should compile from top to bottom but link from bottom up', angular.mock.inject(
-      function ($compile, $rootScope, log) {
+      function (log) {
         element = compileForTest('<a b><c></c></a>');
         expect(log).toEqual('tA; tB; tC; preA; preB; preC; postC; postB; postA');
       }
@@ -3983,12 +3989,12 @@ describe('$compile', function () {
     it('should support link function on directive object', function () {
       angular.mock.module(function () {
         directive('abc', ngInternals.valueFn({
-          link: function (scope, element, attrs) {
+          link(scope, element, attrs) {
             element.text(attrs.abc);
           }
         }));
       });
-      angular.mock.inject(function ($compile, $rootScope) {
+      angular.mock.inject(function () {
         element = compileForTest('<div abc="WORKS">FAIL</div>');
         expect(element.text()).toEqual('WORKS');
       });
@@ -3998,14 +4004,14 @@ describe('$compile', function () {
       angular.mock.module(function () {
         directive('testLink', ngInternals.valueFn({
           templateUrl: 'test-link.html',
-          link: function (scope, element, attrs) {
+          link(scope, element, attrs) {
             attrs.$observe('testLink', function (val) {
               scope.testAttr = val;
             });
           }
         }));
       });
-      angular.mock.inject(function ($compile, $rootScope, $templateCache) {
+      angular.mock.inject(function ($rootScope, $templateCache) {
         $templateCache.put('test-link.html', '{{testAttr}}');
         element = compileForTest('<div test-link="{{1+2}}"></div>');
         $rootScope.$apply();
@@ -4038,7 +4044,7 @@ describe('$compile', function () {
           })
         });
       });
-      angular.mock.inject(function ($rootScope, $compile) {
+      angular.mock.inject(function() {
         element = compileForTest('<div setter></div>');
         expect(element.attr('name')).toEqual('abc');
         expect(element.attr('disabled')).toEqual('disabled');
@@ -4052,13 +4058,13 @@ describe('$compile', function () {
         directive({
           input: ngInternals.valueFn({
             restrict: 'ECA',
-            link: function (scope, element, attr) {
+            link(scope, element, attr) {
               value = attr.required;
             }
           })
         });
       });
-      angular.mock.inject(function ($rootScope, $compile) {
+      angular.mock.inject(function () {
         element = compileForTest('<input required></input>');
         expect(value).toEqual(true);
       });
@@ -4070,13 +4076,13 @@ describe('$compile', function () {
         directive({
           div: ngInternals.valueFn({
             restrict: 'ECA',
-            link: function (scope, element, attr) {
+            link(scope, element, attr) {
               value = attr.required;
             }
           })
         });
       });
-      angular.mock.inject(function ($rootScope, $compile) {
+      angular.mock.inject(function () {
         element = compileForTest('<div required="some text"></div>');
         expect(value).toEqual('some text');
       });
@@ -4090,7 +4096,7 @@ describe('$compile', function () {
         directive({
           first: ngInternals.valueFn({
             priority: 1,
-            compile: function (templateElement, templateAttr) {
+            compile(templateElement, templateAttr) {
               return function (scope, element, attr) {
                 state.first.push({
                   template: { element: templateElement, attr: templateAttr },
@@ -4101,7 +4107,7 @@ describe('$compile', function () {
           }),
           second: ngInternals.valueFn({
             priority: 2,
-            compile: function (templateElement, templateAttr) {
+            compile(templateElement, templateAttr) {
               return function (scope, element, attr) {
                 state.second.push({
                   template: { element: templateElement, attr: templateAttr },
@@ -4112,7 +4118,7 @@ describe('$compile', function () {
           })
         });
       });
-      angular.mock.inject(function ($rootScope, $compile, state) {
+      angular.mock.inject(function ($rootScope, state) {
         var template = generateTestCompiler('<div first second>');
         dealoc(template($rootScope.$new(), angular.noop));
         dealoc(template($rootScope.$new(), angular.noop));
@@ -4146,7 +4152,7 @@ describe('$compile', function () {
         });
       });
 
-      angular.mock.inject(function ($compile, $rootScope) {
+      angular.mock.inject(function ($rootScope) {
         element = compileForTest('<div><div ng-repeat="i in items">' +
           '<span some="id_{{i.id}}" observer></span>' +
           '</div></div>');
@@ -4175,12 +4181,12 @@ describe('$compile', function () {
         angular.mock.module(function () {
           directive('input', ngInternals.valueFn({
             restrict: 'ECA',
-            link: function (scope, element, attr) {
+            link(scope, element, attr) {
               scope.attr = attr;
             }
           }));
         });
-        angular.mock.inject(function ($compile, $rootScope) {
+        angular.mock.inject(function ($rootScope) {
           element = compileForTest('<input></input>');
           attr = $rootScope.attr;
           expect(attr).toBeDefined();
@@ -4264,7 +4270,7 @@ describe('$compile', function () {
               .directive('d2', ngInternals.valueFn({ controller: Controller2 }));
 
             angular.mock.module('my');
-            angular.mock.inject(function ($compile, $rootScope) {
+            angular.mock.inject(function () {
               element = compileForTest('<div d1 d2></div>');
               expect(Controller1.prototype.$onInit).toHaveBeenCalledTimes(1);
               expect(Controller2.prototype.$onInit).toHaveBeenCalledTimes(1);
@@ -4299,7 +4305,7 @@ describe('$compile', function () {
               });
 
             angular.mock.module('my');
-            angular.mock.inject(function ($compile, $rootScope, $exceptionHandler, $log) {
+            angular.mock.inject(function ($exceptionHandler, $log) {
 
               // Setup the directive with bindings that will keep updating the bound value forever
               element = compileForTest('<div><c1 prop="a"></c1><c2 prop="a"></c2>');
@@ -4332,7 +4338,7 @@ describe('$compile', function () {
               .directive('d3', ngInternals.valueFn({ controller: TestController }));
 
             angular.mock.module('my');
-            angular.mock.inject(function ($compile, $rootScope) {
+            angular.mock.inject(function ($rootScope) {
 
               element = compileForTest('<div><d1 ng-if="show[0]"></d1><d2 ng-if="show[1]"></d2><div ng-if="show[2]"><d3></d3></div></div>');
 
@@ -4385,7 +4391,7 @@ describe('$compile', function () {
               .directive('grandChild', ngInternals.valueFn({ scope: true, controller: GrandChildController }));
 
             angular.mock.module('my');
-            angular.mock.inject(function ($compile, $rootScope) {
+            angular.mock.inject(function ($rootScope) {
 
               element = compileForTest('<parent ng-if="show"><child><grand-child></grand-child></child></parent>');
               $rootScope.$apply('show = true');
@@ -4422,9 +4428,9 @@ describe('$compile', function () {
               .directive('d1', ngInternals.valueFn({
                 controller: Controller1,
                 link: {
-                  pre: function (s, e) {
+                  pre(s, e) {
                     log.push('d1 pre: ' + e.text());
-                  }, post: function (s, e) {
+                  }, post(s, e) {
                     log.push('d1 post: ' + e.text());
                   }
                 },
@@ -4433,9 +4439,9 @@ describe('$compile', function () {
               .directive('d2', ngInternals.valueFn({
                 controller: Controller2,
                 link: {
-                  pre: function (s, e) {
+                  pre(s, e) {
                     log.push('d2 pre: ' + e.text());
-                  }, post: function (s, e) {
+                  }, post(s, e) {
                     log.push('d2 post: ' + e.text());
                   }
                 },
@@ -4443,7 +4449,7 @@ describe('$compile', function () {
               }));
 
             angular.mock.module('my');
-            angular.mock.inject(function ($compile, $rootScope) {
+            angular.mock.inject(function () {
               element = compileForTest('<d1></d1>');
               expect(log).toEqual([
                 'd1 pre: loaded',
@@ -4481,7 +4487,7 @@ describe('$compile', function () {
               });
 
             angular.mock.module('my');
-            angular.mock.inject(function ($compile, $rootScope) {
+            angular.mock.inject(function ($rootScope) {
               element = compileForTest('<dcc prop1="val"></dcc>');
               expect(log).toEqual([
                 '$onChanges',
@@ -4532,7 +4538,7 @@ describe('$compile', function () {
               });
 
             angular.mock.module('my');
-            angular.mock.inject(function ($compile, $rootScope) {
+            angular.mock.inject(function ($rootScope) {
               element = compileForTest('<dcc prop1="val"></dcc>');
               expect(log).toEqual([
                 '$onChanges',
@@ -4581,7 +4587,7 @@ describe('$compile', function () {
               });
 
             angular.mock.module('my');
-            angular.mock.inject(function ($compile, $rootScope) {
+            angular.mock.inject(function ($rootScope) {
               // Setup a watch to indicate some complicated updated logic
               $rootScope.$watch('val', function (val, oldVal) {
                 $rootScope.val2 = val * 2;
@@ -4661,7 +4667,7 @@ describe('$compile', function () {
               });
 
             angular.mock.module('my');
-            angular.mock.inject(function ($compile, $rootScope) {
+            angular.mock.inject(function ($rootScope) {
               element = compileForTest('<c1 prop1="val"></c1>');
 
               $rootScope.$apply('val = 1');
@@ -4696,7 +4702,7 @@ describe('$compile', function () {
               });
 
             angular.mock.module('my');
-            angular.mock.inject(function ($compile, $rootScope) {
+            angular.mock.inject(function ($rootScope) {
               element = compileForTest('<c1 prop="a + b"></c1>');
 
               // We add this watch after the compilation to ensure that it will run after the binding watchers
@@ -4743,7 +4749,7 @@ describe('$compile', function () {
               });
 
             angular.mock.module('my');
-            angular.mock.inject(function ($compile, $rootScope) {
+            angular.mock.inject(function ($rootScope) {
 
               $rootScope.$apply('a = 7');
               element = compileForTest('<c1 prop="a" attr="{{a}}"></c1>');
@@ -4787,7 +4793,7 @@ describe('$compile', function () {
               });
 
             angular.mock.module('my');
-            angular.mock.inject(function ($compile, $rootScope) {
+            angular.mock.inject(function ($rootScope) {
               $rootScope.$apply('a = 7');
               element = compileForTest('<c1 prop="a" attr="{{a}}"></c1>');
 
@@ -4830,7 +4836,7 @@ describe('$compile', function () {
               });
             });
 
-            angular.mock.inject(function ($compile, $rootScope) {
+            angular.mock.inject(function ($rootScope) {
               var template = '<test attr="{{a}}"></test>';
               $rootScope.a = 'foo';
 
@@ -4858,7 +4864,7 @@ describe('$compile', function () {
               });
             });
 
-            angular.mock.inject(function ($compile, $rootScope) {
+            angular.mock.inject(function ($rootScope) {
               var template = '<test prop="a" attr="{{a}}"></test>' +
                 '<test prop="b" attr="{{b}}"></test>';
               $rootScope.a = 'foo';
@@ -4921,7 +4927,7 @@ describe('$compile', function () {
               });
 
             angular.mock.module('my');
-            angular.mock.inject(function ($compile, $rootScope) {
+            angular.mock.inject(function ($rootScope) {
 
               // Create a watcher to count the number of digest cycles
               var watchCount = 0;
@@ -4979,7 +4985,7 @@ describe('$compile', function () {
               });
 
             angular.mock.module('my');
-            angular.mock.inject(function ($compile, $rootScope) {
+            angular.mock.inject(function ($rootScope) {
 
               // Setup the directive with two bindings
               element = compileForTest('<outer prop1="a"></outer>');
@@ -5013,7 +5019,7 @@ describe('$compile', function () {
               });
 
             angular.mock.module('my');
-            angular.mock.inject(function ($compile, $rootScope) {
+            angular.mock.inject(function ($rootScope) {
 
               // Setup the directive with bindings that will keep updating the bound value forever
               element = compileForTest('<c1 prop="a" on-change="a = -a"></c1>');
@@ -5050,7 +5056,7 @@ describe('$compile', function () {
               });
 
             angular.mock.module('my');
-            angular.mock.inject(function ($compile, $rootScope, $exceptionHandler) {
+            angular.mock.inject(function ($rootScope, $exceptionHandler) {
 
               // Setup the directive with bindings that will keep updating the bound value forever
               element = compileForTest('<c1 prop="a" on-change="a = -a"></c1>');
@@ -5091,7 +5097,7 @@ describe('$compile', function () {
               });
 
             angular.mock.module('my');
-            angular.mock.inject(function ($compile, $rootScope, $exceptionHandler, $log) {
+            angular.mock.inject(function ($rootScope, $exceptionHandler, $log) {
 
               // Setup the directive with bindings that will keep updating the bound value forever
               element = compileForTest('<div><c1 prop="a"></c1><c2 prop="a"></c2>');
@@ -5131,7 +5137,7 @@ describe('$compile', function () {
               });
 
             angular.mock.module('my');
-            angular.mock.inject(function ($compile, $rootScope, $exceptionHandler, $log) {
+            angular.mock.inject(function ($rootScope, $exceptionHandler, $log) {
 
               // Setup the directive with bindings that will keep updating the bound value forever
               element = compileForTest('<div><c1 prop="a"></c1><c1 prop="a * 2"></c1>');
@@ -5152,7 +5158,8 @@ describe('$compile', function () {
 
 
       describe('isolated locals', function () {
-        var componentScope, regularScope;
+        var componentScope;
+        var regularScope;
 
         beforeEach(angular.mock.module(function () {
           directive('myComponent', function () {
@@ -5184,7 +5191,7 @@ describe('$compile', function () {
                 $exprAlias: '&$expr$',
                 constructor: '&?'
               },
-              link: function (scope) {
+              link(scope) {
                 componentScope = scope;
               }
             };
@@ -5196,7 +5203,7 @@ describe('$compile', function () {
           });
           directive('storeScope', function () {
             return {
-              link: function (scope) {
+              link(scope) {
                 regularScope = scope;
               }
             };
@@ -5271,7 +5278,7 @@ describe('$compile', function () {
         });
 
 
-        it('should update parent scope when "="-bound NaN changes', angular.mock.inject(function ($compile, $rootScope) {
+        it('should update parent scope when "="-bound NaN changes', angular.mock.inject(function ($rootScope) {
           $rootScope.num = NaN;
           compile('<div my-component reference="num"></div>');
           var isolateScope = element.isolateScope();
@@ -5284,7 +5291,7 @@ describe('$compile', function () {
         }));
 
 
-        it('should update isolate scope when "="-bound NaN changes', angular.mock.inject(function ($compile, $rootScope) {
+        it('should update isolate scope when "="-bound NaN changes', angular.mock.inject(function ($rootScope) {
           $rootScope.num = NaN;
           compile('<div my-component reference="num"></div>');
           var isolateScope = element.isolateScope();
@@ -5329,12 +5336,12 @@ describe('$compile', function () {
           var attrs;
           angular.mock.module(function () {
             directive('attrExposer', ngInternals.valueFn({
-              link: function ($scope, $element, $attrs) {
+              link($scope, $element, $attrs) {
                 attrs = $attrs;
               }
             }));
           });
-          angular.mock.inject(function ($compile, $rootScope) {
+          angular.mock.inject(function ($rootScope) {
             compileForTest('<div attr-exposer to-string="{{1 + 1}}">');
             $rootScope.$apply();
             expect(attrs.toString).toBe('2');
@@ -5342,21 +5349,21 @@ describe('$compile', function () {
         });
 
 
-        it('should not initialize scope value if optional expression binding is not passed', angular.mock.inject(function ($compile) {
+        it('should not initialize scope value if optional expression binding is not passed', angular.mock.inject(function () {
           compile('<div my-component></div>');
           var isolateScope = element.isolateScope();
           expect(isolateScope.optExpr).toBeUndefined();
         }));
 
 
-        it('should not initialize scope value if optional expression binding with Object.prototype name is not passed', angular.mock.inject(function ($compile) {
+        it('should not initialize scope value if optional expression binding with Object.prototype name is not passed', angular.mock.inject(function () {
           compile('<div my-component></div>');
           var isolateScope = element.isolateScope();
           expect(isolateScope.constructor).toBe($rootScope.constructor);
         }));
 
 
-        it('should initialize scope value if optional expression binding is passed', angular.mock.inject(function ($compile) {
+        it('should initialize scope value if optional expression binding is passed', angular.mock.inject(function () {
           compile('<div my-component opt-expr="value = \'did!\'"></div>');
           var isolateScope = element.isolateScope();
           expect(typeof isolateScope.optExpr).toBe('function');
@@ -5365,7 +5372,7 @@ describe('$compile', function () {
         }));
 
 
-        it('should initialize scope value if optional expression binding with Object.prototype name is passed', angular.mock.inject(function ($compile) {
+        it('should initialize scope value if optional expression binding with Object.prototype name is passed', angular.mock.inject(function () {
           compile('<div my-component constructor="value = \'did!\'"></div>');
           var isolateScope = element.isolateScope();
           expect(typeof isolateScope.constructor).toBe('function');
@@ -5378,7 +5385,7 @@ describe('$compile', function () {
           angular.mock.module(function ($compileProvider) {
             $compileProvider.directive('testDir', ngInternals.valueFn({
               scope: { prop: '@' },
-              controller: function ($scope) {
+              controller($scope) {
                 $scope.prop = $scope.prop || 'default';
                 this.getProp = function () {
                   return $scope.prop;
@@ -5388,7 +5395,7 @@ describe('$compile', function () {
               template: '<p></p>'
             }));
           });
-          angular.mock.inject(function ($compile, $rootScope) {
+          angular.mock.inject(function ($rootScope) {
             element = compileForTest('<div test-dir></div>');
             var scope = element.isolateScope();
             expect(scope.ctrl.getProp()).toBe('default');
@@ -5403,7 +5410,7 @@ describe('$compile', function () {
           angular.mock.module(function ($compileProvider) {
             $compileProvider.directive('testDir', ngInternals.valueFn({
               scope: { prop: '=?' },
-              controller: function ($scope) {
+              controller($scope) {
                 $scope.prop = $scope.prop || 'default';
                 this.getProp = function () {
                   return $scope.prop;
@@ -5413,7 +5420,7 @@ describe('$compile', function () {
               template: '<p></p>'
             }));
           });
-          angular.mock.inject(function ($compile, $rootScope) {
+          angular.mock.inject(function ($rootScope) {
             element = compileForTest('<div test-dir></div>');
             var scope = element.isolateScope();
             expect(scope.ctrl.getProp()).toBe('default');
@@ -5581,7 +5588,7 @@ describe('$compile', function () {
                   restrict: 'E',
                   scope: { greeting: '=' },
                   template: '<button ng-click="setGreeting()">Say hi!</button>',
-                  link: function (scope) {
+                  link(scope) {
                     scope.setGreeting = function () {
                       scope.greeting = 'Hello!';
                     };
@@ -5959,14 +5966,15 @@ describe('$compile', function () {
           }));
 
           describe('initialization', function () {
-            var component, log;
+            var component;
+            var log;
 
             beforeEach(function () {
               log = [];
               angular.module('owComponentTest', [])
                 .component('owComponent', {
                   bindings: { input: '<' },
-                  controller: function () {
+                  controller() {
                     component = this;
                     this.input = 'constructor';
                     log.push('constructor');
@@ -6288,14 +6296,14 @@ describe('$compile', function () {
                     scope: {
                       undi: '<'
                     },
-                    link: function ($scope) {
+                    link($scope) {
                       componentScope = $scope;
                     }
                   };
                 });
               });
 
-              angular.mock.inject(function ($compile, $rootScope) {
+              angular.mock.inject(function ($rootScope) {
                 element = compileForTest('<form name="f" undi="[f.i]"><input name="i" ng-model="a"/></form>');
                 $rootScope.$apply();
                 expect(componentScope.undi).toBeDefined();
@@ -6414,8 +6422,8 @@ describe('$compile', function () {
           expect(componentScope.$$isolateBindings.exprAlias.attrName).toBe('expr');
           expect(componentScope.$$isolateBindings.$exprAlias.attrName).toBe('$expr$');
 
-          var firstComponentScope = componentScope,
-            first$$isolateBindings = componentScope.$$isolateBindings;
+          var firstComponentScope = componentScope;
+          var first$$isolateBindings = componentScope.$$isolateBindings;
 
           dealoc(element);
           compile('<div><span my-component>');
@@ -6435,7 +6443,7 @@ describe('$compile', function () {
                 'str': '@dirStr',
                 'fn': '&dirFn'
               },
-              controller: function ($scope) {
+              controller($scope) {
                 this.check = function () {
                   expect(this.data).toEqualData({
                     'foo': 'bar',
@@ -6459,7 +6467,7 @@ describe('$compile', function () {
               bindToController: true
             }));
           });
-          angular.mock.inject(function ($compile, $rootScope) {
+          angular.mock.inject(function ($rootScope) {
             $rootScope.fn = ngInternals.valueFn('called!');
             $rootScope.whom = 'world';
             $rootScope.remoteData = {
@@ -6475,7 +6483,8 @@ describe('$compile', function () {
 
 
         it('should not pre-assign bound properties to the controller if `preAssignBindingsEnabled` is disabled', function () {
-          var controllerCalled = false, onInitCalled = false;
+          var controllerCalled = false;
+          var onInitCalled = false;
           angular.mock.module(function ($compileProvider) {
             $compileProvider.preAssignBindingsEnabled(false);
             $compileProvider.directive('fooDir', ngInternals.valueFn({
@@ -6486,7 +6495,7 @@ describe('$compile', function () {
                 'str': '@dirStr',
                 'fn': '&dirFn'
               },
-              controller: function ($scope) {
+              controller($scope) {
                 expect(this.data).toBeUndefined();
                 expect(this.oneway).toBeUndefined();
                 expect(this.str).toBeUndefined();
@@ -6510,7 +6519,7 @@ describe('$compile', function () {
               bindToController: true
             }));
           });
-          angular.mock.inject(function ($compile, $rootScope) {
+          angular.mock.inject(function ($rootScope) {
             $rootScope.fn = ngInternals.valueFn('called!');
             $rootScope.whom = 'world';
             $rootScope.remoteData = {
@@ -6526,7 +6535,8 @@ describe('$compile', function () {
         });
 
         it('should pre-assign bound properties to the controller if `preAssignBindingsEnabled` is enabled', function () {
-          var controllerCalled = false, onInitCalled = false;
+          var controllerCalled = false;
+          var onInitCalled = false;
           angular.mock.module(function ($compileProvider) {
             $compileProvider.preAssignBindingsEnabled(true);
             $compileProvider.directive('fooDir', ngInternals.valueFn({
@@ -6537,7 +6547,7 @@ describe('$compile', function () {
                 'str': '@dirStr',
                 'fn': '&dirFn'
               },
-              controller: function ($scope) {
+              controller($scope) {
                 expect(this.data).toEqualData({
                   'foo': 'bar',
                   'baz': 'biz'
@@ -6557,7 +6567,7 @@ describe('$compile', function () {
               bindToController: true
             }));
           });
-          angular.mock.inject(function ($compile, $rootScope) {
+          angular.mock.inject(function ($rootScope) {
             $rootScope.fn = ngInternals.valueFn('called!');
             $rootScope.whom = 'world';
             $rootScope.remoteData = {
@@ -6610,7 +6620,7 @@ describe('$compile', function () {
               bindToController: true
             }));
           });
-          angular.mock.inject(function ($compile, $rootScope) {
+          angular.mock.inject(function ($rootScope) {
             $rootScope.fn = ngInternals.valueFn('called!');
             $rootScope.whom = 'world';
             $rootScope.remoteData = {
@@ -6633,14 +6643,14 @@ describe('$compile', function () {
               scope: {
                 text: '@atBinding'
               },
-              controller: function ($scope) {
+              controller($scope) {
               },
               bindToController: true,
               controllerAs: 'At'
             }));
           });
 
-          angular.mock.inject(function ($compile, $rootScope) {
+          angular.mock.inject(function ($rootScope) {
             element = compileForTest('<div at-binding="Test: {{text}}"></div>');
             var p = element.find('p');
             $rootScope.$digest();
@@ -6664,7 +6674,7 @@ describe('$compile', function () {
                 'str': '@dirStr',
                 'fn': '&dirFn'
               },
-              controller: function ($scope) {
+              controller($scope) {
                 this.check = function () {
                   expect(this.data).toEqualData({
                     'foo': 'bar',
@@ -6688,7 +6698,7 @@ describe('$compile', function () {
               bindToController: true
             }));
           });
-          angular.mock.inject(function ($compile, $rootScope, $templateCache) {
+          angular.mock.inject(function ($rootScope, $templateCache) {
             $templateCache.put('test.html', '<p>isolate</p>');
             $rootScope.fn = ngInternals.valueFn('called!');
             $rootScope.whom = 'world';
@@ -6719,7 +6729,7 @@ describe('$compile', function () {
               bindToController: true
             }));
           });
-          angular.mock.inject(function ($compile, $rootScope) {
+          angular.mock.inject(function () {
             expect(function () {
               compileForTest('<div no-ctrl>');
             }).toThrowMinErr('$compile', 'noctrl',
@@ -6739,7 +6749,7 @@ describe('$compile', function () {
             $exceptionHandlerProvider.mode('log');
           });
 
-          angular.mock.inject(function ($exceptionHandler, $compile, $rootScope) {
+          angular.mock.inject(function ($exceptionHandler) {
             compileForTest('<div invalid-restrict-true>');
             expect($exceptionHandler.errors.length).toBe(1);
             expect($exceptionHandler.errors[0].toString()).toMatch(/\$compile.*badrestrict.*'true'/);
@@ -6771,42 +6781,42 @@ describe('$compile', function () {
               description: 'controllerAs setting',
               controller: 'myCtrl',
               controllerAs: 'myCtrl'
-            }],
-
-            scopeOptions = [{
-              description: 'isolate scope',
-              scope: {}
-            }, {
-              description: 'new scope',
-              scope: true
-            }, {
-              description: 'no scope',
-              scope: false
-            }],
-
-            templateOptions = [{
-              description: 'inline template',
-              template: '<p>template</p>'
-            }, {
-              description: 'templateUrl setting',
-              templateUrl: 'test.html'
-            }, {
-              description: 'no template'
             }];
+
+          var scopeOptions = [{
+            description: 'isolate scope',
+            scope: {}
+          }, {
+            description: 'new scope',
+            scope: true
+          }, {
+            description: 'no scope',
+            scope: false
+          }];
+
+          var templateOptions = [{
+            description: 'inline template',
+            template: '<p>template</p>'
+          }, {
+            description: 'templateUrl setting',
+            templateUrl: 'test.html'
+          }, {
+            description: 'no template'
+          }];
 
           angular.forEach(controllerOptions, function (controllerOption) {
             angular.forEach(scopeOptions, function (scopeOption) {
               angular.forEach(templateOptions, function (templateOption) {
+                var description = [];
 
-                var description = [],
-                  ddo = {
-                    bindToController: {
-                      'data': '=dirData',
-                      'oneway': '<dirData',
-                      'str': '@dirStr',
-                      'fn': '&dirFn'
-                    }
-                  };
+                var ddo = {
+                  bindToController: {
+                    'data': '=dirData',
+                    'oneway': '<dirData',
+                    'str': '@dirStr',
+                    'fn': '&dirFn'
+                  }
+                };
 
                 angular.forEach([controllerOption, scopeOption, templateOption], function (option) {
                   description.push(option.description);
@@ -6839,7 +6849,7 @@ describe('$compile', function () {
                     });
                     $compileProvider.directive('fooDir', ngInternals.valueFn(ddo));
                   });
-                  angular.mock.inject(function ($compile, $rootScope, $templateCache) {
+                  angular.mock.inject(function ($rootScope, $templateCache) {
                     $templateCache.put('test.html', '<p>template</p>');
                     $rootScope.fn = ngInternals.valueFn('called!');
                     $rootScope.whom = 'world';
@@ -6862,11 +6872,9 @@ describe('$compile', function () {
                     }
                   });
                 });
-
               });
             });
           });
-
         });
 
 
@@ -6882,7 +6890,7 @@ describe('$compile', function () {
                 'fn': '&fooFn'
               },
               controllerAs: 'fooCtrl',
-              controller: function () {
+              controller() {
                 this.check = function () {
                   expect(this.data).toEqualData({ 'foo': 'bar', 'baz': 'biz' });
                   expect(this.oneway).toEqualData({ 'foo': 'bar', 'baz': 'biz' });
@@ -6905,7 +6913,7 @@ describe('$compile', function () {
                 'fn': '&barFn'
               },
               controllerAs: 'barCtrl',
-              controller: function () {
+              controller() {
                 this.check = function () {
                   expect(this.data).toEqualData({ 'foo2': 'bar2', 'baz2': 'biz2' });
                   expect(this.oneway).toEqualData({ 'foo2': 'bar2', 'baz2': 'biz2' });
@@ -6921,7 +6929,7 @@ describe('$compile', function () {
               }
             }));
           });
-          angular.mock.inject(function ($compile, $rootScope) {
+          angular.mock.inject(function ($rootScope) {
             $rootScope.fn = ngInternals.valueFn('called!');
             $rootScope.string = 'world';
             $rootScope.data = { 'foo': 'bar', 'baz': 'biz' };
@@ -6959,7 +6967,7 @@ describe('$compile', function () {
               },
               scope: {},
               controllerAs: 'fooCtrl',
-              controller: function () {
+              controller() {
                 this.check = function () {
                   expect(this.data).toEqualData({ 'foo': 'bar', 'baz': 'biz' });
                   expect(this.oneway).toEqualData({ 'foo': 'bar', 'baz': 'biz' });
@@ -6982,7 +6990,7 @@ describe('$compile', function () {
                 'fn': '&barFn'
               },
               controllerAs: 'barCtrl',
-              controller: function () {
+              controller() {
                 this.check = function () {
                   expect(this.data).toEqualData({ 'foo2': 'bar2', 'baz2': 'biz2' });
                   expect(this.oneway).toEqualData({ 'foo2': 'bar2', 'baz2': 'biz2' });
@@ -6998,7 +7006,7 @@ describe('$compile', function () {
               }
             }));
           });
-          angular.mock.inject(function ($compile, $rootScope) {
+          angular.mock.inject(function ($rootScope) {
             $rootScope.fn = ngInternals.valueFn('called!');
             $rootScope.string = 'world';
             $rootScope.data = { 'foo': 'bar', 'baz': 'biz' };
@@ -7036,7 +7044,7 @@ describe('$compile', function () {
               },
               scope: true,
               controllerAs: 'fooCtrl',
-              controller: function () {
+              controller() {
                 this.check = function () {
                   expect(this.data).toEqualData({ 'foo': 'bar', 'baz': 'biz' });
                   expect(this.oneway).toEqualData({ 'foo': 'bar', 'baz': 'biz' });
@@ -7060,7 +7068,7 @@ describe('$compile', function () {
               },
               scope: true,
               controllerAs: 'barCtrl',
-              controller: function () {
+              controller() {
                 this.check = function () {
                   expect(this.data).toEqualData({ 'foo2': 'bar2', 'baz2': 'biz2' });
                   expect(this.oneway).toEqualData({ 'foo2': 'bar2', 'baz2': 'biz2' });
@@ -7076,7 +7084,7 @@ describe('$compile', function () {
               }
             }));
           });
-          angular.mock.inject(function ($compile, $rootScope) {
+          angular.mock.inject(function ($rootScope) {
             $rootScope.fn = ngInternals.valueFn('called!');
             $rootScope.string = 'world';
             $rootScope.data = { 'foo': 'bar', 'baz': 'biz' };
@@ -7136,7 +7144,7 @@ describe('$compile', function () {
               }));
             });
 
-            angular.mock.inject(function ($compile, $rootScope) {
+            angular.mock.inject(function ($rootScope) {
               element = compileForTest(
                 '<div ng-controller="ParentCtrl as ctrl">' +
                 '<child ' +
@@ -7205,7 +7213,7 @@ describe('$compile', function () {
               }));
             });
 
-            angular.mock.inject(function ($compile, $rootScope) {
+            angular.mock.inject(function ($rootScope) {
               element = compileForTest(
                 '<div ng-controller="ParentCtrl as ctrl">' +
                 '<child ' +
@@ -7254,7 +7262,7 @@ describe('$compile', function () {
               controller: 'myCtrl as theCtrl'
             }));
           });
-          angular.mock.inject(function ($compile, $rootScope, $templateCache) {
+          angular.mock.inject(function ($rootScope, $templateCache) {
             $templateCache.put('test.html', '<p>isolate</p>');
             element = compileForTest('<div foo-dir>');
             $rootScope.$digest();
@@ -7304,7 +7312,7 @@ describe('$compile', function () {
               controller: 'myCtrl as theCtrl'
             }));
           });
-          angular.mock.inject(function ($compile, $rootScope, $templateCache) {
+          angular.mock.inject(function ($rootScope, $templateCache) {
             $templateCache.put('test.html', '<p>isolate</p>');
             $rootScope.fn = ngInternals.valueFn('called!');
             $rootScope.whom = 'world';
@@ -7364,7 +7372,7 @@ describe('$compile', function () {
               controller: 'myCtrl as theCtrl'
             }));
           });
-          angular.mock.inject(function ($compile, $rootScope, $templateCache) {
+          angular.mock.inject(function ($rootScope, $templateCache) {
             $templateCache.put('test.html', '<p>isolate</p>');
             $rootScope.fn = ngInternals.valueFn('called!');
             $rootScope.whom = 'world';
@@ -7393,7 +7401,7 @@ describe('$compile', function () {
                 bindToController: {
                   prop: '@'
                 },
-                controller: function () {
+                controller() {
                   var self = this;
                   this.initProp = function () {
                     this.prop = this.prop || 'default';
@@ -7411,7 +7419,7 @@ describe('$compile', function () {
                 template: '<p></p>'
               }));
             });
-            angular.mock.inject(function ($compile, $rootScope) {
+            angular.mock.inject(function ($rootScope) {
               element = compileForTest('<div test-dir></div>');
               var scope = element.scope();
               expect(scope.ctrl.getProp()).toBe('default');
@@ -7428,7 +7436,7 @@ describe('$compile', function () {
                 bindToController: {
                   prop: '@'
                 },
-                controller: function () {
+                controller() {
                   var self = this;
                   this.initProp = function () {
                     this.prop = this.prop || 'default';
@@ -7446,7 +7454,7 @@ describe('$compile', function () {
                 template: '<p></p>'
               }));
             });
-            angular.mock.inject(function ($compile, $rootScope) {
+            angular.mock.inject(function ($rootScope) {
               element = compileForTest('<div test-dir></div>');
               var scope = element.isolateScope();
               expect(scope.ctrl.getProp()).toBe('default');
@@ -7456,7 +7464,6 @@ describe('$compile', function () {
             });
           });
         });
-
       });
 
       describe('require', function () {
@@ -7466,10 +7473,10 @@ describe('$compile', function () {
             directive('main', function (log) {
               return {
                 priority: 2,
-                controller: function () {
+                controller() {
                   this.name = 'main';
                 },
-                link: function (scope, element, attrs, controller) {
+                link(scope, element, attrs, controller) {
                   log(controller.name);
                 }
               };
@@ -7478,20 +7485,20 @@ describe('$compile', function () {
               return {
                 priority: 1,
                 require: 'main',
-                link: function (scope, element, attrs, controller) {
+                link(scope, element, attrs, controller) {
                   log('dep:' + controller.name);
                 }
               };
             });
             directive('other', function (log) {
               return {
-                link: function (scope, element, attrs, controller) {
+                link(scope, element, attrs, controller) {
                   log(!!controller); // should be false
                 }
               };
             });
           });
-          angular.mock.inject(function (log, $compile, $rootScope) {
+          angular.mock.inject(function (log) {
             element = compileForTest('<div main dep other></div>');
             expect(log).toEqual('false; dep:main; main');
           });
@@ -7503,12 +7510,12 @@ describe('$compile', function () {
           angular.mock.module(function () {
             directive('logControllerProp', function (log) {
               return {
-                controller: function ($scope) {
+                controller($scope) {
                   this.foo = 'baz'; // value should not be used.
                   expectedController = { foo: 'bar' };
                   return expectedController;
                 },
-                link: function (scope, element, attrs, controller) {
+                link(scope, element, attrs, controller) {
                   expect(expectedController).toBeDefined();
                   expect(controller).toBe(expectedController);
                   expect(controller.foo).toBe('bar');
@@ -7517,7 +7524,7 @@ describe('$compile', function () {
               };
             });
           });
-          angular.mock.inject(function (log, $compile, $rootScope) {
+          angular.mock.inject(function (log) {
             element = compileForTest('<log-controller-prop></log-controller-prop>');
             expect(log).toEqual('done');
             expect(element.data('$logControllerPropController')).toBe(expectedController);
@@ -7531,11 +7538,11 @@ describe('$compile', function () {
             directive('nested', function (log) {
               return {
                 require: '^^?nested',
-                controller: function () {
+                controller() {
                   if (!expectedController) expectedController = { foo: 'bar' };
                   return expectedController;
                 },
-                link: function (scope, element, attrs, controller) {
+                link(scope, element, attrs, controller) {
                   if (element.parent().length) {
                     expect(expectedController).toBeDefined();
                     expect(controller).toBe(expectedController);
@@ -7546,7 +7553,7 @@ describe('$compile', function () {
               };
             });
           });
-          angular.mock.inject(function (log, $compile, $rootScope) {
+          angular.mock.inject(function (log) {
             element = compileForTest('<div nested><div nested></div></div>');
             expect(log).toEqual('done');
             expect(element.data('$nestedController')).toBe(expectedController);
@@ -7560,7 +7567,7 @@ describe('$compile', function () {
               return {
                 templateUrl: 'main.html',
                 scope: {},
-                controller: function () {
+                controller() {
                   this.name = 'lucas';
                   return { name: 'george' };
                 },
@@ -7568,7 +7575,7 @@ describe('$compile', function () {
               };
             });
           });
-          angular.mock.inject(function ($templateCache, $compile, $rootScope) {
+          angular.mock.inject(function ($templateCache, $rootScope) {
             $templateCache.put('main.html', '<span>template:{{mainCtrl.name}}</span>');
             element = compileForTest('<main/>');
             $rootScope.$apply();
@@ -7582,12 +7589,12 @@ describe('$compile', function () {
           angular.mock.module(function () {
             directive('nester', ngInternals.valueFn({
               transclude: true,
-              controller: function ($transclude) {
+              controller($transclude) {
                 this.foo = 'baz';
                 expectedController = { transclude: $transclude, foo: 'bar' };
                 return expectedController;
               },
-              link: function (scope, el, attr, ctrl) {
+              link(scope, el, attr, ctrl) {
                 ctrl.transclude(cloneAttach);
 
                 function cloneAttach(clone) {
@@ -7598,7 +7605,7 @@ describe('$compile', function () {
             directive('nested', function (log) {
               return {
                 require: '^^nester',
-                link: function (scope, element, attrs, controller) {
+                link(scope, element, attrs, controller) {
                   expect(controller).toBeDefined();
                   expect(controller).toBe(expectedController);
                   log('done');
@@ -7606,7 +7613,7 @@ describe('$compile', function () {
               };
             });
           });
-          angular.mock.inject(function (log, $compile) {
+          angular.mock.inject(function (log) {
             element = compileForTest('<div nester><div nested></div></div>');
             $rootScope.$apply();
             expect(log.toString()).toBe('done');
@@ -7619,17 +7626,17 @@ describe('$compile', function () {
           angular.mock.module(function () {
             directive('logControllerProp', function (log) {
               return {
-                controller: function ($scope) {
+                controller($scope) {
                   this.foo = 'baz'; // value *will* be used.
                   return 'bar';
                 },
-                link: function (scope, element, attrs, controller) {
+                link(scope, element, attrs, controller) {
                   log(controller.foo);
                 }
               };
             });
           });
-          angular.mock.inject(function (log, $compile, $rootScope) {
+          angular.mock.inject(function (log) {
             element = compileForTest('<log-controller-prop></log-controller-prop>');
             expect(log).toEqual('baz');
             expect(element.data('$logControllerPropController').foo).toEqual('baz');
@@ -7638,13 +7645,14 @@ describe('$compile', function () {
 
 
         it('should correctly assign controller return values for multiple directives', function () {
-          var directiveController, otherDirectiveController;
+          var directiveController;
+          var otherDirectiveController;
           angular.mock.module(function () {
 
             directive('myDirective', function (log) {
               return {
                 scope: true,
-                controller: function ($scope) {
+                controller($scope) {
                   directiveController = {
                     foo: 'bar'
                   };
@@ -7655,7 +7663,7 @@ describe('$compile', function () {
 
             directive('myOtherDirective', function (log) {
               return {
-                controller: function ($scope) {
+                controller($scope) {
                   otherDirectiveController = {
                     baz: 'luh'
                   };
@@ -7666,7 +7674,7 @@ describe('$compile', function () {
 
           });
 
-          angular.mock.inject(function (log, $compile, $rootScope) {
+          angular.mock.inject(function () {
             element = compileForTest('<my-directive my-other-directive></my-directive>');
             expect(element.data('$myDirectiveController')).toBe(directiveController);
             expect(element.data('$myOtherDirectiveController')).toBe(otherDirectiveController);
@@ -7679,15 +7687,15 @@ describe('$compile', function () {
             directive('nested', function (log) {
               return {
                 require: '^^?nested',
-                controller: function ($scope) {
+                controller($scope) {
                 },
-                link: function (scope, element, attrs, controller) {
+                link(scope, element, attrs, controller) {
                   log(!!controller);
                 }
               };
             });
           });
-          angular.mock.inject(function (log, $compile, $rootScope) {
+          angular.mock.inject(function (log) {
             element = compileForTest('<div nested><div nested></div></div>');
             expect(log).toEqual('true; false');
           });
@@ -7699,15 +7707,15 @@ describe('$compile', function () {
             directive('nested', function (log) {
               return {
                 require: '?^^nested',
-                controller: function ($scope) {
+                controller($scope) {
                 },
-                link: function (scope, element, attrs, controller) {
+                link(scope, element, attrs, controller) {
                   log(!!controller);
                 }
               };
             });
           });
-          angular.mock.inject(function (log, $compile, $rootScope) {
+          angular.mock.inject(function (log) {
             element = compileForTest('<div nested><div nested></div></div>');
             expect(log).toEqual('true; false');
           });
@@ -7719,14 +7727,14 @@ describe('$compile', function () {
             directive('nested', function () {
               return {
                 require: '^^nested',
-                controller: function ($scope) {
+                controller($scope) {
                 },
-                link: function (scope, element, attrs, controller) {
+                link(scope, element, attrs, controller) {
                 }
               };
             });
           });
-          angular.mock.inject(function ($compile, $rootScope) {
+          angular.mock.inject(function () {
             expect(function () {
               element = compileForTest('<div nested></div>');
             }).toThrowMinErr('$compile', 'ctreq', 'Controller \'nested\', required by directive \'nested\', can\'t be found!');
@@ -7738,7 +7746,7 @@ describe('$compile', function () {
           angular.mock.module(function () {
             directive('dirA', function () {
               return {
-                controller: function () {
+                controller() {
                   this.name = 'dirA';
                 }
               };
@@ -7747,13 +7755,13 @@ describe('$compile', function () {
               return {
                 require: 'dirA',
                 template: '<p>dirB</p>',
-                link: function (scope, element, attrs, dirAController) {
+                link(scope, element, attrs, dirAController) {
                   log('dirAController.name: ' + dirAController.name);
                 }
               };
             });
           });
-          angular.mock.inject(function (log, $compile, $rootScope) {
+          angular.mock.inject(function (log) {
             element = compileForTest('<div dir-a dir-b></div>');
             expect(log).toEqual('dirAController.name: dirA');
           });
@@ -7764,7 +7772,7 @@ describe('$compile', function () {
           angular.mock.module(function () {
             directive('dirA', function () {
               return {
-                controller: function () {
+                controller() {
                   this.name = 'dirA';
                 }
               };
@@ -7773,13 +7781,13 @@ describe('$compile', function () {
               return {
                 require: 'dirA',
                 templateUrl: 'dirB.html',
-                link: function (scope, element, attrs, dirAController) {
+                link(scope, element, attrs, dirAController) {
                   log('dirAController.name: ' + dirAController.name);
                 }
               };
             });
           });
-          angular.mock.inject(function (log, $compile, $rootScope, $templateCache) {
+          angular.mock.inject(function (log, $rootScope, $templateCache) {
             $templateCache.put('dirB.html', '<p>dirB</p>');
             element = compileForTest('<div dir-a dir-b></div>');
             $rootScope.$digest();
@@ -7788,7 +7796,8 @@ describe('$compile', function () {
         });
 
         it('should bind the required controllers to the directive controller, if provided as an object and bindToController is truthy', function () {
-          var parentController, siblingController;
+          var parentController;
+          var siblingController;
 
           function ParentController() {
             this.name = 'Parent';
@@ -7833,7 +7842,7 @@ describe('$compile', function () {
             });
 
           angular.mock.module('my');
-          angular.mock.inject(function ($compile, $rootScope, meDirective) {
+          angular.mock.inject(function () {
             element = compileForTest('<parent><me sibling></me></parent>');
             expect(MeController.prototype.$onInit).toHaveBeenCalled();
             expect(parentController).toEqual(expect.any(ParentController));
@@ -7905,7 +7914,7 @@ describe('$compile', function () {
             });
 
           angular.mock.module('my');
-          angular.mock.inject(function ($compile, $rootScope) {
+          angular.mock.inject(function () {
             var template =
               '<div>' +
               // With optional
@@ -7943,7 +7952,8 @@ describe('$compile', function () {
 
 
         it('should not bind required controllers if bindToController is falsy', function () {
-          var parentController, siblingController;
+          var parentController;
+          var siblingController;
 
           function ParentController() {
             this.name = 'Parent';
@@ -7986,7 +7996,7 @@ describe('$compile', function () {
             });
 
           angular.mock.module('my');
-          angular.mock.inject(function ($compile, $rootScope, meDirective) {
+          angular.mock.inject(function () {
             element = compileForTest('<parent><me sibling></me></parent>');
             expect(MeController.prototype.$onInit).toHaveBeenCalled();
             expect(parentController).toBeUndefined();
@@ -7995,7 +8005,9 @@ describe('$compile', function () {
         });
 
         it('should bind required controllers to controller that has an explicit constructor return value', function () {
-          var parentController, siblingController, meController;
+          var parentController;
+          var siblingController;
+          var meController;
 
           function ParentController() {
             this.name = 'Parent';
@@ -8008,7 +8020,7 @@ describe('$compile', function () {
           function MeController() {
             meController = {
               name: 'Me',
-              $onInit: function () {
+              $onInit() {
                 parentController = this.container;
                 siblingController = this.friend;
               }
@@ -8042,7 +8054,7 @@ describe('$compile', function () {
             });
 
           angular.mock.module('my');
-          angular.mock.inject(function ($compile, $rootScope, meDirective) {
+          angular.mock.inject(function () {
             element = compileForTest('<parent><me sibling></me></parent>');
             expect(meController.$onInit).toHaveBeenCalled();
             expect(parentController).toEqual(expect.any(ParentController));
@@ -8052,7 +8064,11 @@ describe('$compile', function () {
 
 
         it('should bind required controllers to controllers that return an explicit constructor return value', function () {
-          var parentController, containerController, siblingController, friendController, meController;
+          var parentController;
+          var containerController;
+          var siblingController;
+          var friendController;
+          var meController;
 
           function MeController() {
             this.name = 'Me';
@@ -8098,7 +8114,7 @@ describe('$compile', function () {
             });
 
           angular.mock.module('my');
-          angular.mock.inject(function ($compile, $rootScope, meDirective) {
+          angular.mock.inject(function (meDirective) {
             element = compileForTest('<parent><me sibling></me></parent>');
             expect(containerController).toEqual(parentController);
             expect(friendController).toEqual(siblingController);
@@ -8121,14 +8137,14 @@ describe('$compile', function () {
             directive('nonIsolate', function () {
               return {
                 require: 'isolate',
-                link: function (_, __, ___, isolateDirController) {
+                link(_, __, ___, isolateDirController) {
                   isolateDirControllerInNonIsolateDirective = isolateDirController;
                 }
               };
             });
           });
 
-          angular.mock.inject(function ($compile, $rootScope) {
+          angular.mock.inject(function () {
             element = compileForTest('<div isolate non-isolate></div>');
 
             expect(isolateDirControllerInNonIsolateDirective).toBeDefined();
@@ -8171,21 +8187,21 @@ describe('$compile', function () {
                 replace: true,
                 scope: {},
                 template: '<span ng-init="name=\'WORKS\'">{{name}}</span>',
-                link: function (s) {
+                link(s) {
                   isolateScope = s;
                 }
               };
             });
             directive('nonIsolate', function () {
               return {
-                link: function (s) {
+                link(s) {
                   normalScope = s;
                 }
               };
             });
           });
 
-          angular.mock.inject(function ($compile, $rootScope) {
+          angular.mock.inject(function ($rootScope) {
             element = compileForTest('<div isolate non-isolate></div>');
 
             expect(normalScope).toBe;
@@ -8207,21 +8223,21 @@ describe('$compile', function () {
                 replace: true,
                 scope: {},
                 templateUrl: 'main.html',
-                link: function (s) {
+                link(s) {
                   isolateScope = s;
                 }
               };
             });
             directive('nonIsolate', function () {
               return {
-                link: function (s) {
+                link(s) {
                   normalScope = s;
                 }
               };
             });
           });
 
-          angular.mock.inject(function ($compile, $rootScope, $templateCache) {
+          angular.mock.inject(function ($rootScope, $templateCache) {
             $templateCache.put('main.html', '<span ng-init="name=\'WORKS\'">{{name}}</span>');
             element = compileForTest('<div isolate non-isolate></div>');
             $rootScope.$apply();
@@ -8247,14 +8263,14 @@ describe('$compile', function () {
               });
               directive('scopeTester', function (log) {
                 return {
-                  link: function ($scope, $element) {
+                  link($scope, $element) {
                     log($element.attr('scope-tester') + '=' + ($scope.$root === $scope ? 'non-isolate' : 'isolate'));
                   }
                 };
               });
             });
 
-            angular.mock.inject(function ($compile, $rootScope, log) {
+            angular.mock.inject(function ($rootScope, log) {
               element = compileForTest('<div>' +
                 '<div isolate scope-tester="outside"></div>' +
                 '<span scope-tester="sibling"></span>' +
@@ -8280,7 +8296,7 @@ describe('$compile', function () {
               return {
                 scope: {},
                 require: 'nonIsolate',
-                link: function (_, __, ___, nonIsolateDirController) {
+                link(_, __, ___, nonIsolateDirController) {
                   nonIsolateDirControllerInIsolateDirective = nonIsolateDirController;
                 }
               };
@@ -8292,7 +8308,7 @@ describe('$compile', function () {
             });
           });
 
-          angular.mock.inject(function ($compile, $rootScope) {
+          angular.mock.inject(function () {
             element = compileForTest('<div isolate non-isolate></div>');
 
             expect(nonIsolateDirControllerInIsolateDirective).toBeDefined();
@@ -8308,14 +8324,14 @@ describe('$compile', function () {
                 templateUrl: 'main.html',
                 transclude: true,
                 scope: {},
-                controller: function () {
+                controller() {
                   this.name = 'lucas';
                 },
                 controllerAs: 'mainCtrl'
               };
             });
           });
-          angular.mock.inject(function ($templateCache, $compile, $rootScope) {
+          angular.mock.inject(function ($templateCache, $rootScope) {
             $templateCache.put('main.html', '<span>template:{{mainCtrl.name}} <div ng-transclude></div></span>');
             element = compileForTest('<div main>transclude:{{mainCtrl.name}}</div>');
             $rootScope.$apply();
@@ -8337,7 +8353,7 @@ describe('$compile', function () {
               };
             });
           });
-          angular.mock.inject(function ($templateCache, $compile, $rootScope) {
+          angular.mock.inject(function ($templateCache, $rootScope) {
             $templateCache.put('main.html', '<span>{{mainCtrl.name}}</span>');
             element = compileForTest('<div main></div>');
             $rootScope.$apply();
@@ -8350,7 +8366,7 @@ describe('$compile', function () {
           angular.mock.module(function () {
             directive('main', function (log) {
               return {
-                controller: function () {
+                controller() {
                   this.name = 'main';
                 }
               };
@@ -8358,13 +8374,13 @@ describe('$compile', function () {
             directive('dep', function (log) {
               return {
                 require: '^main',
-                link: function (scope, element, attrs, controller) {
+                link(scope, element, attrs, controller) {
                   log('dep:' + controller.name);
                 }
               };
             });
           });
-          angular.mock.inject(function (log, $compile, $rootScope) {
+          angular.mock.inject(function (log) {
             element = compileForTest('<div main><div dep></div></div>');
             expect(log).toEqual('dep:main');
           });
@@ -8376,13 +8392,13 @@ describe('$compile', function () {
             directive('dep', function (log) {
               return {
                 require: '^main',
-                link: function (scope, element, attrs, controller) {
+                link(scope, element, attrs, controller) {
                   log('dep:' + controller.name);
                 }
               };
             });
           });
-          angular.mock.inject(function (log, $compile, $rootScope) {
+          angular.mock.inject(function () {
             expect(function () {
               compileForTest('<div main><div dep></div></div>');
             }).toThrowMinErr('$compile', 'ctreq', 'Controller \'main\', required by directive \'dep\', can\'t be found!');
@@ -8395,13 +8411,13 @@ describe('$compile', function () {
             directive('dep', function (log) {
               return {
                 require: '?^main',
-                link: function (scope, element, attrs, controller) {
+                link(scope, element, attrs, controller) {
                   log('dep:' + controller);
                 }
               };
             });
           });
-          angular.mock.inject(function (log, $compile, $rootScope) {
+          angular.mock.inject(function (log) {
             compileForTest('<div main><div dep></div></div>');
             expect(log).toEqual('dep:null');
           });
@@ -8413,13 +8429,13 @@ describe('$compile', function () {
             directive('dep', function (log) {
               return {
                 require: '^?main',
-                link: function (scope, element, attrs, controller) {
+                link(scope, element, attrs, controller) {
                   log('dep:' + controller);
                 }
               };
             });
           });
-          angular.mock.inject(function (log, $compile, $rootScope) {
+          angular.mock.inject(function (log) {
             compileForTest('<div main><div dep></div></div>');
             expect(log).toEqual('dep:null');
           });
@@ -8431,13 +8447,13 @@ describe('$compile', function () {
             directive('dep', function (log) {
               return {
                 require: '?main',
-                link: function (scope, element, attrs, controller) {
+                link(scope, element, attrs, controller) {
                   log('dep:' + !!controller);
                 }
               };
             });
           });
-          angular.mock.inject(function (log, $compile, $rootScope) {
+          angular.mock.inject(function (log) {
             element = compileForTest('<div main><div dep></div></div>');
             expect(log).toEqual('dep:false');
           });
@@ -8447,25 +8463,25 @@ describe('$compile', function () {
         it('should support multiple controllers', function () {
           angular.mock.module(function () {
             directive('c1', ngInternals.valueFn({
-              controller: function () {
+              controller() {
                 this.name = 'c1';
               }
             }));
             directive('c2', ngInternals.valueFn({
-              controller: function () {
+              controller() {
                 this.name = 'c2';
               }
             }));
             directive('dep', function (log) {
               return {
                 require: ['^c1', '^c2'],
-                link: function (scope, element, attrs, controller) {
+                link(scope, element, attrs, controller) {
                   log('dep:' + controller[0].name + '-' + controller[1].name);
                 }
               };
             });
           });
-          angular.mock.inject(function (log, $compile, $rootScope) {
+          angular.mock.inject(function (log) {
             element = compileForTest('<div c1 c2><div dep></div></div>');
             expect(log).toEqual('dep:c1-c2');
           });
@@ -8474,25 +8490,25 @@ describe('$compile', function () {
         it('should support multiple controllers as an object hash', function () {
           angular.mock.module(function () {
             directive('c1', ngInternals.valueFn({
-              controller: function () {
+              controller() {
                 this.name = 'c1';
               }
             }));
             directive('c2', ngInternals.valueFn({
-              controller: function () {
+              controller() {
                 this.name = 'c2';
               }
             }));
             directive('dep', function (log) {
               return {
                 require: { myC1: '^c1', myC2: '^c2' },
-                link: function (scope, element, attrs, controllers) {
+                link(scope, element, attrs, controllers) {
                   log('dep:' + controllers.myC1.name + '-' + controllers.myC2.name);
                 }
               };
             });
           });
-          angular.mock.inject(function (log, $compile, $rootScope) {
+          angular.mock.inject(function (log) {
             element = compileForTest('<div c1 c2><div dep></div></div>');
             expect(log).toEqual('dep:c1-c2');
           });
@@ -8502,25 +8518,25 @@ describe('$compile', function () {
           function () {
             angular.mock.module(function () {
               directive('myC1', ngInternals.valueFn({
-                controller: function () {
+                controller() {
                   this.name = 'c1';
                 }
               }));
               directive('myC2', ngInternals.valueFn({
-                controller: function () {
+                controller() {
                   this.name = 'c2';
                 }
               }));
               directive('dep', function (log) {
                 return {
                   require: { myC1: '^', myC2: '^' },
-                  link: function (scope, element, attrs, controllers) {
+                  link(scope, element, attrs, controllers) {
                     log('dep:' + controllers.myC1.name + '-' + controllers.myC2.name);
                   }
                 };
               });
             });
-            angular.mock.inject(function (log, $compile, $rootScope) {
+            angular.mock.inject(function (log) {
               element = compileForTest('<div my-c1 my-c2><div dep></div></div>');
               expect(log).toEqual('dep:c1-c2');
             });
@@ -8528,8 +8544,8 @@ describe('$compile', function () {
         );
 
         it('should instantiate the controller just once when template/templateUrl', function () {
-          var syncCtrlSpy = jest.fn(),
-            asyncCtrlSpy = jest.fn();
+          var syncCtrlSpy = jest.fn();
+          var asyncCtrlSpy = jest.fn();
 
           angular.mock.module(function () {
             directive('myDirectiveSync', ngInternals.valueFn({
@@ -8539,14 +8555,14 @@ describe('$compile', function () {
             directive('myDirectiveAsync', ngInternals.valueFn({
               templateUrl: 'myDirectiveAsync.html',
               controller: asyncCtrlSpy,
-              compile: function () {
+              compile() {
                 return function () {
                 };
               }
             }));
           });
 
-          angular.mock.inject(function ($templateCache, $compile, $rootScope) {
+          angular.mock.inject(function ($templateCache, $rootScope) {
             expect(syncCtrlSpy).not.toHaveBeenCalled();
             expect(asyncCtrlSpy).not.toHaveBeenCalled();
 
@@ -8581,7 +8597,7 @@ describe('$compile', function () {
                 transclude: true,
                 replace: true,
                 templateUrl: 'parentDirective.html',
-                controller: function (log) {
+                controller(log) {
                   log('parentController');
                 }
               };
@@ -8590,14 +8606,14 @@ describe('$compile', function () {
               return {
                 require: '^parentDirective',
                 templateUrl: 'childDirective.html',
-                controller: function (log) {
+                controller(log) {
                   log('childController');
                 }
               };
             });
           });
 
-          angular.mock.inject(function ($templateCache, log, $compile, $rootScope) {
+          angular.mock.inject(function ($templateCache, log, $rootScope) {
             $templateCache.put('parentDirective.html', '<div ng-transclude>parentTemplateText;</div>');
             $templateCache.put('childDirective.html', '<span>childTemplateText;</span>');
 
@@ -8626,7 +8642,7 @@ describe('$compile', function () {
             });
           });
 
-          angular.mock.inject(function ($templateCache, $compile, $rootScope, log) {
+          angular.mock.inject(function ($templateCache, $rootScope, log) {
             $rootScope.foo = 'bar';
 
             element = compileForTest('<div my-directive my-foo="foo"></div>');
@@ -8653,7 +8669,7 @@ describe('$compile', function () {
             });
           });
 
-          angular.mock.inject(function ($templateCache, $compile, $rootScope, log) {
+          angular.mock.inject(function ($templateCache, $rootScope, log) {
             $templateCache.put('hello.html', '<p>Hello</p>');
             $rootScope.foo = 'bar';
 
@@ -8674,7 +8690,7 @@ describe('$compile', function () {
                 transclude: true,
                 replace: true,
                 templateUrl: 'parentDirective.html',
-                controller: function (log) {
+                controller(log) {
                   log('parentController');
                 }
               };
@@ -8685,7 +8701,7 @@ describe('$compile', function () {
                 transclude: true,
                 replace: true,
                 templateUrl: 'childDirective.html',
-                controller: function (log) {
+                controller(log) {
                   log('childController');
                 }
               };
@@ -8694,14 +8710,14 @@ describe('$compile', function () {
               return {
                 require: '^childDirective',
                 templateUrl: 'babyDirective.html',
-                controller: function (log) {
+                controller(log) {
                   log('babyController');
                 }
               };
             });
           });
 
-          angular.mock.inject(function ($templateCache, log, $compile, $rootScope) {
+          angular.mock.inject(function ($templateCache, log, $rootScope) {
             $templateCache.put('parentDirective.html', '<div ng-transclude>parentTemplateText;</div>');
             $templateCache.put('childDirective.html', '<span ng-transclude>childTemplateText;</span>');
             $templateCache.put('babyDirective.html', '<span>babyTemplateText;</span>');
@@ -8730,11 +8746,11 @@ describe('$compile', function () {
                 scope: true,
                 templateUrl: 'hello.html',
                 controller: Ctrl,
-                compile: function () {
+                compile() {
                   return {
-                    pre: function (scope, template, attr, ctrl) {
+                    pre(scope, template, attr, ctrl) {
                     },
-                    post: function () {
+                    post() {
                     }
                   };
                 }
@@ -8742,7 +8758,7 @@ describe('$compile', function () {
             });
           });
 
-          angular.mock.inject(function ($templateCache, $compile, $rootScope, log) {
+          angular.mock.inject(function ($templateCache, $rootScope, log) {
             $templateCache.put('hello.html', '<p>Hello</p>');
 
             element = compileForTest('<div my-directive></div>');
@@ -8765,11 +8781,11 @@ describe('$compile', function () {
                 scope: true,
                 template: '<p>Hello</p>',
                 controller: Ctrl,
-                compile: function () {
+                compile() {
                   return {
-                    pre: function (scope, template, attr, ctrl) {
+                    pre(scope, template, attr, ctrl) {
                     },
-                    post: function () {
+                    post() {
                     }
                   };
                 }
@@ -8777,7 +8793,7 @@ describe('$compile', function () {
             });
           });
 
-          angular.mock.inject(function ($templateCache, $compile, $rootScope, log) {
+          angular.mock.inject(function ($templateCache, $rootScope, log) {
             element = compileForTest('<div my-directive></div>');
             $rootScope.$apply();
 
@@ -8795,7 +8811,7 @@ describe('$compile', function () {
               link: angular.noop
             }));
           });
-          angular.mock.inject(function ($compile, $rootScope) {
+          angular.mock.inject(function () {
             expect(function () {
               // a-dir will cause a ctreq error to be thrown. Previously, the error would reference
               // the last directive in the chain (which in this case would be ngClick), based on
@@ -8820,14 +8836,14 @@ describe('$compile', function () {
                   transclude: 'content',
                   replace: true,
                   scope: {},
-                  link: function (scope) {
+                  link(scope) {
                     scope.x = 'iso';
                   },
                   template: '<ul><li>W:{{x}}-{{$parent.$id}}-{{$id}};</li><li ng-transclude></li></ul>'
                 };
               });
             });
-            angular.mock.inject(function (log, $rootScope, $compile) {
+            angular.mock.inject(function (log, $rootScope) {
               element = compileForTest('<div><div trans>T:{{x}}-{{$parent.$id}}-{{$id}}<span>;</span></div></div>');
               $rootScope.x = 'root';
               $rootScope.$apply();
@@ -8856,7 +8872,7 @@ describe('$compile', function () {
                 $httpBackend.expect('GET', 'chapter.html').respond('<div>chapter-<div section>[<div ng-transclude></div>]</div></div>');
               };
             });
-            angular.mock.inject(function (log, $rootScope, $compile, $httpBackend) {
+            angular.mock.inject(function (log, $rootScope, $httpBackend) {
               element = compileForTest('<div><div book>paragraph</div></div>');
               $rootScope.$apply();
 
@@ -8883,10 +8899,10 @@ describe('$compile', function () {
                 return {
                   priority: lowerPriority,
                   link: {
-                    pre: function () {
+                    pre() {
                       log('pre');
                     },
-                    post: function () {
+                    post() {
                       log('post');
                     }
                   }
@@ -8899,7 +8915,7 @@ describe('$compile', function () {
                 };
               });
             });
-            angular.mock.inject(function (log, $rootScope, $compile) {
+            angular.mock.inject(function (log, $rootScope) {
               element = compileForTest('<div trans><span>transcluded content</span></div>');
 
               expect(lowerPriority).toBeLessThan(ngTranscludePriority);
@@ -8917,7 +8933,7 @@ describe('$compile', function () {
               directive('foo', ngInternals.valueFn({
                 transclude: 'content',
                 template: '<div>This is before {{before}}. </div>',
-                link: function (scope, element, attr, ctrls, $transclude) {
+                link(scope, element, attr, ctrls, $transclude) {
                   var futureParent = element.children().eq(0);
                   $transclude(function (clone) {
                     futureParent.append(clone);
@@ -8926,7 +8942,7 @@ describe('$compile', function () {
                 scope: true
               }));
             });
-            angular.mock.inject(function ($rootScope, $compile) {
+            angular.mock.inject(function ($rootScope) {
               element = compileForTest('<div><div foo>This is after {{after}}</div></div>');
               $rootScope.before = 'BEFORE';
               $rootScope.after = 'AFTER';
@@ -8952,7 +8968,7 @@ describe('$compile', function () {
                 transclude: true
               }));
             });
-            angular.mock.inject(function ($compile) {
+            angular.mock.inject(function () {
               expect(function () {
                 compileForTest('<div first="" second=""></div>');
               }).toThrowMinErr('$compile', 'multidir', /Multiple directives \[first, second] asking for transclusion on: <div .+/);
@@ -8966,20 +8982,20 @@ describe('$compile', function () {
                 scope: {},
                 replace: true,
                 template: '<div trans>{{x}}</div>',
-                link: function (scope, element, attr, ctrl) {
+                link(scope, element, attr, ctrl) {
                   scope.x = 'iso';
                 }
               }));
               directive('trans', ngInternals.valueFn({
                 transclude: 'content',
-                link: function (scope, element, attr, ctrl, $transclude) {
+                link(scope, element, attr, ctrl, $transclude) {
                   $transclude(function (clone) {
                     element.append(clone);
                   });
                 }
               }));
             });
-            angular.mock.inject(function ($rootScope, $compile) {
+            angular.mock.inject(function ($rootScope) {
               element = compileForTest('<isolate></isolate>');
               $rootScope.x = 'root';
               $rootScope.$apply();
@@ -8995,20 +9011,20 @@ describe('$compile', function () {
                 scope: true,
                 replace: true,
                 template: '<div trans>{{x}}</div>',
-                link: function (scope, element, attr, ctrl) {
+                link(scope, element, attr, ctrl) {
                   scope.x = 'child';
                 }
               }));
               directive('trans', ngInternals.valueFn({
                 transclude: 'content',
-                link: function (scope, element, attr, ctrl, $transclude) {
+                link(scope, element, attr, ctrl, $transclude) {
                   $transclude(function (clone) {
                     element.append(clone);
                   });
                 }
               }));
             });
-            angular.mock.inject(function ($rootScope, $compile) {
+            angular.mock.inject(function ($rootScope) {
               element = compileForTest('<child></child>');
               $rootScope.x = 'root';
               $rootScope.$apply();
@@ -9020,13 +9036,13 @@ describe('$compile', function () {
             angular.mock.module(function () {
               directive('trans', ngInternals.valueFn({
                 transclude: true,
-                link: function (scope, element, attr, ctrl, $transclude) {
+                link(scope, element, attr, ctrl, $transclude) {
                   $transclude();
                   $transclude();
                 }
               }));
             });
-            angular.mock.inject(function ($rootScope, $compile) {
+            angular.mock.inject(function () {
               expect(function () {
                 compileForTest('<trans></trans>');
               }).toThrowMinErr('$compile', 'multilink', 'This element has already been linked.');
@@ -9038,7 +9054,7 @@ describe('$compile', function () {
               $compileProvider.debugInfoEnabled(true);
             });
 
-            angular.mock.inject(function ($compile, $rootScope) {
+            angular.mock.inject(function ($rootScope) {
               var cacheSize = jqLiteCacheSize();
               element = compileForTest('<div><div ng-repeat="x in xs" ng-if="x==1">{{x}}</div></div>');
               expect(jqLiteCacheSize()).toEqual(cacheSize + 1);
@@ -9063,7 +9079,7 @@ describe('$compile', function () {
               $compileProvider.debugInfoEnabled(false);
             });
 
-            angular.mock.inject(function ($compile, $rootScope) {
+            angular.mock.inject(function ($rootScope) {
               var cacheSize = jqLiteCacheSize();
 
               element = compileForTest('<div><div ng-repeat="x in xs" ng-if="x==1">{{x}}</div></div>');
@@ -9089,7 +9105,7 @@ describe('$compile', function () {
               $compileProvider.debugInfoEnabled(true);
             });
 
-            angular.mock.inject(function ($compile, $rootScope) {
+            angular.mock.inject(function ($rootScope) {
               var cacheSize = jqLiteCacheSize();
               element = compileForTest('<div><div ng-repeat="x in xs" ng-if="val">{{x}}</div></div>');
 
@@ -9140,7 +9156,7 @@ describe('$compile', function () {
               });
             });
 
-            angular.mock.inject(function ($compile, $rootScope, $httpBackend, $timeout, $templateCache) {
+            angular.mock.inject(function ($rootScope, $httpBackend, $timeout, $templateCache) {
               var cacheSize = jqLiteCacheSize();
               $httpBackend.whenGET('red.html').respond('<p>red.html</p>');
               var template = generateTestCompiler(
@@ -9171,14 +9187,16 @@ describe('$compile', function () {
 
 
           describe('cleaning up after a replaced element', function () {
-            var $compile, xs;
+            var $compile;
+            var xs;
             beforeEach(angular.mock.inject(function (_$compile_) {
               $compile = _$compile_;
               xs = [0, 1];
             }));
 
             function testCleanup() {
-              var privateData, firstRepeatedElem;
+              var privateData;
+              var firstRepeatedElem;
 
               element = compileForTest('<div><div ng-repeat="x in xs" ng-click="noop()">{{x}}</div></div>');
 
@@ -9241,7 +9259,7 @@ describe('$compile', function () {
                 };
               });
             });
-            angular.mock.inject(function ($rootScope, $compile) {
+            angular.mock.inject(function ($rootScope) {
               element = compileForTest('<div><div trans>T:{{$$transcluded}}</div></div>');
               $rootScope.$apply();
               expect(angular.element(element.find('span')[0]).text()).toEqual('I:');
@@ -9260,7 +9278,7 @@ describe('$compile', function () {
                 };
               });
             });
-            angular.mock.inject(function ($rootScope, $compile) {
+            angular.mock.inject(function ($rootScope) {
               element = compileForTest('<div trans>unicorn!</div>');
               $rootScope.$apply();
               expect(sortedHtml(element.html())).toEqual('<div ng-transclude="">unicorn!</div>');
@@ -9277,7 +9295,7 @@ describe('$compile', function () {
                 };
               });
             });
-            angular.mock.inject(function (log, $rootScope, $compile) {
+            angular.mock.inject(function (log, $rootScope) {
               element = compileForTest('<div trans></div>');
               $rootScope.$apply();
               expect(sortedHtml(element.html())).toEqual('<div ng-transclude="">old stuff!</div>');
@@ -9294,7 +9312,7 @@ describe('$compile', function () {
                 };
               });
             });
-            angular.mock.inject(function (log, $rootScope, $compile) {
+            angular.mock.inject(function (log, $rootScope) {
               element = angular.element('<div trans></div>');
               toDealoc.push(element);
               var linkfn = generateTestCompiler(element);
@@ -9315,7 +9333,7 @@ describe('$compile', function () {
                 };
               });
             });
-            angular.mock.inject(function (log, $rootScope, $compile) {
+            angular.mock.inject(function (log, $rootScope) {
               element = compileForTest('<div trans></div>');
               $rootScope.$apply();
               expect(element.text()).toEqual('012');
@@ -9342,7 +9360,7 @@ describe('$compile', function () {
                 };
               });
             });
-            angular.mock.inject(function ($rootScope, $compile) {
+            angular.mock.inject(function ($rootScope) {
               element = compileForTest('<div trans>unicorn!</div>');
               $rootScope.$apply();
               expect(sortedHtml(element.html())).toEqual('<div ng-transclude="">unicorn!</div>');
@@ -9369,7 +9387,7 @@ describe('$compile', function () {
                 };
               });
             });
-            angular.mock.inject(function (log, $rootScope, $compile) {
+            angular.mock.inject(function (log, $rootScope) {
               element = compileForTest('<div trans></div>');
               $rootScope.$apply();
               expect(sortedHtml(element.html())).toEqual('<div ng-transclude=""><inner>old stuff! </inner></div>');
@@ -9396,7 +9414,7 @@ describe('$compile', function () {
                 };
               });
             });
-            angular.mock.inject(function (log, $rootScope, $compile) {
+            angular.mock.inject(function (log, $rootScope) {
               element = compileForTest('<div trans>\n  \n</div>');
               $rootScope.$apply();
               expect(sortedHtml(element.html())).toEqual('<div ng-transclude=""><inner>old stuff! </inner></div>');
@@ -9423,7 +9441,7 @@ describe('$compile', function () {
                 };
               });
             });
-            angular.mock.inject(function (log, $rootScope, $compile) {
+            angular.mock.inject(function (log, $rootScope) {
               element = compileForTest('<div trans>\n<!-- some comment -->  \n</div>');
               $rootScope.$apply();
               expect(sortedHtml(element.html())).toEqual('<div ng-transclude="">\n<!-- some comment -->  \n</div>');
@@ -9450,7 +9468,7 @@ describe('$compile', function () {
                 };
               });
             });
-            angular.mock.inject(function (log, $rootScope, $compile) {
+            angular.mock.inject(function (log, $rootScope) {
               element = compileForTest('<div trans></div>');
               $rootScope.$apply();
               expect(sortedHtml(element.html())).toEqual('<div ng-transclude="optionalSlot"><inner>old stuff! </inner></div>');
@@ -9467,7 +9485,7 @@ describe('$compile', function () {
                 };
               });
             });
-            angular.mock.inject(function ($rootScope, $compile) {
+            angular.mock.inject(function ($rootScope) {
               element = compileForTest('<div trans></div>');
               $rootScope.$apply();
               expect(sortedHtml(element.html())).toEqual('<div ng-transclude=""></div>');
@@ -9475,7 +9493,7 @@ describe('$compile', function () {
           });
 
           it('should throw on an ng-transclude element inside no transclusion directive', function () {
-            angular.mock.inject(function ($rootScope, $compile) {
+            angular.mock.inject(function () {
               var error;
 
               try {
@@ -9517,7 +9535,7 @@ describe('$compile', function () {
               }));
             });
 
-            angular.mock.inject(function ($compile, $rootScope) {
+            angular.mock.inject(function () {
               expect(function () {
                 compileForTest('<div trans-foo>content</div>');
               }).toThrowMinErr('ngTransclude', 'orphan',
@@ -9545,7 +9563,7 @@ describe('$compile', function () {
               }));
             });
 
-            angular.mock.inject(function ($compile, $rootScope, $templateCache) {
+            angular.mock.inject(function ($rootScope, $templateCache) {
               $templateCache.put('noTransBar.html',
                 '<div>' +
                 // This ng-transclude is invalid. It should throw an error.
@@ -9569,7 +9587,7 @@ describe('$compile', function () {
                 transclude: true,
                 // template: '<div class="foo">whatever</div>',
                 templateUrl: 'foo.html',
-                compile: function (_, __, transclude) {
+                compile(_, __, transclude) {
                   return function (scope, element) {
                     transclude(scope, function (clone, scope) {
                       element.html('');
@@ -9580,7 +9598,7 @@ describe('$compile', function () {
               }));
             });
 
-            angular.mock.inject(function ($compile, $rootScope, $templateCache) {
+            angular.mock.inject(function ($rootScope, $templateCache) {
               $templateCache.put('foo.html', '<div class="foo">whatever</div>');
 
               compile('<div trans-in-compile>transcluded content</div>');
@@ -9599,17 +9617,17 @@ describe('$compile', function () {
                   transclude: true,
                   template: '<div ng-transclude></div>',
                   link: {
-                    pre: function ($scope, $element) {
+                    pre($scope, $element) {
                       log('pre(' + $element.text() + ')');
                     },
-                    post: function ($scope, $element) {
+                    post($scope, $element) {
                       log('post(' + $element.text() + ')');
                     }
                   }
                 };
               });
             });
-            angular.mock.inject(function (log, $rootScope, $compile) {
+            angular.mock.inject(function (log, $rootScope) {
               element = compileForTest('<div trans><span>unicorn!</span></div>');
               $rootScope.$apply();
               expect(log).toEqual('pre(); post(unicorn!)');
@@ -9628,17 +9646,17 @@ describe('$compile', function () {
                   transclude: true,
                   templateUrl: 'trans.html',
                   link: {
-                    pre: function ($scope, $element) {
+                    pre($scope, $element) {
                       log('pre(' + $element.text() + ')');
                     },
-                    post: function ($scope, $element) {
+                    post($scope, $element) {
                       log('post(' + $element.text() + ')');
                     }
                   }
                 };
               });
             });
-            angular.mock.inject(function (log, $rootScope, $compile, $templateCache) {
+            angular.mock.inject(function (log, $rootScope, $templateCache) {
               $templateCache.put('trans.html', '<div ng-transclude></div>');
 
               element = compileForTest('<div trans><span>unicorn!</span></div>');
@@ -9657,17 +9675,17 @@ describe('$compile', function () {
                   replace: true,
                   template: '<div ng-transclude></div>',
                   link: {
-                    pre: function ($scope, $element) {
+                    pre($scope, $element) {
                       log('pre(' + $element.text() + ')');
                     },
-                    post: function ($scope, $element) {
+                    post($scope, $element) {
                       log('post(' + $element.text() + ')');
                     }
                   }
                 };
               });
             });
-            angular.mock.inject(function (log, $rootScope, $compile) {
+            angular.mock.inject(function (log, $rootScope) {
               element = compileForTest('<div replaced-trans><span>unicorn!</span></div>');
               $rootScope.$apply();
               expect(log).toEqual('pre(); post(unicorn!)');
@@ -9684,17 +9702,17 @@ describe('$compile', function () {
                   replace: true,
                   templateUrl: 'trans.html',
                   link: {
-                    pre: function ($scope, $element) {
+                    pre($scope, $element) {
                       log('pre(' + $element.text() + ')');
                     },
-                    post: function ($scope, $element) {
+                    post($scope, $element) {
                       log('post(' + $element.text() + ')');
                     }
                   }
                 };
               });
             });
-            angular.mock.inject(function (log, $rootScope, $compile, $templateCache) {
+            angular.mock.inject(function (log, $rootScope, $templateCache) {
               $templateCache.put('trans.html', '<div ng-transclude></div>');
 
               element = compileForTest('<div replaced-trans><span>unicorn!</span></div>');
@@ -9704,14 +9722,15 @@ describe('$compile', function () {
           });
 
           it('should copy the directive controller to all clones', function () {
-            var transcludeCtrl, cloneCount = 2;
+            var transcludeCtrl;
+            var cloneCount = 2;
             angular.mock.module(function () {
               directive('transclude', ngInternals.valueFn({
                 transclude: 'content',
-                controller: function ($transclude) {
+                controller($transclude) {
                   transcludeCtrl = this;
                 },
-                link: function (scope, el, attr, ctrl, $transclude) {
+                link(scope, el, attr, ctrl, $transclude) {
                   var i;
                   for (i = 0; i < cloneCount; i++) {
                     $transclude(cloneAttach);
@@ -9723,9 +9742,10 @@ describe('$compile', function () {
                 }
               }));
             });
-            angular.mock.inject(function ($compile) {
+            angular.mock.inject(function () {
               element = compileForTest('<div transclude><span></span></div>');
-              var children = element.children(), i;
+              var children = element.children();
+              var i;
               expect(transcludeCtrl).toBeDefined();
 
               expect(element.data('$transcludeController')).toBe(transcludeCtrl);
@@ -9736,26 +9756,28 @@ describe('$compile', function () {
           });
 
           it('should provide the $transclude controller local as 5th argument to the pre and post-link function', function () {
-            var ctrlTransclude, preLinkTransclude, postLinkTransclude;
+            var ctrlTransclude;
+            var preLinkTransclude;
+            var postLinkTransclude;
             angular.mock.module(function () {
               directive('transclude', ngInternals.valueFn({
                 transclude: 'content',
-                controller: function ($transclude) {
+                controller($transclude) {
                   ctrlTransclude = $transclude;
                 },
-                compile: function () {
+                compile() {
                   return {
-                    pre: function (scope, el, attr, ctrl, $transclude) {
+                    pre(scope, el, attr, ctrl, $transclude) {
                       preLinkTransclude = $transclude;
                     },
-                    post: function (scope, el, attr, ctrl, $transclude) {
+                    post(scope, el, attr, ctrl, $transclude) {
                       postLinkTransclude = $transclude;
                     }
                   };
                 }
               }));
             });
-            angular.mock.inject(function ($compile) {
+            angular.mock.inject(function () {
               element = compileForTest('<div transclude></div>');
               expect(ctrlTransclude).toBeDefined();
               expect(ctrlTransclude).toBe(preLinkTransclude);
@@ -9768,14 +9790,14 @@ describe('$compile', function () {
             angular.mock.module(function () {
               directive('transclude', ngInternals.valueFn({
                 transclude: 'content',
-                link: function (scope, element, attr, ctrl, $transclude) {
+                link(scope, element, attr, ctrl, $transclude) {
                   $transclude(scope, function (clone) {
                     element.append(clone);
                   });
                 }
               }));
             });
-            angular.mock.inject(function ($compile) {
+            angular.mock.inject(function () {
               element = compileForTest('<div transclude>{{$id}}</div>');
               $rootScope.$apply();
               expect(element.text()).toBe('' + $rootScope.$id);
@@ -9788,9 +9810,9 @@ describe('$compile', function () {
             angular.mock.module(function () {
               directive('transclude', ngInternals.valueFn({
                 transclude: 'content',
-                controller: function () {
+                controller() {
                 },
-                link: function (scope, element, attr, ctrl, $transclude) {
+                link(scope, element, attr, ctrl, $transclude) {
                   $transclude(function (clone) {
                     element.append(clone);
                   });
@@ -9798,12 +9820,12 @@ describe('$compile', function () {
               }));
               directive('child', ngInternals.valueFn({
                 require: '^transclude',
-                link: function (scope, element, attr, ctrl) {
+                link(scope, element, attr, ctrl) {
                   capturedChildCtrl = ctrl;
                 }
               }));
             });
-            angular.mock.inject(function ($compile) {
+            angular.mock.inject(function () {
               element = compileForTest('<div transclude><div child></div></div>');
               expect(capturedChildCtrl).toBeTruthy();
             });
@@ -9821,7 +9843,7 @@ describe('$compile', function () {
                 }));
               });
 
-              angular.mock.inject(function ($compile) {
+              angular.mock.inject(function () {
                 element = angular.element('<div transclude></div>');
                 toDealoc.push(element);
                 element[0].appendChild(document.createTextNode('1{{ value }}'));
@@ -9845,9 +9867,9 @@ describe('$compile', function () {
             'function returned from `$compile`', function () {
 
             beforeEach(angular.mock.module(function () {
-              directive('lazyCompile', function ($compile) {
+              directive('lazyCompile', function () {
                 return {
-                  compile: function (tElement, tAttrs) {
+                  compile(tElement, tAttrs) {
                     var content = tElement.contents();
                     tElement.empty();
                     return function (scope, element, attrs, ctrls, transcludeFn) {
@@ -9868,7 +9890,7 @@ describe('$compile', function () {
 
             it('should preserve the bound scope', function () {
 
-              angular.mock.inject(function ($compile, $rootScope) {
+              angular.mock.inject(function ($rootScope) {
                 element = compileForTest(
                   '<div>' +
                   '<div ng-init="outer=true"></div>' +
@@ -9903,7 +9925,7 @@ describe('$compile', function () {
                 template: '<div><lazy-compile><div ng-transclude></div></lazy-compile></div>'
               }));
 
-              angular.mock.inject(function ($compile, $rootScope) {
+              angular.mock.inject(function ($rootScope) {
                 element = compileForTest(
                   '<div>' +
                   '<div ng-init="outer=true"></div>' +
@@ -9948,7 +9970,7 @@ describe('$compile', function () {
 
 
             it('should not leak the transclude scope when the transcluded content is an element transclusion directive',
-              angular.mock.inject(function ($compile, $rootScope) {
+              angular.mock.inject(function ($rootScope) {
 
                 element = compileForTest(
                   '<div toggle>' +
@@ -9979,7 +10001,7 @@ describe('$compile', function () {
 
 
             it('should not leak the transclude scope when the transcluded content is an multi-element transclusion directive',
-              angular.mock.inject(function ($compile, $rootScope) {
+              angular.mock.inject(function ($rootScope) {
 
                 element = compileForTest(
                   '<div toggle>' +
@@ -10011,7 +10033,7 @@ describe('$compile', function () {
 
 
             it('should not leak the transclude scope if the transcluded contains only comments',
-              angular.mock.inject(function ($compile, $rootScope) {
+              angular.mock.inject(function ($rootScope) {
 
                 element = compileForTest(
                   '<div toggle>' +
@@ -10041,7 +10063,7 @@ describe('$compile', function () {
               }));
 
             it('should not leak the transclude scope if the transcluded contains only text nodes',
-              angular.mock.inject(function ($compile, $rootScope) {
+              angular.mock.inject(function ($rootScope) {
 
                 element = compileForTest(
                   '<div toggle>' +
@@ -10071,7 +10093,7 @@ describe('$compile', function () {
               }));
 
             it('should mark as destroyed all sub scopes of the scope being destroyed',
-              angular.mock.inject(function ($compile, $rootScope) {
+              angular.mock.inject(function ($rootScope) {
 
                 element = compileForTest(
                   '<div toggle>' +
@@ -10135,25 +10157,25 @@ describe('$compile', function () {
             }));
 
 
-            it('should allow nested transclude directives with sync template containing sync template', angular.mock.inject(function ($compile, $rootScope) {
+            it('should allow nested transclude directives with sync template containing sync template', angular.mock.inject(function ($rootScope) {
               element = compileForTest('<div sync-sync>transcluded content</div>');
               $rootScope.$digest();
               expect(element.text()).toEqual('transcluded content');
             }));
 
-            it('should allow nested transclude directives with sync template containing async template', angular.mock.inject(function ($compile, $rootScope) {
+            it('should allow nested transclude directives with sync template containing async template', angular.mock.inject(function ($rootScope) {
               element = compileForTest('<div sync-async>transcluded content</div>');
               $rootScope.$digest();
               expect(element.text()).toEqual('transcluded content');
             }));
 
-            it('should allow nested transclude directives with async template containing sync template', angular.mock.inject(function ($compile, $rootScope) {
+            it('should allow nested transclude directives with async template containing sync template', angular.mock.inject(function ($rootScope) {
               element = compileForTest('<div async-sync>transcluded content</div>');
               $rootScope.$digest();
               expect(element.text()).toEqual('transcluded content');
             }));
 
-            it('should allow nested transclude directives with async template containing asynch template', angular.mock.inject(function ($compile, $rootScope) {
+            it('should allow nested transclude directives with async template containing asynch template', angular.mock.inject(function ($rootScope) {
               element = compileForTest('<div async-async>transcluded content</div>');
               $rootScope.$digest();
               expect(element.text()).toEqual('transcluded content');
@@ -10161,8 +10183,9 @@ describe('$compile', function () {
 
 
             it('should not leak memory with nested transclusion', function () {
-              angular.mock.inject(function ($compile, $rootScope) {
-                var size, initialSize = jqLiteCacheSize();
+              angular.mock.inject(function ($rootScope) {
+                var size;
+                var initialSize = jqLiteCacheSize();
 
                 element = angular.element('<div><ul><li ng-repeat="n in nums">{{n}} => <i ng-if="0 === n%2">Even</i><i ng-if="1 === n%2">Odd</i></li></ul></div>');
                 toDealoc.push(element);
@@ -10224,7 +10247,7 @@ describe('$compile', function () {
             }));
 
 
-            it('should pass the outer scope to the transclude on the isolated template sync-sync', angular.mock.inject(function ($compile, $rootScope) {
+            it('should pass the outer scope to the transclude on the isolated template sync-sync', angular.mock.inject(function ($rootScope) {
 
               $rootScope.val = 'transcluded content';
               element = compileForTest('<iso><span ng-bind="val"></span></iso>');
@@ -10232,7 +10255,7 @@ describe('$compile', function () {
               expect(element.text()).toEqual('transcluded content');
             }));
 
-            it('should pass the outer scope to the transclude on the isolated template async-sync', angular.mock.inject(function ($compile, $rootScope) {
+            it('should pass the outer scope to the transclude on the isolated template async-sync', angular.mock.inject(function ($rootScope) {
 
               $rootScope.val = 'transcluded content';
               element = compileForTest('<iso-async1><span ng-bind="val"></span></iso-async1>');
@@ -10240,7 +10263,7 @@ describe('$compile', function () {
               expect(element.text()).toEqual('transcluded content');
             }));
 
-            it('should pass the outer scope to the transclude on the isolated template async-async', angular.mock.inject(function ($compile, $rootScope) {
+            it('should pass the outer scope to the transclude on the isolated template async-async', angular.mock.inject(function ($rootScope) {
 
               $rootScope.val = 'transcluded content';
               element = compileForTest('<iso-async2><span ng-bind="val"></span></iso-async2>');
@@ -10273,7 +10296,7 @@ describe('$compile', function () {
 
               });
 
-              angular.mock.inject(function ($compile, $rootScope) {
+              angular.mock.inject(function ($rootScope) {
                 var element = compileForTest('<div my-example></div>');
                 $rootScope.$digest();
                 expect(element.text()).toEqual('myExample 0!');
@@ -10297,10 +10320,10 @@ describe('$compile', function () {
                 return {
                   transclude: 'element',
                   priority: 2,
-                  controller: function ($transclude) {
+                  controller($transclude) {
                     this.$transclude = $transclude;
                   },
-                  compile: function (element, attrs, template) {
+                  compile(element, attrs, template) {
                     log('compile: ' + angular.mock.dump(element));
                     return function (scope, element, attrs, ctrl) {
                       log('link');
@@ -10316,7 +10339,7 @@ describe('$compile', function () {
                 };
               });
             });
-            angular.mock.inject(function (log, $rootScope, $compile) {
+            angular.mock.inject(function (log, $rootScope) {
               element = compileForTest('<div><div high-log trans="text" log>{{$parent.$id}}-{{$id}};</div></div>');
               $rootScope.$apply();
               expect(log).toEqual('compile: <!-- trans: text -->; link; LOG; LOG; HIGH');
@@ -10333,7 +10356,7 @@ describe('$compile', function () {
                 transclude: 'element'
               }));
             });
-            angular.mock.inject(function ($compile) {
+            angular.mock.inject(function () {
               expect(function () {
                 compileForTest('<div first second></div>');
               }).toThrowMinErr('$compile', 'multidir', 'Multiple directives [first, second] asking for transclusion on: ' +
@@ -10354,7 +10377,7 @@ describe('$compile', function () {
                 transclude: 'element'
               }));
             });
-            angular.mock.inject(function ($compile) {
+            angular.mock.inject(function () {
               expect(function () {
                 compileForTest('<div first second></div>');
               }).toThrowMinErr('$compile', 'multidir', /Multiple directives \[first, second] asking for transclusion on: <div .+/);
@@ -10376,7 +10399,7 @@ describe('$compile', function () {
                 transclude: 'element'
               }));
             });
-            angular.mock.inject(function ($compile, $httpBackend) {
+            angular.mock.inject(function ($httpBackend) {
               $httpBackend.expectGET('template.html').respond('<p second>template.html</p>');
 
               expect(function () {
@@ -10401,7 +10424,7 @@ describe('$compile', function () {
                 transclude: 'element'
               }));
             });
-            angular.mock.inject(function ($compile) {
+            angular.mock.inject(function () {
               expect(function () {
                 compileForTest('<div template first></div>');
               }).toThrowMinErr('$compile', 'multidir', /Multiple directives \[first, second] asking for transclusion on: <p .+/);
@@ -10414,14 +10437,14 @@ describe('$compile', function () {
             angular.mock.module(function () {
               directive('transclude', ngInternals.valueFn({
                 transclude: 'element',
-                compile: function (element, attr, linker) {
+                compile(element, attr, linker) {
                   return function (scope, element, attr) {
                     comment = element;
                   };
                 }
               }));
             });
-            angular.mock.inject(function ($compile, $rootScope) {
+            angular.mock.inject(function () {
               var element = angular.element('<div>before<div transclude></div>after</div>').contents();
               toDealoc.push(element);
               expect(element.length).toEqual(3);
@@ -10450,7 +10473,7 @@ describe('$compile', function () {
                 };
               });
             });
-            angular.mock.inject(function (log, $compile, $rootScope) {
+            angular.mock.inject(function (log) {
               compileForTest('<div><div element-trans log="elem"></div><div regular-trans log="regular"></div></div>');
               expect(log).toEqual('compile:elementTrans; compile:regularTrans; regular');
             });
@@ -10464,7 +10487,7 @@ describe('$compile', function () {
                   return {
                     transclude: 'element',
                     priority: 50,
-                    controller: function ($transclude, $element) {
+                    controller($transclude, $element) {
                       log('controller:elementTrans');
                       $transclude(function (clone) {
                         $element.after(clone);
@@ -10480,13 +10503,13 @@ describe('$compile', function () {
                 });
                 directive('normalDir', function (log) {
                   return {
-                    controller: function () {
+                    controller() {
                       log('controller:normalDir');
                     }
                   };
                 });
               });
-              angular.mock.inject(function ($compile, $rootScope, log) {
+              angular.mock.inject(function ($rootScope, log) {
                 element = compileForTest('<div><div element-trans normal-dir></div></div>');
                 expect(log).toEqual([
                   'controller:elementTrans',
@@ -10502,26 +10525,27 @@ describe('$compile', function () {
             angular.mock.module(function () {
               directive('transclude', ngInternals.valueFn({
                 transclude: 'element',
-                controller: function ($transclude) {
+                controller($transclude) {
                   _$transclude = $transclude;
                 }
               }));
             });
-            angular.mock.inject(function ($compile) {
+            angular.mock.inject(function () {
               element = compileForTest('<div transclude></div>');
               expect(_$transclude).toBeDefined();
             });
           });
 
           it('should copy the directive controller to all clones', function () {
-            var transcludeCtrl, cloneCount = 2;
+            var transcludeCtrl;
+            var cloneCount = 2;
             angular.mock.module(function () {
               directive('transclude', ngInternals.valueFn({
                 transclude: 'element',
-                controller: function () {
+                controller() {
                   transcludeCtrl = this;
                 },
-                link: function (scope, el, attr, ctrl, $transclude) {
+                link(scope, el, attr, ctrl, $transclude) {
                   var i;
                   for (i = 0; i < cloneCount; i++) {
                     $transclude(cloneAttach);
@@ -10533,9 +10557,10 @@ describe('$compile', function () {
                 }
               }));
             });
-            angular.mock.inject(function ($compile) {
+            angular.mock.inject(function () {
               element = compileForTest('<div><div transclude></div></div>');
-              var children = element.children(), i;
+              var children = element.children();
+              var i;
               for (i = 0; i < cloneCount; i++) {
                 expect(children.eq(i).data('$transcludeController')).toBe(transcludeCtrl);
               }
@@ -10547,9 +10572,9 @@ describe('$compile', function () {
             angular.mock.module(function () {
               directive('transclude', ngInternals.valueFn({
                 transclude: 'element',
-                controller: function () {
+                controller() {
                 },
-                link: function (scope, element, attr, ctrl, $transclude) {
+                link(scope, element, attr, ctrl, $transclude) {
                   $transclude(scope, function (clone) {
                     element.after(clone);
                   });
@@ -10557,12 +10582,12 @@ describe('$compile', function () {
               }));
               directive('child', ngInternals.valueFn({
                 require: '^transclude',
-                link: function (scope, element, attr, ctrl) {
+                link(scope, element, attr, ctrl) {
                   capturedTranscludeCtrl = ctrl;
                 }
               }));
             });
-            angular.mock.inject(function ($compile) {
+            angular.mock.inject(function () {
               // We need to wrap the transclude directive's element in a parent element so that the
               // cloned element gets deallocated/cleaned up correctly
               element = compileForTest('<div><div transclude><div child></div></div></div>');
@@ -10579,12 +10604,12 @@ describe('$compile', function () {
               }));
               directive('transclude', ngInternals.valueFn({
                 transclude: 'content',
-                controller: function ($transclude) {
+                controller($transclude) {
                   transclude = $transclude;
                 }
               }));
             });
-            angular.mock.inject(function ($compile, $httpBackend) {
+            angular.mock.inject(function ($httpBackend) {
               $httpBackend.expectGET('template.html').respond('<div transclude></div>');
               element = compileForTest('<div template></div>');
               $httpBackend.flush();
@@ -10598,7 +10623,7 @@ describe('$compile', function () {
               directive('innerAgain', function (log) {
                 return {
                   transclude: 'element',
-                  link: function (scope, element, attr, controllers, transclude) {
+                  link(scope, element, attr, controllers, transclude) {
                     log('innerAgain:' + angular.lowercase(ngInternals.nodeName_(element)) + ':' + ngInternals.trim(element[0].data));
                     transclude(scope, function (clone) {
                       element.parent().append(clone);
@@ -10610,7 +10635,7 @@ describe('$compile', function () {
                 return {
                   replace: true,
                   templateUrl: 'inner.html',
-                  link: function (scope, element) {
+                  link(scope, element) {
                     log('inner:' + angular.lowercase(ngInternals.nodeName_(element)) + ':' + ngInternals.trim(element[0].data));
                   }
                 };
@@ -10618,7 +10643,7 @@ describe('$compile', function () {
               directive('outer', function (log) {
                 return {
                   transclude: 'element',
-                  link: function (scope, element, attrs, controllers, transclude) {
+                  link(scope, element, attrs, controllers, transclude) {
                     log('outer:' + angular.lowercase(ngInternals.nodeName_(element)) + ':' + ngInternals.trim(element[0].data));
                     transclude(scope, function (clone) {
                       element.parent().append(clone);
@@ -10627,7 +10652,7 @@ describe('$compile', function () {
                 };
               });
             });
-            angular.mock.inject(function (log, $compile, $rootScope, $templateCache) {
+            angular.mock.inject(function (log, $rootScope, $templateCache) {
               $templateCache.put('inner.html', '<div inner-again><p>Content</p></div>');
               element = compileForTest('<div><div outer><div inner></div></div></div>');
               $rootScope.$digest();
@@ -10662,7 +10687,7 @@ describe('$compile', function () {
               return $delegate;
             });
           });
-          angular.mock.inject(function ($compile, $rootScope) {
+          angular.mock.inject(function ($rootScope) {
             element = compileForTest('<div><div foo something="bar"></div></div>');
             $rootScope.bar = 'bar';
             $rootScope.$digest();
@@ -10683,7 +10708,7 @@ describe('$compile', function () {
               };
             });
           });
-          angular.mock.inject(function ($compile, $rootScope) {
+          angular.mock.inject(function ($rootScope) {
             element = compileForTest('<div><div foo="\'foo\'" bar="\'bar\'"></div></div>');
             $rootScope.$digest();
             expect(element.text()).toBe('foobar');
@@ -10708,7 +10733,7 @@ describe('$compile', function () {
               directive('transSync', function () {
                 return {
                   transclude: true,
-                  link: function (scope, element, attr, ctrl, transclude) {
+                  link(scope, element, attr, ctrl, transclude) {
 
                     expect(transclude).toEqual(expect.any(Function));
 
@@ -10722,7 +10747,7 @@ describe('$compile', function () {
               directive('trans', function ($timeout) {
                 return {
                   transclude: true,
-                  link: function (scope, element, attrs, ctrl, transclude) {
+                  link(scope, element, attrs, ctrl, transclude) {
 
                     // We use timeout here to simulate how ng-if works
                     $timeout(function () {
@@ -10742,7 +10767,7 @@ describe('$compile', function () {
               });
             });
 
-            angular.mock.inject(function ($compile, $rootScope, $templateCache, $timeout) {
+            angular.mock.inject(function ($rootScope, $templateCache, $timeout) {
 
               $templateCache.put('template.html', '<div trans-sync>Content To Be Transcluded</div>');
 
@@ -10757,25 +10782,26 @@ describe('$compile', function () {
           });
 
           it('should lazily compile the contents of directives that are transcluded', function () {
-            var innerCompilationCount = 0, transclude;
+            var innerCompilationCount = 0;
+            var transclude;
 
             angular.mock.module(function () {
               directive('trans', ngInternals.valueFn({
                 transclude: true,
-                controller: function ($transclude) {
+                controller($transclude) {
                   transclude = $transclude;
                 }
               }));
 
               directive('inner', ngInternals.valueFn({
                 template: '<span>FooBar</span>',
-                compile: function () {
+                compile() {
                   innerCompilationCount += 1;
                 }
               }));
             });
 
-            angular.mock.inject(function ($compile, $rootScope) {
+            angular.mock.inject(function () {
               element = compileForTest('<trans><inner></inner></trans>');
               expect(innerCompilationCount).toBe(0);
               transclude(function (child) {
@@ -10787,26 +10813,27 @@ describe('$compile', function () {
           });
 
           it('should lazily compile the contents of directives that are transcluded with a template', function () {
-            var innerCompilationCount = 0, transclude;
+            var innerCompilationCount = 0;
+            var transclude;
 
             angular.mock.module(function () {
               directive('trans', ngInternals.valueFn({
                 transclude: true,
                 template: '<div>Baz</div>',
-                controller: function ($transclude) {
+                controller($transclude) {
                   transclude = $transclude;
                 }
               }));
 
               directive('inner', ngInternals.valueFn({
                 template: '<span>FooBar</span>',
-                compile: function () {
+                compile() {
                   innerCompilationCount += 1;
                 }
               }));
             });
 
-            angular.mock.inject(function ($compile, $rootScope) {
+            angular.mock.inject(function () {
               element = compileForTest('<trans><inner></inner></trans>');
               expect(innerCompilationCount).toBe(0);
               transclude(function (child) {
@@ -10818,26 +10845,27 @@ describe('$compile', function () {
           });
 
           it('should lazily compile the contents of directives that are transcluded with a templateUrl', function () {
-            var innerCompilationCount = 0, transclude;
+            var innerCompilationCount = 0;
+            var transclude;
 
             angular.mock.module(function () {
               directive('trans', ngInternals.valueFn({
                 transclude: true,
                 templateUrl: 'baz.html',
-                controller: function ($transclude) {
+                controller($transclude) {
                   transclude = $transclude;
                 }
               }));
 
               directive('inner', ngInternals.valueFn({
                 template: '<span>FooBar</span>',
-                compile: function () {
+                compile() {
                   innerCompilationCount += 1;
                 }
               }));
             });
 
-            angular.mock.inject(function ($compile, $rootScope, $httpBackend) {
+            angular.mock.inject(function ($httpBackend) {
               $httpBackend.expectGET('baz.html').respond('<div>Baz</div>');
               element = compileForTest('<trans><inner></inner></trans>');
               $httpBackend.flush();
@@ -10852,25 +10880,26 @@ describe('$compile', function () {
           });
 
           it('should lazily compile the contents of directives that are transclude element', function () {
-            var innerCompilationCount = 0, transclude;
+            var innerCompilationCount = 0;
+            var transclude;
 
             angular.mock.module(function () {
               directive('trans', ngInternals.valueFn({
                 transclude: 'element',
-                controller: function ($transclude) {
+                controller($transclude) {
                   transclude = $transclude;
                 }
               }));
 
               directive('inner', ngInternals.valueFn({
                 template: '<span>FooBar</span>',
-                compile: function () {
+                compile() {
                   innerCompilationCount += 1;
                 }
               }));
             });
 
-            angular.mock.inject(function ($compile, $rootScope) {
+            angular.mock.inject(function () {
               element = compileForTest('<div><trans><inner></inner></trans></div>');
               expect(innerCompilationCount).toBe(0);
               transclude(function (child) {
@@ -10882,28 +10911,30 @@ describe('$compile', function () {
           });
 
           it('should lazily compile transcluded directives with ngIf on them', function () {
-            var innerCompilationCount = 0, outerCompilationCount = 0, transclude;
+            var innerCompilationCount = 0;
+            var outerCompilationCount = 0;
+            var transclude;
 
             angular.mock.module(function () {
               directive('outer', ngInternals.valueFn({
                 transclude: true,
-                compile: function () {
+                compile() {
                   outerCompilationCount += 1;
                 },
-                controller: function ($transclude) {
+                controller($transclude) {
                   transclude = $transclude;
                 }
               }));
 
               directive('inner', ngInternals.valueFn({
                 template: '<span>FooBar</span>',
-                compile: function () {
+                compile() {
                   innerCompilationCount += 1;
                 }
               }));
             });
 
-            angular.mock.inject(function ($compile, $rootScope) {
+            angular.mock.inject(function ($rootScope) {
               $rootScope.shouldCompile = false;
 
               element = compileForTest('<div><outer ng-if="shouldCompile"><inner></inner></outer></div>');
@@ -10937,13 +10968,13 @@ describe('$compile', function () {
               }));
 
               directive('inner', ngInternals.valueFn({
-                compile: function () {
+                compile() {
                   innerCompilationCount += 1;
                 }
               }));
             });
 
-            angular.mock.inject(function ($compile, $rootScope, $httpBackend) {
+            angular.mock.inject(function ($httpBackend) {
               $httpBackend.expectGET('inner.html').respond('<inner></inner>');
               element = compileForTest('<outer></outer>');
               $httpBackend.flush();
@@ -10972,7 +11003,7 @@ describe('$compile', function () {
           };
         });
       });
-      angular.mock.inject(function ($rootScope, $compile) {
+      angular.mock.inject(function ($rootScope) {
         element = compileForTest(
           '<minion-component>' +
           '<span>stuart</span>' +
@@ -10999,7 +11030,7 @@ describe('$compile', function () {
           };
         });
       });
-      angular.mock.inject(function ($rootScope, $compile) {
+      angular.mock.inject(function ($rootScope) {
         element = compileForTest(
           '<minion-component>' +
           '<span>stuart</span>' +
@@ -11034,7 +11065,7 @@ describe('$compile', function () {
           };
         });
       });
-      angular.mock.inject(function ($rootScope, $compile) {
+      angular.mock.inject(function ($rootScope) {
         element = compileForTest(
           '<minion-component>' +
           'text1' +
@@ -11066,7 +11097,7 @@ describe('$compile', function () {
           };
         });
       });
-      angular.mock.inject(function ($rootScope, $compile) {
+      angular.mock.inject(function ($rootScope) {
         element = compileForTest(
           '<minion-component>' +
           '<minion>stuart</minion>' +
@@ -11099,7 +11130,7 @@ describe('$compile', function () {
           };
         });
       });
-      angular.mock.inject(function ($rootScope, $compile) {
+      angular.mock.inject(function ($rootScope) {
         element = compileForTest(
           '<minion-component>' +
           '<minion>stuart</minion>' +
@@ -11131,7 +11162,7 @@ describe('$compile', function () {
           };
         });
       });
-      angular.mock.inject(function ($rootScope, $compile) {
+      angular.mock.inject(function () {
         expect(function () {
           element = compileForTest(
             '<minion-component>' +
@@ -11160,7 +11191,7 @@ describe('$compile', function () {
           };
         });
       });
-      angular.mock.inject(function ($rootScope, $compile) {
+      angular.mock.inject(function ($rootScope) {
         element = compileForTest(
           '<minion-component>' +
           '<minion>stuart</minion>' +
@@ -11189,7 +11220,7 @@ describe('$compile', function () {
           };
         });
       });
-      angular.mock.inject(function ($rootScope, $compile) {
+      angular.mock.inject(function () {
         expect(function () {
           element = compileForTest(
             '<minion-component>' +
@@ -11217,7 +11248,7 @@ describe('$compile', function () {
           };
         });
       });
-      angular.mock.inject(function ($rootScope, $compile) {
+      angular.mock.inject(function ($rootScope) {
         element = compileForTest(
           '<foo>' +
           '<bar>baz</bar>' +
@@ -11244,7 +11275,7 @@ describe('$compile', function () {
           };
         });
       });
-      angular.mock.inject(function ($rootScope, $compile) {
+      angular.mock.inject(function ($rootScope) {
         element = compileForTest(
           '<foo>' +
           '<foo-bar>bar1</foo-bar>' +
@@ -11274,13 +11305,13 @@ describe('$compile', function () {
               '<div class="boss" ng-transclude="bossSlot"></div>' +
               '<div class="minion" ng-transclude="minionSlot"></div>' +
               '<div class="other" ng-transclude></div>',
-            link: function (s, e, a, c, transcludeFn) {
+            link(s, e, a, c, transcludeFn) {
               capturedTranscludeFn = transcludeFn;
             }
           };
         });
       });
-      angular.mock.inject(function ($rootScope, $compile, log) {
+      angular.mock.inject(function ($rootScope, log) {
         element = compileForTest(
           '<minion-component>' +
           '  <minion>stuart</minion>' +
@@ -11314,7 +11345,7 @@ describe('$compile', function () {
           };
         });
       });
-      angular.mock.inject(function ($rootScope, $compile) {
+      angular.mock.inject(function ($rootScope) {
         element = compileForTest(
           '<minion-component>' +
           '<minion>stuart</minion>' +
@@ -11340,7 +11371,7 @@ describe('$compile', function () {
           }));
         });
 
-        angular.mock.inject(function ($compile) {
+        angular.mock.inject(function () {
           element = angular.element('<div transclude></div>');
           toDealoc.push(element);
           element[0].appendChild(document.createTextNode('1{{ value }}'));
@@ -11361,7 +11392,7 @@ describe('$compile', function () {
 
   describe('*[src] context requirement', function () {
 
-    it('should NOT require trusted values for img src', angular.mock.inject(function ($rootScope, $compile, $sce) {
+    it('should NOT require trusted values for img src', angular.mock.inject(function ($rootScope, $sce) {
       element = compileForTest('<img src="{{testUrl}}"></img>');
       $rootScope.testUrl = 'http://example.com/image.png';
       $rootScope.$digest();
@@ -11375,7 +11406,7 @@ describe('$compile', function () {
 
   describe('img[src] sanitization', function () {
 
-    it('should not sanitize attributes other than src', angular.mock.inject(function ($compile, $rootScope) {
+    it('should not sanitize attributes other than src', angular.mock.inject(function ($rootScope) {
       element = compileForTest('<img title="{{testUrl}}"></img>');
       $rootScope.testUrl = 'javascript:doEvilStuff()';
       $rootScope.$apply();
@@ -11385,8 +11416,8 @@ describe('$compile', function () {
 
     it('should use $$sanitizeUriProvider for reconfiguration of the src whitelist', function () {
       angular.mock.module(function ($compileProvider, $$sanitizeUriProvider) {
-        var newRe = /javascript:/,
-          returnVal;
+        var newRe = /javascript:/;
+        var returnVal;
         expect($compileProvider.imgSrcSanitizationWhitelist()).toBe($$sanitizeUriProvider.imgSrcSanitizationWhitelist());
 
         returnVal = $compileProvider.imgSrcSanitizationWhitelist(newRe);
@@ -11404,7 +11435,7 @@ describe('$compile', function () {
       angular.mock.module(function ($provide) {
         $provide.value('$$sanitizeUri', $$sanitizeUri);
       });
-      angular.mock.inject(function ($compile, $rootScope) {
+      angular.mock.inject(function ($rootScope) {
         element = compileForTest('<img src="{{testUrl}}"></img>');
         $rootScope.testUrl = 'someUrl';
 
@@ -11431,7 +11462,7 @@ describe('$compile', function () {
           linked = true;
         }));
       });
-      angular.mock.inject(function ($compile, $rootScope) {
+      angular.mock.inject(function () {
         element = compileForTest('<img setter></img>');
 
         expect(linked).toBe(true);
@@ -11439,7 +11470,7 @@ describe('$compile', function () {
       });
     });
 
-    it('should NOT require trusted values for img srcset', angular.mock.inject(function ($rootScope, $compile, $sce) {
+    it('should NOT require trusted values for img srcset', angular.mock.inject(function ($rootScope, $sce) {
       element = compileForTest('<img srcset="{{testUrl}}"></img>');
       $rootScope.testUrl = 'http://example.com/image.png';
       $rootScope.$digest();
@@ -11455,7 +11486,7 @@ describe('$compile', function () {
       angular.mock.module(function ($provide) {
         $provide.value('$$sanitizeUri', $$sanitizeUri);
       });
-      angular.mock.inject(function ($compile, $rootScope) {
+      angular.mock.inject(function ($rootScope) {
         element = compileForTest('<img srcset="{{testUrl}}"></img>');
         $rootScope.testUrl = 'someUrl';
 
@@ -11466,7 +11497,7 @@ describe('$compile', function () {
       });
     });
 
-    it('should sanitize all uris in srcset', angular.mock.inject(function ($rootScope, $compile) {
+    it('should sanitize all uris in srcset', angular.mock.inject(function ($rootScope) {
       element = compileForTest('<img srcset="{{testUrl}}"></img>');
       var testSet = {
         'http://example.com/image.png': 'http://example.com/image.png',
@@ -11507,7 +11538,7 @@ describe('$compile', function () {
 
   describe('a[href] sanitization', function () {
 
-    it('should not sanitize href on elements other than anchor', angular.mock.inject(function ($compile, $rootScope) {
+    it('should not sanitize href on elements other than anchor', angular.mock.inject(function ($rootScope) {
       element = compileForTest('<div href="{{testUrl}}"></div>');
       $rootScope.testUrl = 'javascript:doEvilStuff()';
       $rootScope.$apply();
@@ -11515,7 +11546,7 @@ describe('$compile', function () {
       expect(element.attr('href')).toBe('javascript:doEvilStuff()');
     }));
 
-    it('should not sanitize attributes other than href', angular.mock.inject(function ($compile, $rootScope) {
+    it('should not sanitize attributes other than href', angular.mock.inject(function ($rootScope) {
       element = compileForTest('<a title="{{testUrl}}"></a>');
       $rootScope.testUrl = 'javascript:doEvilStuff()';
       $rootScope.$apply();
@@ -11525,8 +11556,8 @@ describe('$compile', function () {
 
     it('should use $$sanitizeUriProvider for reconfiguration of the href whitelist', function () {
       angular.mock.module(function ($compileProvider, $$sanitizeUriProvider) {
-        var newRe = /javascript:/,
-          returnVal;
+        var newRe = /javascript:/;
+        var returnVal;
         expect($compileProvider.aHrefSanitizationWhitelist()).toBe($$sanitizeUriProvider.aHrefSanitizationWhitelist());
 
         returnVal = $compileProvider.aHrefSanitizationWhitelist(newRe);
@@ -11544,7 +11575,7 @@ describe('$compile', function () {
       angular.mock.module(function ($provide) {
         $provide.value('$$sanitizeUri', $$sanitizeUri);
       });
-      angular.mock.inject(function ($compile, $rootScope) {
+      angular.mock.inject(function ($rootScope) {
         element = compileForTest('<a href="{{testUrl}}"></a>');
         $rootScope.testUrl = 'someUrl';
 
@@ -11560,7 +11591,7 @@ describe('$compile', function () {
       angular.mock.module(function ($provide) {
         $provide.value('$$sanitizeUri', $$sanitizeUri);
       });
-      angular.mock.inject(function ($compile, $rootScope) {
+      angular.mock.inject(function ($rootScope) {
         element = compileForTest('<a ng-href="{{testUrl}}"></a>');
         $rootScope.testUrl = 'someUrl';
 
@@ -11576,7 +11607,7 @@ describe('$compile', function () {
       angular.mock.module(function ($provide) {
         $provide.value('$$sanitizeUri', $$sanitizeUri);
       });
-      angular.mock.inject(function ($compile, $rootScope) {
+      angular.mock.inject(function ($rootScope) {
         element = compileForTest('<svg><a xlink:href="" ng-href="{{ testUrl }}"></a></svg>');
         $rootScope.testUrl = 'evilUrl';
 
@@ -11593,7 +11624,7 @@ describe('$compile', function () {
       angular.mock.module(function ($provide) {
         $provide.value('$$sanitizeUri', $$sanitizeUri);
       });
-      angular.mock.inject(function ($compile, $rootScope) {
+      angular.mock.inject(function ($rootScope) {
         element = compileForTest('<svg><a xlink:href="" ng-href="{{ testUrl }}"></a></svg>');
         $rootScope.testUrl = 'evilUrl';
 
@@ -11606,7 +11637,7 @@ describe('$compile', function () {
   });
 
   describe('interpolation on HTML DOM event handler attributes onclick, onXYZ, formaction', function () {
-    it('should disallow interpolation on onclick', angular.mock.inject(function ($compile, $rootScope) {
+    it('should disallow interpolation on onclick', angular.mock.inject(function ($rootScope) {
       // All interpolations are disallowed.
       $rootScope.onClickJs = '';
       expect(function () {
@@ -11626,14 +11657,14 @@ describe('$compile', function () {
         'Please use the ng- versions (such as ng-click instead of onclick) instead.');
     }));
 
-    it('should pass through arbitrary values on onXYZ event attributes that contain a hyphen', angular.mock.inject(function ($compile, $rootScope) {
+    it('should pass through arbitrary values on onXYZ event attributes that contain a hyphen', angular.mock.inject(function ($rootScope) {
       element = compileForTest('<button on-click="{{onClickJs}}"></script>');
       $rootScope.onClickJs = 'javascript:doSomething()';
       $rootScope.$apply();
       expect(element.attr('on-click')).toEqual('javascript:doSomething()');
     }));
 
-    it('should pass through arbitrary values on "on" and "data-on" attributes', angular.mock.inject(function ($compile, $rootScope) {
+    it('should pass through arbitrary values on "on" and "data-on" attributes', angular.mock.inject(function ($rootScope) {
       element = compileForTest('<button data-on="{{dataOnVar}}"></script>');
       $rootScope.dataOnVar = 'data-on text';
       $rootScope.$apply();
@@ -11647,14 +11678,14 @@ describe('$compile', function () {
   });
 
   describe('iframe[src]', function () {
-    it('should pass through src attributes for the same domain', angular.mock.inject(function ($compile, $rootScope, $sce) {
+    it('should pass through src attributes for the same domain', angular.mock.inject(function ($rootScope, $sce) {
       element = compileForTest('<iframe src="{{testUrl}}"></iframe>');
       $rootScope.testUrl = 'different_page';
       $rootScope.$apply();
       expect(element.attr('src')).toEqual('different_page');
     }));
 
-    it('should clear out src attributes for a different domain', angular.mock.inject(function ($compile, $rootScope, $sce) {
+    it('should clear out src attributes for a different domain', angular.mock.inject(function ($rootScope, $sce) {
       element = compileForTest('<iframe src="{{testUrl}}"></iframe>');
       $rootScope.testUrl = 'http://a.different.domain.example.com';
       expect(function () {
@@ -11665,7 +11696,7 @@ describe('$compile', function () {
         'http://a.different.domain.example.com');
     }));
 
-    it('should clear out JS src attributes', angular.mock.inject(function ($compile, $rootScope, $sce) {
+    it('should clear out JS src attributes', angular.mock.inject(function ($rootScope, $sce) {
       element = compileForTest('<iframe src="{{testUrl}}"></iframe>');
       $rootScope.testUrl = 'javascript:alert(1);';
       expect(function () {
@@ -11676,7 +11707,7 @@ describe('$compile', function () {
         'javascript:alert(1);');
     }));
 
-    it('should clear out non-resource_url src attributes', angular.mock.inject(function ($compile, $rootScope, $sce) {
+    it('should clear out non-resource_url src attributes', angular.mock.inject(function ($rootScope, $sce) {
       element = compileForTest('<iframe src="{{testUrl}}"></iframe>');
       $rootScope.testUrl = $sce.trustAsUrl('javascript:doTrustedStuff()');
       expect($rootScope.$apply).toThrowMinErr(
@@ -11684,7 +11715,7 @@ describe('$compile', function () {
         'loading resource from url not allowed by $sceDelegate policy.  URL: javascript:doTrustedStuff()');
     }));
 
-    it('should pass through $sce.trustAs() values in src attributes', angular.mock.inject(function ($compile, $rootScope, $sce) {
+    it('should pass through $sce.trustAs() values in src attributes', angular.mock.inject(function ($rootScope, $sce) {
       element = compileForTest('<iframe src="{{testUrl}}"></iframe>');
       $rootScope.testUrl = $sce.trustAsResourceUrl('javascript:doTrustedStuff()');
       $rootScope.$apply();
@@ -11694,14 +11725,14 @@ describe('$compile', function () {
   });
 
   describe('form[action]', function () {
-    it('should pass through action attribute for the same domain', angular.mock.inject(function ($compile, $rootScope, $sce) {
+    it('should pass through action attribute for the same domain', angular.mock.inject(function ($rootScope, $sce) {
       element = compileForTest('<form action="{{testUrl}}"></form>');
       $rootScope.testUrl = 'different_page';
       $rootScope.$apply();
       expect(element.attr('action')).toEqual('different_page');
     }));
 
-    it('should clear out action attribute for a different domain', angular.mock.inject(function ($compile, $rootScope, $sce) {
+    it('should clear out action attribute for a different domain', angular.mock.inject(function ($rootScope, $sce) {
       element = compileForTest('<form action="{{testUrl}}"></form>');
       $rootScope.testUrl = 'http://a.different.domain.example.com';
       expect(function () {
@@ -11712,7 +11743,7 @@ describe('$compile', function () {
         'http://a.different.domain.example.com');
     }));
 
-    it('should clear out JS action attribute', angular.mock.inject(function ($compile, $rootScope, $sce) {
+    it('should clear out JS action attribute', angular.mock.inject(function ($rootScope, $sce) {
       element = compileForTest('<form action="{{testUrl}}"></form>');
       $rootScope.testUrl = 'javascript:alert(1);';
       expect(function () {
@@ -11723,7 +11754,7 @@ describe('$compile', function () {
         'javascript:alert(1);');
     }));
 
-    it('should clear out non-resource_url action attribute', angular.mock.inject(function ($compile, $rootScope, $sce) {
+    it('should clear out non-resource_url action attribute', angular.mock.inject(function ($rootScope, $sce) {
       element = compileForTest('<form action="{{testUrl}}"></form>');
       $rootScope.testUrl = $sce.trustAsUrl('javascript:doTrustedStuff()');
       expect($rootScope.$apply).toThrowMinErr(
@@ -11732,7 +11763,7 @@ describe('$compile', function () {
     }));
 
 
-    it('should pass through $sce.trustAs() values in action attribute', angular.mock.inject(function ($compile, $rootScope, $sce) {
+    it('should pass through $sce.trustAs() values in action attribute', angular.mock.inject(function ($rootScope, $sce) {
       element = compileForTest('<form action="{{testUrl}}"></form>');
       $rootScope.testUrl = $sce.trustAsResourceUrl('javascript:doTrustedStuff()');
       $rootScope.$apply();
@@ -11742,7 +11773,7 @@ describe('$compile', function () {
   });
 
   describe('link[href]', function () {
-    it('should reject invalid RESOURCE_URLs', angular.mock.inject(function ($compile, $rootScope) {
+    it('should reject invalid RESOURCE_URLs', angular.mock.inject(function ($rootScope) {
       element = compileForTest('<link href="{{testUrl}}" rel="stylesheet" />');
       $rootScope.testUrl = 'https://evil.example.org/css.css';
       expect(function () {
@@ -11753,7 +11784,7 @@ describe('$compile', function () {
         'https://evil.example.org/css.css');
     }));
 
-    it('should accept valid RESOURCE_URLs', angular.mock.inject(function ($compile, $rootScope, $sce) {
+    it('should accept valid RESOURCE_URLs', angular.mock.inject(function ($rootScope, $sce) {
       element = compileForTest('<link href="{{testUrl}}" rel="stylesheet" />');
 
       $rootScope.testUrl = './css1.css';
@@ -11765,7 +11796,7 @@ describe('$compile', function () {
       expect(element.attr('href')).toContain('https://elsewhere.example.org/css2.css');
     }));
 
-    it('should accept valid constants', angular.mock.inject(function ($compile, $rootScope) {
+    it('should accept valid constants', angular.mock.inject(function ($rootScope) {
       element = compileForTest('<link href="https://elsewhere.example.org/css2.css" rel="stylesheet" />');
 
       $rootScope.$apply();
@@ -11774,7 +11805,7 @@ describe('$compile', function () {
   });
 
   describe('iframe[srcdoc]', function () {
-    it('should NOT set iframe contents for untrusted values', angular.mock.inject(function ($compile, $rootScope, $sce) {
+    it('should NOT set iframe contents for untrusted values', angular.mock.inject(function ($rootScope, $sce) {
       element = compileForTest('<iframe srcdoc="{{html}}"></iframe>');
       $rootScope.html = '<div onclick="">hello</div>';
       expect(function () {
@@ -11784,7 +11815,7 @@ describe('$compile', function () {
         /[^[]*\[\$sce:unsafe] Attempting to use an unsafe value in a safe context./.source));
     }));
 
-    it('should NOT set html for wrongly typed values', angular.mock.inject(function ($rootScope, $compile, $sce) {
+    it('should NOT set html for wrongly typed values', angular.mock.inject(function ($rootScope, $sce) {
       element = compileForTest('<iframe srcdoc="{{html}}"></iframe>');
       $rootScope.html = $sce.trustAsCss('<div onclick="">hello</div>');
       expect(function () {
@@ -11794,7 +11825,7 @@ describe('$compile', function () {
         /[^[]*\[\$sce:unsafe] Attempting to use an unsafe value in a safe context./.source));
     }));
 
-    it('should set html for trusted values', angular.mock.inject(function ($rootScope, $compile, $sce) {
+    it('should set html for trusted values', angular.mock.inject(function ($rootScope, $sce) {
       element = compileForTest('<iframe srcdoc="{{html}}"></iframe>');
       $rootScope.html = $sce.trustAsHtml('<div onclick="">hello</div>');
       $rootScope.$digest();
@@ -11854,10 +11885,10 @@ describe('$compile', function () {
         directive('syncTest', function (log) {
           return {
             link: {
-              pre: function (s, e, attr) {
+              pre(s, e, attr) {
                 log(attr.test);
               },
-              post: function (s, e, attr) {
+              post(s, e, attr) {
                 log(attr.test);
               }
             }
@@ -11867,10 +11898,10 @@ describe('$compile', function () {
           return {
             templateUrl: 'async.html',
             link: {
-              pre: function (s, e, attr) {
+              pre(s, e, attr) {
                 log(attr.test);
               },
-              post: function (s, e, attr) {
+              post(s, e, attr) {
                 log(attr.test);
               }
             }
@@ -11988,13 +12019,13 @@ describe('$compile', function () {
         angular.mock.module(function ($compileProvider) {
           $compileProvider.directive('dashStarter', function (log) {
             return {
-              link: function (scope, element, attrs) {
+              link(scope, element, attrs) {
                 log(attrs.onDashStart);
               }
             };
           });
         });
-        angular.mock.inject(function ($compile, $rootScope, log) {
+        angular.mock.inject(function ($rootScope, log) {
           compileForTest('<span data-dash-starter data-on-dash-start="starter"></span>');
           $rootScope.$digest();
           expect(log).toEqual('starter');
@@ -12005,13 +12036,13 @@ describe('$compile', function () {
         angular.mock.module(function ($compileProvider) {
           $compileProvider.directive('dashEnder', function (log) {
             return {
-              link: function (scope, element, attrs) {
+              link(scope, element, attrs) {
                 log(attrs.onDashEnd);
               }
             };
           });
         });
-        angular.mock.inject(function ($compile, $rootScope, log) {
+        angular.mock.inject(function ($rootScope, log) {
           compileForTest('<span data-dash-ender data-on-dash-end="ender"></span>');
           $rootScope.$digest();
           expect(log).toEqual('ender');
@@ -12023,7 +12054,7 @@ describe('$compile', function () {
 
   describe('when an attribute has an underscore-separated name', function () {
 
-    it('should work with different prefixes', angular.mock.inject(function ($compile, $rootScope) {
+    it('should work with different prefixes', angular.mock.inject(function ($rootScope) {
       $rootScope.dimensions = '0 0 0 0';
       element = compileForTest('<svg ng:attr:view_box="{{dimensions}}"></svg>');
       expect(element.attr('viewBox')).toBeUndefined();
@@ -12031,7 +12062,7 @@ describe('$compile', function () {
       expect(element.attr('viewBox')).toBe('0 0 0 0');
     }));
 
-    it('should work if they are prefixed with x- or data-', angular.mock.inject(function ($compile, $rootScope) {
+    it('should work if they are prefixed with x- or data-', angular.mock.inject(function ($rootScope) {
       $rootScope.dimensions = '0 0 0 0';
       $rootScope.number = 0.42;
       $rootScope.scale = 1;
@@ -12051,7 +12082,7 @@ describe('$compile', function () {
   });
 
   describe('multi-element directive', function () {
-    it('should group on link function', angular.mock.inject(function ($compile, $rootScope) {
+    it('should group on link function', angular.mock.inject(function ($rootScope) {
       $rootScope.show = false;
       element = compileForTest(
         '<div>' +
@@ -12065,7 +12096,7 @@ describe('$compile', function () {
     }));
 
 
-    it('should group on compile function', angular.mock.inject(function ($compile, $rootScope) {
+    it('should group on compile function', angular.mock.inject(function ($rootScope) {
       $rootScope.show = false;
       element = compileForTest(
         '<div>' +
@@ -12077,7 +12108,7 @@ describe('$compile', function () {
     }));
 
 
-    it('should support grouping over text nodes', angular.mock.inject(function ($compile, $rootScope) {
+    it('should support grouping over text nodes', angular.mock.inject(function ($rootScope) {
       $rootScope.show = false;
       element = compileForTest(
         '<div>' +
@@ -12090,7 +12121,7 @@ describe('$compile', function () {
     }));
 
 
-    it('should group on $root compile function', angular.mock.inject(function ($compile, $rootScope) {
+    it('should group on $root compile function', angular.mock.inject(function ($rootScope) {
       $rootScope.show = false;
       element = compileForTest(
         '<div></div>' +
@@ -12108,12 +12139,12 @@ describe('$compile', function () {
       angular.mock.module(function ($compileProvider) {
         $compileProvider.directive('ngMultiBind', ngInternals.valueFn({
           multiElement: true,
-          link: function (scope, element, attr) {
+          link(scope, element, attr) {
             element.text(scope.$eval(attr.ngMultiBind));
           }
         }));
       });
-      angular.mock.inject(function ($compile, $rootScope) {
+      angular.mock.inject(function ($rootScope) {
         $rootScope.show = false;
         element = compileForTest(
           '<div></div>' +
@@ -12130,7 +12161,7 @@ describe('$compile', function () {
     });
 
 
-    it('should group on nested groups of same directive', angular.mock.inject(function ($compile, $rootScope) {
+    it('should group on nested groups of same directive', angular.mock.inject(function ($rootScope) {
       $rootScope.show = false;
       element = compileForTest(
         '<div></div>' +
@@ -12147,7 +12178,7 @@ describe('$compile', function () {
 
 
     it('should set up and destroy the transclusion scopes correctly',
-      angular.mock.inject(function ($compile, $rootScope) {
+      angular.mock.inject(function ($rootScope) {
         element = compileForTest(
           '<div>' +
           '<div ng-if-start="val0"><span ng-if="val1"></span></div>' +
@@ -12223,7 +12254,7 @@ describe('$compile', function () {
 
 
     it('should set up and destroy the transclusion scopes correctly',
-      angular.mock.inject(function ($compile, $rootScope) {
+      angular.mock.inject(function ($rootScope) {
         element = compileForTest(
           '<div>' +
           '<div ng-repeat-start="val in val0" ng-if="val1"></div>' +
@@ -12324,7 +12355,7 @@ describe('$compile', function () {
           };
         });
       });
-      angular.mock.inject(function ($compile, $rootScope) {
+      angular.mock.inject(function () {
         expect(function () {
           element = compileForTest(
             '<div>' +
@@ -12340,7 +12371,7 @@ describe('$compile', function () {
         $compileProvider.directive('emptyDirective', function () {
           return {
             multiElement: true,
-            link: function (scope, element) {
+            link(scope, element) {
               element.data('x', 'abc');
             }
           };
@@ -12348,7 +12379,7 @@ describe('$compile', function () {
         $compileProvider.directive('rangeDirective', function () {
           return {
             multiElement: true,
-            link: function (scope) {
+            link(scope) {
               scope.x = 'X';
               scope.y = 'Y';
             }
@@ -12356,7 +12387,7 @@ describe('$compile', function () {
         });
       });
 
-      angular.mock.inject(function ($compile, $rootScope) {
+      angular.mock.inject(function ($rootScope) {
         element = compileForTest(
           '<div>' +
           '<div range-directive-start empty-directive>{{x}}</div>' +
@@ -12379,7 +12410,7 @@ describe('$compile', function () {
           };
         });
       });
-      angular.mock.inject(function ($compile) {
+      angular.mock.inject(function () {
         expect(function () {
           element = compileForTest(
             '<div>' +
@@ -12390,7 +12421,7 @@ describe('$compile', function () {
     });
 
 
-    it('should support data- and x- prefix', angular.mock.inject(function ($compile, $rootScope) {
+    it('should support data- and x- prefix', angular.mock.inject(function ($rootScope) {
       $rootScope.show = false;
       element = compileForTest(
         '<div>' +
@@ -12413,9 +12444,9 @@ describe('$compile', function () {
     beforeEach(angular.mock.module('ngAnimateMock'));
 
     it('should automatically fire the addClass and removeClass animation hooks',
-      angular.mock.inject(function ($compile, $animate, $rootScope) {
-
-        var data, element = angular.element('<div class="{{val1}} {{val2}} fire"></div>');
+      angular.mock.inject(function ($animate, $rootScope) {
+        var data;
+        var element = angular.element('<div class="{{val1}} {{val2}} fire"></div>');
         toDealoc.push(element);
         compileForTest(element);
 
@@ -12481,7 +12512,7 @@ describe('$compile', function () {
         $compileProvider.directive('foo', function () {
           return {
             priority: 1, // before the replace directive
-            link: function ($scope, $element, $attrs) {
+            link($scope, $element, $attrs) {
               linkCalls.push($attrs.foo);
               $element.on('$destroy', function () {
                 destroyCalls.push($attrs.foo);
@@ -12491,7 +12522,7 @@ describe('$compile', function () {
         });
       });
 
-      angular.mock.inject(function ($compile, $templateCache, $rootScope) {
+      angular.mock.inject(function ($templateCache, $rootScope) {
         $templateCache.put('template123', '<p></p>');
 
         compileForTest(
@@ -12514,7 +12545,7 @@ describe('$compile', function () {
     }
 
     function testCompileLinkDataCleanup(template) {
-      angular.mock.inject(function ($compile, $rootScope) {
+      angular.mock.inject(function ($rootScope) {
         var toCompile = angular.element(template);
 
         var preCompiledChildren = getAll(toCompile);
@@ -12555,7 +12586,7 @@ describe('$compile', function () {
           };
         });
       });
-      angular.mock.inject(function ($templateCache, $compile, $rootScope) {
+      angular.mock.inject(function ($templateCache) {
         $templateCache.put('the-dir-template-url', template);
 
         testCompileLinkDataCleanup(
@@ -12598,13 +12629,13 @@ describe('$compile', function () {
     it('should register a directive', function () {
       angular.module('my', []).component('myComponent', {
         template: '<div>SUCCESS</div>',
-        controller: function (log) {
+        controller(log) {
           log('OK');
         }
       });
       angular.mock.module('my');
 
-      angular.mock.inject(function ($compile, $rootScope, log) {
+      angular.mock.inject(function (log) {
         element = compileForTest('<my-component></my-component>');
         expect(element.find('div').text()).toEqual('SUCCESS');
         expect(log).toEqual('OK');
@@ -12616,20 +12647,20 @@ describe('$compile', function () {
       angular.module('my', []).component({
         fooComponent: {
           template: '<div>FOO SUCCESS</div>',
-          controller: function () {
+          controller() {
             log += 'FOO:OK';
           }
         },
         barComponent: {
           template: '<div>BAR SUCCESS</div>',
-          controller: function () {
+          controller() {
             log += 'BAR:OK';
           }
         }
       });
       angular.mock.module('my');
 
-      angular.mock.inject(function ($compile, $rootScope) {
+      angular.mock.inject(function () {
         var fooElement = compileForTest('<foo-component></foo-component>');
         var barElement = compileForTest('<bar-component></bar-component>');
 
@@ -12643,13 +12674,13 @@ describe('$compile', function () {
       angular.mock.module(function ($compileProvider) {
         $compileProvider.component('myComponent', {
           template: '<div>SUCCESS</div>',
-          controller: function (log) {
+          controller(log) {
             log('OK');
           }
         });
       });
 
-      angular.mock.inject(function ($compile, $rootScope, log) {
+      angular.mock.inject(function (log) {
         element = compileForTest('<my-component></my-component>');
         expect(element.find('div').text()).toEqual('SUCCESS');
         expect(log).toEqual('OK');
@@ -12762,10 +12793,10 @@ describe('$compile', function () {
     it('should allow passing injectable functions as template/templateUrl', function () {
       var log = '';
       angular.module('my', []).component('myComponent', {
-        template: function ($element, $attrs, myValue) {
+        template($element, $attrs, myValue) {
           log += 'template,' + $element + ',' + $attrs + ',' + myValue + '\n';
         },
-        templateUrl: function ($element, $attrs, myValue) {
+        templateUrl($element, $attrs, myValue) {
           log += 'templateUrl,' + $element + ',' + $attrs + ',' + myValue + '\n';
         }
       }).value('myValue', 'blah');

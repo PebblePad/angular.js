@@ -1,7 +1,8 @@
 'use strict';
 
 describe('$filter', function() {
-  var $filterProvider, $filter;
+  var $filterProvider;
+  var $filter;
 
   beforeEach(angular.mock.module(function(_$filterProvider_) {
     $filterProvider = _$filterProvider_;

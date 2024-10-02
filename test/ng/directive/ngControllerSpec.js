@@ -23,7 +23,7 @@ describe('ngController', function() {
     };
     Greeter.prototype = {
       suffix: '!',
-      protoGreet: function(name) {
+      protoGreet(name) {
         return this.prefix + name + this.suffix;
       }
     };
@@ -33,7 +33,7 @@ describe('ngController', function() {
       $scope.name = 'Adam';
     });
 
-    $controllerProvider.register('Public', function($scope) {
+    $controllerProvider.register('Public', function() {
       this.mark = 'works';
     });
 
@@ -115,7 +115,7 @@ describe('ngController', function() {
 
     var count = 0;
 
-    $rootScope.CountController = function($scope) {
+    $rootScope.CountController = function() {
       count += 1;
     };
 

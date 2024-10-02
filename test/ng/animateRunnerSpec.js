@@ -86,7 +86,9 @@ describe('$$AnimateRunner', function() {
       var runner2 = new $$AnimateRunner();
       runner1.setHost(runner2);
 
-      var status1, status2, signature = '';
+      var status1;
+      var status2;
+      var signature = '';
       runner1.done(function(status) {
         signature += '1';
         status1 = status;
@@ -137,7 +139,7 @@ describe('$$AnimateRunner', function() {
   });
 
   it('should expose/create the contained promise when getPromise() is called',
-    angular.mock.inject(function($$AnimateRunner, $rootScope) {
+    angular.mock.inject(function($$AnimateRunner) {
 
     var runner = new $$AnimateRunner();
     expect(ngInternals.isPromiseLike(runner.getPromise())).toBeTruthy();

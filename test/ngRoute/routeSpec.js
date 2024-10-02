@@ -54,8 +54,8 @@ describe('$routeProvider', function() {
 
 
 describe('$route', function() {
-  var $httpBackend,
-      element;
+  var $httpBackend;
+  var element;
 
   beforeEach(angular.mock.module('ngRoute'));
 
@@ -134,7 +134,7 @@ describe('$route', function() {
     });
     angular.mock.module(provideLog);
     angular.mock.inject(function($route, $location, $rootScope, $compile, log) {
-      $rootScope.$on('$routeChangeStart', function(event, next, current) {
+      $rootScope.$on('$routeChangeStart', function(event, next) {
         if (next.id === 'some') {
           $location.path('/redirect');
         }
@@ -154,9 +154,9 @@ describe('$route', function() {
   });
 
   it('should route and fire change event', function() {
-    var log = '',
-        lastRoute,
-        nextRoute;
+    var log = '';
+    var lastRoute;
+    var nextRoute;
 
     angular.mock.module(function($routeProvider) {
       $routeProvider.when('/Book/:book/Chapter/:chapter',
@@ -198,9 +198,9 @@ describe('$route', function() {
   });
 
   it('should route and fire change event when catch-all params are used', function() {
-    var log = '',
-        lastRoute,
-        nextRoute;
+    var log = '';
+    var lastRoute;
+    var nextRoute;
 
     angular.mock.module(function($routeProvider) {
       $routeProvider.when('/Book1/:book/Chapter/:chapter/:highlight*/edit',
@@ -257,9 +257,9 @@ describe('$route', function() {
 
 
   it('should route and fire change event correctly whenever the case insensitive flag is utilized', function() {
-    var log = '',
-        lastRoute,
-        nextRoute;
+    var log = '';
+    var lastRoute;
+    var nextRoute;
 
     angular.mock.module(function($routeProvider) {
       $routeProvider.when('/Book1/:book/Chapter/:chapter/:highlight*/edit',
@@ -356,7 +356,7 @@ describe('$route', function() {
         event.preventDefault();
       });
 
-      $rootScope.$on('$routeChangeSuccess', function(event) {
+      $rootScope.$on('$routeChangeSuccess', function() {
         throw new Error('Should not get here');
       });
 
@@ -592,11 +592,13 @@ describe('$route', function() {
       });
 
       angular.mock.inject(function($route, $location, $rootScope) {
-        var currentRoute, nextRoute,
-            onChangeSpy = jest.fn(function(e, next) {
-          currentRoute = $route.current;
-          nextRoute = next;
-        });
+        var currentRoute;
+        var nextRoute;
+
+        var onChangeSpy = jest.fn(function(e, next) {
+      currentRoute = $route.current;
+      nextRoute = next;
+    });
 
 
         // init
@@ -681,8 +683,8 @@ describe('$route', function() {
     });
 
     it('should fire $routeChangeStart and resolve promises', function() {
-      var deferA,
-          deferB;
+      var deferA;
+      var deferB;
 
       angular.mock.module(function($provide, $routeProvider) {
         $provide.factory('b', function($q) {
@@ -723,7 +725,7 @@ describe('$route', function() {
 
       angular.mock.module(function($provide, $routeProvider) {
         $routeProvider.when('/path', { template: 'foo', resolve: {
-          a: function($q) {
+          a($q) {
             deferA = $q.defer();
             return deferA.promise;
           }
@@ -823,8 +825,8 @@ describe('$route', function() {
 
       angular.mock.inject(function($route, $httpBackend, $location, $rootScope, $routeParams) {
         var log = '';
-        $rootScope.$on('$routeChangeStart', function(e, next) { log += '$before' + angular.toJson($routeParams) + ';'; });
-        $rootScope.$on('$routeChangeSuccess', function(e, next) { log += '$after' + angular.toJson($routeParams) + ';'; });
+        $rootScope.$on('$routeChangeStart', function() { log += '$before' + angular.toJson($routeParams) + ';'; });
+        $rootScope.$on('$routeChangeSuccess', function() { log += '$after' + angular.toJson($routeParams) + ';'; });
 
         $httpBackend.whenGET('r1.html').respond('R1');
         $httpBackend.whenGET('r2.html').respond('R2');
@@ -916,7 +918,7 @@ describe('$route', function() {
       angular.mock.module(function($routeProvider) {
         $routeProvider.when('/locals', {
           resolve: {
-            a: function($q) {
+            a($q) {
               throw myError;
             }
           }
@@ -1197,10 +1199,10 @@ describe('$route', function() {
         var error = new Error('Test');
 
         angular.mock.module(function($routeProvider) {
-          $routeProvider.when('/foo', {redirectTo: function() { throw error; }});
+          $routeProvider.when('/foo', {redirectTo() { throw error; }});
         });
 
-        angular.mock.inject(function($exceptionHandler, $location, $rootScope, $route) {
+        angular.mock.inject(function($exceptionHandler, $location, $rootScope) {
           jest.spyOn($rootScope, '$broadcast');
 
           $location.path('/foo');
@@ -1251,7 +1253,7 @@ describe('$route', function() {
             controller: secondController
           });
         });
-        angular.mock.inject(function($route, $location, $rootScope, $compile) {
+        angular.mock.inject(function($route, $location, $rootScope) {
           var element = compileForTest('<div><ng-view></ng-view></div>');
           $location.path('/redirect');
           $rootScope.$digest();
@@ -1275,11 +1277,11 @@ describe('$route', function() {
         angular.mock.module(function($routeProvider) {
           $routeProvider.when('/redirect/to/undefined', {
             template: templateFn,
-            redirectTo: function() {},
+            redirectTo() {},
             controller: controller
           });
         });
-        angular.mock.inject(function($route, $location, $rootScope, $compile) {
+        angular.mock.inject(function($route, $location, $rootScope) {
           var element = compileForTest('<div><ng-view></ng-view></div>');
           $location.path('/redirect/to/undefined');
           $rootScope.$digest();
@@ -1355,7 +1357,7 @@ describe('$route', function() {
       it('should redirect to the returned url', function() {
         angular.mock.module(function($routeProvider) {
           $routeProvider.
-            when('/foo', {resolveRedirectTo: function() { return '/bar?baz=qux'; }}).
+            when('/foo', {resolveRedirectTo() { return '/bar?baz=qux'; }}).
             when('/bar', {template: 'Bar'});
         });
 
@@ -1373,7 +1375,7 @@ describe('$route', function() {
       it('should support returning a promise', function() {
         angular.mock.module(function($routeProvider) {
           $routeProvider.
-            when('/foo', {resolveRedirectTo: function($q) { return $q.resolve('/bar'); }}).
+            when('/foo', {resolveRedirectTo($q) { return $q.resolve('/bar'); }}).
             when('/bar', {template: 'Bar'});
         });
 
@@ -1393,7 +1395,7 @@ describe('$route', function() {
 
           $routeProvider.
             when('/foo', {
-              resolveRedirectTo: function(nextRoute) {
+              resolveRedirectTo(nextRoute) {
                 return nextRoute;
               }
             });
@@ -1412,7 +1414,7 @@ describe('$route', function() {
         angular.mock.module(function($routeProvider) {
           $routeProvider.
             when('/foo/:bar/baz/:qux', {
-              resolveRedirectTo: function($route) {
+              resolveRedirectTo($route) {
                 expect($route.current.params).toEqual(expect.objectContaining({
                   bar: '1',
                   qux: '2'
@@ -1703,8 +1705,8 @@ describe('$route', function() {
 
 
     it('should not reload a route when reloadOnSearch is disabled and only .search() changes', function() {
-      var routeChange = jest.fn(),
-          routeUpdate = jest.fn();
+      var routeChange = jest.fn();
+      var routeUpdate = jest.fn();
 
       angular.mock.module(function($routeProvider) {
         $routeProvider.when('/foo', {controller: angular.noop, reloadOnSearch: false});
@@ -2091,7 +2093,7 @@ describe('$route', function() {
         $routeProvider.when('/path', {
           template: '',
           resolve: {
-            a: function($q) {
+            a($q) {
               deferred = $q.defer();
               return deferred.promise;
             }
@@ -2120,7 +2122,7 @@ describe('$route', function() {
         $routeProvider.when('/path', {
           template: '',
           resolve: {
-            a: function($q) {
+            a($q) {
               deferred = $q.defer();
               return deferred.promise;
             }
@@ -2147,7 +2149,7 @@ describe('$route', function() {
 
       angular.mock.module(function($provide, $routeProvider) {
         $routeProvider.when('/path', {
-          resolveRedirectTo: function($q) {
+          resolveRedirectTo($q) {
             deferred = $q.defer();
             return deferred.promise;
           }
@@ -2173,7 +2175,7 @@ describe('$route', function() {
 
       angular.mock.module(function($provide, $routeProvider) {
         $routeProvider.when('/path', {
-          resolveRedirectTo: function($q) {
+          resolveRedirectTo($q) {
             deferred = $q.defer();
             return deferred.promise;
           }
@@ -2222,7 +2224,7 @@ describe('$route', function() {
         $routeProvider.when('/qux', {
           template: '',
           resolve: {
-            a: function($q) {
+            a($q) {
               var deferred = deferreds['/qux'] = $q.defer();
               return deferred.promise;
             }
@@ -2232,7 +2234,7 @@ describe('$route', function() {
         // Helpers
         function addRouteWithAsyncRedirect(fromPath, toPath) {
           $routeProvider.when(fromPath, {
-            resolveRedirectTo: function($q) {
+            resolveRedirectTo($q) {
               var deferred = deferreds[fromPath] = $q.defer();
               return deferred.promise.then(function() { return toPath; });
             }

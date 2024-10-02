@@ -20,8 +20,11 @@ describe('ngModelOptions', function() {
   describe('directive', function() {
 
     describe('basic usage', function() {
-
-      var helper = {}, $rootScope, $compile, $timeout, $q;
+      var helper = {};
+      var $rootScope;
+      var $compile;
+      var $timeout;
+      var $q;
 
       generateInputCompilerHelper(helper);
 
@@ -35,8 +38,7 @@ describe('ngModelOptions', function() {
 
       describe('should fall back to `defaultModelOptions`', function() {
         it('if there is no `ngModelOptions` directive', function() {
-          var inputElm = helper.compileInput(
-              '<input type="text" ng-model="name" name="alias" />');
+          helper.compileInput('<input type="text" ng-model="name" name="alias" />');
 
           var inputOptions = $rootScope.form.alias.$options;
           expect(inputOptions.getOption('updateOn')).toEqual(ngInternals.defaultModelOptions.getOption('updateOn'));
@@ -49,8 +51,7 @@ describe('ngModelOptions', function() {
 
 
         it('if `ngModelOptions` on the same element does not specify the option', function() {
-          var inputElm = helper.compileInput(
-              '<input type="text" ng-model="name" name="alias" ng-model-options="{ updateOn: \'blur\' }"/>');
+          helper.compileInput('<input type="text" ng-model="name" name="alias" ng-model-options="{ updateOn: \'blur\' }"/>');
 
           var inputOptions = $rootScope.form.alias.$options;
           expect(inputOptions.getOption('debounce')).toEqual(ngInternals.defaultModelOptions.getOption('debounce'));
@@ -209,10 +210,7 @@ describe('ngModelOptions', function() {
 
         it('should make a copy of the options object', function() {
           $rootScope.options = {updateOn: 'default'};
-          var inputElm = helper.compileInput(
-              '<input type="text" ng-model="name" name="alias" ' +
-                'ng-model-options="options"' +
-              '/>');
+          helper.compileInput('<input type="text" ng-model="name" name="alias" ng-model-options="options"/>');
           expect($rootScope.options).toEqual({updateOn: 'default'});
           expect($rootScope.form.alias.$options).not.toBe($rootScope.options);
         });
@@ -312,10 +310,7 @@ describe('ngModelOptions', function() {
 
 
         it('should allow keeping the default update behavior on text inputs', function() {
-          var inputElm = helper.compileInput(
-              '<input type="text" ng-model="name" name="alias" ' +
-                'ng-model-options="{ updateOn: \'default\' }"' +
-              '/>');
+          helper.compileInput('<input type="text" ng-model="name" name="alias" ng-model-options="{ updateOn: \'default\' }"/>');
 
           helper.changeInputValueTo('a');
           expect($rootScope.name).toEqual('a');
@@ -433,10 +428,7 @@ describe('ngModelOptions', function() {
 
       describe('debounce', function() {
         it('should trigger only after timeout in text inputs', function() {
-          var inputElm = helper.compileInput(
-              '<input type="text" ng-model="name" name="alias" ' +
-                'ng-model-options="{ debounce: 10000 }"' +
-              '/>');
+          helper.compileInput('<input type="text" ng-model="name" name="alias" ng-model-options="{ debounce: 10000 }"/>');
 
           helper.changeInputValueTo('a');
           helper.changeInputValueTo('b');
@@ -487,10 +479,7 @@ describe('ngModelOptions', function() {
 
 
         it('should not trigger digest while debouncing', function() {
-          var inputElm = helper.compileInput(
-              '<input type="text" ng-model="name" name="alias" ' +
-                'ng-model-options="{ debounce: 10000 }"' +
-              '/>');
+          helper.compileInput('<input type="text" ng-model="name" name="alias" ng-model-options="{ debounce: 10000 }"/>');
 
           var watchSpy = jest.fn();
           $rootScope.$watch(watchSpy);
@@ -605,9 +594,7 @@ describe('ngModelOptions', function() {
 
 
         it('should flush debounced events when calling $commitViewValue directly', function() {
-          var inputElm = helper.compileInput(
-            '<input type="text" ng-model="name" name="alias" ' +
-              'ng-model-options="{ debounce: 1000 }" />');
+          helper.compileInput('<input type="text" ng-model="name" name="alias"  ng-model-options="{ debounce: 1000 }" />');
 
           helper.changeInputValueTo('a');
           expect($rootScope.name).toEqual(undefined);
@@ -616,9 +603,7 @@ describe('ngModelOptions', function() {
         });
 
         it('should cancel debounced events when calling $commitViewValue', function() {
-          var inputElm = helper.compileInput(
-            '<input type="text" ng-model="name" name="alias" ' +
-              'ng-model-options="{ debounce: 1000 }"/>');
+          helper.compileInput('<input type="text" ng-model="name" name="alias" ng-model-options="{ debounce: 1000 }"/>');
 
           helper.changeInputValueTo('a');
           $rootScope.form.alias.$commitViewValue();
@@ -659,9 +644,7 @@ describe('ngModelOptions', function() {
 
 
         it('should allow canceling debounced updates', function() {
-          var inputElm = helper.compileInput(
-            '<input type="text" ng-model="name" name="alias" ' +
-              'ng-model-options="{ debounce: 10000 }" />');
+          helper.compileInput('<input type="text" ng-model="name" name="alias" ng-model-options="{ debounce: 10000 }" />');
 
           helper.changeInputValueTo('a');
           expect($rootScope.name).toEqual(undefined);
@@ -755,13 +738,13 @@ describe('ngModelOptions', function() {
 
         it('should fail on non-assignable model binding if getterSetter is false', function() {
           expect(function() {
-            var inputElm = helper.compileInput('<input type="text" ng-model="accessor(user, \'name\')" />');
+            helper.compileInput('<input type="text" ng-model="accessor(user, \'name\')" />');
           }).toThrowMinErr('ngModel', 'nonassign', 'Expression \'accessor(user, \'name\')\' is non-assignable.');
         });
 
 
         it('should not fail on non-assignable model binding if getterSetter is true', function() {
-          var inputElm = helper.compileInput(
+          helper.compileInput(
             '<input type="text" ng-model="accessor(user, \'name\')" ' +
               'ng-model-options="{ getterSetter: true }" />');
         });
@@ -774,7 +757,7 @@ describe('ngModelOptions', function() {
 
           $rootScope.someService = {
             value: 'a',
-            getterSetter: function(newValue) {
+            getterSetter(newValue) {
               this.value = newValue || this.value;
               return this.value;
             }
@@ -810,8 +793,7 @@ describe('ngModelOptions', function() {
 
 
         it('should not assign not parsable values to the scope if allowInvalid is true', function() {
-          var inputElm = helper.compileInput('<input type="number" name="input" ng-model="value" ' +
-                      'ng-model-options="{allowInvalid: true}" />', {
+          helper.compileInput('<input type="number" name="input" ng-model="value" ng-model-options="{allowInvalid: true}" />', {
             valid: false,
             badInput: true
           });
@@ -860,10 +842,9 @@ describe('ngModelOptions', function() {
 
 
         it('should not call ng-change listeners twice if the model did not change with allowInvalid', function() {
-          var inputElm = helper.compileInput('<input type="text" name="input" ng-model="value" ' +
-                      'ng-model-options="{allowInvalid: true}" ng-change="changed()" />');
+          helper.compileInput('<input type="text" name="input" ng-model="value" ng-model-options="{allowInvalid: true}" ng-change="changed()" />');
           $rootScope.changed = jest.fn();
-          $rootScope.form.input.$parsers.push(function(value) {
+          $rootScope.form.input.$parsers.push(function() {
             return 'modelValue';
           });
 
@@ -880,8 +861,8 @@ describe('ngModelOptions', function() {
 
 
     describe('on directives with `replace: true`', function() {
-
-      var $rootScope, $compile;
+      var $rootScope;
+      var $compile;
 
       beforeEach(angular.mock.module(function($compileProvider) {
         $compileProvider.directive('foo', ngInternals.valueFn({

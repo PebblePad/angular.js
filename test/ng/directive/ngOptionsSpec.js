@@ -1,8 +1,13 @@
 'use strict';
 
 describe('ngOptions', function() {
-
-  var scope, formElement, element, $compile, linkLog, childListMutationObserver, ngModelCtrl;
+  var scope;
+  var formElement;
+  var element;
+  var $compile;
+  var linkLog;
+  var childListMutationObserver;
+  var ngModelCtrl;
 
   function compile(html) {
     formElement = angular.element('<form name="form">' + html + '</form>');
@@ -21,7 +26,7 @@ describe('ngOptions', function() {
 
   beforeEach(function() {
     expect.extend({
-      toEqualSelectValue: function(_actual_, value, multiple) {
+      toEqualSelectValue(_actual_, value, multiple) {
         var errors = [];
         var actual = _actual_.val();
 
@@ -41,7 +46,7 @@ describe('ngOptions', function() {
 
         return { pass: errors.length === 0, message: () => message };
       },
-      toEqualOption: function(actual, value, text, label) {
+      toEqualOption(actual, value, text, label) {
         var errors = [];
         var hash = ngInternals.hashKey(value);
         if (actual.attr('value') !== hash) {
@@ -60,7 +65,7 @@ describe('ngOptions', function() {
 
         return { pass: errors.length === 0, message: () => message };
       },
-      toEqualTrackedOption: function(actual, value, text, label) {
+      toEqualTrackedOption(actual, value, text, label) {
         var errors = [];
         if (actual.attr('value') !== '' + value) {
           errors.push('Expected option value "' + actual.attr('value') + '" to equal "' + value + '"');
@@ -78,7 +83,7 @@ describe('ngOptions', function() {
 
         return { pass: errors.length === 0, message: () => message };
       },
-      toEqualUnknownOption: function(actual) {
+      toEqualUnknownOption(actual) {
         var errors = [];
         if (actual.attr('value') !== '?') {
           errors.push('Expected option value "' + actual.attr('value') + '" to equal "?"');
@@ -90,7 +95,7 @@ describe('ngOptions', function() {
 
         return { pass: errors.length === 0, message: () => message };
       },
-      toEqualUnknownValue: function(actual, value) {
+      toEqualUnknownValue(actual) {
         var errors = [];
         if (actual !== '?') {
           errors.push('Expected select value "' + actual + '" to equal "?"');
@@ -118,7 +123,7 @@ describe('ngOptions', function() {
             options: '='
           },
           templateUrl: 'select_template.html',
-          link: function(scope, $element, attributes) {
+          link(scope) {
             scope.selectable_options = scope.options;
           }
         };
@@ -126,7 +131,7 @@ describe('ngOptions', function() {
 
       .directive('oCompileContents', function() {
         return {
-          link: function(scope, element) {
+          link(scope, element) {
             linkLog.push('linkCompileContents');
             $compile(element.contents())(scope);
           }
@@ -135,7 +140,7 @@ describe('ngOptions', function() {
 
       .directive('observeChildList', function() {
         return {
-          link: function(scope, element) {
+          link(scope, element) {
             var config = { childList: true };
 
             childListMutationObserver = new window.MutationObserver(angular.noop);
@@ -152,7 +157,7 @@ describe('ngOptions', function() {
       $delegate[0].compile = function() {
         return {
           pre: origPreLink,
-          post: function() {
+          post() {
             linkLog.push('linkNgOptions');
             origPostLink.apply(this, arguments);
           }
@@ -1773,7 +1778,15 @@ describe('ngOptions', function() {
 
 
     it('should group when the options are updated', function() {
-      var optgroups, one, two, three, alpha, beta, gamma, delta, epsilon;
+      var optgroups;
+      var one;
+      var two;
+      var three;
+      var alpha;
+      var beta;
+      var gamma;
+      var delta;
+      var epsilon;
 
       createSelect({
         'ng-model': 'selected',
@@ -2537,7 +2550,6 @@ describe('ngOptions', function() {
 
 
     it('should be possible to use ngIf in the blank option', function() {
-      var option;
       createSingleSelect('<option ng-if="isBlank" value="">blank</option>');
 
       scope.$apply(function() {
@@ -2681,7 +2693,7 @@ describe('ngOptions', function() {
     });
 
 
-    it('should not throw with a directive that replaces', angular.mock.inject(function($templateCache, $httpBackend) {
+    it('should not throw with a directive that replaces', angular.mock.inject(function($templateCache) {
       $templateCache.put('select_template.html', '<select ng-options="option as option for option in selectable_options"> <option value="">This is a test</option> </select>');
 
       scope.options = ['a', 'b', 'c', 'd'];
@@ -2927,7 +2939,7 @@ describe('ngOptions', function() {
         if (!addSpiesOnProto) {
           angular.forEach(options, function(option, i) {
             Object.defineProperty(option, 'selected', {
-              get: function() { return _selected[i]; },
+              get() { return _selected[i]; },
               set: optionsSetSelected[i]
             });
           });
@@ -2952,10 +2964,10 @@ describe('ngOptions', function() {
           };
 
           Object.defineProperty(optionProto, 'selected', {
-            get: function() {
+            get() {
               return getIndexAndCall(this, getSelected, getSelectedOriginal);
             },
-            set: function(value) {
+            set(value) {
               return getIndexAndCall(this, setSelected, setSelectedOriginal, value);
             }
           });
@@ -3466,5 +3478,4 @@ describe('ngOptions', function() {
       expect(selectCtrl.$isUnknownOptionSelected()).toBe(false);
     });
   });
-
 });

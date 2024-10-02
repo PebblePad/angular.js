@@ -7,9 +7,6 @@ describe('$templateRequest', function() {
     describe('httpOptions', function() {
 
       it('should default to undefined and fallback to default $http options', function() {
-
-        var defaultHeader;
-
         angular.mock.module(function($templateRequestProvider) {
           expect($templateRequestProvider.httpOptions()).toBeUndefined();
         });

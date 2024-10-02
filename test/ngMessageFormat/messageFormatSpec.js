@@ -17,17 +17,21 @@
 
 describe('$$ngMessageFormat', function() {
   describe('core', function() {
-    var $$messageFormat, $parse, $interpolate, $locale, $rootScope;
+    var $$messageFormat;
+    var $parse;
+    var $interpolate;
+    var $locale;
+    var $rootScope;
 
     function Person(name, gender) {
       this.name = name;
       this.gender = gender;
     }
 
-    var alice   = new Person('Alice', 'female'),
-        bob     = new Person('Bob', 'male'),
-        charlie = new Person('Charlie', 'male'),
-        harry   = new Person('Harry Potter', 'male');
+    var alice   = new Person('Alice', 'female');
+    var bob     = new Person('Bob', 'male');
+    var charlie = new Person('Charlie', 'male');
+    var harry   = new Person('Harry Potter', 'male');
 
     function initScope($scope) {
       $scope.recipients = [alice, bob, charlie];
@@ -311,10 +315,10 @@ describe('$$ngMessageFormat', function() {
     }));
 
 
-    it('should use custom toString when present', angular.mock.inject(function($interpolate, $rootScope) {
+    it('should use custom toString when present', angular.mock.inject(function($interpolate) {
        var context = {
         a: {
-          toString: function() {
+          toString() {
             return 'foo';
           }
         }
@@ -592,50 +596,50 @@ describe('$$ngMessageFormat', function() {
       }));
 
       it('should Parse Inner Binding', angular.mock.inject(function($interpolate) {
-        var interpolateFn = $interpolate('a{{b}}C'),
-            expressions = interpolateFn.expressions;
+        var interpolateFn = $interpolate('a{{b}}C');
+        var expressions = interpolateFn.expressions;
         expect(expressions).toEqual(['b']);
         expect(interpolateFn({b: 123})).toEqual('a123C');
       }));
 
       it('should Parse Ending Binding', angular.mock.inject(function($interpolate) {
-        var interpolateFn = $interpolate('a{{b}}'),
-          expressions = interpolateFn.expressions;
+        var interpolateFn = $interpolate('a{{b}}');
+        var expressions = interpolateFn.expressions;
         expect(expressions).toEqual(['b']);
         expect(interpolateFn({b: 123})).toEqual('a123');
       }));
 
       it('should Parse Begging Binding', angular.mock.inject(function($interpolate) {
-        var interpolateFn = $interpolate('{{b}}c'),
-          expressions = interpolateFn.expressions;
+        var interpolateFn = $interpolate('{{b}}c');
+        var expressions = interpolateFn.expressions;
         expect(expressions).toEqual(['b']);
         expect(interpolateFn({b: 123})).toEqual('123c');
       }));
 
       it('should Parse Loan Binding', angular.mock.inject(function($interpolate) {
-        var interpolateFn = $interpolate('{{b}}'),
-          expressions = interpolateFn.expressions;
+        var interpolateFn = $interpolate('{{b}}');
+        var expressions = interpolateFn.expressions;
         expect(expressions).toEqual(['b']);
         expect(interpolateFn({b: 123})).toEqual('123');
       }));
 
       it('should Parse Two Bindings', angular.mock.inject(function($interpolate) {
-        var interpolateFn = $interpolate('{{b}}{{c}}'),
-          expressions = interpolateFn.expressions;
+        var interpolateFn = $interpolate('{{b}}{{c}}');
+        var expressions = interpolateFn.expressions;
         expect(expressions).toEqual(['b', 'c']);
         expect(interpolateFn({b: 111, c: 222})).toEqual('111222');
       }));
 
       it('should Parse Two Bindings With Text In Middle', angular.mock.inject(function($interpolate) {
-        var interpolateFn = $interpolate('{{b}}x{{c}}'),
-          expressions = interpolateFn.expressions;
+        var interpolateFn = $interpolate('{{b}}x{{c}}');
+        var expressions = interpolateFn.expressions;
         expect(expressions).toEqual(['b', 'c']);
         expect(interpolateFn({b: 111, c: 222})).toEqual('111x222');
       }));
 
       it('should Parse Multiline', angular.mock.inject(function($interpolate) {
-        var interpolateFn = $interpolate('"X\nY{{A\n+B}}C\nD"'),
-          expressions = interpolateFn.expressions;
+        var interpolateFn = $interpolate('"X\nY{{A\n+B}}C\nD"');
+        var expressions = interpolateFn.expressions;
         expect(expressions).toEqual(['A\n+B']);
         expect(interpolateFn({'A': 'aa', 'B': 'bb'})).toEqual('"X\nYaabbC\nD"');
       }));

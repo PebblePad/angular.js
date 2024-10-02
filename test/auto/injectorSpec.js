@@ -2,8 +2,9 @@
 
 describe('injector.modules', function() {
     it('should expose the loaded module info on the instance injector', function() {
-      var test1 = angular.module('test1', ['test2']).info({ version: '1.1' });
-      var test2 = angular.module('test2', []).info({ version: '1.2' });
+      angular.module('test1', ['test2']).info({ version: '1.1' });
+      angular.module('test2', []).info({ version: '1.2' });
+
       angular.mock.module('test1');
       angular.mock.inject(['$injector', function($injector) {
         expect(Object.keys($injector.modules)).toEqual(['ng', 'ngLocale', 'ngMock', 'test1', 'test2']);
@@ -14,12 +15,13 @@ describe('injector.modules', function() {
 
     it('should expose the loaded module info on the provider injector', function() {
       var providerInjector;
-      var test1 = angular.module('test1', ['test2']).info({ version: '1.1' });
-      var test2 = angular.module('test2', [])
+      angular.module('test1', ['test2']).info({ version: '1.1' });
+
+      angular.module('test2', [])
         .info({ version: '1.2' })
         .provider('test', ['$injector', function($injector) {
           providerInjector = $injector;
-          return {$get: function() {}};
+          return {$get() {}};
         }]);
       angular.mock.module('test1');
       // needed to ensure that the provider blocks are executed
@@ -50,8 +52,8 @@ describe('injector', function() {
 
 
   it('should return same instance from calling provider', function() {
-    var instance = {},
-        original = instance;
+    var instance = {};
+    var original = instance;
     providers('instance', function() { return instance; });
     expect(injector.get('instance')).toEqual(instance);
     instance = 'deleted';
@@ -260,7 +262,7 @@ describe('injector', function() {
     it('should be able to register a service from a new module', function() {
       var injector = angular.injector([]);
       angular.module('a', []).factory('aService', function() {
-        return {sayHello: function() { return 'Hello'; }};
+        return {sayHello() { return 'Hello'; }};
       });
       injector.loadNewModules(['a']);
       injector.invoke(function(aService) {
@@ -502,7 +504,7 @@ describe('injector', function() {
 
   it('should define module', function() {
     var log = '';
-    var injector = angular.injector([function($provide) {
+    angular.injector([function($provide) {
       $provide.value('value', 'value;');
       $provide.factory('fn', ngInternals.valueFn('function;'));
       $provide.provider('service', function Provider() {
@@ -519,10 +521,12 @@ describe('injector', function() {
 
   describe('module', function() {
     it('should provide $injector even when no module is requested', function() {
-      var $provide,
-        $injector = angular.injector([
-          angular.extend(function(p) { $provide = p; }, {$inject: ['$provide']})
-        ]);
+      var $provide;
+
+      var $injector = angular.injector([
+        angular.extend(function(p) { $provide = p; }, {$inject: ['$provide']})
+      ]);
+
       expect($injector.get('$injector')).toBe($injector);
     });
 
@@ -782,7 +786,8 @@ describe('injector', function() {
 
 
       describe('decorator', function() {
-        var log, injector;
+        var log;
+        var injector;
 
         beforeEach(function() {
           log = [];
@@ -902,7 +907,7 @@ describe('injector', function() {
         it('should allow for decorators to $injector', function() {
           injector = angular.injector(['ng', function($provide) {
             $provide.decorator('$injector', function($delegate) {
-              return angular.extend({}, $delegate, {get: function(val) {
+              return angular.extend({}, $delegate, {get(val) {
                 if (val === 'key') {
                   return 'value';
                 }

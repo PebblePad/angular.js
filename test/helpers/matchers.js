@@ -97,7 +97,7 @@ beforeEach(function() {
     toBeUntouched: cssMatcher('ng-untouched', 'ng-touched'),
     toBeTouched: cssMatcher('ng-touched', 'ng-untouched'),
 
-    toBeAPromise: function(actual) {
+    toBeAPromise(actual) {
       const passed = actual && typeof actual.then === 'function' && typeof actual.catch === 'function' && typeof actual.finally === 'function';
       return {
         message: passed
@@ -107,7 +107,7 @@ beforeEach(function() {
       };
     },
 
-    toBeShown: function(actual) {
+    toBeShown(actual) {
       const passed = !isNgElementHidden(actual);
 
       return {
@@ -118,7 +118,7 @@ beforeEach(function() {
       };
     },
 
-    toBeHidden: function(actual) {
+    toBeHidden(actual) {
       const passed = isNgElementHidden(actual);
 
       return {
@@ -129,7 +129,7 @@ beforeEach(function() {
       };
     },
 
-    toEqual: function(actual, expected) {
+    toEqual(actual, expected) {
         if (actual && actual.$$log) {
           actual = (typeof expected === 'string')
               ? actual.toString()
@@ -144,7 +144,7 @@ beforeEach(function() {
       };
     },
 
-    toEqualOneOf: function(actual, ...expectedArgs) {
+    toEqualOneOf(actual, ...expectedArgs) {
       const passed = expectedArgs.some((expected) => this.equals(actual, expected, [DOMTester]));
       return {
         message: passed
@@ -154,7 +154,7 @@ beforeEach(function() {
       };
     },
 
-    toEqualData: function(actual, expected) {
+    toEqualData(actual, expected) {
       const passed = angular.equals(actual, expected);
       return {
         message: passed
@@ -164,7 +164,7 @@ beforeEach(function() {
       };
     },
 
-    toHaveBeenCalledOnceWith: function(actual, ...expectedArgs) {
+    toHaveBeenCalledOnceWith(actual, ...expectedArgs) {
       if (!jest.isMockFunction(actual)) {
         throw new Error('Expected a spy, but got ' + this.utils.stringify(actual) + '.');
       }
@@ -204,7 +204,7 @@ beforeEach(function() {
       };
     },
 
-    toBeOneOf: function(actual, ...expectedArgs) {
+    toBeOneOf(actual, ...expectedArgs) {
       const passed = expectedArgs.includes(actual);
       return {
         message: passed
@@ -214,7 +214,7 @@ beforeEach(function() {
       }
     },
 
-    toHaveClass: function(actual, className) {
+    toHaveClass(actual, className) {
       const hasClass = (element, selector) => {
         if (!element.getAttribute) return false;
         return ((' ' + (element.getAttribute('class') || '') + ' ').replace(/[\n\t]/g, ' ').
@@ -236,7 +236,7 @@ beforeEach(function() {
       };
     },
 
-    toEqualMinErr: function(actual, namespace, code, content) {
+    toEqualMinErr(actual, namespace, code, content) {
       const matcher = new MinErrMatcher(namespace, code, content, {
         inputType: 'error',
         expectedAction: 'equal',
@@ -246,7 +246,7 @@ beforeEach(function() {
       return matcher.test(actual);
     },
 
-    toThrowMinErr: function(actual, namespace, code, content) {
+    toThrowMinErr(actual, namespace, code, content) {
       var exception;
 
       if (!angular.isFunction(actual)) {
@@ -268,7 +268,7 @@ beforeEach(function() {
       return matcher.test(exception);
     },
 
-    toBeMarkedAsSelected: function(actual) {
+    toBeMarkedAsSelected(actual) {
       const isSelected = actual.selected;
       const hasAttribute = actual.hasAttribute('selected');
       const passed = isSelected && hasAttribute;
@@ -280,7 +280,7 @@ beforeEach(function() {
         pass: passed
       }
     },
-    toEqualSelect: function(actual, ...expectedValues) {
+    toEqualSelect(actual, ...expectedValues) {
         var actualValues = [];
 
         angular.forEach(actual.find('option'), (option) => {
@@ -332,18 +332,19 @@ function createAsync(doneFn) {
     var newJob = new Job();
     timeout = timeout || 5000;
     this.next.push(function() {
-      var counter = 0,
-        intervalId = window.setInterval(function() {
-          if (fn()) {
-            window.clearInterval(intervalId);
-            newJob.start();
-          }
-          counter += 5;
-          if (counter > timeout) {
-            window.clearInterval(intervalId);
-            throw new Error(error);
-          }
-        }, 5);
+      var counter = 0;
+
+      var intervalId = window.setInterval(function() {
+        if (fn()) {
+          window.clearInterval(intervalId);
+          newJob.start();
+        }
+        counter += 5;
+        if (counter > timeout) {
+          window.clearInterval(intervalId);
+          throw new Error(error);
+        }
+      }, 5);
     });
     return newJob;
   };

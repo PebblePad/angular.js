@@ -2,8 +2,8 @@
 // The http specs run against the mocked httpBackend
 
 describe('$http', function() {
-
-  var callback, mockedCookies;
+  var callback;
+  var mockedCookies;
   var customParamSerializer = function(params) {
     return Object.keys(params).join('_');
   };
@@ -16,11 +16,11 @@ describe('$http', function() {
   }));
 
   beforeEach(angular.mock.module({
-    $$cookieReader: function() { return mockedCookies; },
+    $$cookieReader() { return mockedCookies; },
     customParamSerializer: customParamSerializer
   }));
 
-  afterEach(angular.mock.inject(function($exceptionHandler, $httpBackend, $rootScope) {
+  afterEach(angular.mock.inject(function($exceptionHandler, $httpBackend) {
     angular.forEach($exceptionHandler.errors, function(e) {
       dump('Unhandled exception: ', e);
     });
@@ -37,10 +37,11 @@ describe('$http', function() {
     describe('interceptors', function() {
       it('should chain request, requestReject, response and responseReject interceptors', function() {
         angular.mock.module(function($httpProvider) {
-          var savedConfig, savedResponse;
+          var savedConfig;
+          var savedResponse;
           $httpProvider.interceptors.push(function($q) {
             return {
-              request: function(config) {
+              request(config) {
                 config.url += '/1';
                 savedConfig = config;
                 return $q.reject('/2');
@@ -49,7 +50,7 @@ describe('$http', function() {
           });
           $httpProvider.interceptors.push(function($q) {
             return {
-              requestError: function(error) {
+              requestError(error) {
                 savedConfig.url += error;
                 return $q.resolve(savedConfig);
               }
@@ -57,7 +58,7 @@ describe('$http', function() {
           });
           $httpProvider.interceptors.push(function() {
             return {
-              responseError: function(rejection) {
+              responseError(rejection) {
                 savedResponse.data += rejection;
                 return savedResponse;
               }
@@ -65,7 +66,7 @@ describe('$http', function() {
           });
           $httpProvider.interceptors.push(function($q) {
             return {
-              response: function(response) {
+              response(response) {
                 response.data += ':1';
                 savedResponse = response;
                 return $q.reject(':2');
@@ -88,25 +89,25 @@ describe('$http', function() {
 
       it('should verify order of execution', function() {
         angular.mock.module(function($httpProvider) {
-          $httpProvider.interceptors.push(function($q) {
+          $httpProvider.interceptors.push(function() {
             return {
-              request: function(config) {
+              request(config) {
                 config.url += '/outer';
                 return config;
               },
-              response: function(response) {
+              response(response) {
                 response.data = '{' + response.data + '} outer';
                 return response;
               }
             };
           });
-          $httpProvider.interceptors.push(function($q) {
+          $httpProvider.interceptors.push(function() {
             return {
-              request: function(config) {
+              request(config) {
                 config.url += '/inner';
                 return config;
               },
-              response: function(response) {
+              response(response) {
                 response.data = '{' + response.data + '} inner';
                 return response;
               }
@@ -132,7 +133,7 @@ describe('$http', function() {
         angular.mock.module(function($httpProvider) {
           $httpProvider.interceptors.push(function() {
             return {
-              request: function(config) {
+              request(config) {
                 expect(config.url).toEqual('/url');
                 expect(config.data).toEqual({one: 'two'});
                 expect(config.headers.foo).toEqual('bar');
@@ -154,7 +155,7 @@ describe('$http', function() {
         angular.mock.module(function($httpProvider) {
           $httpProvider.interceptors.push(function() {
             return {
-              request: function(config) {
+              request(config) {
                 config.url = '/intercepted';
                 config.headers.foo = 'intercepted';
                 return config;
@@ -176,7 +177,7 @@ describe('$http', function() {
         angular.mock.module(function($httpProvider) {
           $httpProvider.interceptors.push(function() {
             return {
-              request: function(config) {
+              request(config) {
                 config.headers = {foo: 'intercepted'};
                 return config;
               }
@@ -197,14 +198,15 @@ describe('$http', function() {
         angular.mock.module(function($httpProvider) {
           $httpProvider.interceptors.push(function($q) {
             return {
-              request: function(promise) {
+              request() {
                 return $q.reject(reason);
               }
             };
           });
         });
         angular.mock.inject(function($http, $httpBackend, $rootScope) {
-          var success = jest.fn(), error = jest.fn();
+          var success = jest.fn();
+          var error = jest.fn();
           $http.get('/url').then(success, error);
           $rootScope.$apply();
           expect(success).not.toHaveBeenCalled();
@@ -216,7 +218,7 @@ describe('$http', function() {
         angular.mock.module(function($httpProvider) {
           $httpProvider.interceptors.push(function() {
             return {
-              request: function(config) {
+              request(config) {
                 config.url = '/intercepted';
                 config.headers.foo = 'intercepted';
                 return config;
@@ -242,7 +244,7 @@ describe('$http', function() {
         angular.mock.module(function($provide, $httpProvider) {
           $provide.factory('myInterceptor', function() {
             return {
-              request: function(config) {
+              request(config) {
                 config.url = '/intercepted';
                 return config;
               }
@@ -259,9 +261,9 @@ describe('$http', function() {
 
       it('should support complex interceptors based on promises', function() {
         angular.mock.module(function($provide, $httpProvider) {
-          $provide.factory('myInterceptor', function($q, $rootScope) {
+          $provide.factory('myInterceptor', function($q) {
             return {
-              request: function(config) {
+              request(config) {
                 return $q.resolve('/intercepted').then(function(intercepted) {
                   config.url = intercepted;
                   return config;
@@ -282,7 +284,10 @@ describe('$http', function() {
 
 
   describe('the instance', function() {
-    var $httpBackend, $http, $rootScope, $sce;
+    var $httpBackend;
+    var $http;
+    var $rootScope;
+    var $sce;
 
     beforeEach(angular.mock.module(function($sceDelegateProvider) {
       // Setup a special whitelisted url that we can use in testing JSONP requests
@@ -734,7 +739,7 @@ describe('$http', function() {
         $http({
           url: '/url',
           method: 'POST',
-          transformRequest: function(data) {
+          transformRequest(data) {
             data = {'one': 'two'};
             return data;
           }
@@ -898,7 +903,7 @@ describe('$http', function() {
 
     describe('jsonp trust', function() {
       it('should throw error if the url is not a trusted resource', function() {
-        var success, error;
+        var error;
         $http({method: 'JSONP', url: 'http://example.org/path'})
               .catch(function(e) { error = e; });
         $rootScope.$digest();
@@ -1125,7 +1130,7 @@ describe('$http', function() {
           $httpBackend.expect('POST', '/url', 'header1').respond(200);
           $http.post('/url', 'req', {
             headers: {h1: 'header1'},
-            transformRequest: function(data, headers) {
+            transformRequest(data, headers) {
               return headers('h1');
             }
           }).then(callback);
@@ -1138,7 +1143,7 @@ describe('$http', function() {
           $httpBackend.expect('POST', '/url', 'header1').respond(200);
           $http.post('/url', 'req', {
             headers: {H1: 'header1'},
-            transformRequest: function(data, headers) {
+            transformRequest(data, headers) {
               return headers('H1');
             }
           }).then(callback);
@@ -1150,7 +1155,7 @@ describe('$http', function() {
         it('should not allow modifications to headers in a transform functions', function() {
           var config = {
             headers: {'Accept': 'bar'},
-            transformRequest: function(data, headers) {
+            transformRequest(data, headers) {
               angular.extend(headers(), {
                 'Accept': 'foo'
               });
@@ -1420,7 +1425,7 @@ describe('$http', function() {
         it('should have access to response headers', function() {
           $httpBackend.expect('GET', '/url').respond(200, 'response', {h1: 'header1'});
           $http.get('/url', {
-            transformResponse: function(data, headers) {
+            transformResponse(data, headers) {
               return headers('h1');
             }
           }).then(callback);
@@ -1433,7 +1438,7 @@ describe('$http', function() {
         it('should have access to response status', function() {
           $httpBackend.expect('GET', '/url').respond(200, 'response', {h1: 'header1'});
           $http.get('/url', {
-            transformResponse: function(data, headers, status) {
+            transformResponse(data, headers, status) {
               return status;
             }
           }).then(callback);
@@ -1628,7 +1633,7 @@ describe('$http', function() {
       }));
 
 
-      it('should not share the pending cached headers object instance', angular.mock.inject(function($rootScope) {
+      it('should not share the pending cached headers object instance', () => {
         var firstResult;
         callback.mockImplementation(function(result) {
           expect(result.headers()).toEqual(firstResult.headers());
@@ -1643,7 +1648,7 @@ describe('$http', function() {
         $httpBackend.flush();
 
         expect(callback).toHaveBeenCalledTimes(1);
-      }));
+      });
 
 
       it('should cache status code as well', angular.mock.inject(function($rootScope) {
@@ -2013,7 +2018,7 @@ describe('$http', function() {
           expect(incOutstandingRequestCountSpy).not.toHaveBeenCalled();
           expect(completeOutstandingRequestSpy).not.toHaveBeenCalled();
 
-          $http.get('', {transformRequest: function() { throw new Error(); }}).catch(angular.noop);
+          $http.get('', {transformRequest() { throw new Error(); }}).catch(angular.noop);
 
           expect(incOutstandingRequestCountSpy).toHaveBeenCalledTimes(1);
           expect(completeOutstandingRequestSpy).not.toHaveBeenCalled();
@@ -2032,7 +2037,7 @@ describe('$http', function() {
           expect(completeOutstandingRequestSpy).not.toHaveBeenCalled();
 
           $httpBackend.when('GET').respond(200);
-          $http.get('', {transformResponse: function() { throw new Error(); }}).catch(angular.noop);
+          $http.get('', {transformResponse() { throw new Error(); }}).catch(angular.noop);
 
           expect(incOutstandingRequestCountSpy).toHaveBeenCalledTimes(1);
           expect(completeOutstandingRequestSpy).not.toHaveBeenCalled();
@@ -2060,13 +2065,13 @@ describe('$http', function() {
 
         $httpProvider.interceptors.push(function($q) {
           return {
-            request: function(config) {
+            request(config) {
               return (reqInterceptorDeferred = $q.defer()).
                 promise.
                 finally(function() { reqInterceptorFulfilled = true; }).
                 then(ngInternals.valueFn(config));
             },
-            response: function() {
+            response() {
               return (resInterceptorDeferred = $q.defer()).
                 promise.
                 finally(function() { resInterceptorFulfilled = true; });
@@ -2364,7 +2369,7 @@ describe('$http', function() {
   it('should use withCredentials from default', function() {
     var $httpBackend = jest.fn();
 
-    $httpBackend.mockImplementation(function(m, u, d, c, h, timeout, withCredentials, responseType) {
+    $httpBackend.mockImplementation(function(m, u, d, c, h, timeout, withCredentials) {
       expect(withCredentials).toBe(true);
     });
 
@@ -2390,7 +2395,11 @@ describe('$http', function() {
 
 
 describe('$http with $applyAsync', function() {
-  var $http, $httpBackend, $rootScope, $browser, log;
+  var $http;
+  var $httpBackend;
+  var $rootScope;
+  var $browser;
+  var log;
   beforeEach(angular.mock.module(function($httpProvider) {
     $httpProvider.useApplyAsync(true);
   }, provideLog));
@@ -2467,8 +2476,8 @@ describe('$http with $applyAsync', function() {
 
 
 describe('$http param serializers', function() {
-
-  var defSer, jqrSer;
+  var defSer;
+  var jqrSer;
   beforeEach(angular.mock.inject(function($httpParamSerializer, $httpParamSerializerJQLike) {
     defSer = $httpParamSerializer;
     jqrSer = $httpParamSerializerJQLike;
@@ -2498,7 +2507,7 @@ describe('$http param serializers', function() {
     });
 
     it('should NOT serialize functions', function() {
-      expect(defSer({foo: 'foov', bar: function() {}})).toEqual('foo=foov');
+      expect(defSer({foo: 'foov', bar() {}})).toEqual('foo=foov');
     });
   });
 

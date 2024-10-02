@@ -40,7 +40,7 @@ function createMockStyleSheet(doc) {
   var ss = doc.styleSheets[doc.styleSheets.length - 1];
 
   return {
-    addRule: function(selector, styles) {
+    addRule(selector, styles) {
       try {
         ss.insertRule(selector + '{ ' + styles + '}', 0);
       } catch (e) {
@@ -50,7 +50,7 @@ function createMockStyleSheet(doc) {
       }
     },
 
-    addPossiblyPrefixedRule: function(selector, styles) {
+    addPossiblyPrefixedRule(selector, styles) {
       // Support: Android <5, Blackberry Browser 10, default Chrome in Android 4.4.x
       // Mentioned browsers need a -webkit- prefix for transitions & animations.
       var prefixedStyles = styles.split(/\s*;\s*/g)
@@ -66,7 +66,7 @@ function createMockStyleSheet(doc) {
       this.addRule(selector, styles);
     },
 
-    destroy: function() {
+    destroy() {
       head.removeChild(node);
     }
   };

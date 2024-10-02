@@ -6,7 +6,11 @@ describe('ngModel', function() {
 
   describe('NgModelController', function() {
     const NgModelController = ngInternals.NgModelController;
-    var ctrl, scope, ngModelAccessor, element, parentFormCtrl;
+    var ctrl;
+    var scope;
+    var ngModelAccessor;
+    var element;
+    var parentFormCtrl;
 
     beforeEach(angular.mock.inject(function($rootScope, $controller) {
       var attrs = {name: 'testAlias', ngModel: 'value'};
@@ -295,7 +299,10 @@ describe('ngModel', function() {
 
 
       it('should remove all other errors when any parser returns undefined', function() {
-        var a, b, val = function(val, x) {
+        var a;
+        var b;
+
+        var val = function(val, x) {
           return x ? val : x;
         };
 
@@ -343,7 +350,7 @@ describe('ngModel', function() {
 
 
       it('should not remove external validators when a parser failed', function() {
-        ctrl.$parsers.push(function(v) { return undefined; });
+        ctrl.$parsers.push(function() { return undefined; });
         ctrl.$setValidity('externalError', false);
         ctrl.$setViewValue('someValue');
         expect(ctrl.$error).toEqual({ externalError: true, parse: true });
@@ -356,7 +363,6 @@ describe('ngModel', function() {
         var element = $compile('<form name="myForm">' +
                                  '<input name="myControl" ng-model="value" >' +
                                '</form>')($rootScope);
-        var inputElm = element.find('input');
         var ctrl = $rootScope.myForm.myControl;
 
         var parserIsFailing = false;
@@ -409,7 +415,7 @@ describe('ngModel', function() {
 
       it('should update the model after all async validators resolve', angular.mock.inject(function($q) {
         var defer;
-        ctrl.$asyncValidators.promiseValidator = function(value) {
+        ctrl.$asyncValidators.promiseValidator = function() {
           defer = $q.defer();
           return defer.promise;
         };
@@ -504,7 +510,7 @@ describe('ngModel', function() {
 
 
       it('should not rerender nor validate in case view value is not changed', function() {
-        ctrl.$formatters.push(function(value) {
+        ctrl.$formatters.push(function() {
           return 'nochange';
         });
 
@@ -518,7 +524,7 @@ describe('ngModel', function() {
 
 
       it('should always format the viewValue as a string for a blank input type when the value is present',
-        angular.mock.inject(function($compile, $rootScope, $sniffer) {
+        angular.mock.inject(function($compile, $rootScope) {
 
         var form = $compile('<form name="form"><input name="field" ng-model="val" /></form>')($rootScope);
 
@@ -535,7 +541,7 @@ describe('ngModel', function() {
 
 
       it('should always format the viewValue as a string for a `text` input type when the value is present',
-        angular.mock.inject(function($compile, $rootScope, $sniffer) {
+        angular.mock.inject(function($compile, $rootScope) {
 
         var form = $compile('<form name="form"><input type="text" name="field" ng-model="val" /></form>')($rootScope);
         $rootScope.val = 123;
@@ -551,7 +557,7 @@ describe('ngModel', function() {
 
 
       it('should always format the viewValue as a string for an `email` input type when the value is present',
-        angular.mock.inject(function($compile, $rootScope, $sniffer) {
+        angular.mock.inject(function($compile, $rootScope) {
 
         var form = $compile('<form name="form"><input type="email" name="field" ng-model="val" /></form>')($rootScope);
         $rootScope.val = 123;
@@ -567,7 +573,7 @@ describe('ngModel', function() {
 
 
       it('should always format the viewValue as a string for a `url` input type when the value is present',
-        angular.mock.inject(function($compile, $rootScope, $sniffer) {
+        angular.mock.inject(function($compile, $rootScope) {
 
         var form = $compile('<form name="form"><input type="url" name="field" ng-model="val" /></form>')($rootScope);
         $rootScope.val = 123;
@@ -586,7 +592,7 @@ describe('ngModel', function() {
         angular.mock.inject(function($q) {
 
         ctrl.$asyncValidators.test = function() {
-          return $q(function(resolve, reject) {
+          return $q(function(resolve) {
             resolve();
           });
         };
@@ -613,7 +619,6 @@ describe('ngModel', function() {
 
         it('should run the model -> view pipeline', function() {
           var log = [];
-          var input = ctrl.$$element;
 
           ctrl.$formatters.unshift(function(value) {
             log.push(value);
@@ -721,7 +726,7 @@ describe('ngModel', function() {
           scope.$apply('value = ""');
 
           var validatorResult = false;
-          ctrl.$validators.someValidator = function(value) {
+          ctrl.$validators.someValidator = function() {
             return validatorResult;
           };
 
@@ -743,7 +748,7 @@ describe('ngModel', function() {
 
           ctrl.$setViewValue('abc');
 
-          ctrl.$validators.test = function(modelValue, viewValue) {
+          ctrl.$validators.test = function() {
             return true;
           };
 
@@ -757,7 +762,7 @@ describe('ngModel', function() {
 
         it('should set the model to undefined when it becomes invalid', function() {
           var valid = true;
-          ctrl.$validators.test = function(modelValue, viewValue) {
+          ctrl.$validators.test = function() {
             return valid;
           };
 
@@ -773,7 +778,7 @@ describe('ngModel', function() {
 
         it('should update the model when it becomes valid', function() {
           var valid = true;
-          ctrl.$validators.test = function(modelValue, viewValue) {
+          ctrl.$validators.test = function() {
             return valid;
           };
 
@@ -791,7 +796,7 @@ describe('ngModel', function() {
 
 
         it('should not update the model when it is valid, but there is a parse error', function() {
-          ctrl.$parsers.push(function(modelValue) {
+          ctrl.$parsers.push(function() {
             return undefined;
           });
 
@@ -799,7 +804,7 @@ describe('ngModel', function() {
           expect(ctrl.$error.parse).toBe(true);
           expect(scope.value).toBeUndefined();
 
-          ctrl.$validators.test = function(modelValue, viewValue) {
+          ctrl.$validators.test = function() {
             return true;
           };
 
@@ -829,7 +834,7 @@ describe('ngModel', function() {
             return true;
           };
 
-          ctrl.$formatters.push(function(modelValue) {
+          ctrl.$formatters.push(function() {
             return 'xyz';
           });
 
@@ -846,7 +851,7 @@ describe('ngModel', function() {
             return true;
           };
 
-          ctrl.$parsers.push(function(modelValue) {
+          ctrl.$parsers.push(function() {
             return 'xyz';
           });
 
@@ -991,7 +996,7 @@ describe('ngModel', function() {
 
       it('should render a validator asynchronously when a promise is returned', angular.mock.inject(function($q) {
         var defer;
-        ctrl.$asyncValidators.promiseValidator = function(value) {
+        ctrl.$asyncValidators.promiseValidator = function() {
           defer = $q.defer();
           return defer.promise;
         };
@@ -1020,7 +1025,7 @@ describe('ngModel', function() {
       }));
 
 
-      it('should throw an error when a promise is not returned for an asynchronous validator', angular.mock.inject(function($q) {
+      it('should throw an error when a promise is not returned for an asynchronous validator', angular.mock.inject(function() {
         ctrl.$asyncValidators.async = function(value) {
           return true;
         };
@@ -1038,18 +1043,18 @@ describe('ngModel', function() {
         var stages = {};
 
         stages.sync = { status1: false, status2: false, count: 0 };
-        ctrl.$validators.syncValidator1 = function(modelValue, viewValue) {
+        ctrl.$validators.syncValidator1 = function() {
           stages.sync.count++;
           return stages.sync.status1;
         };
 
-        ctrl.$validators.syncValidator2 = function(modelValue, viewValue) {
+        ctrl.$validators.syncValidator2 = function() {
           stages.sync.count++;
           return stages.sync.status2;
         };
 
         stages.async = { defer: null, count: 0 };
-        ctrl.$asyncValidators.asyncValidator = function(modelValue, viewValue) {
+        ctrl.$asyncValidators.asyncValidator = function() {
           stages.async.defer = $q.defer();
           stages.async.count++;
           return stages.async.defer.promise;
@@ -1086,8 +1091,10 @@ describe('ngModel', function() {
 
 
       it('should ignore expired async validation promises once delivered', angular.mock.inject(function($q) {
-        var defer, oldDefer, newDefer;
-        ctrl.$asyncValidators.async = function(value) {
+        var defer;
+        var oldDefer;
+        var newDefer;
+        ctrl.$asyncValidators.async = function() {
           defer = $q.defer();
           return defer.promise;
         };
@@ -1109,12 +1116,12 @@ describe('ngModel', function() {
 
 
       it('should clear and ignore all pending promises when the model value changes', angular.mock.inject(function($q) {
-        ctrl.$validators.sync = function(value) {
+        ctrl.$validators.sync = function() {
           return true;
         };
 
         var defers = [];
-        ctrl.$asyncValidators.async = function(value) {
+        ctrl.$asyncValidators.async = function() {
           var defer = $q.defer();
           defers.push(defer);
           return defer.promise;
@@ -1149,7 +1156,7 @@ describe('ngModel', function() {
         });
 
         var defer;
-        ctrl.$asyncValidators.async = function(value) {
+        ctrl.$asyncValidators.async = function() {
           defer = $q.defer();
           return defer.promise;
         };
@@ -1180,7 +1187,7 @@ describe('ngModel', function() {
           return failParser ? undefined : value;
         });
 
-        ctrl.$asyncValidators.async = function(value) {
+        ctrl.$asyncValidators.async = function() {
           return $q.reject();
         };
 
@@ -1196,11 +1203,11 @@ describe('ngModel', function() {
 
       it('should clear all errors from async validators if a sync validator fails', angular.mock.inject(function($q) {
         var failValidator = false;
-        ctrl.$validators.sync = function(value) {
+        ctrl.$validators.sync = function() {
           return !failValidator;
         };
 
-        ctrl.$asyncValidators.async = function(value) {
+        ctrl.$asyncValidators.async = function() {
           return $q.reject();
         };
 
@@ -1221,7 +1228,6 @@ describe('ngModel', function() {
         var element = $compile('<form name="myForm">' +
                                  '<input type="text" name="username" ng-model="username" minlength="10" required />' +
                                '</form>')($rootScope);
-        var inputElm = element.find('input');
 
         var formCtrl = $rootScope.myForm;
         var usernameCtrl = formCtrl.username;
@@ -1247,7 +1253,6 @@ describe('ngModel', function() {
                                  '<input type="text" name="username" ng-model="username" minlength="10" required />' +
                                  '<input type="number" name="age" ng-model="age" min="10" required />' +
                                '</form>')($rootScope);
-        var inputElm = element.find('input');
 
         var formCtrl = $rootScope.myForm;
         var usernameCtrl = formCtrl.username;
@@ -1315,7 +1320,7 @@ describe('ngModel', function() {
           return value;
         });
 
-        ctrl.$validators.mock = function(modelValue) {
+        ctrl.$validators.mock = function() {
           return true;
         };
 
@@ -1337,7 +1342,7 @@ describe('ngModel', function() {
           return value;
         });
 
-        ctrl.$validators.mock = function(modelValue) {
+        ctrl.$validators.mock = function() {
           return true;
         };
 
@@ -1453,7 +1458,6 @@ describe('ngModel', function() {
       });
 
       it('should set the given options', function() {
-        var $options = ctrl.$options;
         ctrl.$overrideModelOptions({ debounce: 1000, updateOn: 'blur' });
         expect(ctrl.$options.getOption('debounce')).toEqual(1000);
         expect(ctrl.$options.getOption('updateOn')).toEqual('blur');
@@ -1490,8 +1494,6 @@ describe('ngModel', function() {
 
 
   describe('CSS classes', function() {
-    var EMAIL_REGEXP = /^[a-z0-9!#$%&'*+/=?^_`{|}~.-]+@[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*$/i;
-
     it('should set ng-empty or ng-not-empty when the view value changes',
           angular.mock.inject(function($compile, $rootScope, $sniffer) {
 
@@ -1566,13 +1568,14 @@ describe('ngModel', function() {
 
 
   describe('custom formatter and parser that are added by a directive in post linking', function() {
-    var inputElm, scope;
+    var inputElm;
+    var scope;
 
     beforeEach(angular.mock.module(function($compileProvider) {
       $compileProvider.directive('customFormat', function() {
         return {
           require: 'ngModel',
-          link: function(scope, element, attrs, ngModelCtrl) {
+          link(scope, element, attrs, ngModelCtrl) {
             ngModelCtrl.$formatters.push(function(value) {
               return value.part;
             });
@@ -1805,7 +1808,6 @@ describe('ngModel', function() {
 
 
   describe('animations', function() {
-
     function findElementAnimations(element, queue) {
       var node = element[0];
       var animations = [];
@@ -1825,7 +1827,10 @@ describe('ngModel', function() {
       if (classNameB) expect(animation.args[2]).toBe(classNameB);
     }
 
-    var doc, input, scope, model;
+    var doc;
+    var input;
+    var scope;
+    var model;
 
 
     beforeEach(angular.mock.module('ngAnimateMock'));

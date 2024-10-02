@@ -57,7 +57,7 @@ describe('ngBind*', function() {
 
     it('should use custom toString when present', angular.mock.inject(function($rootScope, $compile) {
       $rootScope.value = {
-        toString: function() {
+        toString() {
           return 'foo';
         }
       };
@@ -179,7 +179,7 @@ describe('ngBind*', function() {
         expect(angular.lowercase(element.html())).toEqual('<div onclick="">hello</div>');
       }));
 
-      it('should update html', angular.mock.inject(function($rootScope, $compile, $sce) {
+      it('should update html', angular.mock.inject(function($rootScope, $compile) {
         element = $compile('<div ng-bind-html="html"></div>')($rootScope);
         $rootScope.html = 'hello';
         $rootScope.$digest();

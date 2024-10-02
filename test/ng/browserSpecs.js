@@ -75,28 +75,28 @@ function MockWindow(options) {
       locationHref = replaceHash(locationHref, value);
       if (!options.updateAsync) this.flushHref();
     },
-    replace: function(url) {
+    replace(url) {
       locationHref = url;
       mockWindow.history.state = null;
       if (!options.updateAsync) this.flushHref();
     },
-    flushHref: function() {
+    flushHref() {
       committedHref = locationHref;
     }
   };
 
   this.history = {
-    pushState: function() {
+    pushState() {
       this._replaceState.apply(this, arguments);
       historyEntriesLength++;
     },
-    flushHref: function() {
+    flushHref() {
       committedHref = locationHref;
     },
-    replaceState: function(state, title, url) {
+    replaceState(state, title, url) {
       return this._replaceState(state, title, url);
     },
-    _replaceState: function(state, title, url) {
+    _replaceState(state, title, url) {
       locationHref = url;
       if (!options.updateAsync) committedHref = locationHref;
       mockWindow.history.state = angular.copy(state);
@@ -116,7 +116,7 @@ function MockDocument() {
   this.find = function(name) {
     if (name === 'base') {
       return {
-        attr: function(name) {
+        attr(name) {
           if (name === 'href') {
             return self.basePath;
           } else {
@@ -132,7 +132,14 @@ function MockDocument() {
 
 describe('browser', function() {
   /* global Browser: false */
-  var browser, fakeWindow, fakeDocument, fakeLog, logs, scripts, removedScripts;
+  var browser;
+
+  var fakeWindow;
+  var fakeDocument;
+  var fakeLog;
+  var logs;
+  var scripts;
+  var removedScripts;
 
   beforeEach(function() {
     scripts = [];
@@ -143,10 +150,10 @@ describe('browser', function() {
 
     logs = {log:[], warn:[], info:[], error:[]};
 
-    fakeLog = {log: function() { logs.log.push(slice.call(arguments)); },
-                   warn: function() { logs.warn.push(slice.call(arguments)); },
-                   info: function() { logs.info.push(slice.call(arguments)); },
-                   error: function() { logs.error.push(slice.call(arguments)); }};
+    fakeLog = {log() { logs.log.push(slice.call(arguments)); },
+                   warn() { logs.warn.push(slice.call(arguments)); },
+                   info() { logs.info.push(slice.call(arguments)); },
+                   error() { logs.error.push(slice.call(arguments)); }};
 
     browser = new ngInternals.Browser(fakeWindow, fakeDocument, fakeLog, sniffer);
   });
@@ -227,8 +234,8 @@ describe('browser', function() {
 
 
     it('should return unique deferId', function() {
-      var deferId1 = browser.defer(angular.noop),
-          deferId2 = browser.defer(angular.noop);
+      var deferId1 = browser.defer(angular.noop);
+      var deferId2 = browser.defer(angular.noop);
 
       expect(deferId1).toBeDefined();
       expect(deferId2).toBeDefined();
@@ -238,10 +245,10 @@ describe('browser', function() {
 
     describe('cancel', function() {
       it('should allow tasks to be canceled with returned deferId', function() {
-        var log = [],
-            deferId1 = browser.defer(function() { log.push('cancel me'); }),
-            deferId2 = browser.defer(function() { log.push('ok'); }),
-            deferId3 = browser.defer(function() { log.push('cancel me, now!'); });
+        var log = [];
+        var deferId1 = browser.defer(function() { log.push('cancel me'); });
+        var deferId2 = browser.defer(function() { log.push('ok'); });
+        var deferId3 = browser.defer(function() { log.push('cancel me, now!'); });
 
         expect(log).toEqual([]);
         expect(browser.defer.cancel(deferId1)).toBe(true);
@@ -255,7 +262,9 @@ describe('browser', function() {
 
 
   describe('url', function() {
-    var pushState, replaceState, locationReplace;
+    var pushState;
+    var replaceState;
+    var locationReplace;
 
     beforeEach(function() {
       pushState = jest.spyOn(fakeWindow.history, 'pushState').mockImplementation(() => {});
@@ -394,9 +403,10 @@ describe('browser', function() {
       // hash in all possible ways and checks
       // - whether the change to the hash can be read out in sync
       // - whether the change to the hash can be read out in the hashchange event
-      var realWin = window,
-          $realWin = angular.element(realWin),
-          hashInHashChangeEvent = [];
+      var realWin = window;
+
+      var $realWin = angular.element(realWin);
+      var hashInHashChangeEvent = [];
 
       var job = createAsync(done);
       job.runs(function() {
@@ -425,17 +435,19 @@ describe('browser', function() {
         hashInHashChangeEvent.push(realWin.location.hash);
       }
     });
-
   });
 
   describe('url (when state passed)', function() {
-    var currentHref, pushState, replaceState, locationReplace;
+    var currentHref;
+    var pushState;
+    var replaceState;
+    var locationReplace;
 
     beforeEach(function() {
     });
     describe('in a supported browser', runTests());
 
-    function runTests(options) {
+    function runTests() {
       return function() {
         beforeEach(function() {
           sniffer = {history: true};
@@ -539,20 +551,19 @@ describe('browser', function() {
 
       var _state = mockWindow.history.state;
       Object.defineProperty(mockWindow.history, 'state', {
-        get: function() {
+        get() {
           historyStateAccessed = true;
           return _state;
         }
       });
 
-      var browser = new ngInternals.Browser(mockWindow, fakeDocument, fakeLog, mockSniffer);
-
+      new ngInternals.Browser(mockWindow, fakeDocument, fakeLog, mockSniffer);
       expect(historyStateAccessed).toBe(false);
     });
 
     describe('in a supported browser', runTests());
 
-    function runTests(options) {
+    function runTests() {
       return function() {
         beforeEach(function() {
           fakeWindow = new MockWindow();
@@ -654,7 +665,7 @@ describe('browser', function() {
 
       describe('in a supported browser', runTests());
 
-      function runTests(options) {
+      function runTests() {
         return function() {
           beforeEach(function() {
             fakeWindow = new MockWindow();
@@ -835,7 +846,7 @@ describe('browser', function() {
       fakeWindow.location.href = 'http://server/some/deep/path';
       var changeUrlCount = 0;
       var _url = browser.url;
-      browser.url = function(newUrl, replace, state) {
+      browser.url = function(newUrl, replace) {
         if (newUrl) {
           changeUrlCount++;
         }
@@ -884,13 +895,12 @@ describe('browser', function() {
 
   describe('integration test with $rootScope', function() {
 
-    beforeEach(angular.mock.module(function($provide, $locationProvider) {
+    beforeEach(angular.mock.module(function($provide) {
       $provide.value('$browser', browser);
     }));
 
     it('should not interfere with legacy browser url replace behavior', function() {
       angular.mock.inject(function($rootScope) {
-        var current = fakeWindow.location.href;
         var newUrl = 'notyet';
         sniffer.history = false;
         expect(historyEntriesLength).toBe(1);
@@ -904,5 +914,4 @@ describe('browser', function() {
     });
 
   });
-
 });

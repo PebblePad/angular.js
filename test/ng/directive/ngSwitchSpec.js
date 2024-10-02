@@ -480,7 +480,9 @@ describe('ngSwitch', function() {
 });
 
 describe('ngSwitch animation', function() {
-  var body, element, $rootElement;
+  var body;
+  var element;
+  var $rootElement;
 
   function html(content) {
     $rootElement.html(content);
@@ -508,14 +510,13 @@ describe('ngSwitch animation', function() {
       angular.mock.module(function($animateProvider) {
         $animateProvider.register('.long-leave', function() {
           return {
-            leave: function(element, done) {
+            leave() {
               //do nothing at all
             }
           };
         });
       });
-      angular.mock.inject(function($compile, $rootScope, $animate, $templateCache) {
-        var item;
+      angular.mock.inject(function($compile, $rootScope) {
         var $scope = $rootScope.$new();
         element = $compile(html(
           '<div ng-switch="inc">' +
@@ -526,7 +527,8 @@ describe('ngSwitch animation', function() {
 
         $scope.$apply('inc = "one"');
 
-        var destroyed, inner = element.children(0);
+        var destroyed;
+        var inner = element.children(0);
         inner.on('$destroy', function() {
           destroyed = true;
         });

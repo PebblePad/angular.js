@@ -1,7 +1,9 @@
 'use strict';
 
 describe('a', function() {
-  var element, $compile, $rootScope;
+  var element;
+  var $compile;
+  var $rootScope;
 
   beforeEach(angular.mock.module(function($compileProvider) {
     $compileProvider.
@@ -35,9 +37,9 @@ describe('a', function() {
 
 
   it('should prevent default action to be executed when href is empty', function() {
-    var orgLocation = window.document.location.href,
-        preventDefaultCalled = false,
-        event;
+    var orgLocation = window.document.location.href;
+    var preventDefaultCalled = false;
+    var event;
 
     element = $compile('<a href="">empty link</a>')($rootScope);
 
@@ -121,10 +123,10 @@ describe('a', function() {
   if (angular.isDefined(window.SVGElement)) {
     describe('SVGAElement', function() {
       it('should prevent default action to be executed when href is empty', function() {
-        var orgLocation = window.document.location.href,
-            preventDefaultCalled = false,
-            event,
-            child;
+        var orgLocation = window.document.location.href;
+        var preventDefaultCalled = false;
+        var event;
+        var child;
 
         element = $compile('<svg><a xlink:href="">empty link</a></svg>')($rootScope);
         child = element.children('a');

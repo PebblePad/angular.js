@@ -30,13 +30,12 @@ describe('errors', function() {
   });
 
   describe('minErr', function() {
-
     var supportStackTraces = function () {
       var e = new Error();
       return angular.isDefined(e.stack);
     };
-    var emptyTestError = angular.$$minErr(),
-      testError = angular.$$minErr('test');
+    var emptyTestError = angular.$$minErr();
+    var testError = angular.$$minErr('test');
 
     it('should return an Error factory', function () {
       var myError = testError('test', 'Oops');
@@ -68,15 +67,18 @@ describe('errors', function() {
     });
 
     it('should interpolate non-string arguments', function () {
-      var arr = [1, 2, 3],
-        obj = { a: 123, b: 'baar' },
-        anonFn = function (something) {
-          return something;
-        },
-        namedFn = function foo(something) {
-          return something;
-        },
-        myError;
+      var arr = [1, 2, 3];
+      var obj = { a: 123, b: 'baar' };
+
+      var anonFn = function (something) {
+        return something;
+      };
+
+      var namedFn = function foo(something) {
+        return something;
+      };
+
+      var myError;
 
       myError = testError('26', 'arr: {0}; obj: {1}; anonFn: {2}; namedFn: {3}',
         arr, obj, anonFn, namedFn);
@@ -129,8 +131,9 @@ describe('errors', function() {
     it('should preserve interpolation markers when fewer arguments than needed are provided', function () {
       // this way we can easily see if we are passing fewer args than needed
 
-      var foo = 'Fooooo',
-        myError = testError('26', 'This {0} is {1} on {2}', foo);
+      var foo = 'Fooooo';
+
+      var myError = testError('26', 'This {0} is {1} on {2}', foo);
 
       expect(myError.message).toMatch(/^\[test:26] This Fooooo is \{1\} on \{2\}/);
     });

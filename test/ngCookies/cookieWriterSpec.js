@@ -1,7 +1,8 @@
 'use strict';
 
 describe('$$cookieWriter', function() {
-  var $$cookieWriter, document;
+  var $$cookieWriter;
+  var document;
 
   function deleteAllCookies() {
     var cookies = document.cookie.split(';');
@@ -83,7 +84,9 @@ describe('$$cookieWriter', function() {
     });
 
     it('should log warnings when 4kb per cookie storage limit is reached', angular.mock.inject(function($log) {
-      var i, longVal = '', cookieStr;
+      var i;
+      var longVal = '';
+      var cookieStr;
 
       for (i = 0; i < 4083; i++) {
         longVal += 'x';
@@ -122,7 +125,8 @@ describe('$$cookieWriter', function() {
 });
 
 describe('cookie options', function() {
-  var fakeDocument, $$cookieWriter;
+  var fakeDocument;
+  var $$cookieWriter;
 
   function getLastCookieAssignment(key) {
     return fakeDocument[0].cookie
@@ -186,5 +190,4 @@ describe('cookie options', function() {
     $$cookieWriter('name', 'value', {expires: new Date(Date.UTC(1981, 11, 27))});
     expect(getLastCookieAssignment('expires')).toMatch(/^Sun, 27 Dec 1981 00:00:00 (UTC|GMT)$/);
   });
-
 });

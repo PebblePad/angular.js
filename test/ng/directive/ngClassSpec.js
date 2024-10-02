@@ -689,7 +689,7 @@ describe('ngClass', function() {
 });
 
 describe('ngClass animations', function() {
-  var body, element, $rootElement;
+  var element;
 
   afterEach(function() {
     dealoc(element);
@@ -697,7 +697,7 @@ describe('ngClass animations', function() {
 
   it('should avoid calling addClass accidentally when removeClass is going on', function() {
     angular.mock.module('ngAnimateMock');
-    angular.mock.inject(function($compile, $rootScope, $animate, $timeout) {
+    angular.mock.inject(function($compile, $rootScope, $animate) {
       element = angular.element('<div ng-class="val"></div>');
       var body = angular.element(window.document.body);
       body.append(element);
@@ -738,7 +738,7 @@ describe('ngClass animations', function() {
     angular.mock.module(function($animateProvider) {
       $animateProvider.register('.crazy', function() {
         return {
-          enter: function(element, done) {
+          enter(element, done) {
             element.data('state', 'crazy-enter');
             done();
           }
@@ -778,8 +778,6 @@ describe('ngClass animations', function() {
     angular.mock.module('ngAnimateMock');
 
     angular.mock.inject(function($rootScope, $compile, $animate) {
-      var className;
-
       $rootScope.one = true;
       $rootScope.two = true;
       $rootScope.three = true;

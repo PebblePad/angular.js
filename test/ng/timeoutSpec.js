@@ -124,32 +124,31 @@ describe('$timeout', function() {
 
   it('should pass the timeout arguments in the timeout callback',
       angular.mock.inject(function($timeout, $browser, log) {
-    var task1 = jest.fn(),
-        task2 = jest.fn();
+        var task1 = jest.fn();
+        var task2 = jest.fn();
 
-    $timeout(task1, 9000, true, 'What does', 'the timeout', 'say about', 'its delay level');
-    expect($browser.deferredFns.length).toBe(1);
+        $timeout(task1, 9000, true, 'What does', 'the timeout', 'say about', 'its delay level');
+        expect($browser.deferredFns.length).toBe(1);
 
-    $timeout(task2, 9001, false, 'It\'s', 'over', 9000);
-    expect($browser.deferredFns.length).toBe(2);
+        $timeout(task2, 9001, false, 'It\'s', 'over', 9000);
+        expect($browser.deferredFns.length).toBe(2);
 
-    $timeout(9000, false, 'What!', 9000).then(function(value) { log('There\'s no way that can be right! ' + value); }, log.fn('It can\'t!'));
-    expect($browser.deferredFns.length).toBe(3);
-    expect(log).toEqual([]);
+        $timeout(9000, false, 'What!', 9000).then(function(value) { log('There\'s no way that can be right! ' + value); }, log.fn('It can\'t!'));
+        expect($browser.deferredFns.length).toBe(3);
+        expect(log).toEqual([]);
 
-    $timeout.flush(0);
-    expect(task1).not.toHaveBeenCalled();
+        $timeout.flush(0);
+        expect(task1).not.toHaveBeenCalled();
 
-    $timeout.flush(9000);
-    expect(task1).toHaveBeenCalledWith('What does', 'the timeout', 'say about', 'its delay level');
+        $timeout.flush(9000);
+        expect(task1).toHaveBeenCalledWith('What does', 'the timeout', 'say about', 'its delay level');
 
-    $timeout.flush(1);
-    expect(task2).toHaveBeenCalledWith('It\'s', 'over', 9000);
+        $timeout.flush(1);
+        expect(task2).toHaveBeenCalledWith('It\'s', 'over', 9000);
 
-    $timeout.flush(9000);
-    expect(log).toEqual(['There\'s no way that can be right! undefined']);
-
-  }));
+        $timeout.flush(9000);
+        expect(log).toEqual(['There\'s no way that can be right! undefined']);
+      }));
 
 
   describe('exception handling', function() {
@@ -228,11 +227,13 @@ describe('$timeout', function() {
 
   describe('cancel', function() {
     it('should cancel tasks', angular.mock.inject(function($timeout) {
-      var task1 = jest.fn(),
-          task2 = jest.fn(),
-          task3 = jest.fn(),
-          task4 = jest.fn(),
-          promise1, promise3, promise4;
+      var task1 = jest.fn();
+      var task2 = jest.fn();
+      var task3 = jest.fn();
+      var task4 = jest.fn();
+      var promise1;
+      var promise3;
+      var promise4;
 
       promise1 = $timeout(task1);
       $timeout(task2);
@@ -267,9 +268,10 @@ describe('$timeout', function() {
 
 
     it('should return true if a task was successfully canceled', angular.mock.inject(function($timeout) {
-      var task1 = jest.fn(),
-          task2 = jest.fn(),
-          promise1, promise2;
+      var task1 = jest.fn();
+      var task2 = jest.fn();
+      var promise1;
+      var promise2;
 
       promise1 = $timeout(task1);
       $timeout.flush();

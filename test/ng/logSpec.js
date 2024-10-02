@@ -2,7 +2,13 @@
 'use strict';
 
 describe('$log', function() {
-  var $window, logger, log, warn, info, error, debug;
+  var $window;
+  var logger;
+  var log;
+  var warn;
+  var info;
+  var error;
+  var debug;
 
   beforeEach(angular.mock.module(function($provide) {
     $window = {
@@ -146,7 +152,8 @@ describe('$log', function() {
       });
 
       describe('$log.error', function() {
-        var e, $log;
+        var e;
+        var $log;
 
         function TestError() {
           Error.prototype.constructor.apply(this, arguments);

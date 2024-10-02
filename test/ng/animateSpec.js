@@ -19,7 +19,7 @@ describe('$animate', function() {
     }));
 
     it('should enter the element to the start of the parent container',
-      angular.mock.inject(function($animate, $compile, $rootScope) {
+      angular.mock.inject(function($animate) {
         var element = compileForTest('<div></div>');
       for (var i = 0; i < 5; i++) {
         element.append(angular.element('<div> ' + i + '</div>'));
@@ -52,7 +52,7 @@ describe('$animate', function() {
     }));
 
     it('should apply styles instantly to the element',
-      angular.mock.inject(function($animate, $compile, $rootScope) {
+      angular.mock.inject(function($animate) {
         var element = compileForTest('<div></div>');
 
       $animate.animate(element, { color: 'rgb(0, 0, 0)' });
@@ -262,7 +262,8 @@ describe('$animate', function() {
           parent.append(element);
         }
 
-        var fn, invalidOptions = function() { };
+        var fn;
+        var invalidOptions = function() { };
 
         switch (event) {
           case 'enter':
@@ -387,7 +388,7 @@ describe('$animate', function() {
     var copiedOptions = angular.copy(initialOptions);
     expect(copiedOptions).toEqual(initialOptions);
 
-    var runner = $animate.enter(element, parent, null, copiedOptions);
+    $animate.enter(element, parent, null, copiedOptions);
     expect(copiedOptions).toEqual(initialOptions);
 
     $rootScope.$digest();
@@ -405,34 +406,7 @@ describe('$animate', function() {
       dealoc(element);
     });
 
-    function setupClassManipulationSpies() {
-      angular.mock.inject(function($animate) {
-        addClass = jest.spyOn(window, 'jqLiteAddClass');
-        removeClass = jest.spyOn(window, 'jqLiteRemoveClass');
-      });
-    }
-
-    function setupClassManipulationLogger(log) {
-      angular.mock.inject(function() {
-        var _addClass = jqLiteAddClass;
-        addClass = jest.spyOn(window, 'jqLiteAddClass').mockImplementation(function(element, classes) {
-          var names = classes;
-          if (Object.prototype.toString.call(classes) === '[object Array]') names = classes.join(' ');
-          log('addClass(' + names + ')');
-          return _addClass(element, classes);
-        });
-
-        var _removeClass = jqLiteRemoveClass;
-        removeClass = jest.spyOn(window, 'jqLiteRemoveClass').mockImplementation(function(element, classes) {
-          var names = classes;
-          if (Object.prototype.toString.call(classes) === '[object Array]') names = classes.join(' ');
-          log('removeClass(' + names + ')');
-          return _removeClass(element, classes);
-        });
-      });
-    }
-
-    it('should defer class manipulation until end of digest', angular.mock.inject(function($rootScope, $animate, log) {
+    it('should defer class manipulation until end of digest', angular.mock.inject(function($rootScope, $animate) {
       element = angular.element('<p>test</p>');
 
       $rootScope.$apply(function() {
@@ -456,7 +430,7 @@ describe('$animate', function() {
     }));
 
 
-    it('should defer class manipulation until postDigest when outside of digest', angular.mock.inject(function($rootScope, $animate, log) {
+    it('should defer class manipulation until postDigest when outside of digest', angular.mock.inject(function($rootScope, $animate) {
       element = angular.element('<p class="test-class4">test</p>');
 
       $animate.addClass(element, 'test-class1');
@@ -524,7 +498,7 @@ describe('$animate', function() {
     }));
 
 
-    it('should defer class manipulation until postDigest when outside of digest for SVG', angular.mock.inject(function($rootScope, $animate, log) {
+    it('should defer class manipulation until postDigest when outside of digest for SVG', angular.mock.inject(function($rootScope, $animate) {
       element = angular.element('<svg><g class="test-class4"></g></svg>');
       var target = element.children().eq(0);
 

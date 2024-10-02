@@ -2,7 +2,10 @@
 
 describe('$$testability', function() {
   describe('finding elements', function() {
-    var $$testability, $compile, scope, element;
+    var $$testability;
+    var $compile;
+    var scope;
+    var element;
 
     beforeEach(angular.mock.inject(function(_$$testability_, _$compile_, $rootScope) {
       $$testability = _$$testability_;

@@ -109,7 +109,7 @@ describe('linky', function() {
 
 
     it('should optionally add custom attributes from function', function() {
-      expect(linky('http://example.com', '_self', function(url) {return {'class': 'blue'};})).
+      expect(linky('http://example.com', '_self', function() {return {'class': 'blue'};})).
         toBeOneOf('<a class="blue" target="_self" href="http://example.com">http://example.com</a>',
                   '<a href="http://example.com" target="_self" class="blue">http://example.com</a>',
                   '<a class="blue" href="http://example.com" target="_self">http://example.com</a>');

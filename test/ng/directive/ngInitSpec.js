@@ -29,7 +29,7 @@ describe('ngInit', function() {
 
   it('should be evaluated after ngController', function() {
     angular.mock.module(function($controllerProvider) {
-      $controllerProvider.register('TestCtrl', function($scope) {});
+      $controllerProvider.register('TestCtrl', function() {});
     });
     angular.mock.inject(function($rootScope, $compile) {
       element = $compile('<div><div ng-controller="TestCtrl" ' +

@@ -67,7 +67,7 @@ describe('ngInclude', function() {
 
 
     it('should NOT use untrusted URL expressions ', angular.mock.inject(putIntoCache('myUrl', '{{name}} text'),
-        function($rootScope, $compile, $sce) {
+        function($rootScope, $compile) {
       element = angular.element('<ng:include src="url"></ng:include>');
       angular.element(window.document.body).append(element);
       element = $compile(element)($rootScope);
@@ -146,26 +146,26 @@ describe('ngInclude', function() {
 
 
     it('should fire $includeContentError event when content request fails', angular.mock.inject(
-        function($rootScope, $compile, $httpBackend, $templateCache) {
-      var contentLoadedSpy = jest.fn(),
-          contentErrorSpy = jest.fn();
+        function($rootScope, $compile, $httpBackend) {
+          var contentLoadedSpy = jest.fn();
+          var contentErrorSpy = jest.fn();
 
-      $rootScope.$on('$includeContentLoaded', contentLoadedSpy);
-      $rootScope.$on('$includeContentError', contentErrorSpy);
+          $rootScope.$on('$includeContentLoaded', contentLoadedSpy);
+          $rootScope.$on('$includeContentError', contentErrorSpy);
 
-      $httpBackend.expect('GET', 'tpl.html').respond(400, 'nope');
+          $httpBackend.expect('GET', 'tpl.html').respond(400, 'nope');
 
-      element = $compile('<div><div ng-include="template"></div></div>')($rootScope);
+          element = $compile('<div><div ng-include="template"></div></div>')($rootScope);
 
-      $rootScope.$apply(function() {
-        $rootScope.template = 'tpl.html';
-      });
-      $httpBackend.flush();
+          $rootScope.$apply(function() {
+            $rootScope.template = 'tpl.html';
+          });
+          $httpBackend.flush();
 
-      expect(contentLoadedSpy).not.toHaveBeenCalled();
-      expect(contentErrorSpy).toHaveBeenCalledOnceWith(expect.any(Object), 'tpl.html');
-      expect(element.children('div').contents().length).toBe(0);
-    }));
+          expect(contentLoadedSpy).not.toHaveBeenCalled();
+          expect(contentErrorSpy).toHaveBeenCalledOnceWith(expect.any(Object), 'tpl.html');
+          expect(element.children('div').contents().length).toBe(0);
+        }));
 
 
     it('should evaluate onload expression when a partial is loaded', angular.mock.inject(
@@ -452,7 +452,7 @@ describe('ngInclude', function() {
 
       it('should call $anchorScroll if autoscroll attribute is present', angular.mock.inject(
           compileAndLink('<div><ng:include src="tpl" autoscroll></ng:include></div>'),
-          function($rootScope, $animate, $timeout) {
+          function($rootScope, $animate) {
 
         $rootScope.$apply(function() {
           $rootScope.tpl = 'template.html';
@@ -469,7 +469,7 @@ describe('ngInclude', function() {
 
 
       it('should call $anchorScroll if autoscroll evaluates to true',
-        angular.mock.inject(function($rootScope, $compile, $animate, $timeout) {
+        angular.mock.inject(function($rootScope, $compile, $animate) {
 
         element = $compile('<div><ng:include src="tpl" autoscroll="value"></ng:include></div>')($rootScope);
 
@@ -506,7 +506,7 @@ describe('ngInclude', function() {
 
       it('should not call $anchorScroll if autoscroll attribute is not present', angular.mock.inject(
           compileAndLink('<div><ng:include src="tpl"></ng:include></div>'),
-          function($rootScope, $animate, $timeout) {
+          function($rootScope, $animate) {
 
         $rootScope.$apply(function() {
           $rootScope.tpl = 'template.html';
@@ -518,7 +518,7 @@ describe('ngInclude', function() {
 
 
       it('should not call $anchorScroll if autoscroll evaluates to false',
-        angular.mock.inject(function($rootScope, $compile, $animate, $timeout) {
+        angular.mock.inject(function($rootScope, $compile, $animate) {
 
         element = $compile('<div><ng:include src="tpl" autoscroll="value"></ng:include></div>')($rootScope);
 
@@ -544,7 +544,7 @@ describe('ngInclude', function() {
 
       it('should only call $anchorScroll after the "enter" animation completes', angular.mock.inject(
           compileAndLink('<div><ng:include src="tpl" autoscroll></ng:include></div>'),
-          function($rootScope, $animate, $timeout) {
+          function($rootScope, $animate) {
             expect(autoScrollSpy).not.toHaveBeenCalled();
 
             $rootScope.$apply('tpl = \'template.html\'');
@@ -560,7 +560,8 @@ describe('ngInclude', function() {
   });
 
   describe('and transcludes', function() {
-    var element, directive;
+    var element;
+    var directive;
 
     beforeEach(angular.mock.module(function($compileProvider) {
       element = null;
@@ -579,13 +580,13 @@ describe('ngInclude', function() {
         directive('template', ngInternals.valueFn({
           template: '<div ng-include="\'include.html\'"></div>',
           replace: true,
-          controller: function() {
+          controller() {
             this.flag = true;
           }
         }));
         directive('test', ngInternals.valueFn({
           require: '^template',
-          link: function(scope, el, attr, ctrl) {
+          link(scope, el, attr, ctrl) {
             controller = ctrl;
           }
         }));
@@ -604,7 +605,7 @@ describe('ngInclude', function() {
       angular.mock.module(function() {
         directive('test', function() {
           return {
-            link: function(scope, element) {
+            link(scope, element) {
               testElement = element;
             }
           };
@@ -625,7 +626,7 @@ describe('ngInclude', function() {
       angular.mock.module(function() {
         directive('test', function() {
           return {
-            link: function(scope, element) {
+            link(scope, element) {
               contentOnLink = element.text();
             }
           };
@@ -645,7 +646,7 @@ describe('ngInclude', function() {
       angular.mock.module(function() {
         directive('test', function() {
           return {
-            link: function(scope, element) {
+            link(scope, element) {
               root = element.parent().parent();
             }
           };
@@ -662,7 +663,9 @@ describe('ngInclude', function() {
   });
 
   describe('and animations', function() {
-    var body, element, $rootElement;
+    var body;
+    var element;
+    var $rootElement;
 
     function html(content) {
       $rootElement.html(content);
@@ -692,8 +695,6 @@ describe('ngInclude', function() {
 
     it('should fire off the enter animation',
       angular.mock.inject(function($compile, $rootScope, $templateCache, $animate) {
-        var item;
-
         $templateCache.put('enter', [200, '<div>data</div>', {}]);
         $rootScope.tpl = 'enter';
         element = $compile(html(
@@ -711,7 +712,6 @@ describe('ngInclude', function() {
 
     it('should fire off the leave animation',
       angular.mock.inject(function($compile, $rootScope, $templateCache, $animate) {
-        var item;
         $templateCache.put('enter', [200, '<div>data</div>', {}]);
         $rootScope.tpl = 'enter';
         element = $compile(html(
@@ -736,7 +736,6 @@ describe('ngInclude', function() {
 
     it('should animate two separate ngInclude elements',
       angular.mock.inject(function($compile, $rootScope, $templateCache, $animate) {
-        var item;
         $templateCache.put('one', [200, 'one', {}]);
         $templateCache.put('two', [200, 'two', {}]);
         $rootScope.tpl = 'one';
@@ -774,7 +773,6 @@ describe('ngInclude', function() {
         });
       });
       angular.mock.inject(function($compile, $rootScope, $animate, $templateCache) {
-        var item;
         var $scope = $rootScope.$new();
         element = $compile(html(
           '<div>' +
@@ -787,7 +785,8 @@ describe('ngInclude', function() {
 
         $scope.$apply('inc = "one"');
 
-        var destroyed, inner = element.children(0);
+        var destroyed;
+        var inner = element.children(0);
         inner.on('$destroy', function() {
           destroyed = true;
         });

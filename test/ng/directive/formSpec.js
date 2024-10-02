@@ -2,13 +2,17 @@
 'use strict';
 
 describe('form', function() {
-  var doc, control, scope, $compile, changeInputValue;
+  var doc;
+  var control;
+  var scope;
+  var $compile;
+  var changeInputValue;
 
   beforeEach(angular.mock.module(function($compileProvider) {
     $compileProvider.directive('storeModelCtrl', function() {
       return {
         require: 'ngModel',
-        link: function(scope, elm, attr, ctrl) {
+        link(scope, elm, attr, ctrl) {
           control = ctrl;
         }
       };
@@ -249,8 +253,8 @@ describe('form', function() {
     expect(scope.formB.$error.required.length).toBe(1);
     expect(scope.formB.$error.required).toEqual([scope.formB.lastName]);
 
-    var inputA = doc.find('input').eq(0),
-        inputB = doc.find('input').eq(1);
+    var inputA = doc.find('input').eq(0);
+    var inputB = doc.find('input').eq(1);
 
     changeInputValue(inputA, 'val1');
     changeInputValue(inputB, 'val2');
@@ -379,9 +383,9 @@ describe('form', function() {
 
     it('should prevent form submission', function(done) {
       var job = createAsync(done);
-      var nextTurn = false,
-          submitted = false,
-          reloadPrevented;
+      var nextTurn = false;
+      var submitted = false;
+      var reloadPrevented;
 
       doc = angular.element('<form ng-submit="submitMe()">' +
                      '<input type="submit" value="submit">' +
@@ -420,70 +424,68 @@ describe('form', function() {
 
 
     it('should prevent the default when the form is destroyed by a submission via a click event', function(done) {
-      angular.mock.inject(function($timeout) {
-        doc = angular.element('<div>' +
-                        '<form ng-submit="submitMe()">' +
-                          '<button type="submit" ng-click="destroy()"></button>' +
-                        '</form>' +
-                      '</div>');
+      doc = angular.element('<div>' +
+                      '<form ng-submit="submitMe()">' +
+                        '<button type="submit" ng-click="destroy()"></button>' +
+                      '</form>' +
+                    '</div>');
+      // Support: Chrome 60+ (on Windows)
+      // We need to add the form to the DOM in order for `submit` events to be properly fired.
+      window.document.body.appendChild(doc[0]);
+
+      var form = doc.find('form');
+      var destroyed = false;
+      var nextTurn = false;
+      var submitted = false;
+      var reloadPrevented = 'never called';
+
+      scope.destroy = function() {
+        // yes, I know, scope methods should not do direct DOM manipulation, but I wanted to keep
+        // this test small. Imagine that the destroy action will cause a model change (e.g.
+        // $location change) that will cause some directive to destroy the dom (e.g. ngView+$route)
+        doc.empty();
+        destroyed = true;
+      };
+
+      scope.submitMe = function() {
+        submitted = true;
+      };
+
+      var assertPreventDefaultListener = function(e) {
+        reloadPrevented = e.defaultPrevented || (e.returnValue === false);
+      };
+
+      $compile(doc)(scope);
+
+      form[0].addEventListener('submit', assertPreventDefaultListener);
+
+      browserTrigger(doc.find('button'), 'click');
+
+      // let the browser process all events (and potentially reload the page)
+      window.setTimeout(function() { nextTurn = true;}, 100);
+
+      var job = createAsync(done);
+      job.waitsFor(function() { return nextTurn; })
+      .runs(function() {
+        expect(doc.html()).toBe('');
+        expect(destroyed).toBe(true);
+        expect(submitted).toBe(false); // this is known corner-case that is not currently handled
+                                       // the issue is that the submit listener is destroyed before
+                                       // the event propagates there. we can fix this if we see
+                                       // the issue in the wild, I'm not going to bother to do it
+                                       // now. (i)
+
         // Support: Chrome 60+ (on Windows)
-        // We need to add the form to the DOM in order for `submit` events to be properly fired.
-        window.document.body.appendChild(doc[0]);
+        // Chrome 60+ on Windows does not fire `submit` events when the form is not attached to
+        // the DOM. Verify that the `submit` listener was either never fired or (if fired) the
+        // reload was prevented.
+        expect(reloadPrevented).not.toBe(false);
 
-        var form = doc.find('form'),
-            destroyed = false,
-            nextTurn = false,
-            submitted = false,
-            reloadPrevented = 'never called';
-
-        scope.destroy = function() {
-          // yes, I know, scope methods should not do direct DOM manipulation, but I wanted to keep
-          // this test small. Imagine that the destroy action will cause a model change (e.g.
-          // $location change) that will cause some directive to destroy the dom (e.g. ngView+$route)
-          doc.empty();
-          destroyed = true;
-        };
-
-        scope.submitMe = function() {
-          submitted = true;
-        };
-
-        var assertPreventDefaultListener = function(e) {
-          reloadPrevented = e.defaultPrevented || (e.returnValue === false);
-        };
-
-        $compile(doc)(scope);
-
-        form[0].addEventListener('submit', assertPreventDefaultListener);
-
-        browserTrigger(doc.find('button'), 'click');
-
-        // let the browser process all events (and potentially reload the page)
-        window.setTimeout(function() { nextTurn = true;}, 100);
-
-        var job = createAsync(done);
-        job.waitsFor(function() { return nextTurn; })
-        .runs(function() {
-          expect(doc.html()).toBe('');
-          expect(destroyed).toBe(true);
-          expect(submitted).toBe(false); // this is known corner-case that is not currently handled
-                                         // the issue is that the submit listener is destroyed before
-                                         // the event propagates there. we can fix this if we see
-                                         // the issue in the wild, I'm not going to bother to do it
-                                         // now. (i)
-
-          // Support: Chrome 60+ (on Windows)
-          // Chrome 60+ on Windows does not fire `submit` events when the form is not attached to
-          // the DOM. Verify that the `submit` listener was either never fired or (if fired) the
-          // reload was prevented.
-          expect(reloadPrevented).not.toBe(false);
-
-          // prevent mem leak in test
-          form[0].removeEventListener('submit', assertPreventDefaultListener);
-        })
-        .done();
-        job.start();
-      });
+        // prevent mem leak in test
+        form[0].removeEventListener('submit', assertPreventDefaultListener);
+      })
+      .done();
+      job.start();
     });
 
 
@@ -514,10 +516,10 @@ describe('form', function() {
           '</ng:form>');
       $compile(doc)(scope);
 
-      var parent = scope.parent,
-          child = scope.child,
-          inputA = child.inputA,
-          inputB = child.inputB;
+      var parent = scope.parent;
+      var child = scope.child;
+      var inputA = child.inputA;
+      var inputB = child.inputB;
 
       inputA.$setValidity('MyError', false);
       inputB.$setValidity('MyError', false);
@@ -550,8 +552,8 @@ describe('form', function() {
       $compile(doc)(scope);
       scope.$apply();
 
-      var parent = scope.parent,
-        child = scope.child;
+      var parent = scope.parent;
+      var child = scope.child;
 
       expect(parent).toBeDefined();
       expect(child).toBeDefined();
@@ -574,8 +576,8 @@ describe('form', function() {
       $compile(doc)(scope);
       scope.$apply();
 
-      var parent = scope.parent,
-        child = scope.child.form;
+      var parent = scope.parent;
+      var child = scope.child.form;
 
       expect(parent).toBeDefined();
       expect(child).toBeDefined();
@@ -599,9 +601,9 @@ describe('form', function() {
       scope.inputPresent = true;
       scope.$apply();
 
-      var parent = scope.parent,
-          child = scope.child,
-          input = child.inputA;
+      var parent = scope.parent;
+      var child = scope.child;
+      var input = child.inputA;
 
       expect(parent).toBeDefined();
       expect(child).toBeDefined();
@@ -689,10 +691,10 @@ describe('form', function() {
       scope.inputPresent = true;
       scope.$apply();
 
-      var parent = scope.parent,
-          child = scope.child,
-          inputA = child.inputA,
-          inputB = child.inputB;
+      var parent = scope.parent;
+      var child = scope.child;
+      var inputA = child.inputA;
+      var inputB = child.inputB;
 
       expect(parent).toBeDefined();
       expect(child).toBeDefined();
@@ -926,8 +928,8 @@ describe('form', function() {
       scope.$digest();
     });
 
-    it('should set valid and invalid to undefined when a validation error state is set as pending', angular.mock.inject(function($q, $rootScope) {
-      var defer, form = doc.data('$formController');
+    it('should set valid and invalid to undefined when a validation error state is set as pending', () => {
+      var form = doc.data('$formController');
 
       var ctrl = {};
       form.$setValidity('matias', undefined, ctrl);
@@ -947,13 +949,12 @@ describe('form', function() {
       expect(form.$valid).toBe(false);
       expect(form.$invalid).toBe(true);
       expect(form.$pending).toBeUndefined();
-    }));
+    });
   });
 
   describe('$setPristine', function() {
 
     it('should reset pristine state of form and controls', function() {
-
       doc = $compile(
           '<form name="testForm">' +
             '<input ng-model="named1" name="foo">' +
@@ -962,12 +963,12 @@ describe('form', function() {
 
       scope.$digest();
 
-      var form = doc,
-          formCtrl = scope.testForm,
-          input1 = form.find('input').eq(0),
-          input1Ctrl = input1.controller('ngModel'),
-          input2 = form.find('input').eq(1),
-          input2Ctrl = input2.controller('ngModel');
+      var form = doc;
+      var formCtrl = scope.testForm;
+      var input1 = form.find('input').eq(0);
+      var input1Ctrl = input1.controller('ngModel');
+      var input2 = form.find('input').eq(1);
+      var input2Ctrl = input2.controller('ngModel');
 
       input1Ctrl.$setViewValue('xx');
       input2Ctrl.$setViewValue('yy');
@@ -992,7 +993,6 @@ describe('form', function() {
 
 
     it('should reset pristine state of anonymous form controls', function() {
-
       doc = $compile(
           '<form name="testForm">' +
             '<input ng-model="anonymous">' +
@@ -1000,10 +1000,10 @@ describe('form', function() {
 
       scope.$digest();
 
-      var form = doc,
-          formCtrl = scope.testForm,
-          input = form.find('input').eq(0),
-          inputCtrl = input.controller('ngModel');
+      var form = doc;
+      var formCtrl = scope.testForm;
+      var input = form.find('input').eq(0);
+      var inputCtrl = input.controller('ngModel');
 
       inputCtrl.$setViewValue('xx');
       scope.$apply();
@@ -1022,7 +1022,6 @@ describe('form', function() {
 
 
     it('should reset pristine state of nested forms', function() {
-
       doc = $compile(
           '<form name="testForm">' +
             '<div ng-form>' +
@@ -1032,12 +1031,12 @@ describe('form', function() {
 
       scope.$digest();
 
-      var form = doc,
-          formCtrl = scope.testForm,
-          nestedForm = form.find('div'),
-          nestedFormCtrl = nestedForm.controller('form'),
-          nestedInput = form.find('input').eq(0),
-          nestedInputCtrl = nestedInput.controller('ngModel');
+      var form = doc;
+      var formCtrl = scope.testForm;
+      var nestedForm = form.find('div');
+      var nestedFormCtrl = nestedForm.controller('form');
+      var nestedInput = form.find('input').eq(0);
+      var nestedInputCtrl = nestedInput.controller('ngModel');
 
       nestedInputCtrl.$setViewValue('xx');
       scope.$apply();
@@ -1199,7 +1198,9 @@ describe('form animations', function() {
     expect(animation.args[2]).toBe(classNameRemoved);
   }
 
-  var doc, scope, form;
+  var doc;
+  var scope;
+  var form;
   beforeEach(angular.mock.inject(function($rootScope, $compile, $rootElement, $animate) {
     scope = $rootScope.$new();
     doc = angular.element('<form name="myForm"></form>');

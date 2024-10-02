@@ -1,11 +1,16 @@
 'use strict';
 
 describe('jqLite', function() {
-  var scope, element, a, b, c, document;
+  var scope;
+  var element;
+  var a;
+  var b;
+  var c;
+  var document;
   var jqLite = angular.element;
 
   expect.extend({
-    toJqEqual: function(_actual_, expected) {
+    toJqEqual(_actual_, expected) {
       var msg = 'Unequal length';
 
       var value = _actual_ && expected && _actual_.length === expected.length;
@@ -88,7 +93,6 @@ describe('jqLite', function() {
     it('should properly handle dash-delimited node names', function() {
       var nodeNames = 'thead tbody tfoot colgroup caption tr th td div kung'.split(' ');
       var nodeNamesTested = 0;
-      var nodes, customNodeName;
 
       angular.forEach(nodeNames, function(nodeName) {
         var customNodeName = nodeName + '-foo';
@@ -176,9 +180,9 @@ describe('jqLite', function() {
       });
 
       it('shouldn\'t unsanitize sanitized code', function(done) {
-        var counter = 0,
-          assertCount = 13,
-          container = angular.element('<div></div>');
+        var counter = 0;
+        var assertCount = 13;
+        var container = angular.element('<div></div>');
 
         function donePartial() {
           counter++;
@@ -274,9 +278,9 @@ describe('jqLite', function() {
 
     it('should work with the child html element instead if the current element is the document obj',
       function() {
-        var item = {},
-          doc = angular.element(document),
-          html = doc.find('html');
+        var item = {};
+        var doc = angular.element(document);
+        var html = doc.find('html');
 
         html.data('item', item);
         expect(doc.inheritedData('item')).toBe(item);
@@ -286,9 +290,9 @@ describe('jqLite', function() {
     );
 
     it('should return null values', function() {
-      var ul = angular.element('<ul><li><p><b>deep deep</b><p></li></ul>'),
-        li = ul.find('li'),
-        b = li.find('b');
+      var ul = angular.element('<ul><li><p><b>deep deep</b><p></li></ul>');
+      var li = ul.find('li');
+      var b = li.find('b');
 
       ul.data('foo', 'bar');
       li.data('foo', null);
@@ -300,9 +304,9 @@ describe('jqLite', function() {
     });
 
     it('should pass through DocumentFragment boundaries via host', function() {
-      var host = angular.element('<div></div>'),
-        frag = document.createDocumentFragment(),
-        $frag = angular.element(frag);
+      var host = angular.element('<div></div>');
+      var frag = document.createDocumentFragment();
+      var $frag = angular.element(frag);
       frag.host = host[0];
       host.data('foo', 123);
       host.append($frag);
@@ -331,9 +335,9 @@ describe('jqLite', function() {
 
     it('should retrieve scope attached to the html element if it\'s requested on the document',
       function() {
-        var doc = angular.element(document),
-          html = doc.find('html'),
-          scope = {};
+        var doc = angular.element(document);
+        var html = doc.find('html');
+        var scope = {};
 
         html.data('$scope', scope);
 
@@ -389,9 +393,9 @@ describe('jqLite', function() {
 
   describe('injector', function() {
     it('should retrieve injector attached to the current element or its parent', function() {
-      var template = angular.element('<div><span></span></div>'),
-        span = template.children().eq(0),
-        injector = angular.bootstrap(template);
+      var template = angular.element('<div><span></span></div>');
+      var span = template.children().eq(0);
+      var injector = angular.bootstrap(template);
 
 
       expect(span.injector()).toBe(injector);
@@ -401,9 +405,9 @@ describe('jqLite', function() {
 
     it('should retrieve injector attached to the html element if it\'s requested on document',
       function() {
-        var doc = angular.element(document),
-          html = doc.find('html'),
-          injector = {};
+        var doc = angular.element(document);
+        var html = doc.find('html');
+        var injector = {};
 
         html.data('$injector', injector);
 
@@ -423,8 +427,8 @@ describe('jqLite', function() {
 
   describe('controller', function() {
     it('should retrieve controller attached to the current element or its parent', function() {
-      var div = angular.element('<div><span></span></div>'),
-        span = div.find('span');
+      var div = angular.element('<div><span></span></div>');
+      var span = div.find('span');
 
       div.data('$ngControllerController', 'ngController');
       span.data('$otherController', 'other');
@@ -567,9 +571,9 @@ describe('jqLite', function() {
 
 
     it('should keep data if an element is removed via detach()', function() {
-      var root = angular.element('<div><span>abc</span></div>'),
-        span = root.find('span'),
-        data = span.data();
+      var root = angular.element('<div><span>abc</span></div>');
+      var span = root.find('span');
+      var data = span.data();
 
       span.data('foo', 'bar');
       span.detach();
@@ -592,8 +596,8 @@ describe('jqLite', function() {
     });
 
     it('should create a new data object if called without args', function() {
-      var element = angular.element(a),
-        data = element.data();
+      var element = angular.element(a);
+      var data = element.data();
 
       expect(data).toEqual({});
       element.data('foo', 'bar');
@@ -601,8 +605,8 @@ describe('jqLite', function() {
     });
 
     it('should create a new data object if called with a single object arg', function() {
-      var element = angular.element(a),
-        newData = {foo: 'bar'};
+      var element = angular.element(a);
+      var newData = {foo: 'bar'};
 
       element.data(newData);
       expect(element.data()).toEqual({foo: 'bar'});
@@ -615,8 +619,8 @@ describe('jqLite', function() {
         element.data('existing', 'val');
         expect(element.data()).toEqual({existing: 'val'});
 
-        var oldData = element.data(),
-          newData = {meLike: 'turtles', 'youLike': 'carrots'};
+        var oldData = element.data();
+        var newData = {meLike: 'turtles', 'youLike': 'carrots'};
 
         expect(element.data(newData)).toBe(element);
         expect(element.data()).toEqual({meLike: 'turtles', youLike: 'carrots', existing: 'val'});
@@ -625,8 +629,8 @@ describe('jqLite', function() {
 
     describe('data cleanup', function() {
       it('should remove data on element removal', function() {
-        var div = angular.element('<div><span>text</span></div>'),
-          span = div.find('span');
+        var div = angular.element('<div><span>text</span></div>');
+        var span = div.find('span');
 
         span.data('name', 'AngularJS');
         span.remove();
@@ -634,9 +638,9 @@ describe('jqLite', function() {
       });
 
       it('should remove event listeners on element removal', function() {
-        var div = angular.element('<div><span>text</span></div>'),
-          span = div.find('span'),
-          log = '';
+        var div = angular.element('<div><span>text</span></div>');
+        var span = div.find('span');
+        var log = '';
 
         span.on('click', function() { log += 'click;'; });
         browserTrigger(span);
@@ -1392,7 +1396,7 @@ describe('jqLite', function() {
         alert: angular.noop,
         setInterval: angular.noop,
         length:10, // pretend you are an array
-        addEventListener: function(type, fn) {
+        addEventListener(type, fn) {
           expect(type).toEqual('hashchange');
           eventFn = fn;
         },
@@ -1433,8 +1437,8 @@ describe('jqLite', function() {
     });
 
     it('should bind to all events separated by space', function() {
-      var elm = angular.element(a),
-        callback = jest.fn();
+      var elm = angular.element(a);
+      var callback = jest.fn();
 
       elm.on('click keypress', callback);
       elm.on('click', callback);
@@ -1459,8 +1463,8 @@ describe('jqLite', function() {
     });
 
     it('should have event.isDefaultPrevented method', function() {
-      var element = angular.element(a),
-        clickSpy = jest.fn();
+      var element = angular.element(a);
+      var clickSpy = jest.fn();
 
       clickSpy.mockImplementation(function(e) {
         expect(function() {
@@ -1477,11 +1481,11 @@ describe('jqLite', function() {
     });
 
     it('should stop triggering handlers when stopImmediatePropagation is called', function() {
-      var element = angular.element(a),
-        clickSpy1 = jest.fn(),
-        clickSpy2 = jest.fn().mockImplementation((event) => { event.stopImmediatePropagation(); }),
-        clickSpy3 = jest.fn(),
-        clickSpy4 = jest.fn();
+      var element = angular.element(a);
+      var clickSpy1 = jest.fn();
+      var clickSpy2 = jest.fn().mockImplementation((event) => { event.stopImmediatePropagation(); });
+      var clickSpy3 = jest.fn();
+      var clickSpy4 = jest.fn();
 
       element.on('click', clickSpy1);
       element.on('click', clickSpy2);
@@ -1497,8 +1501,8 @@ describe('jqLite', function() {
     });
 
     it('should execute stopPropagation when stopImmediatePropagation is called', function() {
-      var element = angular.element(a),
-        clickSpy = jest.fn();
+      var element = angular.element(a);
+      var clickSpy = jest.fn();
 
       clickSpy.mockImplementation(function(event) {
         jest.spyOn(event, 'stopPropagation');
@@ -1513,8 +1517,8 @@ describe('jqLite', function() {
     });
 
     it('should have event.isImmediatePropagationStopped method', function() {
-      var element = angular.element(a),
-        clickSpy = jest.fn();
+      var element = angular.element(a);
+      var clickSpy = jest.fn();
 
       clickSpy.mockImplementation(function(event) {
         expect(event.isImmediatePropagationStopped()).toBe(false);
@@ -1529,7 +1533,10 @@ describe('jqLite', function() {
     });
 
     describe('mouseenter-mouseleave', function() {
-      var root, parent, child, log;
+      var root;
+      var parent;
+      var child;
+      var log;
 
       function setup(html, parentNode, childNode) {
         log = '';
@@ -1549,17 +1556,16 @@ describe('jqLite', function() {
           var evnt;
           evnt = document.createEvent('MouseEvents');
 
-          var originalPreventDefault = evnt.preventDefault,
-            appWindow = window,
-            fakeProcessDefault = true,
-            finalProcessDefault;
+          var originalPreventDefault = evnt.preventDefault;
+          var fakeProcessDefault = true;
 
           evnt.preventDefault = function() {
             fakeProcessDefault = false;
             return originalPreventDefault.apply(evnt, arguments);
           };
 
-          var x = 0, y = 0;
+          var x = 0;
+          var y = 0;
           evnt.initMouseEvent(type, true, true, window, 0, x, y, x, y, false, false,
             false, false, 0, relatedTarget);
 
@@ -1612,11 +1618,11 @@ describe('jqLite', function() {
     });
 
     it('should throw an error if eventData or a selector is passed', function() {
-      var elm = angular.element(a),
-        anObj = {},
-        aString = '',
-        aValue = 45,
-        callback = function() {};
+      var elm = angular.element(a);
+      var anObj = {};
+      var aString = '';
+      var aValue = 45;
+      var callback = function() {};
 
       expect(function() {
         elm.on('click', anObj, callback);
@@ -1629,7 +1635,6 @@ describe('jqLite', function() {
       expect(function() {
         elm.on('click', aValue, callback);
       }).toThrowMinErr('jqLite', 'onargs');
-
     });
   });
 
@@ -1651,9 +1656,9 @@ describe('jqLite', function() {
     });
 
     it('should deregister all listeners', function() {
-      var aElem = angular.element(a),
-        clickSpy = jest.fn(),
-        mouseoverSpy = jest.fn();
+      var aElem = angular.element(a);
+      var clickSpy = jest.fn();
+      var mouseoverSpy = jest.fn();
 
       aElem.on('click', clickSpy);
       aElem.on('mouseover', mouseoverSpy);
@@ -1676,9 +1681,9 @@ describe('jqLite', function() {
 
 
     it('should deregister listeners for specific type', function() {
-      var aElem = angular.element(a),
-        clickSpy = jest.fn(),
-        mouseoverSpy = jest.fn();
+      var aElem = angular.element(a);
+      var clickSpy = jest.fn();
+      var mouseoverSpy = jest.fn();
 
       aElem.on('click', clickSpy);
       aElem.on('mouseover', mouseoverSpy);
@@ -1707,9 +1712,9 @@ describe('jqLite', function() {
 
 
     it('should deregister all listeners for types separated by spaces', function() {
-      var aElem = angular.element(a),
-        clickSpy = jest.fn(),
-        mouseoverSpy = jest.fn();
+      var aElem = angular.element(a);
+      var clickSpy = jest.fn();
+      var mouseoverSpy = jest.fn();
 
       aElem.on('click', clickSpy);
       aElem.on('mouseover', mouseoverSpy);
@@ -1732,9 +1737,9 @@ describe('jqLite', function() {
 
 
     it('should deregister specific listener', function() {
-      var aElem = angular.element(a),
-        clickSpy1 = jest.fn(),
-        clickSpy2 = jest.fn();
+      var aElem = angular.element(a);
+      var clickSpy1 = jest.fn();
+      var clickSpy2 = jest.fn();
 
       aElem.on('click', clickSpy1);
       aElem.on('click', clickSpy2);
@@ -1815,11 +1820,12 @@ describe('jqLite', function() {
 
 
     it('should deregister specific listener within the listener and call subsequent listeners', function() {
-      var aElem = angular.element(a),
-        clickSpy = jest.fn(),
-        clickOnceSpy = jest.fn().mockImplementation(() => {
-          aElem.off('click', clickOnceSpy);
-        });
+      var aElem = angular.element(a);
+      var clickSpy = jest.fn();
+
+      var clickOnceSpy = jest.fn().mockImplementation(() => {
+        aElem.off('click', clickOnceSpy);
+      });
 
       aElem.on('click', clickOnceSpy);
       aElem.on('click', clickSpy);
@@ -1835,9 +1841,9 @@ describe('jqLite', function() {
 
 
     it('should deregister specific listener for multiple types separated by spaces', function() {
-      var aElem = angular.element(a),
-        leaderSpy = jest.fn(),
-        extraSpy = jest.fn();
+      var aElem = angular.element(a);
+      var leaderSpy = jest.fn();
+      var extraSpy = jest.fn();
 
       aElem.on('click', leaderSpy);
       aElem.on('click', extraSpy);
@@ -1984,7 +1990,8 @@ describe('jqLite', function() {
 
     it('should return the same event object just as on() does', function() {
       var element = angular.element(a);
-      var eventA, eventB;
+      var eventA;
+      var eventB;
       element.on('click', function(event) {
         eventA = event;
       });
@@ -1999,10 +2006,10 @@ describe('jqLite', function() {
     it('should not remove other event handlers of the same type after execution', function() {
       var element = angular.element(a);
       var calls = [];
-      element.one('click', function(event) {
+      element.one('click', function() {
         calls.push('one');
       });
-      element.on('click', function(event) {
+      element.on('click', function() {
         calls.push('on');
       });
 
@@ -2225,8 +2232,8 @@ describe('jqLite', function() {
 
   describe('parent', function() {
     it('should return parent or an empty set when no parent', function() {
-      var parent = angular.element('<div><p>abc</p></div>'),
-        child = parent.find('p');
+      var parent = angular.element('<div><p>abc</p></div>');
+      var child = parent.find('p');
 
       expect(parent.parent()).toBeTruthy();
       expect(parent.parent().length).toEqual(0);
@@ -2245,8 +2252,9 @@ describe('jqLite', function() {
 
     it('should return empty jqLite object when parent is a document fragment', function() {
       //this is quite unfortunate but jQuery 1.5.1 behaves this way
-      var fragment = document.createDocumentFragment(),
-        child = angular.element('<p>foo</p>');
+      var fragment = document.createDocumentFragment();
+
+      var child = angular.element('<p>foo</p>');
 
       fragment.appendChild(child[0]);
       expect(child[0].parentNode).toBe(fragment);
@@ -2301,10 +2309,10 @@ describe('jqLite', function() {
 
   describe('triggerHandler', function() {
     it('should trigger all registered handlers for an event', function() {
-      var element = angular.element('<span>poke</span>'),
-        pokeSpy = jest.fn(),
-        clickSpy1 = jest.fn(),
-        clickSpy2 = jest.fn();
+      var element = angular.element('<span>poke</span>');
+      var pokeSpy = jest.fn();
+      var clickSpy1 = jest.fn();
+      var clickSpy2 = jest.fn();
 
       element.on('poke', pokeSpy);
       element.on('click', clickSpy1);
@@ -2328,9 +2336,10 @@ describe('jqLite', function() {
       // we need the event to have at least preventDefault because AngularJS will call it on
       // all anchors with no href automatically
 
-      var element = angular.element('<a>poke</a>'),
-        pokeSpy = jest.fn(),
-        event;
+      var element = angular.element('<a>poke</a>');
+
+      var pokeSpy = jest.fn();
+      var event;
 
       element.on('click', pokeSpy);
 
@@ -2342,9 +2351,9 @@ describe('jqLite', function() {
     });
 
     it('should pass extra parameters as an additional argument', function() {
-      var element = angular.element('<a>poke</a>'),
-        pokeSpy = jest.fn(),
-        data;
+      var element = angular.element('<a>poke</a>');
+      var pokeSpy = jest.fn();
+      var data;
 
       element.on('click', pokeSpy);
 
@@ -2354,9 +2363,9 @@ describe('jqLite', function() {
     });
 
     it('should mark event as prevented if preventDefault is called', function() {
-      var element = angular.element('<a>poke</a>'),
-        pokeSpy = jest.fn(),
-        event;
+      var element = angular.element('<a>poke</a>');
+      var pokeSpy = jest.fn();
+      var event;
 
       element.on('click', pokeSpy);
       element.triggerHandler('click');
@@ -2368,11 +2377,12 @@ describe('jqLite', function() {
     });
 
     it('should support handlers that deregister themselves', function() {
-      var element = angular.element('<a>poke</a>'),
-        clickSpy = jest.fn(),
-        clickOnceSpy = jest.fn().mockImplementation(function() {
-          element.off('click', clickOnceSpy);
-        });
+      var element = angular.element('<a>poke</a>');
+      var clickSpy = jest.fn();
+
+      var clickOnceSpy = jest.fn().mockImplementation(function() {
+        element.off('click', clickOnceSpy);
+      });
 
       element.on('click', clickOnceSpy);
       element.on('click', clickSpy);
@@ -2387,13 +2397,15 @@ describe('jqLite', function() {
     });
 
     it('should accept a custom event instead of eventName', function() {
-      var element = angular.element('<a>poke</a>'),
-        pokeSpy = jest.fn(),
-        customEvent = {
-          type: 'click',
-          someProp: 'someValue'
-        },
-        actualEvent;
+      var element = angular.element('<a>poke</a>');
+      var pokeSpy = jest.fn();
+
+      var customEvent = {
+        type: 'click',
+        someProp: 'someValue'
+      };
+
+      var actualEvent;
 
       element.on('click', pokeSpy);
       element.triggerHandler(customEvent);
@@ -2405,10 +2417,10 @@ describe('jqLite', function() {
     });
 
     it('should stop triggering handlers when stopImmediatePropagation is called', function() {
-      var element = angular.element(a),
-        clickSpy1 = jest.fn(),
-        clickSpy2 = jest.fn().mockImplementation(function(event) { event.stopImmediatePropagation(); }),
-        clickSpy3 = jest.fn();
+      var element = angular.element(a);
+      var clickSpy1 = jest.fn();
+      var clickSpy2 = jest.fn().mockImplementation(function(event) { event.stopImmediatePropagation(); });
+      var clickSpy3 = jest.fn();
 
       element.on('click', clickSpy1);
       element.on('click', clickSpy2);
@@ -2422,9 +2434,9 @@ describe('jqLite', function() {
     });
 
     it('should have event.isImmediatePropagationStopped method', function() {
-      var element = angular.element(a),
-        clickSpy = jest.fn(),
-        event;
+      var element = angular.element(a);
+      var clickSpy = jest.fn();
+      var event;
 
       element.on('click', clickSpy);
       element.triggerHandler('click');

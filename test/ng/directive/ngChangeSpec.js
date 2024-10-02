@@ -3,8 +3,8 @@
 /* globals generateInputCompilerHelper: false */
 
 describe('ngChange', function() {
-
-  var helper = {}, $rootScope;
+  var helper = {};
+  var $rootScope;
 
   generateInputCompilerHelper(helper);
 

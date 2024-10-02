@@ -14,7 +14,7 @@ describe('$anchorScroll', function() {
           scrollTo: jest.fn(),
           scrollBy: jest.fn(),
           document: window.document,
-          getComputedStyle: function(elem) {
+          getComputedStyle(elem) {
             return window.getComputedStyle(elem);
           }
         };
@@ -27,19 +27,21 @@ describe('$anchorScroll', function() {
   function addElements(...elements) {
     return function($window) {
       angular.forEach(elements, function(identifier) {
-        var match = identifier.match(/(?:(\w*) )?(\w*)=(\w*)/),
-            nodeName = match[1] || 'a',
-            tmpl = '<' + nodeName + ' ' + match[2] + '="' + match[3] + '">' +
-                      match[3] +   // add some content or else Firefox and IE place the element
-                                   // in weird ways that break yOffset-testing.
-                   '</' + nodeName + '>',
-            jqElm = angular.element(tmpl),
-            elm = jqElm[0];
-            // Inline elements cause Firefox to report an unexpected value for
-            // `getBoundingClientRect().top` on some platforms (depending on the default font and
-            // line-height). Using inline-block elements prevents this.
-            // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1014738
-            elm.style.display = 'inline-block';
+        var match = identifier.match(/(?:(\w*) )?(\w*)=(\w*)/);
+        var nodeName = match[1] || 'a';
+
+        var tmpl = '<' + nodeName + ' ' + match[2] + '="' + match[3] + '">' +
+                  match[3] +   // add some content or else Firefox and IE place the element
+                               // in weird ways that break yOffset-testing.
+               '</' + nodeName + '>';
+
+        var jqElm = angular.element(tmpl);
+        var elm = jqElm[0];
+        // Inline elements cause Firefox to report an unexpected value for
+        // `getBoundingClientRect().top` on some platforms (depending on the default font and
+        // line-height). Using inline-block elements prevents this.
+        // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1014738
+        elm.style.display = 'inline-block';
 
         elmSpy[identifier] = jest.spyOn(elm, 'scrollIntoView');
         angular.element($window.document.body).append(jqElm);
@@ -110,7 +112,7 @@ describe('$anchorScroll', function() {
   }
 
   function expectScrollingToTop($window) {
-    angular.forEach(elmSpy, function(spy, id) {
+    angular.forEach(elmSpy, function(spy) {
       expect(spy).not.toHaveBeenCalled();
     });
 

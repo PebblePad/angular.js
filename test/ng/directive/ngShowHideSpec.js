@@ -1,7 +1,9 @@
 'use strict';
 
 describe('ngShow / ngHide', function() {
-  var $scope, $compile, element;
+  var $scope;
+  var $compile;
+  var element;
 
   function expectVisibility(exprs, ngShowOrNgHide, shownOrHidden) {
     element = $compile('<div></div>')($scope);
@@ -105,7 +107,9 @@ describe('ngShow / ngHide', function() {
 });
 
 describe('ngShow / ngHide animations', function() {
-  var body, element, $rootElement;
+  var body;
+  var element;
+  var $rootElement;
 
   function html(content) {
     body.append($rootElement);
@@ -127,7 +131,7 @@ describe('ngShow / ngHide animations', function() {
 
   beforeEach(angular.mock.module('ngAnimateMock'));
 
-  beforeEach(angular.mock.module(function($animateProvider, $provide) {
+  beforeEach(angular.mock.module(function() {
     return function(_$rootElement_) {
       $rootElement = _$rootElement_;
     };

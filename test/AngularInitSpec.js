@@ -15,15 +15,15 @@ describe('angularInit', function() {
 
   beforeEach(function() {
     element = {
-      hasAttribute: function(name) {
+      hasAttribute(name) {
         return !!element[name];
       },
 
-      querySelector: function(arg) {
+      querySelector(arg) {
         return element.querySelector[arg] || null;
       },
 
-      getAttribute: function(name) {
+      getAttribute(name) {
         return element[name];
       }
     };

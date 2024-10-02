@@ -1,7 +1,9 @@
 'use strict';
 
 describe('ngClick (touch)', function() {
-  var element, time, orig_now;
+  var element;
+  var time;
+  var orig_now;
 
   afterEach(function() {
     dealoc(element);
@@ -279,7 +281,8 @@ describe('ngClick (touch)', function() {
     }
 
     describe('the clickbuster', function() {
-      var element1, element2;
+      var element1;
+      var element2;
 
       afterEach(function() {
         dealoc(element1);
@@ -295,7 +298,7 @@ describe('ngClick (touch)', function() {
       }));
 
 
-      it('should cancel the following click event', angular.mock.inject(function($rootScope, $compile, $rootElement, $document) {
+      it('should cancel the following click event', angular.mock.inject(function($rootScope, $compile, $rootElement) {
         element = $compile('<div ng-click="count = count + 1"></div>')($rootScope);
         $rootElement.append(element);
 
@@ -535,7 +538,10 @@ describe('ngClick (touch)', function() {
         };
 
         var $rootScope;
-        var container, otherElement, input, label;
+        var container;
+        var otherElement;
+        var input;
+        var label;
         beforeEach(angular.mock.inject(function(_$rootScope_, $compile, $rootElement) {
           $rootScope = _$rootScope_;
           var container = $compile('<div><div ng-click="count = count + 1"></div>' +

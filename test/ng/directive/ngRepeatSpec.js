@@ -1,7 +1,11 @@
 'use strict';
 
 describe('ngRepeat', function() {
-  var element, $compile, scope, $exceptionHandler, $compileProvider;
+  var element;
+  var $compile;
+  var scope;
+  var $exceptionHandler;
+  var $compileProvider;
 
   beforeEach(angular.mock.module(function(_$compileProvider_) {
     $compileProvider = _$compileProvider_;
@@ -450,7 +454,7 @@ describe('ngRepeat', function() {
     });
 
 
-    it('should support alias identifiers containing reserved words', angular.mock.inject(function($exceptionHandler) {
+    it('should support alias identifiers containing reserved words', angular.mock.inject(function() {
       scope.x = 'bl';
       scope.items = [
         { name: 'red' },
@@ -1109,7 +1113,11 @@ describe('ngRepeat', function() {
 
 
   describe('stability', function() {
-    var a, b, c, d, lis;
+    var a;
+    var b;
+    var c;
+    var d;
+    var lis;
 
     beforeEach(function() {
       element = $compile(
@@ -1241,7 +1249,7 @@ describe('ngRepeat', function() {
     it('should allow mixing ngRepeat and another element transclusion directive', function() {
       $compileProvider.directive('elmTrans', ngInternals.valueFn({
         transclude: 'element',
-        controller: function($transclude, $scope, $element) {
+        controller($transclude, $scope, $element) {
           $transclude(function(transcludedNodes) {
             $element.after(']]').after(transcludedNodes).after('[[');
           });
@@ -1326,13 +1334,13 @@ describe('ngRepeat and transcludes', function() {
       directive('template', ngInternals.valueFn({
         template: '<div ng-repeat="l in [1]"><span test></span></div>',
         replace: true,
-        controller: function() {
+        controller() {
           this.flag = true;
         }
       }));
       directive('test', ngInternals.valueFn({
         require: '^template',
-        link: function(scope, el, attr, ctrl) {
+        link(scope, el, attr, ctrl) {
           controller = ctrl;
         }
       }));
@@ -1404,7 +1412,9 @@ describe('ngRepeat and transcludes', function() {
 });
 
 describe('ngRepeat animations', function() {
-  var body, element, $rootElement;
+  var body;
+  var element;
+  var $rootElement;
 
   function html(content) {
     $rootElement.html(content);
@@ -1497,7 +1507,6 @@ describe('ngRepeat animations', function() {
     angular.mock.inject(function($compile, $rootScope, $animate, $document, $sniffer, $timeout) {
       if (!$sniffer.transitions) return;
 
-      var item;
       var ss = createMockStyleSheet($document);
 
       try {

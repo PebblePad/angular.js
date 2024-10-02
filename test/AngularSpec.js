@@ -6,7 +6,8 @@
 Float32Array, Float64Array,  */
 
 describe('angular', function() {
-  var element, document;
+  var element;
+  var document;
 
   beforeEach(function() {
     document = window.document;
@@ -422,7 +423,8 @@ describe('angular', function() {
     });
 
     it('should throw an exception when source and destination are equivalent', function() {
-      var src, dst;
+      var src;
+      var dst;
       src = dst = {key: 'value'};
       expect(function() { angular.copy(src, dst); }).toThrowMinErr('ng', 'cpi', 'Can\'t copy! Source and destination are identical.');
       src = dst = [2, 4];
@@ -430,7 +432,8 @@ describe('angular', function() {
     });
 
     it('should not copy the private $$hashKey', function() {
-      var src,dst;
+      var src;
+      var dst;
       src = {};
       ngInternals.hashKey(src);
       dst = angular.copy(src);
@@ -443,7 +446,9 @@ describe('angular', function() {
     });
 
     it('should retain the previous $$hashKey when copying object with hashKey', function() {
-      var src,dst,h;
+      var src;
+      var dst;
+      var h;
       src = {};
       dst = {};
       // force creation of a hashkey
@@ -629,7 +634,8 @@ describe('angular', function() {
   describe('extend', function() {
 
     it('should not copy the private $$hashKey', function() {
-      var src,dst;
+      var src;
+      var dst;
       src = {};
       dst = {};
       ngInternals.hashKey(src);
@@ -639,16 +645,18 @@ describe('angular', function() {
 
 
     it('should copy the properties of the source object onto the destination object', function() {
-      var destination, source;
+      var destination;
+      var source;
       destination = {};
-			source = {foo: true};
+      source = {foo: true};
       destination = angular.extend(destination, source);
       expect(angular.isDefined(destination.foo)).toBe(true);
     });
 
 
     it('ISSUE #4751 - should copy the length property of an object source to the destination object', function() {
-      var destination, source;
+      var destination;
+      var source;
       destination = {};
       source = {radius: 30, length: 0};
       destination = angular.extend(destination, source);
@@ -657,7 +665,9 @@ describe('angular', function() {
     });
 
     it('should retain the previous $$hashKey', function() {
-      var src,dst,h;
+      var src;
+      var dst;
+      var h;
       src = {};
       dst = {};
       h = ngInternals.hashKey(dst);
@@ -671,7 +681,9 @@ describe('angular', function() {
 
 
     it('should work when extending with itself', function() {
-      var src,dst,h;
+      var src;
+      var dst;
+      var h;
       dst = src = {};
       h = ngInternals.hashKey(dst);
       dst = angular.extend(dst,src);
@@ -850,8 +862,8 @@ describe('angular', function() {
     });
 
     it('should handle arrays', function() {
-      var original = [{}, 1],
-          clone = [];
+      var original = [{}, 1];
+      var clone = [];
 
       var aCopy = angular.shallowCopy(original);
       expect(aCopy).not.toBe(original);
@@ -891,8 +903,8 @@ describe('angular', function() {
     });
 
     it('should ignore undefined member variables during comparison', function() {
-      var obj1 = {name: 'misko'},
-          obj2 = {name: 'misko', undefinedvar: undefined};
+      var obj1 = {name: 'misko'};
+      var obj2 = {name: 'misko', undefinedvar: undefined};
 
       expect(angular.equals(obj1, obj2)).toBe(true);
       expect(angular.equals(obj2, obj1)).toBe(true);
@@ -905,7 +917,7 @@ describe('angular', function() {
     });
 
     it('should ignore functions', function() {
-      expect(angular.equals({func: function() {}}, {bar: function() {}})).toEqual(true);
+      expect(angular.equals({func() {}}, {bar() {}})).toEqual(true);
     });
 
     it('should work well with nulls', function() {
@@ -935,8 +947,8 @@ describe('angular', function() {
     });
 
     it('should compare Scope instances only by identity', angular.mock.inject(function($rootScope) {
-      var scope1 = $rootScope.$new(),
-          scope2 = $rootScope.$new();
+      var scope1 = $rootScope.$new();
+      var scope2 = $rootScope.$new();
 
       expect(angular.equals(scope1, scope1)).toBe(true);
       expect(angular.equals(scope1, scope2)).toBe(false);
@@ -1227,8 +1239,8 @@ describe('angular', function() {
       }
       MyObj.prototype.foo = 'fooVal';
 
-      var obj = new MyObj(),
-          log = [];
+      var obj = new MyObj();
+      var log = [];
 
       angular.forEach(obj, function(value, key) { log.push(key + ':' + value); });
 
@@ -1251,8 +1263,8 @@ describe('angular', function() {
 
 
     it('should handle JQLite and jQuery objects like arrays', function() {
-      var jqObject = angular.element('<p><span>s1</span><span>s2</span></p>').find('span'),
-          log = [];
+      var jqObject = angular.element('<p><span>s1</span><span>s2</span></p>').find('span');
+      var log = [];
 
       angular.forEach(jqObject, function(value, key) { log.push(key + ':' + value.innerHTML); });
       expect(log).toEqual(['0:s1', '1:s2']);
@@ -1265,8 +1277,8 @@ describe('angular', function() {
 
 
     it('should handle NodeList objects like arrays', function() {
-      var nodeList = angular.element('<p><span>a</span><span>b</span><span>c</span></p>')[0].childNodes,
-          log = [];
+      var nodeList = angular.element('<p><span>a</span><span>b</span><span>c</span></p>')[0].childNodes;
+      var log = [];
 
 
       angular.forEach(nodeList, function(value, key) { log.push(key + ':' + value.innerHTML); });
@@ -1281,16 +1293,16 @@ describe('angular', function() {
                                   '<a name=\'x\'>c</a>' +
                                 '</p>';
 
-      var htmlCollection = document.getElementsByName('x'),
-          log = [];
+      var htmlCollection = document.getElementsByName('x');
+      var log = [];
 
       angular.forEach(htmlCollection, function(value, key) { log.push(key + ':' + value.innerHTML); });
       expect(log).toEqual(['0:a', '1:c']);
     });
 
     it('should handle arguments objects like arrays', function() {
-      var args,
-          log = [];
+      var args;
+      var log = [];
 
       (function() { args = arguments; })('a', 'b', 'c');
 
@@ -1310,8 +1322,9 @@ describe('angular', function() {
       var obj = {
           'foo': 'bar',
           'length': 2
-        },
-        log = [];
+        };
+
+      var log = [];
 
       angular.forEach(obj, function(value, key) { log.push(key + ':' + value); });
       expect(log).toEqual(['foo:bar', 'length:2']);
@@ -1324,8 +1337,8 @@ describe('angular', function() {
         this.foo = 'bar';
       }
 
-      var obj = new CustomType(),
-          log = [];
+      var obj = new CustomType();
+      var log = [];
 
       angular.forEach(obj, function(value, key) { log.push(key + ':' + value); });
       expect(log).toEqual(['length:2', 'foo:bar']);
@@ -1723,8 +1736,8 @@ describe('angular', function() {
 
 
     describe('deferred bootstrap', function() {
-      var originalName = window.name,
-          element;
+      var originalName = window.name;
+      var element;
 
       beforeEach(function() {
         window.name = '';
@@ -1748,12 +1761,11 @@ describe('angular', function() {
       });
 
       it('should resume deferred bootstrap, if defined', function() {
-        var injector;
         window.name = 'NG_DEFER_BOOTSTRAP!';
 
         angular.resumeDeferredBootstrap = angular.noop;
         var spy = jest.spyOn(angular, 'resumeDeferredBootstrap');
-        injector = angular.bootstrap(element);
+        angular.bootstrap(element);
         expect(spy).toHaveBeenCalled();
       });
 
@@ -1904,9 +1916,9 @@ describe('angular', function() {
   describe('isElement', function() {
     it('should return a boolean value', angular.mock.inject(function($rootElement, $compile, $document, $rootScope) {
       element = $compile('<p>Hello, world!</p>')($rootScope);
-      var body = $document.find('body')[0],
-          expected = [false, false, false, false, false, false, false, true, true],
-          tests = [null, undefined, 'string', 1001, {}, 0, false, body, element];
+      var body = $document.find('body')[0];
+      var expected = [false, false, false, false, false, false, false, true, true];
+      var tests = [null, undefined, 'string', 1001, {}, 0, false, body, element];
 
       angular.forEach(tests, function(value, idx) {
         var result = angular.isElement(value);
@@ -1921,10 +1933,10 @@ describe('angular', function() {
       // please fix this.
       var fakeBackboneCollection = {
         children: [{}, {}, {}],
-        find: function() {},
-        on: function() {},
-        off: function() {},
-        bind: function() {}
+        find() {},
+        on() {},
+        off() {},
+        bind() {}
       };
       expect(angular.isElement(fakeBackboneCollection)).toBe(false);
     });

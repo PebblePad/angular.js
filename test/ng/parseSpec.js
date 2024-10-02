@@ -118,13 +118,12 @@ describe('parser', function() {
     });
 
     it('should send the unicode characters and code points', function() {
-      function getText(t) { return t.text; }
       var isIdentifierStart = jest.fn();
       var isIdentifierContinue = jest.fn();
       isIdentifierStart.mockReturnValue(true);
       isIdentifierContinue.mockReturnValue(true);
       var lex = new Lexer({csp: false, isIdentifierStart: isIdentifierStart, isIdentifierContinue: isIdentifierContinue});
-      var tokens = lex.lex('\uD801\uDC37\uD852\uDF62\uDBFF\uDFFF');
+      lex.lex('\uD801\uDC37\uD852\uDF62\uDBFF\uDFFF');
       expect(isIdentifierStart).toHaveBeenCalledTimes(1);
       expect(isIdentifierStart.mock.calls[0]).toEqual(['\uD801\uDC37', 0x10437]);
       expect(isIdentifierContinue).toHaveBeenCalledTimes(2);
@@ -1820,7 +1819,8 @@ describe('parser', function() {
     });
   });
 
-  var $filterProvider, scope;
+  var $filterProvider;
+  var scope;
 
   beforeEach(angular.mock.module(['$filterProvider', function(filterProvider) {
     $filterProvider = filterProvider;
@@ -2022,7 +2022,7 @@ describe('parser', function() {
       });
 
       it('should handle white-spaces around dots in method invocations', function() {
-        scope.a = {b: function() { return this.c; }, c: 4};
+        scope.a = {b() { return this.c; }, c: 4};
         expect(scope.$eval('a . b ()', scope)).toEqual(4);
         expect(scope.$eval('a. b ()', scope)).toEqual(4);
         expect(scope.$eval('a .b ()', scope)).toEqual(4);
@@ -2051,7 +2051,9 @@ describe('parser', function() {
       angular.forEach([2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 42, 99], function(pathLength) {
         it('should resolve nested paths of length ' + pathLength, function() {
           // Create a nested object {x2: {x3: {x4: ... {x[n]: 42} ... }}}.
-          var obj = 42, locals = {};
+          var obj = 42;
+
+          var locals = {};
           for (var i = pathLength; i >= 2; i--) {
             var newObj = {};
             newObj['x' + i] = obj;
@@ -2159,7 +2161,7 @@ describe('parser', function() {
       });
 
       it('should evaluate function call without arguments', function() {
-        scope['const'] =  function(a, b) {return 123;};
+        scope['const'] =  function() {return 123;};
         expect(scope.$eval('const()')).toEqual(123);
       });
 
@@ -2394,7 +2396,7 @@ describe('parser', function() {
         angular.forEach([
           { toString: 2 },
           { toString: null },
-          { toString: function() { return {}; } }
+          { toString() { return {}; } }
         ], function(brokenObject) {
           scope.brokenObject = brokenObject;
           expect(function() {
@@ -2422,17 +2424,17 @@ describe('parser', function() {
 
       // https://github.com/angular/angular.js/issues/10968
       it('should evaluate arrays literals initializers left-to-right', angular.mock.inject(function($parse) {
-        var s = {c:function() {return {b: 1}; }};
+        var s = {c() {return {b: 1}; }};
         expect($parse('e=1;[a=c(),d=a.b+1]')(s)).toEqual([{b: 1}, 2]);
       }));
 
       it('should evaluate function arguments left-to-right', angular.mock.inject(function($parse) {
-        var s = {c:function() {return {b: 1}; }, i: function(x, y) { return [x, y];}};
+        var s = {c() {return {b: 1}; }, i(x, y) { return [x, y];}};
         expect($parse('e=1;i(a=c(),d=a.b+1)')(s)).toEqual([{b: 1}, 2]);
       }));
 
       it('should evaluate object properties expressions left-to-right', angular.mock.inject(function($parse) {
-        var s = {c:function() {return {b: 1}; }};
+        var s = {c() {return {b: 1}; }};
         expect($parse('e=1;{x: a=c(), y: d=a.b+1}')(s)).toEqual({x: {b: 1}, y: 2});
       }));
 
@@ -2441,7 +2443,7 @@ describe('parser', function() {
         var n = 0;
         scope.fn = function() {
           var c = n++;
-          return { c: c, anotherFn: function() { return this.c === c; } };
+          return { c: c, anotherFn() { return this.c === c; } };
         };
         expect(scope.$eval('fn().anotherFn()')).toBe(true);
       });
@@ -2451,7 +2453,7 @@ describe('parser', function() {
         var count = 0;
         scope.fn = function() {
           count++;
-          return { anotherFn: function() { return 'lucas'; } };
+          return { anotherFn() { return 'lucas'; } };
         };
         expect(scope.$eval('fn().anotherFn()')).toBe('lucas');
         expect(count).toBe(1);
@@ -2497,7 +2499,7 @@ describe('parser', function() {
 
       it('should call the function once when it is part of the context on array lookup function', function() {
         var count = 0;
-        var element = [{anotherFn: function() { return 'lucas';} }];
+        var element = [{anotherFn() { return 'lucas';} }];
         scope.fn = function() {
           count++;
           return element;
@@ -2509,7 +2511,7 @@ describe('parser', function() {
 
       it('should call the function once when it is part of the context on property lookup function', function() {
         var count = 0;
-        var element = {name: {anotherFn: function() { return 'lucas';} } };
+        var element = {name: {anotherFn() { return 'lucas';} } };
         scope.fn = function() {
           count++;
           return element;
@@ -2906,7 +2908,7 @@ describe('parser', function() {
                 expect(watcherCalls).toBe(1);
               }));
 
-              it('should always be reevaluated in literals', angular.mock.inject(function($parse) {
+              it('should always be reevaluated in literals', angular.mock.inject(function() {
                 $filterProvider.register('foo', ngInternals.valueFn(function(input) {
                   return input.b > 0;
                 }));
@@ -2917,7 +2919,7 @@ describe('parser', function() {
                 expect(function() { scope.$apply('a = {b: 1}'); }).toThrowMinErr('$rootScope', 'infdig');
               }));
 
-              it('should always be reevaluated when passed literals', angular.mock.inject(function($parse) {
+              it('should always be reevaluated when passed literals', angular.mock.inject(function() {
                 scope.$watch('[a] | filter', function() {});
 
                 scope.$apply('a = 1');
@@ -2956,7 +2958,7 @@ describe('parser', function() {
                 expect(watcherCalls).toBe(1);
               }));
 
-              it('should not be reevaluated in literals', angular.mock.inject(function($parse) {
+              it('should not be reevaluated in literals', angular.mock.inject(function() {
                 var filterCalls = 0;
                 $filterProvider.register('foo', ngInternals.valueFn(function(input) {
                   filterCalls++;
@@ -2966,7 +2968,7 @@ describe('parser', function() {
                 scope.date = new Date(1234567890123);
 
                 var watcherCalls = 0;
-                scope.$watch('[(date | foo)]', function(input) {
+                scope.$watch('[(date | foo)]', function() {
                   watcherCalls++;
                 });
 
@@ -3007,7 +3009,7 @@ describe('parser', function() {
                 expect(watcherCalls).toBe(1);
               }));
 
-              it('should be reevaluated in literals when valueOf() changes', angular.mock.inject(function($parse) {
+              it('should be reevaluated in literals when valueOf() changes', angular.mock.inject(function() {
                 var filterCalls = 0;
                 $filterProvider.register('foo', ngInternals.valueFn(function(input) {
                   filterCalls++;
@@ -3017,7 +3019,7 @@ describe('parser', function() {
                 scope.date = new Date(1234567890123);
 
                 var watcherCalls = 0;
-                scope.$watch('[(date | foo)]', function(input) {
+                scope.$watch('[(date | foo)]', function() {
                   watcherCalls++;
                 });
 
@@ -3042,7 +3044,7 @@ describe('parser', function() {
                 scope.date = new Date(1234567890123);
 
                 var watcherCalls = 0;
-                scope.$watch($parse('[(date | foo)]'), function(input) {
+                scope.$watch($parse('[(date | foo)]'), function() {
                   watcherCalls++;
                 });
 
@@ -3057,7 +3059,7 @@ describe('parser', function() {
               }));
             });
 
-            it('should not be reevaluated when input is simplified via unary operators', angular.mock.inject(function($parse) {
+            it('should not be reevaluated when input is simplified via unary operators', angular.mock.inject(function() {
               var filterCalls = 0;
               $filterProvider.register('foo', ngInternals.valueFn(function(input) {
                 filterCalls++;
@@ -3067,7 +3069,7 @@ describe('parser', function() {
               scope.obj = {};
 
               var watcherCalls = 0;
-              scope.$watch('!obj | foo:!obj', function(input) {
+              scope.$watch('!obj | foo:!obj', function() {
                 watcherCalls++;
               });
 
@@ -3080,7 +3082,7 @@ describe('parser', function() {
               expect(watcherCalls).toBe(1);
             }));
 
-            it('should not be reevaluated when input is simplified via non-plus/concat binary operators', angular.mock.inject(function($parse) {
+            it('should not be reevaluated when input is simplified via non-plus/concat binary operators', angular.mock.inject(function() {
               var filterCalls = 0;
               $filterProvider.register('foo', ngInternals.valueFn(function(input) {
                 filterCalls++;
@@ -3090,7 +3092,7 @@ describe('parser', function() {
               scope.obj = {};
 
               var watcherCalls = 0;
-              scope.$watch('1 - obj | foo:(1 * obj)', function(input) {
+              scope.$watch('1 - obj | foo:(1 * obj)', function() {
                 watcherCalls++;
               });
 
@@ -3103,7 +3105,7 @@ describe('parser', function() {
               expect(watcherCalls).toBe(1);
             }));
 
-            it('should be reevaluated when input is simplified via plus/concat', angular.mock.inject(function($parse) {
+            it('should be reevaluated when input is simplified via plus/concat', angular.mock.inject(function() {
               var filterCalls = 0;
               $filterProvider.register('foo', ngInternals.valueFn(function(input) {
                 filterCalls++;
@@ -3113,7 +3115,7 @@ describe('parser', function() {
               scope.obj = {};
 
               var watcherCalls = 0;
-              scope.$watch('1 + obj | foo', function(input) {
+              scope.$watch('1 + obj | foo', function() {
                 watcherCalls++;
               });
 
@@ -3126,19 +3128,19 @@ describe('parser', function() {
               expect(watcherCalls).toBe(1);
             }));
 
-            it('should reevaluate computed member expressions', angular.mock.inject(function($parse) {
+            it('should reevaluate computed member expressions', angular.mock.inject(function() {
               var toStringCalls = 0;
 
               scope.obj = {};
               scope.key = {
-                toString: function() {
+                toString() {
                   toStringCalls++;
                   return 'foo';
                 }
               };
 
               var watcherCalls = 0;
-              scope.$watch('obj[key]', function(input) {
+              scope.$watch('obj[key]', function() {
                 watcherCalls++;
               });
 
@@ -3179,7 +3181,7 @@ describe('parser', function() {
 
           describe('with primitive input', function() {
 
-            it('should not be reevaluated when passed literals', angular.mock.inject(function($parse) {
+            it('should not be reevaluated when passed literals', angular.mock.inject(function() {
               var filterCalls = 0;
               $filterProvider.register('foo', ngInternals.valueFn(function(input) {
                 filterCalls++;
@@ -3187,7 +3189,7 @@ describe('parser', function() {
               }));
 
               var watcherCalls = 0;
-              scope.$watch('[a] | foo', function(input) {
+              scope.$watch('[a] | foo', function() {
                 watcherCalls++;
               });
 
@@ -3200,7 +3202,7 @@ describe('parser', function() {
               expect(watcherCalls).toBe(2);
             }));
 
-            it('should not be reevaluated in literals', angular.mock.inject(function($parse) {
+            it('should not be reevaluated in literals', angular.mock.inject(function() {
               var filterCalls = 0;
               $filterProvider.register('foo', ngInternals.valueFn(function(input) {
                 filterCalls++;
@@ -3210,7 +3212,7 @@ describe('parser', function() {
               scope.prim = 1234567890123;
 
               var watcherCalls = 0;
-              scope.$watch('[(prim | foo)]', function(input) {
+              scope.$watch('[(prim | foo)]', function() {
                 watcherCalls++;
               });
 
@@ -3338,7 +3340,7 @@ describe('parser', function() {
 
         describe('literals', function() {
 
-          it('should support watching', angular.mock.inject(function($parse) {
+          it('should support watching', angular.mock.inject(function() {
             var lastVal = NaN;
             var callCount = 0;
             var listener = function(val) { callCount++; lastVal = val; };
@@ -3362,7 +3364,7 @@ describe('parser', function() {
             expect(lastVal).toEqual({val: {}});
           }));
 
-          it('should only watch the direct inputs', angular.mock.inject(function($parse) {
+          it('should only watch the direct inputs', angular.mock.inject(function() {
             var lastVal = NaN;
             var callCount = 0;
             var listener = function(val) { callCount++; lastVal = val; };
@@ -3384,7 +3386,7 @@ describe('parser', function() {
             expect(callCount).toBe(2);
           }));
 
-          it('should only watch the direct inputs when nested', angular.mock.inject(function($parse) {
+          it('should only watch the direct inputs when nested', angular.mock.inject(function() {
             var lastVal = NaN;
             var callCount = 0;
             var listener = function(val) { callCount++; lastVal = val; };
@@ -3469,7 +3471,7 @@ describe('parser', function() {
 
                 var parsed = $parse('[date]');
                 var watcherCalls = 0;
-                scope.$watch(parsed, function(input) {
+                scope.$watch(parsed, function() {
                   watcherCalls++;
                 });
 
@@ -3487,7 +3489,7 @@ describe('parser', function() {
 
                 var parsed = $parse('[date]');
                 var watcherCalls = 0;
-                scope.$watch(parsed, function(input) {
+                scope.$watch(parsed, function() {
                   watcherCalls++;
                 });
 
@@ -3503,7 +3505,7 @@ describe('parser', function() {
         });
 
         it('should continue with the evaluation of the expression without invoking computed parts',
-            angular.mock.inject(function($parse) {
+            angular.mock.inject(function() {
           var value = 'foo';
           var spy = jest.fn();
 
@@ -3519,7 +3521,7 @@ describe('parser', function() {
           expect(spy).toHaveBeenCalledTimes(5);
         }));
 
-        it('should invoke all statements in multi-statement expressions', angular.mock.inject(function($parse) {
+        it('should invoke all statements in multi-statement expressions', angular.mock.inject(function() {
           var lastVal = NaN;
           var listener = function(val) { lastVal = val; };
 
@@ -3541,10 +3543,7 @@ describe('parser', function() {
           expect(lastVal).toBe(3);
         }));
 
-        it('should watch the left side of assignments', angular.mock.inject(function($parse) {
-          var lastVal = NaN;
-          var listener = function(val) { lastVal = val; };
-
+        it('should watch the left side of assignments', angular.mock.inject(function() {
           var objA = {};
           var objB = {};
 
@@ -3606,7 +3605,7 @@ describe('parser', function() {
             lastValue = val;
           });
 
-          scope.a = {toString: function() { return this.b; }};
+          scope.a = {toString() { return this.b; }};
           scope.a.b = 1;
 
           //TODO: would be great if it didn't throw!
@@ -3621,7 +3620,7 @@ describe('parser', function() {
       describe('locals', function() {
         it('should expose local variables', angular.mock.inject(function($parse) {
           expect($parse('a')({a: 0}, {a: 1})).toEqual(1);
-          expect($parse('add(a,b)')({b: 1, add: function(a, b) { return a + b; }}, {a: 2})).toEqual(3);
+          expect($parse('add(a,b)')({b: 1, add(a, b) { return a + b; }}, {a: 2})).toEqual(3);
         }));
 
         it('should expose traverse locals', angular.mock.inject(function($parse) {
@@ -3639,7 +3638,8 @@ describe('parser', function() {
         }));
 
         it('should assign directly to locals when the local property exists', angular.mock.inject(function($parse) {
-          var s = {}, l = {};
+          var s = {};
+          var l = {};
 
           $parse('a = 1')(s, l);
           expect(s.a).toBe(1);
@@ -3914,8 +3914,8 @@ describe('parser', function() {
       var scope;
 
       beforeEach(angular.mock.module(function($parseProvider) {
-        isIdentifierStartFn = jest.fn(function(ch, cp) { return isIdentifierStartRe.test(ch); });
-        isIdentifierContinueFn = jest.fn(function(ch, cp) { return isIdentifierContinueRe.test(ch); });
+        isIdentifierStartFn = jest.fn(function(ch) { return isIdentifierStartRe.test(ch); });
+        isIdentifierContinueFn = jest.fn(function(ch) { return isIdentifierContinueRe.test(ch); });
 
         $parseProvider.setIdentifierFns(isIdentifierStartFn, isIdentifierContinueFn);
         angular.$$csp().noUnsafeEval = cspEnabled;

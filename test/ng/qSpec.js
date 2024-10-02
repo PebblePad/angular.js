@@ -32,7 +32,13 @@
 */
 
 describe('q', function() {
-  var q, q_no_error, defer, deferred, promise, log, exceptionHandlerCalls;
+  var q;
+  var q_no_error;
+  var defer;
+  var deferred;
+  var promise;
+  var log;
+  var exceptionHandlerCalls;
 
   // The following private functions are used to help with logging for testing invocation of the
   // promise callbacks.
@@ -157,12 +163,12 @@ describe('q', function() {
 
 
   var mockNextTick = {
-    nextTick: function(task) {
+    nextTick(task) {
       mockNextTick.queue.push(task);
     },
     queue: [],
     logExceptions: true,
-    flush: function() {
+    flush() {
       if (!mockNextTick.queue.length) throw new Error('Nothing to be flushed!');
       while (mockNextTick.queue.length) {
         var queue = mockNextTick.queue;
@@ -700,7 +706,7 @@ describe('q', function() {
               it('should fulfill with the original reason after that promise resolves',
                 function() {
                 var promise = createPromise();
-                var promise2 = createPromise();
+                createPromise();
                 resolve2('bar');
 
                 promise['finally'](fin(1, promise))
@@ -1778,7 +1784,7 @@ describe('q', function() {
       it('should call success callback only once even if the original promise gets fulfilled ' +
           'multiple times', function() {
         var evilPromise = {
-          then: function(success, error, progress) {
+          then(success, error, progress) {
             evilPromise.success = success;
             evilPromise.error = error;
             evilPromise.progress = progress;
@@ -1803,7 +1809,7 @@ describe('q', function() {
       it('should call errback only once even if the original promise gets fulfilled multiple ' +
           'times', function() {
         var evilPromise = {
-          then: function(success, error, progress) {
+          then(success, error, progress) {
             evilPromise.success = success;
             evilPromise.error = error;
             evilPromise.progress = progress;
@@ -1825,7 +1831,7 @@ describe('q', function() {
       it('should not call progressBack after promise gets fulfilled, even if original promise ' +
           'gets notified multiple times', function() {
         var evilPromise = {
-          then: function(success, error, progress) {
+          then(success, error, progress) {
             evilPromise.success = success;
             evilPromise.error = error;
             evilPromise.progress = progress;
@@ -1856,8 +1862,8 @@ describe('q', function() {
 
 
     it('should take an array of promises and return a promise for an array of results', function() {
-      var deferred1 = defer(),
-          deferred2 = defer();
+      var deferred1 = defer();
+      var deferred2 = defer();
 
       q.all([promise, deferred1.promise, deferred2.promise]).then(success(), error());
       expect(logStr()).toBe('');
@@ -1872,36 +1878,36 @@ describe('q', function() {
 
     it('should reject the derived promise if at least one of the promises in the array is rejected',
         function() {
-      var deferred1 = defer(),
-          deferred2 = defer();
+          var deferred1 = defer();
+          var deferred2 = defer();
 
-      q.all([promise, deferred1.promise, deferred2.promise]).then(success(), error());
-      expect(logStr()).toBe('');
-      syncResolve(deferred2, 'cau');
-      expect(logStr()).toBe('');
-      syncReject(deferred1, 'oops');
-      expect(logStr()).toBe('error(oops)->reject(oops)');
-    });
+          q.all([promise, deferred1.promise, deferred2.promise]).then(success(), error());
+          expect(logStr()).toBe('');
+          syncResolve(deferred2, 'cau');
+          expect(logStr()).toBe('');
+          syncReject(deferred1, 'oops');
+          expect(logStr()).toBe('error(oops)->reject(oops)');
+        });
 
 
     it('should not forward notifications from individual promises to the combined promise',
         function() {
-      var deferred1 = defer(),
-          deferred2 = defer();
+          var deferred1 = defer();
+          var deferred2 = defer();
 
-      q.all([promise, deferred1.promise, deferred2.promise]).then(success(), error(), progress());
-      expect(logStr()).toBe('');
-      deferred.notify('x');
-      deferred2.notify('y');
-      expect(logStr()).toBe('');
-      mockNextTick.flush();
-      expect(logStr()).toBe('');
-    });
+          q.all([promise, deferred1.promise, deferred2.promise]).then(success(), error(), progress());
+          expect(logStr()).toBe('');
+          deferred.notify('x');
+          deferred2.notify('y');
+          expect(logStr()).toBe('');
+          mockNextTick.flush();
+          expect(logStr()).toBe('');
+        });
 
 
     it('should ignore multiple resolutions of an (evil) array promise', function() {
       var evilPromise = {
-        then: function(success, error) {
+        then(success, error) {
           evilPromise.success = success;
           evilPromise.error = error;
         }
@@ -1930,8 +1936,8 @@ describe('q', function() {
 
 
     it('should take a hash of promises and return a promise for a hash of results', function() {
-      var deferred1 = defer(),
-          deferred2 = defer();
+      var deferred1 = defer();
+      var deferred2 = defer();
 
       q.all({en: promise, fr: deferred1.promise, es: deferred2.promise}).then(success(), error());
       expect(logStr()).toBe('');
@@ -1946,21 +1952,21 @@ describe('q', function() {
 
     it('should reject the derived promise if at least one of the promises in the hash is rejected',
         function() {
-      var deferred1 = defer(),
-          deferred2 = defer();
+          var deferred1 = defer();
+          var deferred2 = defer();
 
-      q.all({en: promise, fr: deferred1.promise, es: deferred2.promise}).then(success(), error());
-      expect(logStr()).toBe('');
-      syncResolve(deferred2, 'hola');
-      expect(logStr()).toBe('');
-      syncReject(deferred1, 'oops');
-      expect(logStr()).toBe('error(oops)->reject(oops)');
-    });
+          q.all({en: promise, fr: deferred1.promise, es: deferred2.promise}).then(success(), error());
+          expect(logStr()).toBe('');
+          syncResolve(deferred2, 'hola');
+          expect(logStr()).toBe('');
+          syncReject(deferred1, 'oops');
+          expect(logStr()).toBe('error(oops)->reject(oops)');
+        });
 
 
     it('should ignore multiple resolutions of an (evil) hash promise', function() {
       var evilPromise = {
-        then: function(success, error) {
+        then(success, error) {
           evilPromise.success = success;
           evilPromise.error = error;
         }
@@ -1995,8 +2001,8 @@ describe('q', function() {
     });
 
     it('should resolve as soon as the first promise is settled by resolution', function() {
-      var deferred1 = defer(),
-          deferred2 = defer();
+      var deferred1 = defer();
+      var deferred2 = defer();
 
       q.race([promise, deferred1.promise, deferred2.promise]).then(success(), error());
       expect(logStr()).toBe('');
@@ -2009,8 +2015,8 @@ describe('q', function() {
     });
 
     it('should reject as soon as the first promise is settled by rejection', function() {
-      var deferred1 = defer(),
-          deferred2 = defer();
+      var deferred1 = defer();
+      var deferred2 = defer();
 
       q.race([promise, deferred1.promise, deferred2.promise]).then(success(), error());
       expect(logStr()).toBe('');
@@ -2031,8 +2037,8 @@ describe('q', function() {
     });
 
     it('should resolve as soon as the first promise is settled by resolution', function() {
-      var deferred1 = defer(),
-          deferred2 = defer();
+      var deferred1 = defer();
+      var deferred2 = defer();
 
       q.race({a: promise, b: deferred1.promise, c: deferred2.promise}).then(success(), error());
       expect(logStr()).toBe('');
@@ -2045,8 +2051,8 @@ describe('q', function() {
     });
 
     it('should reject as soon as the first promise is settled by rejection', function() {
-      var deferred1 = defer(),
-          deferred2 = defer();
+      var deferred1 = defer();
+      var deferred2 = defer();
 
       q.race({a: promise, b: deferred1.promise, c: deferred2.promise}).then(success(), error());
       expect(logStr()).toBe('');
@@ -2062,7 +2068,7 @@ describe('q', function() {
   describe('exception logging', function() {
     var mockExceptionLogger = {
       log: [],
-      logger: function(e) {
+      logger(e) {
         mockExceptionLogger.log.push(e);
       }
     };

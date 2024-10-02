@@ -3,7 +3,11 @@
 describe('resource', function() {
 
 describe('basic usage', function() {
-  var $resource, CreditCard, callback, $httpBackend, resourceProvider;
+  var $resource;
+  var CreditCard;
+  var callback;
+  var $httpBackend;
+  var resourceProvider;
 
   beforeEach(angular.mock.module('ngResource'));
 
@@ -208,7 +212,8 @@ describe('basic usage', function() {
 
 
     it('should omit properties from prototype chain', function() {
-      var original, clone = {};
+      var original;
+      var clone = {};
       function Func() {}
       Func.prototype.hello = 'world';
 
@@ -729,8 +734,8 @@ describe('basic usage', function() {
 
 
   it('should support dynamic default parameters (global)', function() {
-    var currentGroup = 'students',
-        Person = $resource('/Person/:group/:id', { group: function() { return currentGroup; }});
+    var currentGroup = 'students';
+    var Person = $resource('/Person/:group/:id', { group() { return currentGroup; }});
 
     $httpBackend.expect('GET', '/Person/students/fedor').respond({id: 'fedor', email: 'f@f.com'});
 
@@ -743,7 +748,7 @@ describe('basic usage', function() {
 
   it('should pass resource object to dynamic default parameters', function() {
     var Person = $resource('/Person/:id', {
-      id: function(data) {
+      id(data) {
         return data ? data.id : 'fedor';
       }
     });
@@ -768,13 +773,14 @@ describe('basic usage', function() {
 
 
   it('should support dynamic default parameters (action specific)', function() {
-    var currentGroup = 'students',
-      Person = $resource('/Person/:group/:id', {}, {
-        fetch: {
-          method: 'GET',
-          params: {group: function() { return currentGroup; }}
-        }
-      });
+    var currentGroup = 'students';
+
+    var Person = $resource('/Person/:group/:id', {}, {
+      fetch: {
+        method: 'GET',
+        params: {group() { return currentGroup; }}
+      }
+    });
 
     $httpBackend.expect('GET', '/Person/students/fedor').respond({id: 'fedor', email: 'f@f.com'});
 
@@ -901,7 +907,7 @@ describe('basic usage', function() {
         $httpBackend.expect('GET', '/CreditCard/123').respond({id: 123, number: '9876'});
         var cc = CreditCard.get({id: 123});
 
-        cc.$promise.then(function(value) { return 'new value'; }).then(callback);
+        cc.$promise.then(function() { return 'new value'; }).then(callback);
         $httpBackend.flush();
 
         expect(callback).toHaveBeenCalledOnceWith('new value');
@@ -1014,7 +1020,7 @@ describe('basic usage', function() {
       it('should pass the same transformed value to success callbacks and to promises', function() {
         $httpBackend.expect('GET', '/CreditCard').respond(200, { value: 'original' });
 
-        var transformResponse = function(response) {
+        var transformResponse = function() {
           return { value: 'transformed' };
         };
 
@@ -1025,8 +1031,8 @@ describe('basic usage', function() {
           }
         });
 
-        var successValue,
-            promiseValue;
+        var successValue;
+        var promiseValue;
 
         var cc = new CreditCard({ name: 'Me' });
 
@@ -1081,7 +1087,7 @@ describe('basic usage', function() {
         $httpBackend.expect('GET', '/CreditCard?key=value').respond([{id: 1}, {id: 2}]);
         var ccs = CreditCard.query({key: 'value'});
 
-        ccs.$promise.then(function(value) { return 'new value'; }).then(callback);
+        ccs.$promise.then(function() { return 'new value'; }).then(callback);
         $httpBackend.flush();
 
         expect(callback).toHaveBeenCalledOnceWith('new value');
@@ -1135,7 +1141,7 @@ describe('basic usage', function() {
           method: 'get',
           isArray: true,
           interceptor: {
-            response: function(response) {
+            response(response) {
               return response;
             }
           }
@@ -1164,7 +1170,7 @@ describe('basic usage', function() {
           method: 'get',
           isArray: true,
           interceptor: {
-            responseError: function(response) {
+            responseError(response) {
               return response;
             }
           }
@@ -1192,15 +1198,15 @@ describe('basic usage', function() {
         CreditCard = $resource('/CreditCard', {}, {
           test1: {
             method: 'GET',
-            interceptor: {responseError: function() { return 'foo'; }}
+            interceptor: {responseError() { return 'foo'; }}
           },
           test2: {
             method: 'GET',
-            interceptor: {responseError: function() { return $q.resolve('bar'); }}
+            interceptor: {responseError() { return $q.resolve('bar'); }}
           },
           test3: {
             method: 'GET',
-            interceptor: {responseError: function() { return $q.reject('baz'); }}
+            interceptor: {responseError() { return $q.reject('baz'); }}
           }
         });
 
@@ -1230,7 +1236,10 @@ describe('basic usage', function() {
 
   describe('success mode', function() {
     it('should call the success callback (as 1st argument) on 2xx responses', function() {
-      var instance, headers, status, statusText;
+      var instance;
+      var headers;
+      var status;
+      var statusText;
       var successCb = jest.fn(function(d, h, s, t) {
         expect(d).toBe(instance);
         expect(h()).toEqual(expect.objectContaining(headers));
@@ -1259,7 +1268,10 @@ describe('basic usage', function() {
 
 
     it('should call the success callback (as 2nd argument) on 2xx responses', function() {
-      var instance, headers, status, statusText;
+      var instance;
+      var headers;
+      var status;
+      var statusText;
       var successCb = jest.fn(function(d, h, s, t) {
         expect(d).toBe(instance);
         expect(h()).toEqual(expect.objectContaining(headers));
@@ -1288,9 +1300,9 @@ describe('basic usage', function() {
   });
 
   describe('failure mode', function() {
-    var ERROR_CODE = 500,
-        ERROR_RESPONSE = 'Server Error',
-        errorCB;
+    var ERROR_CODE = 500;
+    var ERROR_RESPONSE = 'Server Error';
+    var errorCB;
 
     beforeEach(function() {
       errorCB = jest.fn(function(response) {
@@ -1325,10 +1337,10 @@ describe('basic usage', function() {
       save: {
         method: 'POST',
         params: {id: '@id'},
-        transformRequest: function(data) {
+        transformRequest(data) {
           return angular.toJson({ __id: data.id });
         },
-        transformResponse: function(data) {
+        transformResponse(data) {
           return { id: data.__id };
         }
       }
@@ -1624,7 +1636,9 @@ describe('extra params', function() {
 });
 
 describe('errors', function() {
-  var $httpBackend, $resource, $q;
+  var $httpBackend;
+  var $resource;
+  var $q;
 
   beforeEach(angular.mock.module(function($exceptionHandlerProvider) {
     $exceptionHandlerProvider.mode('log');
@@ -1727,7 +1741,7 @@ describe('handling rejections', function() {
         },
         test2: {
           method: 'GET',
-          interceptor: {responseError: function() { return {}; }}
+          interceptor: {responseError() { return {}; }}
         }
       });
 
@@ -1757,7 +1771,7 @@ describe('handling rejections', function() {
       var CreditCard = $resource('/CreditCard', {}, {
         test: {
           method: 'GET',
-          interceptor: {responseError: function() { return $q.reject({}); }}
+          interceptor: {responseError() { return $q.reject({}); }}
         }
       });
 
@@ -1774,9 +1788,11 @@ describe('handling rejections', function() {
     function() {
       $httpBackend.expectGET('/CreditCard/123').respond(null);
       var CreditCard = $resource('/CreditCard/:id');
-      var cc = CreditCard.get({id: 123},
-          function(res) { throw new Error('should be caught'); },
-          function() {});
+      CreditCard.get(
+        {id: 123},
+        function() { throw new Error('should be caught'); },
+        function() {}
+      );
 
       $httpBackend.flush();
       expect($exceptionHandler.errors.length).toBe(1);
@@ -1789,8 +1805,10 @@ describe('handling rejections', function() {
     function() {
       $httpBackend.expectGET('/CreditCard/123').respond(null);
       var CreditCard = $resource('/CreditCard/:id');
-      var cc = CreditCard.get({id: 123},
-          function(res) { throw new Error('should be caught'); });
+      CreditCard.get(
+        {id: 123},
+        function() { throw new Error('should be caught'); }
+      );
 
       $httpBackend.flush();
       expect($exceptionHandler.errors.length).toBe(1);
@@ -1805,13 +1823,15 @@ describe('handling rejections', function() {
       var CreditCard = $resource('/CreditCard/:id', null, {
         get: {
           method: 'GET',
-          interceptor: {responseError: function() {}}
+          interceptor: {responseError() {}}
         }
       });
 
-      var cc = CreditCard.get({id: 123},
-          function(res) { throw new Error('should be caught'); },
-          function() {});
+      CreditCard.get(
+        {id: 123},
+        function() { throw new Error('should be caught'); },
+        function() {}
+      );
 
       $httpBackend.flush();
       expect($exceptionHandler.errors.length).toBe(1);
@@ -1826,12 +1846,14 @@ describe('handling rejections', function() {
       var CreditCard = $resource('/CreditCard/:id', null, {
         get: {
           method: 'GET',
-          interceptor: {responseError: function() {}}
+          interceptor: {responseError() {}}
         }
       });
 
-      var cc = CreditCard.get({id: 123},
-          function(res) { throw new Error('should be caught'); });
+      CreditCard.get(
+        {id: 123},
+        function() { throw new Error('should be caught'); }
+      );
 
       $httpBackend.flush();
       expect($exceptionHandler.errors.length).toBe(1);

@@ -20,7 +20,8 @@ beforeEach(function() {
 });
 
 afterEach(function() {
-  var count, cache;
+  var count;
+  var cache;
 
   // These Nodes are persisted across tests.
   // They used to be assigned a `$$hashKey` when animated, which we needed to clear after each test
@@ -53,7 +54,7 @@ afterEach(function() {
 
     cache = angular.element.cache;
 
-    forEachSorted(cache, function(expando, key) {
+    forEachSorted(cache, function(expando) {
       angular.forEach(expando.data, function(value, key) {
         count++;
         if (value && value.$element) {

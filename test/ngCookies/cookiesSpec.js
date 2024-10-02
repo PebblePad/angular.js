@@ -9,7 +9,7 @@ describe('$cookies', function() {
       $$cookieWriter: jest.fn(function(name, value) {
         mockedCookies[name] = value;
       }),
-      $$cookieReader: function() {
+      $$cookieReader() {
         return mockedCookies;
       }
     });

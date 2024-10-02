@@ -1,7 +1,9 @@
 'use strict';
 
 describe('$aria', function() {
-  var scope, $compile, element;
+  var scope;
+  var $compile;
+  var element;
 
   beforeEach(angular.mock.module('ngAria'));
 
@@ -866,7 +868,7 @@ describe('$aria', function() {
           return {
             priority: 10,
             terminal: true,
-            link: function(scope, elem) {
+            link(scope, elem) {
               $compile(elem, null, 10)(scope);
             }
           };

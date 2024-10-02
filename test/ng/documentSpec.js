@@ -31,11 +31,9 @@ describe('$document', function() {
 
 describe('$$isDocumentHidden', function() {
   it('should listen on the visibilitychange event', function() {
-    var doc;
-
     var spy = jest.spyOn(window.document, 'addEventListener');
 
-    angular.mock.inject(function($$isDocumentHidden, $document) {
+    angular.mock.inject(function($$isDocumentHidden) {
       expect(spy.mock.calls[spy.mock.calls.length - 1][0]).toBe('visibilitychange');
       expect(spy.mock.calls[spy.mock.calls.length - 1][1]).toEqual(expect.any(Function));
       expect($$isDocumentHidden()).toBeFalsy(); // undefined in browsers that don't support visibility

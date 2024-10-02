@@ -11,7 +11,7 @@ describe('ngNonBindable', function() {
 
 
   it('should prevent compilation of the owning element and its children',
-      angular.mock.inject(function($rootScope, $compile) {
+      angular.mock.inject(function($rootScope) {
     element = compileForTest('<div ng-non-bindable text="{{name}}"><span ng-bind="name"></span></div>');
     element = compileForTest('<div>' +
                        '  <span id="s1">{{a}}</span>' +

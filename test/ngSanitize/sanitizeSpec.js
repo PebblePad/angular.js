@@ -479,7 +479,7 @@ describe('HTML', function() {
   describe('uri checking', function() {
     beforeEach(function() {
       expect.extend({
-        toBeValidUrl: function(actual) {
+        toBeValidUrl(actual) {
             var sanitize;
             angular.mock.inject(function($sanitize) {
               sanitize = $sanitize;

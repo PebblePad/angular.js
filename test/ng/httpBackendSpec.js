@@ -2,9 +2,12 @@
 'use strict';
 
 describe('$httpBackend', function() {
-
-  var $backend, $browser, $jsonpCallbacks,
-      xhr, fakeDocument, callback;
+  var $backend;
+  var $browser;
+  var $jsonpCallbacks;
+  var xhr;
+  var fakeDocument;
+  var callback;
 
   beforeEach(angular.mock.inject(function($injector) {
 
@@ -30,20 +33,20 @@ describe('$httpBackend', function() {
     };
 
     $jsonpCallbacks = {
-      createCallback: function(url) {
+      createCallback(url) {
         $jsonpCallbacks[url] = function(data) {
           $jsonpCallbacks[url].called = true;
           $jsonpCallbacks[url].data = data;
         };
         return url;
       },
-      wasCalled: function(callbackPath) {
+      wasCalled(callbackPath) {
         return $jsonpCallbacks[callbackPath].called;
       },
-      getResponse: function(callbackPath) {
+      getResponse(callbackPath) {
         return $jsonpCallbacks[callbackPath].data;
       },
-      removeCallback: function(callbackPath) {
+      removeCallback(callbackPath) {
         delete $jsonpCallbacks[callbackPath];
       }
     };
@@ -230,7 +233,7 @@ describe('$httpBackend', function() {
   });
 
   it('should abort request on numerical timeout', function() {
-    callback.mockImplementation(function(status, response) {
+    callback.mockImplementation(function(status) {
       expect(status).toBe(-1);
     });
 
@@ -269,7 +272,7 @@ describe('$httpBackend', function() {
 
 
   it('should not abort resolved request on timeout promise resolution', angular.mock.inject(function($timeout) {
-    callback.mockImplementation(function(status, response) {
+    callback.mockImplementation(function(status) {
       expect(status).toBe(200);
     });
 
@@ -305,7 +308,7 @@ describe('$httpBackend', function() {
 
 
   it('should cancel timeout on completion', function() {
-    callback.mockImplementation(function(status, response) {
+    callback.mockImplementation(function(status) {
       expect(status).toBe(200);
     });
 
@@ -399,8 +402,8 @@ describe('$httpBackend', function() {
       $backend('JSONP', 'http://example.org/path?cb=JSON_CALLBACK', null, callback);
       expect(fakeDocument.$$scripts.length).toBe(1);
 
-      var script = fakeDocument.$$scripts.shift(),
-          url = script.src.match(SCRIPT_URL);
+      var script = fakeDocument.$$scripts.shift();
+      var url = script.src.match(SCRIPT_URL);
 
       expect(url[1]).toBe('http://example.org/path');
       $jsonpCallbacks[url[2]]('some-data');
@@ -417,8 +420,8 @@ describe('$httpBackend', function() {
       expect(fakeDocument.$$scripts.length).toBe(1);
 
 
-      var script = fakeDocument.$$scripts.shift(),
-          callbackId = script.src.match(SCRIPT_URL)[2];
+      var script = fakeDocument.$$scripts.shift();
+      var callbackId = script.src.match(SCRIPT_URL)[2];
 
       $jsonpCallbacks[callbackId]('some-data');
       browserTrigger(script, 'load');
@@ -441,7 +444,7 @@ describe('$httpBackend', function() {
     it('should abort request on timeout and remove JSONP callback', function() {
       jest.spyOn($jsonpCallbacks, 'removeCallback');
 
-      callback.mockImplementation(function(status, response) {
+      callback.mockImplementation(function(status) {
         expect(status).toBe(-1);
       });
 
@@ -449,8 +452,8 @@ describe('$httpBackend', function() {
       expect(fakeDocument.$$scripts.length).toBe(1);
       expect($browser.deferredFns[0].time).toBe(2000);
 
-      var script = fakeDocument.$$scripts.shift(),
-        callbackId = script.src.match(SCRIPT_URL)[2];
+      var script = fakeDocument.$$scripts.shift();
+      var callbackId = script.src.match(SCRIPT_URL)[2];
 
       $browser.defer.flush();
       expect(fakeDocument.$$scripts.length).toBe(0);

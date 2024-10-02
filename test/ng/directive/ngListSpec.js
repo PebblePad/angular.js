@@ -3,8 +3,8 @@
 /* globals generateInputCompilerHelper: false */
 
 describe('ngList', function() {
-
-  var helper = {}, $rootScope;
+  var helper = {};
+  var $rootScope;
 
   generateInputCompilerHelper(helper);
 

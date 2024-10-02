@@ -155,10 +155,10 @@ describe('Scope', function() {
     }));
 
     it('should decrement the watcherCount when destroying a child scope', angular.mock.inject(function($rootScope) {
-      var child1 = $rootScope.$new(),
-        child2 = $rootScope.$new(),
-        grandChild1 = child1.$new(),
-        grandChild2 = child2.$new();
+      var child1 = $rootScope.$new();
+      var child2 = $rootScope.$new();
+      var grandChild1 = child1.$new();
+      var grandChild2 = child2.$new();
 
       child1.$watch('a', function() {});
       child2.$watch('a', function() {});
@@ -179,12 +179,12 @@ describe('Scope', function() {
     }));
 
     it('should decrement the watcherCount when calling the remove function', angular.mock.inject(function($rootScope) {
-      var child1 = $rootScope.$new(),
-        child2 = $rootScope.$new(),
-        grandChild1 = child1.$new(),
-        grandChild2 = child2.$new(),
-        remove1,
-        remove2;
+      var child1 = $rootScope.$new();
+      var child2 = $rootScope.$new();
+      var grandChild1 = child1.$new();
+      var grandChild2 = child2.$new();
+      var remove1;
+      var remove2;
 
       remove1 = child1.$watch('a', function() {});
       child2.$watch('a', function() {});
@@ -306,27 +306,28 @@ describe('Scope', function() {
 
     it('should allow $digest on a child scope with and without a right sibling', angular.mock.inject(
         function($rootScope) {
-      // tests a traversal edge case which we originally missed
-      var log = '',
-          childA = $rootScope.$new(),
-          childB = $rootScope.$new();
+          // tests a traversal edge case which we originally missed
+          var log = '';
 
-      $rootScope.$watch(function() { log += 'r'; });
-      childA.$watch(function() { log += 'a'; });
-      childB.$watch(function() { log += 'b'; });
+          var childA = $rootScope.$new();
+          var childB = $rootScope.$new();
 
-      // init
-      $rootScope.$digest();
-      expect(log).toBe('rabrab');
+          $rootScope.$watch(function() { log += 'r'; });
+          childA.$watch(function() { log += 'a'; });
+          childB.$watch(function() { log += 'b'; });
 
-      log = '';
-      childA.$digest();
-      expect(log).toBe('a');
+          // init
+          $rootScope.$digest();
+          expect(log).toBe('rabrab');
 
-      log = '';
-      childB.$digest();
-      expect(log).toBe('b');
-    }));
+          log = '';
+          childA.$digest();
+          expect(log).toBe('a');
+
+          log = '';
+          childB.$digest();
+          expect(log).toBe('b');
+        }));
 
 
     it('should repeat watch cycle while model changes are identified', angular.mock.inject(function($rootScope) {
@@ -485,8 +486,8 @@ describe('Scope', function() {
 
 
     it('should allow a watch to be added while in a digest', angular.mock.inject(function($rootScope) {
-      var watch1 = jest.fn(),
-          watch2 = jest.fn();
+      var watch1 = jest.fn();
+      var watch2 = jest.fn();
       $rootScope.$watch('foo', function() {
         $rootScope.$watch('foo', watch1);
         $rootScope.$watch('foo', watch2);
@@ -605,29 +606,30 @@ describe('Scope', function() {
 
       it('should return a function that allows listeners to be deregistered', angular.mock.inject(
           function($rootScope) {
-        var listener = jest.fn(),
-            listenerRemove;
+            var listener = jest.fn();
+            var listenerRemove;
 
-        listenerRemove = $rootScope.$watch('foo', listener);
-        $rootScope.$digest(); //init
-        expect(listener).toHaveBeenCalled();
-        expect(listenerRemove).toBeDefined();
+            listenerRemove = $rootScope.$watch('foo', listener);
+            $rootScope.$digest(); //init
+            expect(listener).toHaveBeenCalled();
+            expect(listenerRemove).toBeDefined();
 
-        listener.mockReset();
-        $rootScope.foo = 'bar';
-        $rootScope.$digest(); //trigger
-        expect(listener).toHaveBeenCalledTimes(1);
+            listener.mockReset();
+            $rootScope.foo = 'bar';
+            $rootScope.$digest(); //trigger
+            expect(listener).toHaveBeenCalledTimes(1);
 
-        listener.mockReset();
-        $rootScope.foo = 'baz';
-        listenerRemove();
-        $rootScope.$digest(); //trigger
-        expect(listener).not.toHaveBeenCalled();
-      }));
+            listener.mockReset();
+            $rootScope.foo = 'baz';
+            listenerRemove();
+            $rootScope.$digest(); //trigger
+            expect(listener).not.toHaveBeenCalled();
+          }));
 
 
       it('should allow a watch to be deregistered while in a digest', angular.mock.inject(function($rootScope) {
-        var remove1, remove2;
+        var remove1;
+        var remove2;
         $rootScope.$watch('remove', function() {
           remove1();
           remove2();
@@ -689,7 +691,9 @@ describe('Scope', function() {
 
 
     describe('$watchCollection', function() {
-      var log, $rootScope, deregister;
+      var log;
+      var $rootScope;
+      var deregister;
 
       beforeEach(angular.mock.inject(function(_$rootScope_, _log_) {
         $rootScope = _$rootScope_;
@@ -1201,9 +1205,13 @@ describe('Scope', function() {
     it('should not call watch action fn when watchGroup was deregistered', function() {
       var deregisterMany = scope.$watchGroup(['a', 'b'], function(values, oldValues) {
         log(oldValues + ' >>> ' + values);
-      }), deregisterOne = scope.$watchGroup(['a'], function(values, oldValues) {
+      });
+
+      var deregisterOne = scope.$watchGroup(['a'], function(values, oldValues) {
         log(oldValues + ' >>> ' + values);
-      }), deregisterNone = scope.$watchGroup([], function(values, oldValues) {
+      });
+
+      var deregisterNone = scope.$watchGroup([], function(values, oldValues) {
         log(oldValues + ' >>> ' + values);
       });
 
@@ -1219,7 +1227,10 @@ describe('Scope', function() {
   });
 
   describe('$destroy', function() {
-    var first = null, middle = null, last = null, log = null;
+    var first = null;
+    var middle = null;
+    var last = null;
+    var log = null;
 
     beforeEach(angular.mock.inject(function($rootScope) {
       log = '';
@@ -1328,9 +1339,9 @@ describe('Scope', function() {
     }));
 
     it('should decrement ancestor $$listenerCount entries', angular.mock.inject(function($rootScope) {
-      var EVENT = 'fooEvent',
-          spy = jest.fn(),
-          firstSecond = first.$new();
+      var EVENT = 'fooEvent';
+      var spy = jest.fn();
+      var firstSecond = first.$new();
 
       firstSecond.$on(EVENT, spy);
       firstSecond.$on(EVENT, spy);
@@ -1351,28 +1362,28 @@ describe('Scope', function() {
 
     it('should do nothing when a child event listener is registered after parent\'s destruction',
         angular.mock.inject(function($rootScope) {
-      var parent = $rootScope.$new(),
-          child = parent.$new();
+          var parent = $rootScope.$new();
+          var child = parent.$new();
 
-      parent.$destroy();
-      var fn = child.$on('someEvent', function() {});
-      expect(fn).toBe(angular.noop);
-    }));
+          parent.$destroy();
+          var fn = child.$on('someEvent', function() {});
+          expect(fn).toBe(angular.noop);
+        }));
 
 
     it('should do nothing when a child watch is registered after parent\'s destruction',
         angular.mock.inject(function($rootScope) {
-      var parent = $rootScope.$new(),
-          child = parent.$new();
+          var parent = $rootScope.$new();
+          var child = parent.$new();
 
-      parent.$destroy();
-      var fn = child.$watch('somePath', function() {});
-      expect(fn).toBe(angular.noop);
-    }));
+          parent.$destroy();
+          var fn = child.$watch('somePath', function() {});
+          expect(fn).toBe(angular.noop);
+        }));
 
     it('should do nothing when $apply()ing after parent\'s destruction', angular.mock.inject(function($rootScope) {
-      var parent = $rootScope.$new(),
-          child = parent.$new();
+      var parent = $rootScope.$new();
+      var child = parent.$new();
 
       parent.$destroy();
 
@@ -1384,8 +1395,8 @@ describe('Scope', function() {
     }));
 
     it('should do nothing when $evalAsync()ing after parent\'s destruction', angular.mock.inject(function($rootScope, $timeout) {
-      var parent = $rootScope.$new(),
-          child = parent.$new();
+      var parent = $rootScope.$new();
+      var child = parent.$new();
 
       parent.$destroy();
 
@@ -1400,21 +1411,22 @@ describe('Scope', function() {
 
     it('should preserve all (own and inherited) model properties on a destroyed scope',
         angular.mock.inject(function($rootScope) {
-      // This test simulates an async task (xhr response) interacting with the scope after the scope
-      // was destroyed. Since we can't abort the request, we should ensure that the task doesn't
-      // throw NPEs because the scope was cleaned up during destruction.
+          // This test simulates an async task (xhr response) interacting with the scope after the scope
+          // was destroyed. Since we can't abort the request, we should ensure that the task doesn't
+          // throw NPEs because the scope was cleaned up during destruction.
 
-      var parent = $rootScope.$new(),
-          child = parent.$new();
+          var parent = $rootScope.$new();
 
-      parent.parentModel = 'parent';
-      child.childModel = 'child';
+          var child = parent.$new();
 
-      child.$destroy();
+          parent.parentModel = 'parent';
+          child.childModel = 'child';
 
-      expect(child.parentModel).toBe('parent');
-      expect(child.childModel).toBe('child');
-    }));
+          child.$destroy();
+
+          expect(child.parentModel).toBe('parent');
+          expect(child.childModel).toBe('child');
+        }));
   });
 
 
@@ -1444,9 +1456,9 @@ describe('Scope', function() {
     it('should run callback before $watch', angular.mock.inject(function($rootScope) {
       var log = '';
       var child = $rootScope.$new();
-      $rootScope.$evalAsync(function(scope) { log += 'parent.async;'; });
+      $rootScope.$evalAsync(function() { log += 'parent.async;'; });
       $rootScope.$watch('value', function() { log += 'parent.$digest;'; });
-      child.$evalAsync(function(scope) { log += 'child.async;'; });
+      child.$evalAsync(function() { log += 'child.async;'; });
       child.$watch('value', function() { log += 'child.$digest;'; });
       $rootScope.$digest();
       expect(log).toEqual('parent.async;child.async;parent.$digest;child.$digest;');
@@ -1459,11 +1471,11 @@ describe('Scope', function() {
       $rootScope.internalCount = 0;
       $rootScope.externalCount = 0;
 
-      $rootScope.$evalAsync(function(scope) {
+      $rootScope.$evalAsync(function() {
         $rootScope.internalCount++;
       });
 
-      $rootScope.$$postDigest(function(scope) {
+      $rootScope.$$postDigest(function() {
         $rootScope.externalCount++;
       });
 
@@ -1540,7 +1552,9 @@ describe('Scope', function() {
 
 
     describe('auto-flushing when queueing outside of an $apply', function() {
-      var log, $rootScope, $browser;
+      var log;
+      var $rootScope;
+      var $browser;
 
       beforeEach(angular.mock.inject(function(_log_, _$rootScope_, _$browser_) {
         log = _log_;
@@ -1602,7 +1616,7 @@ describe('Scope', function() {
     it('should apply expression with full lifecycle', angular.mock.inject(function($rootScope) {
       var log = '';
       var child = $rootScope.$new();
-      $rootScope.$watch('a', function(a) { log += '1'; });
+      $rootScope.$watch('a', function() { log += '1'; });
       child.$apply('$parent.a=0');
       expect(log).toEqual('1');
     }));
@@ -1615,7 +1629,7 @@ describe('Scope', function() {
       angular.mock.inject(function($rootScope, $exceptionHandler, $log) {
         var log = '';
         var child = $rootScope.$new();
-        $rootScope.$watch('a', function(a) { log += '1'; });
+        $rootScope.$watch('a', function() { log += '1'; });
         $rootScope.a = 0;
         child.$apply(function() { throw new Error('MyError'); });
         expect(log).toEqual('1');
@@ -1812,7 +1826,7 @@ describe('Scope', function() {
 
 
     it('should be cancelled if a $rootScope digest occurs before the next tick', angular.mock.inject(function($rootScope, $browser) {
-      var apply = jest.spyOn($rootScope, '$apply');
+      jest.spyOn($rootScope, '$apply');
       var cancel = jest.spyOn($browser.defer, 'cancel');
       var expression = jest.fn();
 
@@ -1880,9 +1894,9 @@ describe('Scope', function() {
     }));
 
     it('should run a $$postDigest call on all child scopes when a parent scope is digested', angular.mock.inject(function($rootScope) {
-      var parent = $rootScope.$new(),
-          child = parent.$new(),
-          count = 0;
+      var parent = $rootScope.$new();
+      var child = parent.$new();
+      var count = 0;
 
       $rootScope.$$postDigest(function() {
         count++;
@@ -1902,9 +1916,9 @@ describe('Scope', function() {
     }));
 
     it('should run a $$postDigest call even if the child scope is isolated', angular.mock.inject(function($rootScope) {
-      var parent = $rootScope.$new(),
-          child = parent.$new(true),
-          signature = '';
+      var parent = $rootScope.$new();
+      var child = parent.$new(true);
+      var signature = '';
 
       parent.$$postDigest(function() {
         signature += 'A';
@@ -1925,8 +1939,8 @@ describe('Scope', function() {
     describe('$on', function() {
 
       it('should add listener for both $emit and $broadcast events', angular.mock.inject(function($rootScope) {
-        var log = '',
-            child = $rootScope.$new();
+        var log = '';
+        var child = $rootScope.$new();
 
         function eventFn() {
           log += 'X';
@@ -1944,9 +1958,9 @@ describe('Scope', function() {
 
 
       it('should increment ancestor $$listenerCount entries', angular.mock.inject(function($rootScope) {
-        var child1 = $rootScope.$new(),
-            child2 = child1.$new(),
-            spy = jest.fn();
+        var child1 = $rootScope.$new();
+        var child2 = child1.$new();
+        var spy = jest.fn();
 
         $rootScope.$on('event1', spy);
         expect($rootScope.$$listenerCount).toEqual({event1: 1});
@@ -1965,9 +1979,9 @@ describe('Scope', function() {
       describe('deregistration', function() {
 
         it('should return a function that deregisters the listener', angular.mock.inject(function($rootScope) {
-          var log = '',
-              child = $rootScope.$new(),
-              listenerRemove;
+          var log = '';
+          var child = $rootScope.$new();
+          var listenerRemove;
 
           function eventFn() {
             log += 'X';
@@ -2011,10 +2025,10 @@ describe('Scope', function() {
           var remove1 = $rootScope.$on('abc', listener1);
 
           var listener2 = jest.fn();
-          var remove2 = $rootScope.$on('abc', listener2);
+          $rootScope.$on('abc', listener2);
 
           var listener3 = jest.fn();
-          var remove3 = $rootScope.$on('abc', listener3);
+          $rootScope.$on('abc', listener3);
 
           $rootScope.$broadcast('abc');
           expect(listener1).toHaveBeenCalled();
@@ -2037,10 +2051,10 @@ describe('Scope', function() {
           var remove1 = $rootScope.$on('abc', listener1);
 
           var listener2 = jest.fn(remove1);
-          var remove2 = $rootScope.$on('abc', listener2);
+          $rootScope.$on('abc', listener2);
 
           var listener3 = jest.fn();
-          var remove3 = $rootScope.$on('abc', listener3);
+          $rootScope.$on('abc', listener3);
 
           $rootScope.$broadcast('abc');
           expect(listener1).toHaveBeenCalled();
@@ -2060,16 +2074,16 @@ describe('Scope', function() {
 
         it('should not call listener when removed by previous', angular.mock.inject(function($rootScope) {
           var listener1 = jest.fn();
-          var remove1 = $rootScope.$on('abc', listener1);
+          $rootScope.$on('abc', listener1);
 
           var listener2 = jest.fn(function() { remove3(); });
-          var remove2 = $rootScope.$on('abc', listener2);
+          $rootScope.$on('abc', listener2);
 
           var listener3 = jest.fn();
           var remove3 = $rootScope.$on('abc', listener3);
 
           var listener4 = jest.fn();
-          var remove4 = $rootScope.$on('abc', listener4);
+          $rootScope.$on('abc', listener4);
 
           $rootScope.$broadcast('abc');
           expect(listener1).toHaveBeenCalled();
@@ -2091,9 +2105,9 @@ describe('Scope', function() {
 
 
         it('should decrement ancestor $$listenerCount entries', angular.mock.inject(function($rootScope) {
-          var child1 = $rootScope.$new(),
-              child2 = child1.$new(),
-              spy = jest.fn();
+          var child1 = $rootScope.$new();
+          var child2 = child1.$new();
+          var spy = jest.fn();
 
           $rootScope.$on('event1', spy);
           expect($rootScope.$$listenerCount).toEqual({event1: 1});
@@ -2116,9 +2130,9 @@ describe('Scope', function() {
 
 
         it('should not decrement $$listenerCount when called second time', angular.mock.inject(function($rootScope) {
-          var child = $rootScope.$new(),
-              listener1Spy = jest.fn(),
-              listener2Spy = jest.fn();
+          var child = $rootScope.$new();
+          var listener1Spy = jest.fn();
+          var listener2Spy = jest.fn();
 
           child.$on('abc', listener1Spy);
           expect($rootScope.$$listenerCount).toEqual({abc: 1});
@@ -2143,7 +2157,10 @@ describe('Scope', function() {
 
 
     describe('$emit', function() {
-      var log, child, grandChild, greatGrandChild;
+      var log;
+      var child;
+      var grandChild;
+      var greatGrandChild;
 
       function logger(event) {
         log += event.currentScope.id + '>';
@@ -2215,7 +2232,7 @@ describe('Scope', function() {
         var spy3 = jest.fn();
 
         var remove1 = child.$on('evt', spy1);
-        var remove2 = child.$on('evt', spy2);
+        child.$on('evt', spy2);
         var remove3 = child.$on('evt', spy3);
 
         spy1.mockImplementation(remove1);
@@ -2249,7 +2266,7 @@ describe('Scope', function() {
         var spy3 = jest.fn();
 
         var remove1 = child.$on('evt', spy1);
-        var remove2 = child.$on('evt', spy2);
+        child.$on('evt', spy2);
         var remove3 = child.$on('evt', spy3);
 
         spy1.mockImplementation(remove1);
@@ -2323,8 +2340,15 @@ describe('Scope', function() {
 
     describe('$broadcast', function() {
       describe('event propagation', function() {
-        var log, child1, child2, child3, grandChild11, grandChild21, grandChild22, grandChild23,
-            greatGrandChild211;
+        var log;
+        var child1;
+        var child2;
+        var child3;
+        var grandChild11;
+        var grandChild21;
+        var grandChild22;
+        var grandChild23;
+        var greatGrandChild211;
 
         function logger(event) {
           log += event.currentScope.id + '>';
@@ -2403,19 +2427,19 @@ describe('Scope', function() {
 
         it('should not descend past scopes with a $$listerCount of 0 or undefined',
             angular.mock.inject(function($rootScope) {
-          var EVENT = 'fooEvent',
-              spy = jest.fn();
+              var EVENT = 'fooEvent';
+              var spy = jest.fn();
 
-          // Precondition: There should be no listeners for fooEvent.
-          expect($rootScope.$$listenerCount[EVENT]).toBeUndefined();
+              // Precondition: There should be no listeners for fooEvent.
+              expect($rootScope.$$listenerCount[EVENT]).toBeUndefined();
 
-          // Add a spy listener to a child scope.
-          $rootScope.$$childHead.$$listeners[EVENT] = [spy];
+              // Add a spy listener to a child scope.
+              $rootScope.$$childHead.$$listeners[EVENT] = [spy];
 
-          // $rootScope's count for 'fooEvent' is undefined, so spy should not be called.
-          $rootScope.$broadcast(EVENT);
-          expect(spy).not.toHaveBeenCalled();
-        }));
+              // $rootScope's count for 'fooEvent' is undefined, so spy should not be called.
+              $rootScope.$broadcast(EVENT);
+              expect(spy).not.toHaveBeenCalled();
+            }));
 
 
         it('should return event object', function() {
@@ -2430,9 +2454,9 @@ describe('Scope', function() {
 
       describe('listener', function() {
         it('should receive event object', angular.mock.inject(function($rootScope) {
-          var scope = $rootScope,
-              child = scope.$new(),
-              eventFired = false;
+          var scope = $rootScope;
+          var child = scope.$new();
+          var eventFired = false;
 
           child.$on('fooEvent', function(event) {
             eventFired = true;
@@ -2448,25 +2472,25 @@ describe('Scope', function() {
 
         it('should have the event\'s `currentScope` property set to null after broadcast',
             angular.mock.inject(function($rootScope) {
-          var scope = $rootScope,
-              child = scope.$new(),
-              event;
+              var scope = $rootScope;
+              var child = scope.$new();
+              var event;
 
-          child.$on('fooEvent', function(e) {
-            event = e;
-          });
-          scope.$broadcast('fooEvent');
+              child.$on('fooEvent', function(e) {
+                event = e;
+              });
+              scope.$broadcast('fooEvent');
 
-          expect(event.name).toBe('fooEvent');
-          expect(event.targetScope).toBe(scope);
-          expect(event.currentScope).toBe(null);
-        }));
+              expect(event.name).toBe('fooEvent');
+              expect(event.targetScope).toBe(scope);
+              expect(event.currentScope).toBe(null);
+            }));
 
 
         it('should support passing messages as varargs', angular.mock.inject(function($rootScope) {
-          var scope = $rootScope,
-              child = scope.$new(),
-              args;
+          var scope = $rootScope;
+          var child = scope.$new();
+          var args;
 
           child.$on('fooEvent', function(...providedArgs) {
             args = providedArgs;

@@ -1,7 +1,8 @@
 'use strict';
 
 describe('$$cookieReader', function() {
-  var $$cookieReader, document;
+  var $$cookieReader;
+  var document;
 
 
   describe('with access to `document.cookie`', function() {
@@ -133,5 +134,4 @@ describe('$$cookieReader', function() {
     });
 
   });
-
 });

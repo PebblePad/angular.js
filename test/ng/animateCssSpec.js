@@ -1,8 +1,8 @@
 'use strict';
 
 describe('$animateCss', function() {
-
-  var triggerRAF, element;
+  var triggerRAF;
+  var element;
   beforeEach(angular.mock.inject(function($$rAF, $rootElement, $document) {
     triggerRAF = function() {
       $$rAF.flush();
@@ -154,7 +154,7 @@ describe('$animateCss', function() {
     }));
 
     it('should not bother applying the provided [from] and [to] styles to the element if [cleanupStyles] is present',
-      angular.mock.inject(function($animateCss, $rootScope) {
+      angular.mock.inject(function($animateCss) {
 
       var animator = $animateCss(element, {
         cleanupStyles: true,
@@ -185,5 +185,4 @@ describe('$animateCss', function() {
       }
     }));
   });
-
 });

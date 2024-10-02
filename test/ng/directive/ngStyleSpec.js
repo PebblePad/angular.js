@@ -33,7 +33,12 @@ describe('ngStyle', function() {
 
 
   describe('preserving styles set before and after compilation', function() {
-    var scope, preCompStyle, preCompVal, postCompStyle, postCompVal, element;
+    var scope;
+    var preCompStyle;
+    var preCompVal;
+    var postCompStyle;
+    var postCompVal;
+    var element;
 
     beforeEach(angular.mock.inject(function($rootScope, $compile) {
       preCompStyle = 'width';

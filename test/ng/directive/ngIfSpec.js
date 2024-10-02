@@ -3,7 +3,10 @@
 describe('ngIf', function() {
 
   describe('basic', function() {
-    var $scope, $compile, element, $compileProvider;
+    var $scope;
+    var $compile;
+    var element;
+    var $compileProvider;
 
     beforeEach(angular.mock.module(function(_$compileProvider_) {
       $compileProvider = _$compileProvider_;
@@ -212,13 +215,13 @@ describe('ngIf', function() {
         directive('template', ngInternals.valueFn({
           template: '<div ng-if="true"><span test></span></div>',
           replace: true,
-          controller: function() {
+          controller() {
             this.flag = true;
           }
         }));
         directive('test', ngInternals.valueFn({
           require: '^template',
-          link: function(scope, el, attr, ctrl) {
+          link(scope, el, attr, ctrl) {
             controller = ctrl;
           }
         }));
@@ -235,7 +238,7 @@ describe('ngIf', function() {
     it('should use the correct transcluded scope', function() {
       angular.mock.module(function($compileProvider) {
         $compileProvider.directive('iso', ngInternals.valueFn({
-          link: function(scope) {
+          link(scope) {
             scope.val = 'value in iso scope';
           },
           restrict: 'E',
@@ -255,7 +258,9 @@ describe('ngIf', function() {
   });
 
   describe('and animations', function() {
-    var body, element, $rootElement;
+    var body;
+    var element;
+    var $rootElement;
 
     function html(content) {
       $rootElement.html(content);
@@ -279,7 +284,7 @@ describe('ngIf', function() {
       dealoc(element);
     });
 
-    beforeEach(angular.mock.module(function($animateProvider, $provide) {
+    beforeEach(angular.mock.module(function() {
       return function($animate) {
         $animate.enabled(true);
       };
@@ -344,8 +349,7 @@ describe('ngIf', function() {
           return $delegate;
         });
       });
-      angular.mock.inject(function($compile, $rootScope, $animate) {
-        var item;
+      angular.mock.inject(function($compile, $rootScope) {
         var $scope = $rootScope.$new();
         element = $compile(html(
           '<div>' +
@@ -355,7 +359,8 @@ describe('ngIf', function() {
 
         $scope.$apply('value = true');
 
-        var destroyed, inner = element.children(0);
+        var destroyed;
+        var inner = element.children(0);
         inner.on('$destroy', function() {
           destroyed = true;
         });

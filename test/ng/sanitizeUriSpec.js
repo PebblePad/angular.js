@@ -3,7 +3,10 @@
 /* eslint-disable no-script-url */
 
 describe('sanitizeUri', function() {
-  var sanitizeHref, sanitizeImg, sanitizeUriProvider, testUrl;
+  var sanitizeHref;
+  var sanitizeImg;
+  var sanitizeUriProvider;
+  var testUrl;
   beforeEach(function() {
     angular.mock.module(function(_$$sanitizeUriProvider_) {
       sanitizeUriProvider = _$$sanitizeUriProvider_;
@@ -240,5 +243,4 @@ describe('sanitizeUri', function() {
     });
 
   });
-
 });

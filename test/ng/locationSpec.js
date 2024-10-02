@@ -643,7 +643,7 @@ describe('$location', function() {
     it('should not update browser if only the empty hash fragment is cleared by updating the search', function() {
       initService({supportHistory: true});
       mockUpBrowser({initialUrl:'http://new.com/a/b#', baseHref:'/base/'});
-      angular.mock.inject(function($rootScope, $browser, $location) {
+      angular.mock.inject(function($rootScope, $browser) {
         $browser.url('http://new.com/a/b');
         var $browserUrl = spyOnlyCallsWithArgs($browser, 'url');
         $rootScope.$digest();
@@ -666,7 +666,7 @@ describe('$location', function() {
       initService({html5Mode:true,supportHistory:false});
       mockUpBrowser({initialUrl:'http://server/base/home', baseHref:'/base/'});
       angular.mock.inject(
-        function($browser, $location, $rootScope, $window) {
+        function($browser, $location, $rootScope) {
           var handlerCalled = false;
           $rootScope.$on('$locationChangeSuccess', function() {
             handlerCalled = true;
@@ -753,7 +753,7 @@ describe('$location', function() {
 
     function updatePathOnLocationChangeSuccessTo(newPath) {
       angular.mock.inject(function($rootScope, $location) {
-        $rootScope.$on('$locationChangeSuccess', function(event, newUrl, oldUrl) {
+        $rootScope.$on('$locationChangeSuccess', function() {
           $location.path(newPath);
         });
       });
@@ -781,7 +781,7 @@ describe('$location', function() {
       it('should not infinite $digest when going to base URL without trailing slash when $locationChangeSuccess watcher changes path to /', function() {
         initService({html5Mode: true, supportHistory: false});
         mockUpBrowser({initialUrl:'http://server/app/Home', baseHref:'/app/'});
-        angular.mock.inject(function($rootScope, $location, $browser, $window) {
+        angular.mock.inject(function($rootScope, $location, $browser) {
           var $browserUrl = spyOnlyCallsWithArgs($browser, 'url');
 
           updatePathOnLocationChangeSuccessTo('/');
@@ -906,7 +906,7 @@ describe('$location', function() {
     it('should update $location when browser url changes', function() {
       initService({html5Mode:false,hashPrefix: '!',supportHistory: true});
       mockUpBrowser({initialUrl:'http://new.com/a/b#!', baseHref:'/a/b'});
-      angular.mock.inject(function($window, $browser, $location, $rootScope) {
+      angular.mock.inject(function($window, $browser, $location) {
         jest.spyOn($location, '$$parse');
         $window.location.href = 'http://new.com/a/b#!/aaa';
         $browser.$$checkUrlChange();
@@ -921,8 +921,8 @@ describe('$location', function() {
       initService({html5Mode:false,hashPrefix: '!',supportHistory: true});
       mockUpBrowser({initialUrl:'http://new.com/a/b#!', baseHref:'/a/b'});
       angular.mock.inject(function($rootScope, $browser, $location, $window) {
-        var OLD_URL = $browser.url(),
-            NEW_URL = 'http://new.com/a/b#!/new';
+        var OLD_URL = $browser.url();
+        var NEW_URL = 'http://new.com/a/b#!/new';
 
         $rootScope.$apply(function() {
           $window.location.href = NEW_URL;
@@ -939,9 +939,9 @@ describe('$location', function() {
       initService({html5Mode:false,hashPrefix: '!',supportHistory: true});
       mockUpBrowser({initialUrl:'http://new.com/a/b#!', baseHref:'/a/b'});
       angular.mock.inject(function($rootScope, $browser, $location, $window) {
-        var OLD_URL = $browser.url(),
-            NEW_URL = 'http://new.com/a/b#!/new',
-            notRunYet = true;
+        var OLD_URL = $browser.url();
+        var NEW_URL = 'http://new.com/a/b#!/new';
+        var notRunYet = true;
 
         $rootScope.$watch(function() {
           if (notRunYet) {
@@ -1381,14 +1381,16 @@ describe('$location', function() {
 
 
   describe('link rewriting', function() {
-
-    var root, link, originalBrowser, lastEventPreventDefault;
+    var root;
+    var link;
+    var originalBrowser;
+    var lastEventPreventDefault;
 
     function configureTestLink(options) {
-      var linkHref = options.linkHref,
-          relLink = options.relLink,
-          attrs = options.attrs,
-          content = options.content;
+      var linkHref = options.linkHref;
+      var relLink = options.relLink;
+      var attrs = options.attrs;
+      var content = options.content;
 
       attrs = attrs ? ' ' + attrs + ' ' : '';
 
@@ -1407,7 +1409,7 @@ describe('$location', function() {
         link = angular.element('<a ' + attrs + '>' + content + '</a>')[0];
       }
 
-      angular.mock.module(function($provide) {
+      angular.mock.module(function() {
         return function($rootElement, $document) {
           $rootElement.append(link);
           root = $rootElement[0];
@@ -1946,10 +1948,11 @@ describe('$location', function() {
 
 
     it('should not intercept clicks outside the current hash prefix', function() {
-      var base, clickHandler;
+      var base;
+      var clickHandler;
       angular.mock.module(function($provide) {
         $provide.value('$rootElement', {
-          on: function(event, handler) {
+          on(event, handler) {
             expect(event).toEqual('click');
             clickHandler = handler;
           },
@@ -1977,10 +1980,11 @@ describe('$location', function() {
 
 
     it('should not intercept hash link clicks outside the app base url space', function() {
-      var base, clickHandler;
+      var base;
+      var clickHandler;
       angular.mock.module(function($provide) {
         $provide.value('$rootElement', {
-          on: function(event, handler) {
+          on(event, handler) {
             expect(event).toEqual('click');
             clickHandler = handler;
           },
@@ -2008,7 +2012,7 @@ describe('$location', function() {
 
 
     // regression https://github.com/angular/angular.js/issues/1058
-    it('should not throw if element was removed', angular.mock.inject(function($document, $rootElement, $location) {
+    it('should not throw if element was removed', angular.mock.inject(function($document, $rootElement) {
       // we need to do this otherwise we can't simulate events
       $document.find('body').append($rootElement);
 
@@ -2032,7 +2036,7 @@ describe('$location', function() {
           $locationProvider.hashPrefix('!');
         };
       });
-      angular.mock.inject(function($rootScope, $compile, $browser, $rootElement, $document, $location) {
+      angular.mock.inject(function($rootScope, $compile, $browser, $rootElement, $document) {
         // we need to do this otherwise we can't simulate events
         $document.find('body').append($rootElement);
         var template = '<svg><g><a xlink:href="#!/view1"><circle r="50"></circle></a></g></svg>';
@@ -2084,7 +2088,7 @@ describe('$location', function() {
         $log.info('before', newUrl, oldUrl, $browser.url());
         event.preventDefault();
       });
-      $rootScope.$on('$locationChangeSuccess', function(event, newUrl, oldUrl) {
+      $rootScope.$on('$locationChangeSuccess', function() {
         throw new Error('location should have been canceled');
       });
 
@@ -2313,8 +2317,8 @@ describe('$location', function() {
       });
 
       angular.mock.inject(function($location, $rootScope, $browser, $rootElement) {
-        var log = '',
-            link = $rootElement.find('a');
+        var log = '';
+        var link = $rootElement.find('a');
 
 
         $rootScope.$on('$locationChangeStart', function(event) {
@@ -2336,7 +2340,7 @@ describe('$location', function() {
 
 
     it('should listen on click events on href and prevent browser default in html5 mode', function() {
-      angular.mock.module(function($locationProvider, $provide) {
+      angular.mock.module(function($locationProvider) {
         $locationProvider.html5Mode(true);
         return function($rootElement, $compile, $rootScope) {
           $rootElement.html('<a href="http://server/somePath">link</a>');
@@ -2346,9 +2350,9 @@ describe('$location', function() {
       });
 
       angular.mock.inject(function($location, $rootScope, $browser, $rootElement) {
-        var log = '',
-            link = $rootElement.find('a'),
-            browserUrlBefore = $browser.url();
+        var log = '';
+        var link = $rootElement.find('a');
+        var browserUrlBefore = $browser.url();
 
         $rootScope.$on('$locationChangeStart', function(event) {
           event.preventDefault();
@@ -2476,7 +2480,9 @@ describe('$location', function() {
 
 
   describe('LocationHtml5Url', function() {
-    var locationUrl, locationUmlautUrl, locationIndexUrl;
+    var locationUrl;
+    var locationUmlautUrl;
+    var locationIndexUrl;
 
     beforeEach(function() {
       locationUrl = new ngInternals.LocationHtml5Url('http://server/pre/', 'http://server/pre/');
@@ -2622,7 +2628,9 @@ describe('$location', function() {
 
   describe('LocationHashbangInHtml5Url', function() {
     /* global LocationHashbangInHtml5Url: false */
-    var locationUrl, locationIndexUrl;
+    var locationUrl;
+
+    var locationIndexUrl;
 
     beforeEach(function() {
       locationUrl = new ngInternals.LocationHashbangInHtml5Url('http://server/pre/', 'http://server/pre/', '#!');
@@ -2685,11 +2693,11 @@ describe('$location', function() {
         win.window = win;
         win.history = {
           state: options.state || null,
-          replaceState: function(state, title, url) {
+          replaceState(state, title, url) {
             win.history.state = angular.copy(state);
             if (url) win.location.href = url;
           },
-          pushState: function(state, title, url) {
+          pushState(state, title, url) {
             win.history.state = angular.copy(state);
             if (url) win.location.href = url;
           }
@@ -2698,16 +2706,16 @@ describe('$location', function() {
         win.removeEventListener = angular.noop;
         win.location = {
           get href() { return this.$$getHref(); },
-          $$getHref: function() { return parser.href; },
+          $$getHref() { return parser.href; },
           set href(val) { this.$$setHref(val); },
-          $$setHref: function(val) { parser.href = val; },
+          $$setHref(val) { parser.href = val; },
           get hash() { return parser.hash; },
           // The parser correctly strips on a single preceding hash character if necessary
           // before joining the fragment onto the href by a new hash character
           // See hash setter spec: https://url.spec.whatwg.org/#urlutils-and-urlutilsreadonly-members
           set hash(val) { parser.hash = val; },
 
-          replace: function(val) {
+          replace(val) {
             win.location.href = val;
           }
         };

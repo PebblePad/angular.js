@@ -1,7 +1,8 @@
 'use strict';
 
 describe('Filter: orderBy', function() {
-  var orderBy, orderByFilter;
+  var orderBy;
+  var orderByFilter;
   beforeEach(angular.mock.inject(function($filter) {
     orderBy = orderByFilter = $filter('orderBy');
   }));
@@ -474,8 +475,8 @@ describe('Filter: orderBy', function() {
 
     describe('(object as `value`)', function() {
       it('should use the return value of `valueOf()` (if primitive)', function() {
-        var o1 = {k: 1, valueOf: function() { return 2; }};
-        var o2 = {k: 2, valueOf: function() { return 1; }};
+        var o1 = {k: 1, valueOf() { return 2; }};
+        var o2 = {k: 2, valueOf() { return 1; }};
 
         var items = [o1, o2];
         var expr = null;
@@ -486,8 +487,8 @@ describe('Filter: orderBy', function() {
 
 
       it('should use the return value of `toString()` (if primitive)', function() {
-        var o1 = {k: 1, toString: function() { return 2; }};
-        var o2 = {k: 2, toString: function() { return 1; }};
+        var o1 = {k: 1, toString() { return 2; }};
+        var o2 = {k: 2, toString() { return 1; }};
 
         var items = [o1, o2];
         var expr = null;
@@ -498,10 +499,10 @@ describe('Filter: orderBy', function() {
 
       it('should use the return value of `valueOf()` for subsequent steps (if non-primitive)',
         function() {
-          var o1 = {k: 1, valueOf: function() { return o3; }};
-          var o2 = {k: 2, valueOf: function() { return o4; }};
-          var o3 = {k: 3, toString: function() { return 4; }};
-          var o4 = {k: 4, toString: function() { return 3; }};
+          var o1 = {k: 1, valueOf() { return o3; }};
+          var o2 = {k: 2, valueOf() { return o4; }};
+          var o3 = {k: 3, toString() { return 4; }};
+          var o4 = {k: 4, toString() { return 3; }};
 
           var items = [o1, o2];
           var expr = null;
@@ -514,8 +515,8 @@ describe('Filter: orderBy', function() {
 
       it('should use the return value of `toString()` for subsequent steps (if non-primitive)',
         function() {
-          var o1 = {k: 1, toString: function() { return o3; }};
-          var o2 = {k: 2, toString: function() { return o4; }};
+          var o1 = {k: 1, toString() { return o3; }};
+          var o2 = {k: 2, toString() { return o4; }};
           var o3 = {k: 3};
           var o4 = {k: 4};
 
@@ -564,7 +565,7 @@ describe('Filter: orderBy', function() {
     }
 
 
-    beforeEach(angular.mock.inject(function($filter) {
+    beforeEach(angular.mock.inject(function() {
       orderBy = function(collection) {
         var args = Array.prototype.slice.call(arguments, 0);
         args[0] = arrayLike(args[0]);

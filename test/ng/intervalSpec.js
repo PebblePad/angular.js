@@ -2,13 +2,13 @@
 
 describe('$interval', function () {
   beforeEach(angular.mock.module(function ($provide) {
-    var repeatFns = [],
-      nextRepeatId = 0,
-      now = 0,
-      $window;
+    var repeatFns = [];
+    var nextRepeatId = 0;
+    var now = 0;
+    var $window;
 
     $window = {
-      setInterval: function (fn, delay, count) {
+      setInterval(fn, delay) {
         repeatFns.push({
           nextTime: (now + delay),
           delay: delay,
@@ -22,7 +22,7 @@ describe('$interval', function () {
         return nextRepeatId++;
       },
 
-      clearInterval: function (id) {
+      clearInterval(id) {
         var fnIndex;
 
         angular.forEach(repeatFns, function (fn, index) {
@@ -37,7 +37,7 @@ describe('$interval', function () {
         return false;
       },
 
-      flush: function (millis) {
+      flush(millis) {
         now += millis;
         while (repeatFns.length && repeatFns[0].nextTime <= now) {
           var task = repeatFns[0];
@@ -184,9 +184,9 @@ describe('$interval', function () {
 
 
   it('should allow you to specify a number of arguments', angular.mock.inject(function ($interval, $window) {
-    var task1 = jest.fn(),
-      task2 = jest.fn(),
-      task3 = jest.fn();
+    var task1 = jest.fn();
+    var task2 = jest.fn();
+    var task3 = jest.fn();
     $interval(task1, 1000, 2, true, 'Task1');
     $interval(task2, 1000, 2, true, 'Task2');
     $interval(task3, 1000, 2, true, 'I', 'am', 'a', 'Task3', 'spy');
@@ -204,16 +204,16 @@ describe('$interval', function () {
     expect(task1).toHaveBeenCalledWith('Task1');
     expect(task2).toHaveBeenCalledWith('Task2');
     expect(task3).toHaveBeenCalledWith('I', 'am', 'a', 'Task3', 'spy');
-
   }));
 
 
   it('should return a promise which will be updated with the count on each iteration',
     angular.mock.inject(function ($interval, $window) {
-      var log = [],
-        promise = $interval(function () {
-          log.push('tick');
-        }, 1000);
+      var log = [];
+
+      var promise = $interval(function () {
+        log.push('tick');
+      }, 1000);
 
       promise.then(function (value) {
           log.push('promise success: ' + value);
@@ -236,10 +236,11 @@ describe('$interval', function () {
 
   it('should return a promise which will be resolved after the specified number of iterations',
     angular.mock.inject(function ($interval, $window) {
-      var log = [],
-        promise = $interval(function () {
-          log.push('tick');
-        }, 1000, 2);
+      var log = [];
+
+      var promise = $interval(function () {
+        log.push('tick');
+      }, 1000, 2);
 
       promise.then(function (value) {
           log.push('promise success: ' + value);
@@ -259,7 +260,6 @@ describe('$interval', function () {
       expect(log).toEqual([
         'tick', 'promise update: 0', 'tick', 'promise update: 1', 'promise success: 2'
       ]);
-
     }));
 
 
@@ -300,10 +300,11 @@ describe('$interval', function () {
 
     it('should still update the interval promise when an exception is thrown',
       angular.mock.inject(function ($interval, $window) {
-        var log = [],
-          promise = $interval(function () {
-            throw 'Some Error';
-          }, 1000);
+        var log = [];
+
+        var promise = $interval(function () {
+          throw 'Some Error';
+        }, 1000);
 
         promise.then(function (value) {
             log.push('promise success: ' + value);
@@ -323,10 +324,11 @@ describe('$interval', function () {
 
   describe('cancel', function () {
     it('should cancel tasks', angular.mock.inject(function ($interval, $window) {
-      var task1 = jest.fn(),
-        task2 = jest.fn(),
-        task3 = jest.fn(),
-        promise1, promise3;
+      var task1 = jest.fn();
+      var task2 = jest.fn();
+      var task3 = jest.fn();
+      var promise1;
+      var promise3;
 
       promise1 = $interval(task1, 200);
       $interval(task2, 1000);
@@ -343,8 +345,8 @@ describe('$interval', function () {
 
 
     it('should cancel the promise', angular.mock.inject(function ($interval, $rootScope, $window) {
-      var promise = $interval(angular.noop, 1000),
-        log = [];
+      var promise = $interval(angular.noop, 1000);
+      var log = [];
       promise.then(function (value) {
           log.push('promise success: ' + value);
         },
@@ -360,7 +362,7 @@ describe('$interval', function () {
       $interval.cancel(promise);
       $window.flush(1000);
       $rootScope.$apply(); // For resolving the promise -
-                           // necessary since q uses $rootScope.evalAsync.
+      // necessary since q uses $rootScope.evalAsync.
 
       expect(log).toEqual(['promise update: 0', 'promise error: canceled']);
     }));
@@ -368,9 +370,10 @@ describe('$interval', function () {
 
     it('should return true if a task was successfully canceled',
       angular.mock.inject(function ($interval, $window) {
-        var task1 = jest.fn(),
-          task2 = jest.fn(),
-          promise1, promise2;
+        var task1 = jest.fn();
+        var task2 = jest.fn();
+        var promise1;
+        var promise2;
 
         promise1 = $interval(task1, 1000, 1);
         $window.flush(1000);

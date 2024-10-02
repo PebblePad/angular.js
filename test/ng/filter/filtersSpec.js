@@ -122,9 +122,10 @@ describe('filters', function() {
       // NaN when ngInternals.formatNumber rounded them with the safe rounding
       // function.
 
-      var localLimitMax = 999999999999999900000,
-          localLimitMin = 10000000000000000000,
-          exampleNumber = 444444444400000000000;
+      var localLimitMax = 999999999999999900000;
+
+      var localLimitMin = 10000000000000000000;
+      var exampleNumber = 444444444400000000000;
 
       expect(ngInternals.formatNumber(localLimitMax, pattern, ',', '.', 2))
         .toBe('999,999,999,999,999,900,000.00');
@@ -132,7 +133,6 @@ describe('filters', function() {
         .toBe('10,000,000,000,000,000,000.00');
       expect(ngInternals.formatNumber(exampleNumber, pattern, ',', '.', 2))
         .toBe('444,444,444,400,000,000,000.00');
-
     });
 
     it('should format large number',function() {

@@ -1,8 +1,8 @@
 'use strict';
 
 describe('ngPluralize', function() {
-  var element,
-    elementAlt;
+  var element;
+  var elementAlt;
 
 
   afterEach(function() {
@@ -186,7 +186,8 @@ describe('ngPluralize', function() {
   });
 
   describe('undefined rule cases', function() {
-    var $locale, $log;
+    var $locale;
+    var $log;
     beforeEach(angular.mock.inject(function(_$locale_, _$log_) {
       $locale = _$locale_;
       $log = _$log_;

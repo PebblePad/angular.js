@@ -93,7 +93,7 @@ describe('$sniffer', function() {
       var pushStateAccessCount = 0;
 
       var mockHistory = Object.create(Object.prototype, {
-        pushState: {get: function() { pushStateAccessCount++; return angular.noop; }}
+        pushState: {get() { pushStateAccessCount++; return angular.noop; }}
       });
       var mockWindow = {
         chrome: {
@@ -114,7 +114,7 @@ describe('$sniffer', function() {
         var pushStateAccessCount = 0;
 
         var mockHistory = Object.create(Object.prototype, {
-          pushState: {get: function() { pushStateAccessCount++; return angular.noop; }}
+          pushState: {get() { pushStateAccessCount++; return angular.noop; }}
         });
         var mockWindow = {
           chrome: {
@@ -134,7 +134,9 @@ describe('$sniffer', function() {
 
 
   describe('hasEvent', function() {
-    var mockDocument, mockDivElement, $sniffer;
+    var mockDocument;
+    var mockDivElement;
+    var $sniffer;
 
     beforeEach(function() {
       var mockCreateElementFn = function(elm) { if (elm === 'div') return mockDivElement; };

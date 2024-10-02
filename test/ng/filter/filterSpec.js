@@ -76,7 +76,8 @@ describe('Filter: filter', function() {
 
   it('should match primitive array values against top-level `$` property in object expression',
     function() {
-      var items, expr;
+      var items;
+      var expr;
 
       items = ['something', 'something else', 'another thing'];
       expr = {$: 'some'};
@@ -102,35 +103,36 @@ describe('Filter: filter', function() {
 
 
   it('should match items with array properties containing one or more matching items', function() {
-      var items, expr;
+    var items;
+    var expr;
 
-      items = [
-        {tags: ['web', 'html', 'css', 'js']},
-        {tags: ['hybrid', 'html', 'css', 'js', 'ios', 'android']},
-        {tags: ['mobile', 'ios', 'android']}
-      ];
-      expr = {tags: 'html'};
-      expect(filter(items, expr).length).toBe(2);
-      expect(filter(items, expr)).toEqual([items[0], items[1]]);
+    items = [
+      {tags: ['web', 'html', 'css', 'js']},
+      {tags: ['hybrid', 'html', 'css', 'js', 'ios', 'android']},
+      {tags: ['mobile', 'ios', 'android']}
+    ];
+    expr = {tags: 'html'};
+    expect(filter(items, expr).length).toBe(2);
+    expect(filter(items, expr)).toEqual([items[0], items[1]]);
 
-      items = [
-        {nums: [1, 345, 12]},
-        {nums: [0, 46, 78]},
-        {nums: [123, 4, 67]}
-      ];
-      expr = {nums: 12};
-      expect(filter(items, expr).length).toBe(2);
-      expect(filter(items, expr)).toEqual([items[0], items[2]]);
+    items = [
+      {nums: [1, 345, 12]},
+      {nums: [0, 46, 78]},
+      {nums: [123, 4, 67]}
+    ];
+    expr = {nums: 12};
+    expect(filter(items, expr).length).toBe(2);
+    expect(filter(items, expr)).toEqual([items[0], items[2]]);
 
-      items = [
-        {customers: [{name: 'John'}, {name: 'Elena'}, {name: 'Bill'}]},
-        {customers: [{name: 'Sam'}, {name: 'Klara'}, {name: 'Bill'}]},
-        {customers: [{name: 'Molli'}, {name: 'Elena'}, {name: 'Lora'}]}
-      ];
-      expr = {customers: {name: 'Bill'}};
-      expect(filter(items, expr).length).toBe(2);
-      expect(filter(items, expr)).toEqual([items[0], items[1]]);
-    }
+    items = [
+      {customers: [{name: 'John'}, {name: 'Elena'}, {name: 'Bill'}]},
+      {customers: [{name: 'Sam'}, {name: 'Klara'}, {name: 'Bill'}]},
+      {customers: [{name: 'Molli'}, {name: 'Elena'}, {name: 'Lora'}]}
+    ];
+    expr = {customers: {name: 'Bill'}};
+    expect(filter(items, expr).length).toBe(2);
+    expect(filter(items, expr)).toEqual([items[0], items[1]]);
+  }
   );
 
 
@@ -567,7 +569,7 @@ describe('Filter: filter', function() {
       expect(filter(items, 1970).length).toBe(1);
 
       obj = {
-        toString: function() { return 'custom'; }
+        toString() { return 'custom'; }
       };
       items = [{test: obj}];
       expect(filter(items, 'custom').length).toBe(1);
@@ -650,7 +652,8 @@ describe('Filter: filter', function() {
         {id: 1, details: {email: 'user1@example.com', role: 'user'}},
         {id: 2, details: {email: 'user2@example.com', role: 'user'}}
       ];
-      var expr, comp;
+      var expr;
+      var comp;
 
       expr = {details: {email: 'user@example.com', role: 'adm'}};
       expect(filter(items, expr)).toEqual([]);
