@@ -71,7 +71,7 @@ var $$CoreAnimateQueueProvider = /** @this */ function() {
       off: noop,
       pin: noop,
 
-      push: function(element, event, options, domOperation) {
+      push(element, event, options, domOperation) {
         if (domOperation) {
           domOperation();
         }
@@ -468,7 +468,7 @@ var $AnimateProvider = ['$provide', /** @this */ function($provide) {
        *
        * @param {Promise} animationPromise The animation promise that is returned when an animation is started.
        */
-      cancel: function(runner) {
+      cancel(runner) {
         if (runner.end) {
           runner.end();
         }
@@ -498,7 +498,7 @@ var $AnimateProvider = ['$provide', /** @this */ function($provide) {
        *
        * @return {Promise} the animation callback promise
        */
-      enter: function(element, parent, after, options) {
+      enter(element, parent, after, options) {
         parent = parent && jqLite(parent);
         after = after && jqLite(after);
         parent = parent || after.parent();
@@ -530,7 +530,7 @@ var $AnimateProvider = ['$provide', /** @this */ function($provide) {
        *
        * @return {Promise} the animation callback promise
        */
-      move: function(element, parent, after, options) {
+      move(element, parent, after, options) {
         parent = parent && jqLite(parent);
         after = after && jqLite(after);
         parent = parent || after.parent();
@@ -557,7 +557,7 @@ var $AnimateProvider = ['$provide', /** @this */ function($provide) {
        *
        * @return {Promise} the animation callback promise
        */
-      leave: function(element, options) {
+      leave(element, options) {
         return $$animateQueue.push(element, 'leave', prepareAnimateOptions(options), function() {
           element.remove();
         });
@@ -587,7 +587,7 @@ var $AnimateProvider = ['$provide', /** @this */ function($provide) {
        *
        * @return {Promise} the animation callback promise
        */
-      addClass: function(element, className, options) {
+      addClass(element, className, options) {
         options = prepareAnimateOptions(options);
         options.addClass = mergeClasses(options.addclass, className);
         return $$animateQueue.push(element, 'addClass', options);
@@ -617,7 +617,7 @@ var $AnimateProvider = ['$provide', /** @this */ function($provide) {
        *
        * @return {Promise} the animation callback promise
        */
-      removeClass: function(element, className, options) {
+      removeClass(element, className, options) {
         options = prepareAnimateOptions(options);
         options.removeClass = mergeClasses(options.removeClass, className);
         return $$animateQueue.push(element, 'removeClass', options);
@@ -648,7 +648,7 @@ var $AnimateProvider = ['$provide', /** @this */ function($provide) {
        *
        * @return {Promise} the animation callback promise
        */
-      setClass: function(element, add, remove, options) {
+      setClass(element, add, remove, options) {
         options = prepareAnimateOptions(options);
         options.addClass = mergeClasses(options.addClass, add);
         options.removeClass = mergeClasses(options.removeClass, remove);
@@ -695,7 +695,7 @@ var $AnimateProvider = ['$provide', /** @this */ function($provide) {
        *
        * @return {Promise} the animation callback promise
        */
-      animate: function(element, from, to, className, options) {
+      animate(element, from, to, className, options) {
         options = prepareAnimateOptions(options);
         options.from = options.from ? extend(options.from, from) : from;
         options.to   = options.to   ? extend(options.to, to)     : to;

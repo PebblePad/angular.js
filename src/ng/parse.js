@@ -67,7 +67,7 @@ var Lexer = function Lexer(options) {
 Lexer.prototype = {
   constructor: Lexer,
 
-  lex: function(text) {
+  lex(text) {
     this.text = text;
     this.index = 0;
     this.tokens = [];
@@ -103,54 +103,54 @@ Lexer.prototype = {
     return this.tokens;
   },
 
-  is: function(ch, chars) {
-    return chars.indexOf(ch) !== -1;
+  is(ch, chars) {
+    return chars.includes(ch);
   },
 
-  peek: function(i) {
+  peek(i) {
     var num = i || 1;
     return (this.index + num < this.text.length) ? this.text.charAt(this.index + num) : false;
   },
 
-  isNumber: function(ch) {
+  isNumber(ch) {
     return ('0' <= ch && ch <= '9') && typeof ch === 'string';
   },
 
-  isWhitespace: function(ch) {
+  isWhitespace(ch) {
     // IE treats non-breaking space as \u00A0
     return (ch === ' ' || ch === '\r' || ch === '\t' ||
             ch === '\n' || ch === '\v' || ch === '\u00A0');
   },
 
-  isIdentifierStart: function(ch) {
+  isIdentifierStart(ch) {
     return this.options.isIdentifierStart ?
         this.options.isIdentifierStart(ch, this.codePointAt(ch)) :
         this.isValidIdentifierStart(ch);
   },
 
-  isValidIdentifierStart: function(ch) {
+  isValidIdentifierStart(ch) {
     return ('a' <= ch && ch <= 'z' ||
             'A' <= ch && ch <= 'Z' ||
             '_' === ch || ch === '$');
   },
 
-  isIdentifierContinue: function(ch) {
+  isIdentifierContinue(ch) {
     return this.options.isIdentifierContinue ?
         this.options.isIdentifierContinue(ch, this.codePointAt(ch)) :
         this.isValidIdentifierContinue(ch);
   },
 
-  isValidIdentifierContinue: function(ch, cp) {
+  isValidIdentifierContinue(ch, cp) {
     return this.isValidIdentifierStart(ch, cp) || this.isNumber(ch);
   },
 
-  codePointAt: function(ch) {
+  codePointAt(ch) {
     if (ch.length === 1) return ch.charCodeAt(0);
     // eslint-disable-next-line no-bitwise
     return (ch.charCodeAt(0) << 10) + ch.charCodeAt(1) - 0x35FDC00;
   },
 
-  peekMultichar: function() {
+  peekMultichar() {
     var ch = this.text.charAt(this.index);
     var peek = this.peek();
     if (!peek) {
@@ -164,11 +164,11 @@ Lexer.prototype = {
     return ch;
   },
 
-  isExpOperator: function(ch) {
+  isExpOperator(ch) {
     return (ch === '-' || ch === '+' || this.isNumber(ch));
   },
 
-  throwError: function(error, start, end) {
+  throwError(error, start, end) {
     end = end || this.index;
     var colStr = (isDefined(start)
             ? 's ' + start +  '-' + this.index + ' [' + this.text.substring(start, end) + ']'
@@ -177,7 +177,7 @@ Lexer.prototype = {
         error, colStr, this.text);
   },
 
-  readNumber: function() {
+  readNumber() {
     var number = '';
     var start = this.index;
     while (this.index < this.text.length) {
@@ -210,7 +210,7 @@ Lexer.prototype = {
     });
   },
 
-  readIdent: function() {
+  readIdent() {
     var start = this.index;
     this.index += this.peekMultichar().length;
     while (this.index < this.text.length) {
@@ -227,7 +227,7 @@ Lexer.prototype = {
     });
   },
 
-  readString: function(quote) {
+  readString(quote) {
     var start = this.index;
     this.index++;
     var string = '';
@@ -295,7 +295,7 @@ AST.LocalsExpression = 'LocalsExpression';
 AST.NGValueParameter = 'NGValueParameter';
 
 AST.prototype = {
-  ast: function(text) {
+  ast(text) {
     this.text = text;
     this.tokens = this.lexer.lex(text);
 
@@ -308,7 +308,7 @@ AST.prototype = {
     return value;
   },
 
-  program: function() {
+  program() {
     var body = [];
     while (true) {
       if (this.tokens.length > 0 && !this.peek('}', ')', ';', ']'))
@@ -319,11 +319,11 @@ AST.prototype = {
     }
   },
 
-  expressionStatement: function() {
+  expressionStatement() {
     return { type: AST.ExpressionStatement, expression: this.filterChain() };
   },
 
-  filterChain: function() {
+  filterChain() {
     var left = this.expression();
     while (this.expect('|')) {
       left = this.filter(left);
@@ -331,11 +331,11 @@ AST.prototype = {
     return left;
   },
 
-  expression: function() {
+  expression() {
     return this.assignment();
   },
 
-  assignment: function() {
+  assignment() {
     var result = this.ternary();
     if (this.expect('=')) {
       if (!isAssignable(result)) {
@@ -347,7 +347,7 @@ AST.prototype = {
     return result;
   },
 
-  ternary: function() {
+  ternary() {
     var test = this.logicalOR();
     var alternate;
     var consequent;
@@ -361,7 +361,7 @@ AST.prototype = {
     return test;
   },
 
-  logicalOR: function() {
+  logicalOR() {
     var left = this.logicalAND();
     while (this.expect('||')) {
       left = { type: AST.LogicalExpression, operator: '||', left: left, right: this.logicalAND() };
@@ -369,7 +369,7 @@ AST.prototype = {
     return left;
   },
 
-  logicalAND: function() {
+  logicalAND() {
     var left = this.equality();
     while (this.expect('&&')) {
       left = { type: AST.LogicalExpression, operator: '&&', left: left, right: this.equality()};
@@ -377,7 +377,7 @@ AST.prototype = {
     return left;
   },
 
-  equality: function() {
+  equality() {
     var left = this.relational();
     var token;
     while ((token = this.expect('==','!=','===','!=='))) {
@@ -386,7 +386,7 @@ AST.prototype = {
     return left;
   },
 
-  relational: function() {
+  relational() {
     var left = this.additive();
     var token;
     while ((token = this.expect('<', '>', '<=', '>='))) {
@@ -395,7 +395,7 @@ AST.prototype = {
     return left;
   },
 
-  additive: function() {
+  additive() {
     var left = this.multiplicative();
     var token;
     while ((token = this.expect('+','-'))) {
@@ -404,7 +404,7 @@ AST.prototype = {
     return left;
   },
 
-  multiplicative: function() {
+  multiplicative() {
     var left = this.unary();
     var token;
     while ((token = this.expect('*','/','%'))) {
@@ -413,7 +413,7 @@ AST.prototype = {
     return left;
   },
 
-  unary: function() {
+  unary() {
     var token;
     if ((token = this.expect('+', '-', '!'))) {
       return { type: AST.UnaryExpression, operator: token.text, prefix: true, argument: this.unary() };
@@ -422,7 +422,7 @@ AST.prototype = {
     }
   },
 
-  primary: function() {
+  primary() {
     var primary;
     if (this.expect('(')) {
       primary = this.filterChain();
@@ -460,7 +460,7 @@ AST.prototype = {
     return primary;
   },
 
-  filter: function(baseExpression) {
+  filter(baseExpression) {
     var args = [baseExpression];
     var result = {type: AST.CallExpression, callee: this.identifier(), arguments: args, filter: true};
 
@@ -471,7 +471,7 @@ AST.prototype = {
     return result;
   },
 
-  parseArguments: function() {
+  parseArguments() {
     var args = [];
     if (this.peekToken().text !== ')') {
       do {
@@ -481,7 +481,7 @@ AST.prototype = {
     return args;
   },
 
-  identifier: function() {
+  identifier() {
     var token = this.consume();
     if (!token.identifier) {
       this.throwError('is not a valid identifier', token);
@@ -489,12 +489,12 @@ AST.prototype = {
     return { type: AST.Identifier, name: token.text };
   },
 
-  constant: function() {
+  constant() {
     // TODO check that it is a constant
     return { type: AST.Literal, value: this.consume().value };
   },
 
-  arrayDeclaration: function() {
+  arrayDeclaration() {
     var elements = [];
     if (this.peekToken().text !== ']') {
       do {
@@ -510,8 +510,9 @@ AST.prototype = {
     return { type: AST.ArrayExpression, elements: elements };
   },
 
-  object: function() {
-    var properties = [], property;
+  object() {
+    var properties = [];
+    var property;
     if (this.peekToken().text !== '}') {
       do {
         if (this.peek('}')) {
@@ -551,13 +552,13 @@ AST.prototype = {
     return {type: AST.ObjectExpression, properties: properties };
   },
 
-  throwError: function(msg, token) {
+  throwError(msg, token) {
     throw $parseMinErr('syntax',
         'Syntax Error: Token \'{0}\' {1} at column {2} of the expression [{3}] starting at [{4}].',
           token.text, msg, (token.index + 1), this.text, this.text.substring(token.index));
   },
 
-  consume: function(e1) {
+  consume(e1) {
     if (this.tokens.length === 0) {
       throw $parseMinErr('ueoe', 'Unexpected end of expression: {0}', this.text);
     }
@@ -569,18 +570,18 @@ AST.prototype = {
     return token;
   },
 
-  peekToken: function() {
+  peekToken() {
     if (this.tokens.length === 0) {
       throw $parseMinErr('ueoe', 'Unexpected end of expression: {0}', this.text);
     }
     return this.tokens[0];
   },
 
-  peek: function(e1, e2, e3, e4) {
+  peek(e1, e2, e3, e4) {
     return this.peekAhead(0, e1, e2, e3, e4);
   },
 
-  peekAhead: function(i, e1, e2, e3, e4) {
+  peekAhead(i, e1, e2, e3, e4) {
     if (this.tokens.length > i) {
       var token = this.tokens[i];
       var t = token.text;
@@ -592,7 +593,7 @@ AST.prototype = {
     return false;
   },
 
-  expect: function(e1, e2, e3, e4) {
+  expect(e1, e2, e3, e4) {
     var token = this.peek(e1, e2, e3, e4);
     if (token) {
       this.tokens.shift();
@@ -714,7 +715,7 @@ function findConstantAndWatchExpressions(ast, $filter, parentIsPure) {
     forEach(ast.arguments, function(expr) {
       findConstantAndWatchExpressions(expr, $filter, astIsPure);
       allConstants = allConstants && expr.constant;
-      argsToWatch.push.apply(argsToWatch, expr.toWatch);
+      argsToWatch.push(...expr.toWatch);
     });
     ast.constant = allConstants;
     ast.toWatch = isStatelessFilter ? argsToWatch : [ast];
@@ -731,7 +732,7 @@ function findConstantAndWatchExpressions(ast, $filter, parentIsPure) {
     forEach(ast.elements, function(expr) {
       findConstantAndWatchExpressions(expr, $filter, astIsPure);
       allConstants = allConstants && expr.constant;
-      argsToWatch.push.apply(argsToWatch, expr.toWatch);
+      argsToWatch.push(...expr.toWatch);
     });
     ast.constant = allConstants;
     ast.toWatch = argsToWatch;
@@ -742,12 +743,12 @@ function findConstantAndWatchExpressions(ast, $filter, parentIsPure) {
     forEach(ast.properties, function(property) {
       findConstantAndWatchExpressions(property.value, $filter, astIsPure);
       allConstants = allConstants && property.value.constant;
-      argsToWatch.push.apply(argsToWatch, property.value.toWatch);
+      argsToWatch.push(...property.value.toWatch);
       if (property.computed) {
         //`{[key]: value}` implicitly does `key.toString()` which may be non-pure
         findConstantAndWatchExpressions(property.key, $filter, /*parentIsPure=*/false);
         allConstants = allConstants && property.key.constant;
-        argsToWatch.push.apply(argsToWatch, property.key.toWatch);
+        argsToWatch.push(...property.key.toWatch);
       }
     });
     ast.constant = allConstants;
@@ -799,7 +800,7 @@ function ASTCompiler($filter) {
 }
 
 ASTCompiler.prototype = {
-  compile: function(ast) {
+  compile(ast) {
     var self = this;
     this.state = {
       nextId: 0,
@@ -862,7 +863,7 @@ ASTCompiler.prototype = {
 
   STRICT: 'strict',
 
-  watchFns: function() {
+  watchFns() {
     var result = [];
     var inputs = this.state.inputs;
     var self = this;
@@ -878,14 +879,14 @@ ASTCompiler.prototype = {
     return result.join('');
   },
 
-  generateFunction: function(name, params) {
+  generateFunction(name, params) {
     return 'function(' + params + '){' +
         this.varsPrefix(name) +
         this.body(name) +
         '};';
   },
 
-  filterPrefix: function() {
+  filterPrefix() {
     var parts = [];
     var self = this;
     forEach(this.state.filters, function(id, filter) {
@@ -895,16 +896,21 @@ ASTCompiler.prototype = {
     return '';
   },
 
-  varsPrefix: function(section) {
+  varsPrefix(section) {
     return this.state[section].vars.length ? 'var ' + this.state[section].vars.join(',') + ';' : '';
   },
 
-  body: function(section) {
+  body(section) {
     return this.state[section].body.join('');
   },
 
-  recurse: function(ast, intoId, nameId, recursionFn, create, skipWatchIdCheck) {
-    var left, right, self = this, args, expression, computed;
+  recurse(ast, intoId, nameId, recursionFn, create, skipWatchIdCheck) {
+    var left;
+    var right;
+    var self = this;
+    var args;
+    var expression;
+    var computed;
     recursionFn = recursionFn || noop;
     if (!skipWatchIdCheck && isDefined(ast.watchId)) {
       intoId = intoId || this.nextId();
@@ -1130,7 +1136,7 @@ ASTCompiler.prototype = {
     }
   },
 
-  getHasOwnProperty: function(element, property) {
+  getHasOwnProperty(element, property) {
     var key = element + '.' + property;
     var own = this.current().own;
     if (!own.hasOwnProperty(key)) {
@@ -1139,32 +1145,32 @@ ASTCompiler.prototype = {
     return own[key];
   },
 
-  assign: function(id, value) {
+  assign(id, value) {
     if (!id) return;
     this.current().body.push(id, '=', value, ';');
     return id;
   },
 
-  filter: function(filterName) {
+  filter(filterName) {
     if (!this.state.filters.hasOwnProperty(filterName)) {
       this.state.filters[filterName] = this.nextId(true);
     }
     return this.state.filters[filterName];
   },
 
-  ifDefined: function(id, defaultValue) {
+  ifDefined(id, defaultValue) {
     return 'ifDefined(' + id + ',' + this.escape(defaultValue) + ')';
   },
 
-  plus: function(left, right) {
+  plus(left, right) {
     return 'plus(' + left + ',' + right + ')';
   },
 
-  return_: function(id) {
+  return_(id) {
     this.current().body.push('return ', id, ';');
   },
 
-  if_: function(test, alternate, consequent) {
+  if_(test, alternate, consequent) {
     if (test === true) {
       alternate();
     } else {
@@ -1180,19 +1186,19 @@ ASTCompiler.prototype = {
     }
   },
 
-  not: function(expression) {
+  not(expression) {
     return '!(' + expression + ')';
   },
 
-  isNull: function(expression) {
+  isNull(expression) {
     return expression + '==null';
   },
 
-  notNull: function(expression) {
+  notNull(expression) {
     return expression + '!=null';
   },
 
-  nonComputedMember: function(left, right) {
+  nonComputedMember(left, right) {
     var SAFE_IDENTIFIER = /^[$_a-zA-Z][$_a-zA-Z0-9]*$/;
     var UNSAFE_CHARACTERS = /[^$_a-zA-Z0-9]/g;
     if (SAFE_IDENTIFIER.test(right)) {
@@ -1202,27 +1208,27 @@ ASTCompiler.prototype = {
     }
   },
 
-  computedMember: function(left, right) {
+  computedMember(left, right) {
     return left + '[' + right + ']';
   },
 
-  member: function(left, right, computed) {
+  member(left, right, computed) {
     if (computed) return this.computedMember(left, right);
     return this.nonComputedMember(left, right);
   },
 
-  getStringValue: function(item) {
+  getStringValue(item) {
     this.assign(item, 'getStringValue(' + item + ')');
   },
 
-  lazyRecurse: function(ast, intoId, nameId, recursionFn, create, skipWatchIdCheck) {
+  lazyRecurse(ast, intoId, nameId, recursionFn, create, skipWatchIdCheck) {
     var self = this;
     return function() {
       self.recurse(ast, intoId, nameId, recursionFn, create, skipWatchIdCheck);
     };
   },
 
-  lazyAssign: function(id, value) {
+  lazyAssign(id, value) {
     var self = this;
     return function() {
       self.assign(id, value);
@@ -1231,11 +1237,11 @@ ASTCompiler.prototype = {
 
   stringEscapeRegex: /[^ a-zA-Z0-9]/g,
 
-  stringEscapeFn: function(c) {
+  stringEscapeFn(c) {
     return '\\u' + ('0000' + c.charCodeAt(0).toString(16)).slice(-4);
   },
 
-  escape: function(value) {
+  escape(value) {
     if (isString(value)) return '\'' + value.replace(this.stringEscapeRegex, this.stringEscapeFn) + '\'';
     if (isNumber(value)) return value.toString();
     if (value === true) return 'true';
@@ -1246,7 +1252,7 @@ ASTCompiler.prototype = {
     throw $parseMinErr('esc', 'IMPOSSIBLE');
   },
 
-  nextId: function(skip, init) {
+  nextId(skip, init) {
     var id = 'v' + (this.state.nextId++);
     if (!skip) {
       this.current().vars.push(id + (init ? '=' + init : ''));
@@ -1254,7 +1260,7 @@ ASTCompiler.prototype = {
     return id;
   },
 
-  current: function() {
+  current() {
     return this.state[this.state.computing];
   }
 };
@@ -1265,7 +1271,7 @@ function ASTInterpreter($filter) {
 }
 
 ASTInterpreter.prototype = {
-  compile: function(ast) {
+  compile(ast) {
     var self = this;
     findConstantAndWatchExpressions(ast, self.$filter);
     var assignable;
@@ -1309,8 +1315,11 @@ ASTInterpreter.prototype = {
     return fn;
   },
 
-  recurse: function(ast, context, create) {
-    var left, right, self = this, args;
+  recurse(ast, context, create) {
+    var left;
+    var right;
+    var self = this;
+    var args;
     if (ast.input) {
       return this.inputs(ast.input, ast.watchId);
     }
@@ -1359,7 +1368,7 @@ ASTInterpreter.prototype = {
           for (var i = 0; i < args.length; ++i) {
             values.push(args[i](scope, locals, assign, inputs));
           }
-          var value = right.apply(undefined, values, inputs);
+          var value = right(...values);
           return context ? {context: undefined, name: undefined, value: value} : value;
         } :
         function(scope, locals, assign, inputs) {
@@ -1568,10 +1577,10 @@ ASTInterpreter.prototype = {
       return context ? {value: arg} : arg;
     };
   },
-  value: function(value, context) {
+  value(value, context) {
     return function() { return context ? {context: undefined, name: undefined, value: value} : value; };
   },
-  identifier: function(name, context, create) {
+  identifier(name, context, create) {
     return function(scope, locals, assign, inputs) {
       var base = locals && (name in locals) ? locals : scope;
       if (create && create !== 1 && base && base[name] == null) {
@@ -1585,7 +1594,7 @@ ASTInterpreter.prototype = {
       }
     };
   },
-  computedMember: function(left, right, context, create) {
+  computedMember(left, right, context, create) {
     return function(scope, locals, assign, inputs) {
       var lhs = left(scope, locals, assign, inputs);
       var rhs;
@@ -1607,7 +1616,7 @@ ASTInterpreter.prototype = {
       }
     };
   },
-  nonComputedMember: function(left, right, context, create) {
+  nonComputedMember(left, right, context, create) {
     return function(scope, locals, assign, inputs) {
       var lhs = left(scope, locals, assign, inputs);
       if (create && create !== 1) {
@@ -1623,7 +1632,7 @@ ASTInterpreter.prototype = {
       }
     };
   },
-  inputs: function(input, watchId) {
+  inputs(input, watchId) {
     return function(scope, value, locals, inputs) {
       if (inputs) return inputs[watchId];
       return input(scope, value, locals);
@@ -1643,7 +1652,7 @@ function Parser(lexer, $filter, options) {
 Parser.prototype = {
   constructor: Parser,
 
-  parse: function(text) {
+  parse(text) {
     var ast = this.getAst(text);
     var fn = this.astCompiler.compile(ast.ast);
     fn.literal = isLiteral(ast.ast);
@@ -1652,7 +1661,7 @@ Parser.prototype = {
     return fn;
   },
 
-  getAst: function(exp) {
+  getAst(exp) {
     var oneTime = false;
     exp = exp.trim();
 
@@ -1731,7 +1740,8 @@ function $ParseProvider() {
     'null': null,
     'undefined': undefined
   };
-  var identStart, identContinue;
+  var identStart;
+  var identContinue;
 
   /**
    * @ngdoc method
@@ -1748,30 +1758,30 @@ function $ParseProvider() {
     literals[literalName] = literalValue;
   };
 
- /**
-  * @ngdoc method
-  * @name $parseProvider#setIdentifierFns
-  *
-  * @description
-  *
-  * Allows defining the set of characters that are allowed in AngularJS expressions. The function
-  * `identifierStart` will get called to know if a given character is a valid character to be the
-  * first character for an identifier. The function `identifierContinue` will get called to know if
-  * a given character is a valid character to be a follow-up identifier character. The functions
-  * `identifierStart` and `identifierContinue` will receive as arguments the single character to be
-  * identifier and the character code point. These arguments will be `string` and `numeric`. Keep in
-  * mind that the `string` parameter can be two characters long depending on the character
-  * representation. It is expected for the function to return `true` or `false`, whether that
-  * character is allowed or not.
-  *
-  * Since this function will be called extensively, keep the implementation of these functions fast,
-  * as the performance of these functions have a direct impact on the expressions parsing speed.
-  *
-  * @param {function=} identifierStart The function that will decide whether the given character is
-  *   a valid identifier start character.
-  * @param {function=} identifierContinue The function that will decide whether the given character is
-  *   a valid identifier continue character.
-  */
+  /**
+   * @ngdoc method
+   * @name $parseProvider#setIdentifierFns
+   *
+   * @description
+   *
+   * Allows defining the set of characters that are allowed in AngularJS expressions. The function
+   * `identifierStart` will get called to know if a given character is a valid character to be the
+   * first character for an identifier. The function `identifierContinue` will get called to know if
+   * a given character is a valid character to be a follow-up identifier character. The functions
+   * `identifierStart` and `identifierContinue` will receive as arguments the single character to be
+   * identifier and the character code point. These arguments will be `string` and `numeric`. Keep in
+   * mind that the `string` parameter can be two characters long depending on the character
+   * representation. It is expected for the function to return `true` or `false`, whether that
+   * character is allowed or not.
+   *
+   * Since this function will be called extensively, keep the implementation of these functions fast,
+   * as the performance of these functions have a direct impact on the expressions parsing speed.
+   *
+   * @param {function=} identifierStart The function that will decide whether the given character is
+   *   a valid identifier start character.
+   * @param {function=} identifierContinue The function that will decide whether the given character is
+   *   a valid identifier continue character.
+   */
   this.setIdentifierFns = function(identifierStart, identifierContinue) {
     identStart = identifierStart;
     identContinue = identifierContinue;
@@ -1790,7 +1800,8 @@ function $ParseProvider() {
     return $parse;
 
     function $parse(exp, interceptorFn) {
-      var parsedExpression, cacheKey;
+      var parsedExpression;
+      var cacheKey;
 
       switch (typeof exp) {
         case 'string':
@@ -1899,7 +1910,8 @@ function $ParseProvider() {
     }
 
     function oneTimeWatchDelegate(scope, listener, objectEquality, parsedExpression, prettyPrintExpression) {
-      var unwatch, lastValue;
+      var unwatch;
+      var lastValue;
       if (parsedExpression.inputs) {
         unwatch = inputsWatchDelegate(scope, oneTimeListener, objectEquality, parsedExpression, prettyPrintExpression);
       } else {
@@ -1926,7 +1938,8 @@ function $ParseProvider() {
     }
 
     function oneTimeLiteralWatchDelegate(scope, listener, objectEquality, parsedExpression) {
-      var unwatch, lastValue;
+      var unwatch;
+      var lastValue;
       unwatch = scope.$watch(function oneTimeWatch(scope) {
         return parsedExpression(scope);
       }, function oneTimeListener(value, old, scope) {

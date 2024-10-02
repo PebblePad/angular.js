@@ -3,16 +3,17 @@
 describe('Binder', function() {
 
   var element;
+  var compileToHtmlElement;
 
   function childNode(element, index) {
-    return jqLite(element[0].childNodes[index]);
+    return angular.element(element[0].childNodes[index]);
   }
 
   beforeEach(function() {
     this.compileToHtml = function(content) {
       var html;
-      inject(function($rootScope, $compile) {
-        content = jqLite(content);
+      angular.mock.inject(function($rootScope, $compile) {
+        content = compileToHtmlElement = angular.element(content);
         $compile(content)($rootScope);
         html = sortedHtml(content);
       });
@@ -21,35 +22,36 @@ describe('Binder', function() {
   });
 
   afterEach(function() {
+    dealoc(compileToHtmlElement);
     dealoc(element);
     dealoc(this.element);
   });
 
-  it('BindUpdate', inject(function($rootScope, $compile) {
-    $compile('<div ng-init="a=123"/>')($rootScope);
+  it('BindUpdate', angular.mock.inject(function($rootScope, $compile) {
+    element = $compile('<div ng-init="a=123"/>')($rootScope);
     $rootScope.$digest();
     expect($rootScope.a).toBe(123);
   }));
 
-  it('ExecuteInitialization', inject(function($rootScope, $compile) {
-    $compile('<div ng-init="a=123">')($rootScope);
+  it('ExecuteInitialization', angular.mock.inject(function($rootScope, $compile) {
+    element = $compile('<div ng-init="a=123">')($rootScope);
     expect($rootScope.a).toBe(123);
   }));
 
-  it('ExecuteInitializationStatements', inject(function($rootScope, $compile) {
-    $compile('<div ng-init="a=123;b=345">')($rootScope);
+  it('ExecuteInitializationStatements', angular.mock.inject(function($rootScope, $compile) {
+    element = $compile('<div ng-init="a=123;b=345">')($rootScope);
     expect($rootScope.a).toBe(123);
     expect($rootScope.b).toBe(345);
   }));
 
-  it('ApplyTextBindings', inject(function($rootScope, $compile) {
+  it('ApplyTextBindings', angular.mock.inject(function($rootScope, $compile) {
     element = $compile('<div ng-bind="model.a">x</div>')($rootScope);
     $rootScope.model = {a:123};
     $rootScope.$apply();
     expect(element.text()).toBe('123');
   }));
 
-  it('InputTypeButtonActionExecutesInScope', inject(function($rootScope, $compile) {
+  it('InputTypeButtonActionExecutesInScope', angular.mock.inject(function($rootScope, $compile) {
     var savedCalled = false;
     element = $compile(
       '<input type="button" ng-click="person.save()" value="Apply">')($rootScope);
@@ -61,7 +63,7 @@ describe('Binder', function() {
     expect(savedCalled).toBe(true);
   }));
 
-  it('InputTypeButtonActionExecutesInScope2', inject(function($rootScope, $compile) {
+  it('InputTypeButtonActionExecutesInScope2', angular.mock.inject(function($rootScope, $compile) {
     var log = '';
     element = $compile('<input type="image" ng-click="action()">')($rootScope);
     $rootScope.action = function() {
@@ -72,7 +74,7 @@ describe('Binder', function() {
     expect(log).toEqual('click;');
   }));
 
-  it('ButtonElementActionExecutesInScope', inject(function($rootScope, $compile) {
+  it('ButtonElementActionExecutesInScope', angular.mock.inject(function($rootScope, $compile) {
     var savedCalled = false;
     element = $compile('<button ng-click="person.save()">Apply</button>')($rootScope);
     $rootScope.person = {};
@@ -83,16 +85,17 @@ describe('Binder', function() {
     expect(savedCalled).toBe(true);
   }));
 
-  it('RepeaterUpdateBindings', inject(function($rootScope, $compile) {
-    var form = $compile(
+  it('RepeaterUpdateBindings', angular.mock.inject(function($rootScope, $compile) {
+    element = $compile(
       '<ul>' +
         '<LI ng-repeat="item in model.items" ng-bind="item.a"></LI>' +
       '</ul>')($rootScope);
+
     var items = [{a: 'A'}, {a: 'B'}];
     $rootScope.model = {items: items};
 
     $rootScope.$apply();
-    expect(sortedHtml(form)).toBe(
+    expect(sortedHtml(element)).toBe(
         '<ul>' +
           '<!-- ngRepeat: item in model.items -->' +
           '<li ng-bind="item.a" ng-repeat="item in model.items">A</li>' +
@@ -103,7 +106,7 @@ describe('Binder', function() {
 
     items.unshift({a: 'C'});
     $rootScope.$apply();
-    expect(sortedHtml(form)).toBe(
+    expect(sortedHtml(element)).toBe(
         '<ul>' +
           '<!-- ngRepeat: item in model.items -->' +
           '<li ng-bind="item.a" ng-repeat="item in model.items">C</li>' +
@@ -116,7 +119,7 @@ describe('Binder', function() {
 
     items.shift();
     $rootScope.$apply();
-    expect(sortedHtml(form)).toBe(
+    expect(sortedHtml(element)).toBe(
         '<ul>' +
           '<!-- ngRepeat: item in model.items -->' +
           '<li ng-bind="item.a" ng-repeat="item in model.items">A</li>' +
@@ -130,7 +133,7 @@ describe('Binder', function() {
     $rootScope.$apply();
   }));
 
-  it('RepeaterContentDoesNotBind', inject(function($rootScope, $compile) {
+  it('RepeaterContentDoesNotBind', angular.mock.inject(function($rootScope, $compile) {
     element = $compile(
       '<ul>' +
         '<LI ng-repeat="item in model.items"><span ng-bind="item.a"></span></li>' +
@@ -150,7 +153,7 @@ describe('Binder', function() {
     expect(html.indexOf('action="foo();"')).toBeGreaterThan(0);
   });
 
-  it('ItShouldRemoveExtraChildrenWhenIteratingOverHash', inject(function($rootScope, $compile) {
+  it('ItShouldRemoveExtraChildrenWhenIteratingOverHash', angular.mock.inject(function($rootScope, $compile) {
     element = $compile('<div><div ng-repeat="i in items">{{i}}</div></div>')($rootScope);
     var items = {};
     $rootScope.items = items;
@@ -168,11 +171,11 @@ describe('Binder', function() {
   }));
 
   it('IfAttrBindingThrowsErrorDecorateTheAttribute', function() {
-    module(function($exceptionHandlerProvider) {
+    angular.mock.module(function($exceptionHandlerProvider) {
       $exceptionHandlerProvider.mode('log');
     });
-    inject(function($rootScope, $exceptionHandler, $compile) {
-      $compile('<div attr="before {{error.throw()}} after"></div>', null, true)($rootScope);
+    angular.mock.inject(function($rootScope, $exceptionHandler, $compile) {
+      element = $compile('<div attr="before {{error.throw()}} after"></div>', null, true)($rootScope);
       var errorLogs = $exceptionHandler.errors;
       var count = 0;
 
@@ -181,16 +184,16 @@ describe('Binder', function() {
       };
       $rootScope.$apply();
       expect(errorLogs.length).not.toEqual(0);
-      expect(errorLogs.shift()).toMatch(/ErrorMsg1/);
+      expect(errorLogs.shift().toString()).toMatch(/ErrorMsg1/);
       errorLogs.length = 0;
 
       $rootScope.error['throw'] =  function() { return 'X';};
       $rootScope.$apply();
-      expect(errorLogs.length).toMatch('0');
+      expect(errorLogs.length).toBe(0);
     });
   });
 
-  it('NestedRepeater', inject(function($rootScope, $compile) {
+  it('NestedRepeater', angular.mock.inject(function($rootScope, $compile) {
     element = $compile(
       '<div>' +
         '<div ng-repeat="m in model" name="{{m.name}}">' +
@@ -223,7 +226,7 @@ describe('Binder', function() {
         '</div>');
   }));
 
-  it('HideBindingExpression', inject(function($rootScope, $compile) {
+  it('HideBindingExpression', angular.mock.inject(function($rootScope, $compile) {
     element = $compile('<div ng-hide="hidden === 3"/>')($rootScope);
 
     $rootScope.hidden = 3;
@@ -237,7 +240,7 @@ describe('Binder', function() {
     assertVisible(element);
   }));
 
-  it('HideBinding', inject(function($rootScope, $compile) {
+  it('HideBinding', angular.mock.inject(function($rootScope, $compile) {
     element = $compile('<div ng-hide="hidden"/>')($rootScope);
 
     $rootScope.hidden = 'true';
@@ -266,7 +269,7 @@ describe('Binder', function() {
     assertVisible(element);
   }));
 
-  it('ShowBinding', inject(function($rootScope, $compile) {
+  it('ShowBinding', angular.mock.inject(function($rootScope, $compile) {
     element = $compile('<div ng-show="show"/>')($rootScope);
 
     $rootScope.show = 'true';
@@ -296,7 +299,7 @@ describe('Binder', function() {
   }));
 
 
-  it('BindClass', inject(function($rootScope, $compile) {
+  it('BindClass', angular.mock.inject(function($rootScope, $compile) {
     element = $compile('<div ng-class="clazz"/>')($rootScope);
 
     $rootScope.clazz = 'testClass';
@@ -310,15 +313,15 @@ describe('Binder', function() {
     expect(sortedHtml(element)).toBe('<div class="a b" ng-class="clazz"></div>');
   }));
 
-  it('BindClassEvenOdd', inject(function($rootScope, $compile) {
+  it('BindClassEvenOdd', angular.mock.inject(function($rootScope, $compile) {
     element = $compile(
       '<div>' +
         '<div ng-repeat="i in [0,1]" ng-class-even="\'e\'" ng-class-odd="\'o\'"></div>' +
       '</div>')($rootScope);
     $rootScope.$apply();
 
-    var d1 = jqLite(element[0].childNodes[1]);
-    var d2 = jqLite(element[0].childNodes[3]);
+    var d1 = angular.element(element[0].childNodes[1]);
+    var d2 = angular.element(element[0].childNodes[3]);
     expect(d1.hasClass('o')).toBeTruthy();
     expect(d2.hasClass('e')).toBeTruthy();
     expect(sortedHtml(element)).toBe(
@@ -331,7 +334,7 @@ describe('Binder', function() {
         '</div>');
   }));
 
-  it('BindStyle', inject(function($rootScope, $compile) {
+  it('BindStyle', angular.mock.inject(function($rootScope, $compile) {
     element = $compile('<div ng-style="style"/>')($rootScope);
 
     $rootScope.$eval('style={height: "10px"}');
@@ -344,20 +347,21 @@ describe('Binder', function() {
   }));
 
   it('ActionOnAHrefThrowsError', function() {
-    module(function($exceptionHandlerProvider) {
+    angular.mock.module(function($exceptionHandlerProvider) {
       $exceptionHandlerProvider.mode('log');
     });
-    inject(function($rootScope, $exceptionHandler, $compile) {
-      var input = $compile('<a ng-click="action()">Add Phone</a>')($rootScope);
+
+    angular.mock.inject(function($rootScope, $exceptionHandler, $compile) {
+      element = $compile('<a ng-click="action()">Add Phone</a>')($rootScope);
       $rootScope.action = function() {
         throw new Error('MyError');
       };
-      browserTrigger(input, 'click');
-      expect($exceptionHandler.errors[0]).toMatch(/MyError/);
+      browserTrigger(element, 'click');
+      expect($exceptionHandler.errors[0].toString()).toMatch(/MyError/);
     });
   });
 
-  it('ShouldIgnoreVbNonBindable', inject(function($rootScope, $compile) {
+  it('ShouldIgnoreVbNonBindable', angular.mock.inject(function($rootScope, $compile) {
     element = $compile(
       '<div>{{a}}' +
         '<div ng-non-bindable>{{a}}</div>' +
@@ -369,7 +373,7 @@ describe('Binder', function() {
     expect(element.text()).toBe('123{{a}}{{b}}{{c}}');
   }));
 
-  it('ShouldTemplateBindPreElements', inject(function($rootScope, $compile) {
+  it('ShouldTemplateBindPreElements', angular.mock.inject(function($rootScope, $compile) {
     element = $compile('<pre>Hello {{name}}!</pre>')($rootScope);
     $rootScope.name = 'World';
     $rootScope.$apply();
@@ -377,7 +381,7 @@ describe('Binder', function() {
     expect(sortedHtml(element)).toBe('<pre>Hello World!</pre>');
   }));
 
-  it('FillInOptionValueWhenMissing', inject(function($rootScope, $compile) {
+  it('FillInOptionValueWhenMissing', angular.mock.inject(function($rootScope, $compile) {
     element = $compile(
         '<select ng-model="foo">' +
           '<option selected="true">{{a}}</option>' +
@@ -401,14 +405,14 @@ describe('Binder', function() {
     expect(optionC.text()).toEqual('C');
   }));
 
-  it('ItShouldSelectTheCorrectRadioBox', inject(function($rootScope, $compile) {
+  it('ItShouldSelectTheCorrectRadioBox', angular.mock.inject(function($rootScope, $compile) {
     element = $compile(
       '<div>' +
         '<input type="radio" ng-model="sex" value="female">' +
         '<input type="radio" ng-model="sex" value="male">' +
       '</div>')($rootScope);
-    var female = jqLite(element[0].childNodes[0]);
-    var male = jqLite(element[0].childNodes[1]);
+    var female = angular.element(element[0].childNodes[0]);
+    var male = angular.element(element[0].childNodes[1]);
 
     browserTrigger(female);
     expect($rootScope.sex).toBe('female');
@@ -423,7 +427,7 @@ describe('Binder', function() {
     expect(male.val()).toBe('male');
   }));
 
-  it('ItShouldRepeatOnHashes', inject(function($rootScope, $compile) {
+  it('ItShouldRepeatOnHashes', angular.mock.inject(function($rootScope, $compile) {
     element = $compile(
       '<ul>' +
         '<li ng-repeat="(k,v) in {a:0,b:1}" ng-bind="k + v"></li>' +
@@ -439,7 +443,7 @@ describe('Binder', function() {
         '</ul>');
   }));
 
-  it('ItShouldFireChangeListenersBeforeUpdate', inject(function($rootScope, $compile) {
+  it('ItShouldFireChangeListenersBeforeUpdate', angular.mock.inject(function($rootScope, $compile) {
     element = $compile('<div ng-bind="name"></div>')($rootScope);
     $rootScope.name = '';
     $rootScope.$watch('watched', function() {
@@ -451,7 +455,7 @@ describe('Binder', function() {
     expect(sortedHtml(element)).toBe('<div ng-bind="name">123</div>');
   }));
 
-  it('ItShouldHandleMultilineBindings', inject(function($rootScope, $compile) {
+  it('ItShouldHandleMultilineBindings', angular.mock.inject(function($rootScope, $compile) {
     element = $compile('<div>{{\n 1 \n + \n 2 \n}}</div>')($rootScope);
     $rootScope.$apply();
     expect(element.text()).toBe('3');

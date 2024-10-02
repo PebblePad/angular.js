@@ -3,9 +3,7 @@
 /* We need to tell ESLint what variables are being exported */
 /* exported
   angular,
-  msie,
   jqLite,
-  jQuery,
   slice,
   splice,
   push,
@@ -95,6 +93,7 @@
   hasOwnProperty,
   createMap,
   stringify,
+  UNSAFE_restoreLegacyJqLiteXHTMLReplacement,
   compilationBindings
 
   NODE_TYPE_ELEMENT,
@@ -106,6 +105,14 @@
 */
 
 ////////////////////////////////////
+/**
+ * documentMode is an IE-only property
+ * http://msdn.microsoft.com/en-us/library/ie/cc196988(v=vs.85).aspx
+ */
+if (window.document.documentMode) {
+  throw new Error('Internet Explorer is not supported!');
+}
+
 
 /**
  * @ngdoc module
@@ -189,29 +196,18 @@ if ('i' !== 'I'.toLowerCase()) {
   uppercase = manualUppercase;
 }
 
+var jqLite;
+var slice = [].slice;
+var splice = [].splice;
+var push = [].push;
+var toString = Object.prototype.toString;
+var getPrototypeOf = Object.getPrototypeOf;
+var ngMinErr = minErr('ng');
 
-var
-    msie,             // holds major version number for IE, or NaN if UA is not IE.
-    jqLite,           // delay binding since jQuery could be loaded after us.
-    jQuery,           // delay binding
-    slice             = [].slice,
-    splice            = [].splice,
-    push              = [].push,
-    toString          = Object.prototype.toString,
-    getPrototypeOf    = Object.getPrototypeOf,
-    ngMinErr          = minErr('ng'),
-
-    /** @name angular */
-    angular           = window.angular || (window.angular = {}),
-    angularModule,
-    uid               = 0;
-
-// Support: IE 9-11 only
-/**
- * documentMode is an IE-only property
- * http://msdn.microsoft.com/en-us/library/ie/cc196988(v=vs.85).aspx
- */
-msie = window.document.documentMode;
+/** @name angular */
+var angular = window.angular || (window.angular = {});
+var angularModule;
+var uid = { current: 0 };
 
 
 /**
@@ -278,7 +274,8 @@ function isArrayLike(obj) {
  */
 
 function forEach(obj, iterator, context) {
-  var key, length;
+  var key;
+  var length;
   if (obj) {
     if (isFunction(obj)) {
       for (key in obj) {
@@ -348,7 +345,7 @@ function reverseParams(iteratorFn) {
  * @returns {number} an unique alpha-numeric string
  */
 function nextUid() {
-  return ++uid;
+  return ++uid.current;
 }
 
 
@@ -387,8 +384,10 @@ function baseExtend(dst, objs, deep) {
         } else if (isElement(src)) {
           dst[key] = src.clone();
         } else {
-          if (!isObject(dst[key])) dst[key] = isArray(src) ? [] : {};
-          baseExtend(dst[key], [src], true);
+          if (key !== '__proto__') {
+            if (!isObject(dst[key])) dst[key] = isArray(src) ? [] : {};
+            baseExtend(dst[key], [src], true);
+          }
         }
       } else {
         dst[key] = src;
@@ -795,7 +794,9 @@ function isElement(node) {
  * @returns {object} in the form of {key1:true, key2:true, ...}
  */
 function makeMap(str) {
-  var obj = {}, items = str.split(','), i;
+  var obj = {};
+  var items = str.split(',');
+  var i;
   for (i = 0; i < items.length; i++) {
     obj[items[i]] = true;
   }
@@ -997,15 +998,6 @@ function copy(source, destination, maxDepth) {
         return new source.constructor(copyElement(source.buffer), source.byteOffset, source.length);
 
       case '[object ArrayBuffer]':
-        // Support: IE10
-        if (!source.slice) {
-          // If we're in this case we know the environment supports ArrayBuffer
-          /* eslint-disable no-undef */
-          var copied = new ArrayBuffer(source.byteLength);
-          new Uint8Array(copied).set(new Uint8Array(source));
-          /* eslint-enable */
-          return copied;
-        }
         return source.slice(0);
 
       case '[object Boolean]':
@@ -1015,7 +1007,7 @@ function copy(source, destination, maxDepth) {
         return new source.constructor(source.valueOf());
 
       case '[object RegExp]':
-        var re = new RegExp(source.source, source.toString().match(/[^/]*$/)[0]);
+        var re = new RegExp(source.source, source.flags);
         re.lastIndex = source.lastIndex;
         return re;
 
@@ -1102,7 +1094,11 @@ function equals(o1, o2) {
   if (o1 === null || o2 === null) return false;
   // eslint-disable-next-line no-self-compare
   if (o1 !== o1 && o2 !== o2) return true; // NaN === NaN
-  var t1 = typeof o1, t2 = typeof o2, length, key, keySet;
+  var t1 = typeof o1;
+  var t2 = typeof o2;
+  var length;
+  var key;
+  var keySet;
   if (t1 === t2 && t1 === 'object') {
     if (isArray(o1)) {
       if (!isArray(o2)) return false;
@@ -1150,13 +1146,11 @@ var csp = function() {
       var ngCspAttribute = ngCspElement.getAttribute('ng-csp') ||
                     ngCspElement.getAttribute('data-ng-csp');
       csp.rules = {
-        noUnsafeEval: !ngCspAttribute || (ngCspAttribute.indexOf('no-unsafe-eval') !== -1),
-        noInlineStyle: !ngCspAttribute || (ngCspAttribute.indexOf('no-inline-style') !== -1)
+        noUnsafeEval: !ngCspAttribute || (ngCspAttribute.includes('no-unsafe-eval'))
       };
     } else {
       csp.rules = {
-        noUnsafeEval: noUnsafeEval(),
-        noInlineStyle: false
+        noUnsafeEval: noUnsafeEval()
       };
     }
   }
@@ -1172,60 +1166,6 @@ var csp = function() {
       return true;
     }
   }
-};
-
-/**
- * @ngdoc directive
- * @module ng
- * @name ngJq
- *
- * @element ANY
- * @param {string=} ngJq the name of the library available under `window`
- * to be used for angular.element
- * @description
- * Use this directive to force the angular.element library.  This should be
- * used to force either jqLite by leaving ng-jq blank or setting the name of
- * the jquery variable under window (eg. jQuery).
- *
- * Since AngularJS looks for this directive when it is loaded (doesn't wait for the
- * DOMContentLoaded event), it must be placed on an element that comes before the script
- * which loads angular. Also, only the first instance of `ng-jq` will be used and all
- * others ignored.
- *
- * @example
- * This example shows how to force jqLite using the `ngJq` directive to the `html` tag.
- ```html
- <!doctype html>
- <html ng-app ng-jq>
- ...
- ...
- </html>
- ```
- * @example
- * This example shows how to use a jQuery based library of a different name.
- * The library name must be available at the top most 'window'.
- ```html
- <!doctype html>
- <html ng-app ng-jq="jQueryLib">
- ...
- ...
- </html>
- ```
- */
-var jq = function() {
-  if (isDefined(jq.name_)) return jq.name_;
-  var el;
-  var i, ii = ngAttrPrefixes.length, prefix, name;
-  for (i = 0; i < ii; ++i) {
-    prefix = ngAttrPrefixes[i];
-    el = window.document.querySelector('[' + prefix.replace(':', '\\:') + 'jq]');
-    if (el) {
-      name = el.getAttribute(prefix + 'jq');
-      break;
-    }
-  }
-
-  return (jq.name_ = name);
 };
 
 function concat(array1, array2, index) {
@@ -1358,8 +1298,8 @@ function fromJson(json) {
 
 var ALL_COLONS = /:/g;
 function timezoneToOffset(timezone, fallback) {
-  // Support: IE 9-11 only, Edge 13-15+
-  // IE/Edge do not "understand" colon (`:`) in timezone
+  // Support: Edge 13-15+
+  // Edge does not "understand" colon (`:`) in timezone
   timezone = timezone.replace(ALL_COLONS, '');
   var requestedTimezoneOffset = Date.parse('Jan 01, 1970 00:00:00 ' + timezone) / 60000;
   return isNumberNaN(requestedTimezoneOffset) ? fallback : requestedTimezoneOffset;
@@ -1425,7 +1365,9 @@ function tryDecodeURIComponent(value) {
 function parseKeyValue(/**string*/keyValue) {
   var obj = {};
   forEach((keyValue || '').split('&'), function(keyValue) {
-    var splitPoint, key, val;
+    var splitPoint;
+    var key;
+    var val;
     if (keyValue) {
       key = keyValue = keyValue.replace(/\+/g,'%20');
       splitPoint = keyValue.indexOf('=');
@@ -1509,7 +1451,9 @@ function encodeUriQuery(val, pctEncodeSpaces) {
 var ngAttrPrefixes = ['ng-', 'data-ng-', 'ng:', 'x-ng-'];
 
 function getNgAttribute(element, ngAttr) {
-  var attr, i, ii = ngAttrPrefixes.length;
+  var attr;
+  var i;
+  var ii = ngAttrPrefixes.length;
   for (i = 0; i < ii; ++i) {
     attr = ngAttrPrefixes[i] + ngAttr;
     if (isString(attr = element.getAttribute(attr))) {
@@ -1521,10 +1465,7 @@ function getNgAttribute(element, ngAttr) {
 
 function allowAutoBootstrap(document) {
   var script = document.currentScript;
-
   if (!script) {
-    // Support: IE 9-11 only
-    // IE does not have `document.currentScript`
     return true;
   }
 
@@ -1714,9 +1655,9 @@ var isAutoBootstrapAllowed = allowAutoBootstrap(window.document);
  </example>
  */
 function angularInit(element, bootstrap) {
-  var appElement,
-      module,
-      config = {};
+  var appElement;
+  var module;
+  var config = {};
 
   // The element `element` has priority over any other element.
   forEach(ngAttrPrefixes, function(prefix) {
@@ -1922,48 +1863,30 @@ function bindJQuery() {
     return;
   }
 
-  // bind to jQuery if present;
-  var jqName = jq();
-  jQuery = isUndefined(jqName) ? window.jQuery :   // use jQuery (if present)
-           !jqName             ? undefined     :   // use jqLite
-                                 window[jqName];   // use jQuery specified by `ngJq`
-
-  // Use jQuery if it exists with proper functionality, otherwise default to us.
-  // AngularJS 1.2+ requires jQuery 1.7+ for on()/off() support.
-  // AngularJS 1.3+ technically requires at least jQuery 2.1+ but it may work with older
-  // versions. It will not work for sure with jQuery <1.7, though.
-  if (jQuery && jQuery.fn.on) {
-    jqLite = jQuery;
-    extend(jQuery.fn, {
-      scope: JQLitePrototype.scope,
-      isolateScope: JQLitePrototype.isolateScope,
-      controller: /** @type {?} */ (JQLitePrototype).controller,
-      injector: JQLitePrototype.injector,
-      inheritedData: JQLitePrototype.inheritedData
-    });
-
-    // All nodes removed from the DOM via various jQuery APIs like .remove()
-    // are passed through jQuery.cleanData. Monkey-patch this method to fire
-    // the $destroy event on all removed nodes.
-    originalCleanData = jQuery.cleanData;
-    jQuery.cleanData = function(elems) {
-      var events;
-      for (var i = 0, elem; (elem = elems[i]) != null; i++) {
-        events = jQuery._data(elem, 'events');
-        if (events && events.$destroy) {
-          jQuery(elem).triggerHandler('$destroy');
-        }
-      }
-      originalCleanData(elems);
-    };
-  } else {
-    jqLite = JQLite;
-  }
-
+  jqLite = JQLite;
   angular.element = jqLite;
-
   // Prevent double-proxying.
   bindJQueryFired = true;
+}
+
+/**
+ * @ngdoc function
+ * @name angular.UNSAFE_restoreLegacyJqLiteXHTMLReplacement
+ * @module ng
+ * @kind function
+ *
+ * @description
+ * Restores the pre-1.8 behavior of jqLite that turns XHTML-like strings like
+ * `<div /><span />` to `<div></div><span></span>` instead of `<div><span></span></div>`.
+ * The new behavior is a security fix so if you use this method, please try to adjust
+ * to the change & remove the call as soon as possible.
+
+ * Note that this only patches jqLite. If you use jQuery 3.5.0 or newer, please read
+ * [jQuery 3.5 upgrade guide](https://jquery.com/upgrade-guide/3.5/) for more details
+ * about the workarounds.
+ */
+function UNSAFE_restoreLegacyJqLiteXHTMLReplacement() {
+  JQLite.legacyXHTMLReplacement = true;
 }
 
 /**

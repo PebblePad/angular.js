@@ -2,9 +2,12 @@
 
 describe('$$testability', function() {
   describe('finding elements', function() {
-    var $$testability, $compile, scope, element;
+    var $$testability;
+    var $compile;
+    var scope;
+    var element;
 
-    beforeEach(inject(function(_$$testability_, _$compile_, $rootScope) {
+    beforeEach(angular.mock.inject(function(_$$testability_, _$compile_, $rootScope) {
       $$testability = _$$testability_;
       $compile = _$compile_;
       scope = $rootScope.$new();
@@ -166,7 +169,7 @@ describe('$$testability', function() {
   });
 
   describe('location', function() {
-    beforeEach(module(function() {
+    beforeEach(angular.mock.module(function() {
       return function($httpBackend) {
         $httpBackend.when('GET', 'foo.html').respond('foo');
         $httpBackend.when('GET', 'baz.html').respond('baz');
@@ -175,12 +178,12 @@ describe('$$testability', function() {
       };
     }));
 
-    it('should return the current URL', inject(function($location, $$testability) {
+    it('should return the current URL', angular.mock.inject(function($location, $$testability) {
       $location.path('/bar.html');
       expect($$testability.getLocation()).toMatch(/bar.html$/);
     }));
 
-    it('should change the URL', inject(function($location, $$testability) {
+    it('should change the URL', angular.mock.inject(function($location, $$testability) {
       $location.path('/bar.html');
       $$testability.setLocation('foo.html');
       expect($location.path()).toEqual('/foo.html');
@@ -189,8 +192,8 @@ describe('$$testability', function() {
 
   describe('waiting for stability', function() {
     it('should process callbacks immediately with no outstanding requests',
-      inject(function($$testability) {
-        var callback = jasmine.createSpy('callback');
+      angular.mock.inject(function($$testability) {
+        var callback = jest.fn();
         $$testability.whenStable(callback);
         expect(callback).toHaveBeenCalled();
       }));

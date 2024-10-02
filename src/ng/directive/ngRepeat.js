@@ -493,7 +493,10 @@ var ngRepeatDirective = ['$parse', '$animate', '$compile', function($parse, $ani
           aliasAs);
       }
 
-      var trackByExpGetter, trackByIdExpFn, trackByIdArrayFn, trackByIdObjFn;
+      var trackByExpGetter;
+      var trackByIdExpFn;
+      var trackByIdArrayFn;
+      var trackByIdObjFn;
       var hashFnLocals = {$id: hashKey};
 
       if (trackByExp) {
@@ -531,21 +534,34 @@ var ngRepeatDirective = ['$parse', '$animate', '$compile', function($parse, $ani
 
         //watch props
         $scope.$watchCollection(rhs, function ngRepeatAction(collection) {
-          var index, length,
-              previousNode = $element[0],     // node that cloned nodes should be inserted after
-                                              // initialized to the comment node anchor
-              nextNode,
-              // Same as lastBlockMap but it has the current state. It will become the
-              // lastBlockMap on the next iteration.
-              nextBlockMap = createMap(),
-              collectionLength,
-              key, value, // key/value of iteration
-              trackById,
-              trackByIdFn,
-              collectionKeys,
-              block,       // last object information {scope, element, id}
-              nextBlockOrder,
-              elementsToRemove;
+          var index;
+          var length;
+
+          // node that cloned nodes should be inserted after
+          // initialized to the comment node anchor
+          var previousNode = $element[0];
+
+          var nextNode;
+
+          // Same as lastBlockMap but it has the current state. It will become the
+          // lastBlockMap on the next iteration.
+          var nextBlockMap = createMap();
+
+          var collectionLength;
+          var key;
+
+          // key/value of iteration
+          var value;
+
+          var trackById;
+          var trackByIdFn;
+          var collectionKeys;
+
+          // last object information {scope, element, id}
+          var block;
+
+          var nextBlockOrder;
+          var elementsToRemove;
 
           if (aliasAs) {
             $scope[aliasAs] = collection;

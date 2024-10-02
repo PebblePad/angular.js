@@ -3,21 +3,21 @@
 describe('urlUtils', function() {
   describe('urlResolve', function() {
     it('should returned already parsed URLs unchanged', function() {
-      var urlObj = urlResolve('/foo?bar=baz#qux');
-      expect(urlResolve(urlObj)).toBe(urlObj);
-      expect(urlResolve(true)).toBe(true);
-      expect(urlResolve(null)).toBeNull();
-      expect(urlResolve(undefined)).toBeUndefined();
+      var urlObj = ngInternals.urlResolve('/foo?bar=baz#qux');
+      expect(ngInternals.urlResolve(urlObj)).toBe(urlObj);
+      expect(ngInternals.urlResolve(true)).toBe(true);
+      expect(ngInternals.urlResolve(null)).toBeNull();
+      expect(ngInternals.urlResolve(undefined)).toBeUndefined();
     });
 
 
     it('should normalize a relative url', function() {
-      expect(urlResolve('foo').href).toMatch(/^https?:\/\/[^/]+\/foo$/);
+      expect(ngInternals.urlResolve('foo').href).toMatch(/^https?:\/\/[^/]+\/foo$/);
     });
 
 
     it('should parse relative URL into component pieces', function() {
-      var parsed = urlResolve('foo');
+      var parsed = ngInternals.urlResolve('foo');
       expect(parsed.href).toMatch(/https?:\/\//);
       expect(parsed.protocol).toMatch(/^https?/);
       expect(parsed.host).not.toBe('');
@@ -28,7 +28,7 @@ describe('urlUtils', function() {
 
     it('should return pathname as / if empty path provided', function() {
       // IE (all versions) counts / as empty, necessary to use / so that pathname is not context.html
-      var parsed = urlResolve('/');
+      var parsed = ngInternals.urlResolve('/');
       expect(parsed.pathname).toBe('/');
     });
   });
@@ -36,15 +36,15 @@ describe('urlUtils', function() {
 
   describe('urlIsSameOrigin', function() {
     it('should support various combinations of urls - both string and parsed',
-      inject(function($document) {
+      angular.mock.inject(function($document) {
         function expectIsSameOrigin(url, expectedValue) {
-          expect(urlIsSameOrigin(url)).toBe(expectedValue);
-          expect(urlIsSameOrigin(urlResolve(url))).toBe(expectedValue);
+          expect(ngInternals.urlIsSameOrigin(url)).toBe(expectedValue);
+          expect(ngInternals.urlIsSameOrigin(ngInternals.urlResolve(url))).toBe(expectedValue);
         }
 
         expectIsSameOrigin('path', true);
 
-        var origin = urlResolve($document[0].location.href);
+        var origin = ngInternals.urlResolve($document[0].location.href);
         expectIsSameOrigin('//' + origin.host + '/path', true);
 
         // Different domain.
@@ -62,11 +62,11 @@ describe('urlUtils', function() {
 
 
   describe('urlIsAllowedOriginFactory', function() {
-    var origin = urlResolve(window.location.href);
+    var origin = ngInternals.urlResolve(window.location.href);
     var urlIsAllowedOrigin;
 
     beforeEach(function() {
-      urlIsAllowedOrigin = urlIsAllowedOriginFactory([
+      urlIsAllowedOrigin = ngInternals.urlIsAllowedOriginFactory([
         'https://foo.com/',
         origin.protocol + '://bar.com:1337/'
       ]);
@@ -88,9 +88,9 @@ describe('urlUtils', function() {
 
     it('should support both strings and parsed URL objects', function() {
       expect(urlIsAllowedOrigin('path')).toBe(true);
-      expect(urlIsAllowedOrigin(urlResolve('path'))).toBe(true);
+      expect(urlIsAllowedOrigin(ngInternals.urlResolve('path'))).toBe(true);
       expect(urlIsAllowedOrigin('https://foo.com/path')).toBe(true);
-      expect(urlIsAllowedOrigin(urlResolve('https://foo.com/path'))).toBe(true);
+      expect(urlIsAllowedOrigin(ngInternals.urlResolve('https://foo.com/path'))).toBe(true);
     });
 
 

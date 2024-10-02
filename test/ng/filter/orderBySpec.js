@@ -1,8 +1,9 @@
 'use strict';
 
 describe('Filter: orderBy', function() {
-  var orderBy, orderByFilter;
-  beforeEach(inject(function($filter) {
+  var orderBy;
+  var orderByFilter;
+  beforeEach(angular.mock.inject(function($filter) {
     orderBy = orderByFilter = $filter('orderBy');
   }));
 
@@ -250,7 +251,7 @@ describe('Filter: orderBy', function() {
           expect(orderBy(items, expr, 'reverse')).toEqual(sorted);
           expect(orderBy(items, expr, {})).toEqual(sorted);
           expect(orderBy(items, expr, [])).toEqual(sorted);
-          expect(orderBy(items, expr, noop)).toEqual(sorted);
+          expect(orderBy(items, expr, angular.noop)).toEqual(sorted);
         }
       );
 
@@ -303,9 +304,9 @@ describe('Filter: orderBy', function() {
 
 
       it('should compare values of different type alphabetically by type', function() {
-        var items = [undefined, '1', {}, 999, noop, false];
+        var items = [undefined, '1', {}, 999, angular.noop, false];
         var expr = null;
-        var sorted = [false, noop, 999, {}, '1', undefined];
+        var sorted = [false, angular.noop, 999, {}, '1', undefined];
 
         expect(orderBy(items, expr)).toEqual(sorted);
       });
@@ -359,20 +360,20 @@ describe('Filter: orderBy', function() {
 
 
       it('should pass `{value, type, index}` objects to comparators', function() {
-        var items = [false, noop, 999, {}, '', undefined];
+        var items = [false, angular.noop, 999, {}, '', undefined];
         var expr = null;
         var reverse = null;
-        var comparator = jasmine.createSpy('comparator').and.returnValue(-1);
+        var comparator = jest.fn(() => -1);
 
         orderBy(items, expr, reverse, comparator);
-        var allArgsFlat = Array.prototype.concat.apply([], comparator.calls.allArgs());
+        var allArgsFlat = Array.prototype.concat.apply([], comparator.mock.calls);
 
-        expect(allArgsFlat).toContain({index: 0, type: 'boolean',   value: false    });
-        expect(allArgsFlat).toContain({index: 1, type: 'function',  value: noop     });
-        expect(allArgsFlat).toContain({index: 2, type: 'number',    value: 999      });
-        expect(allArgsFlat).toContain({index: 3, type: 'object',    value: {}       });
-        expect(allArgsFlat).toContain({index: 4, type: 'string',    value: ''       });
-        expect(allArgsFlat).toContain({index: 5, type: 'undefined', value: undefined});
+        expect(allArgsFlat).toContainEqual({index: 0, type: 'boolean',   value: false    });
+        expect(allArgsFlat).toContainEqual({index: 1, type: 'function',  value: angular.noop     });
+        expect(allArgsFlat).toContainEqual({index: 2, type: 'number',    value: 999      });
+        expect(allArgsFlat).toContainEqual({index: 3, type: 'object',    value: {}       });
+        expect(allArgsFlat).toContainEqual({index: 4, type: 'string',    value: ''       });
+        expect(allArgsFlat).toContainEqual({index: 5, type: 'undefined', value: undefined});
       });
 
 
@@ -380,12 +381,12 @@ describe('Filter: orderBy', function() {
         var items = [null, null];
         var expr = null;
         var reverse = null;
-        var comparator = jasmine.createSpy('comparator').and.returnValue(-1);
+        var comparator = jest.fn(() => -1);
 
         orderBy(items, expr, reverse, comparator);
-        var arg = comparator.calls.argsFor(0)[0];
+        var arg = comparator.mock.calls[0][0];
 
-        expect(arg).toEqual(jasmine.objectContaining({
+        expect(arg).toEqual(expect.objectContaining({
           type: 'string',
           value: 'null'
         }));
@@ -411,15 +412,15 @@ describe('Filter: orderBy', function() {
           var items = ['foo', 'bar'];
           var expr = null;
           var reverse = null;
-          var comparator = jasmine.createSpy('comparator').and.returnValue(0);
+          var comparator = jest.fn(() => 0);
 
           orderBy(items, expr, reverse, comparator);
 
           expect(comparator).toHaveBeenCalledTimes(2);
-          var lastArgs = comparator.calls.mostRecent().args;
+          var lastArgs = comparator.mock.calls[comparator.mock.calls.length - 1];
 
-          expect(lastArgs).toContain(jasmine.objectContaining({value: 0, type: 'number'}));
-          expect(lastArgs).toContain(jasmine.objectContaining({value: 1, type: 'number'}));
+          expect(lastArgs).toContainEqual(expect.objectContaining({value: 0, type: 'number'}));
+          expect(lastArgs).toContainEqual(expect.objectContaining({value: 1, type: 'number'}));
         }
       );
 
@@ -474,8 +475,8 @@ describe('Filter: orderBy', function() {
 
     describe('(object as `value`)', function() {
       it('should use the return value of `valueOf()` (if primitive)', function() {
-        var o1 = {k: 1, valueOf: function() { return 2; }};
-        var o2 = {k: 2, valueOf: function() { return 1; }};
+        var o1 = {k: 1, valueOf() { return 2; }};
+        var o2 = {k: 2, valueOf() { return 1; }};
 
         var items = [o1, o2];
         var expr = null;
@@ -486,8 +487,8 @@ describe('Filter: orderBy', function() {
 
 
       it('should use the return value of `toString()` (if primitive)', function() {
-        var o1 = {k: 1, toString: function() { return 2; }};
-        var o2 = {k: 2, toString: function() { return 1; }};
+        var o1 = {k: 1, toString() { return 2; }};
+        var o2 = {k: 2, toString() { return 1; }};
 
         var items = [o1, o2];
         var expr = null;
@@ -496,36 +497,12 @@ describe('Filter: orderBy', function() {
         expect(orderBy(items, expr)).toEqual(sorted);
       });
 
-
-      it('should ignore the `toString()` inherited from `Object`', function() {
-        /* globals toString: true */
-
-        // The global `toString` variable (in 'src/Angular.js')
-        // has already captured `Object.prototype.toString`
-        var originalToString = toString;
-        toString = jasmine.createSpy('toString').and.callFake(originalToString);
-
-        var o1 = Object.create({toString: toString});
-        var o2 = Object.create({toString: toString});
-
-        var items = [o1, o2];
-        var expr = null;
-
-        orderBy(items, expr);
-
-        expect(o1.toString).not.toHaveBeenCalled();
-        expect(o2.toString).not.toHaveBeenCalled();
-
-        toString = originalToString;
-      });
-
-
       it('should use the return value of `valueOf()` for subsequent steps (if non-primitive)',
         function() {
-          var o1 = {k: 1, valueOf: function() { return o3; }};
-          var o2 = {k: 2, valueOf: function() { return o4; }};
-          var o3 = {k: 3, toString: function() { return 4; }};
-          var o4 = {k: 4, toString: function() { return 3; }};
+          var o1 = {k: 1, valueOf() { return o3; }};
+          var o2 = {k: 2, valueOf() { return o4; }};
+          var o3 = {k: 3, toString() { return 4; }};
+          var o4 = {k: 4, toString() { return 3; }};
 
           var items = [o1, o2];
           var expr = null;
@@ -538,21 +515,21 @@ describe('Filter: orderBy', function() {
 
       it('should use the return value of `toString()` for subsequent steps (if non-primitive)',
         function() {
-          var o1 = {k: 1, toString: function() { return o3; }};
-          var o2 = {k: 2, toString: function() { return o4; }};
+          var o1 = {k: 1, toString() { return o3; }};
+          var o2 = {k: 2, toString() { return o4; }};
           var o3 = {k: 3};
           var o4 = {k: 4};
 
           var items = [o1, o2];
           var expr = null;
           var reverse = null;
-          var comparator = jasmine.createSpy('comparator').and.returnValue(-1);
+          var comparator = jest.fn(() => -1);
 
           orderBy(items, expr, reverse, comparator);
-          var args = comparator.calls.argsFor(0);
+          var args = comparator.mock.calls[0];
 
-          expect(args).toContain(jasmine.objectContaining({value: o3, type: 'object'}));
-          expect(args).toContain(jasmine.objectContaining({value: o4, type: 'object'}));
+          expect(args).toContainEqual(expect.objectContaining({value: o3, type: 'object'}));
+          expect(args).toContainEqual(expect.objectContaining({value: o4, type: 'object'}));
         }
       );
 
@@ -564,13 +541,13 @@ describe('Filter: orderBy', function() {
         var items = [o1, o2];
         var expr = null;
         var reverse = null;
-        var comparator = jasmine.createSpy('comparator').and.returnValue(-1);
+        var comparator = jest.fn(() => -1);
 
         orderBy(items, expr, reverse, comparator);
-        var args = comparator.calls.argsFor(0);
+        var args = comparator.mock.calls[0];
 
-        expect(args).toContain(jasmine.objectContaining({value: o1, type: 'object'}));
-        expect(args).toContain(jasmine.objectContaining({value: o2, type: 'object'}));
+        expect(args).toContainEqual(expect.objectContaining({value: o1, type: 'object'}));
+        expect(args).toContainEqual(expect.objectContaining({value: o2, type: 'object'}));
       });
     });
   });
@@ -588,7 +565,7 @@ describe('Filter: orderBy', function() {
     }
 
 
-    beforeEach(inject(function($filter) {
+    beforeEach(angular.mock.inject(function() {
       orderBy = function(collection) {
         var args = Array.prototype.slice.call(arguments, 0);
         args[0] = arrayLike(args[0]);

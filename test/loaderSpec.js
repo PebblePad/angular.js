@@ -1,11 +1,8 @@
 'use strict';
 
 describe('module loader', function() {
-  var window;
-
   beforeEach(function() {
-    window = {};
-    setupModuleLoader(window);
+    window.name = "";
   });
 
 
@@ -19,7 +16,7 @@ describe('module loader', function() {
     var angular = window.angular;
     var module = angular.module;
 
-    setupModuleLoader(window);
+    // setupModuleLoader(window);
     expect(window.angular).toBe(angular);
     expect(window.angular.module).toBe(module);
   });
@@ -47,20 +44,20 @@ describe('module loader', function() {
 
     expect(myModule.requires).toEqual(['other']);
     expect(myModule._invokeQueue).toEqual([
-      ['$provide', 'constant', jasmine.objectContaining(['abc', 123])],
-      ['$provide', 'provider', jasmine.objectContaining(['sk', 'sv'])],
-      ['$provide', 'factory', jasmine.objectContaining(['fk', 'fv'])],
-      ['$provide', 'service', jasmine.objectContaining(['a', 'aa'])],
-      ['$provide', 'value', jasmine.objectContaining(['k', 'v'])],
-      ['$filterProvider', 'register', jasmine.objectContaining(['f', 'ff'])],
-      ['$compileProvider', 'directive', jasmine.objectContaining(['d', 'dd'])],
-      ['$compileProvider', 'component', jasmine.objectContaining(['c', 'cc'])],
-      ['$controllerProvider', 'register', jasmine.objectContaining(['ctrl', 'ccc'])]
+      ['$provide', 'constant', expect.objectContaining(['abc', 123])],
+      ['$provide', 'provider', expect.objectContaining(['sk', 'sv'])],
+      ['$provide', 'factory', expect.objectContaining(['fk', 'fv'])],
+      ['$provide', 'service', expect.objectContaining(['a', 'aa'])],
+      ['$provide', 'value', expect.objectContaining(['k', 'v'])],
+      ['$filterProvider', 'register', expect.objectContaining(['f', 'ff'])],
+      ['$compileProvider', 'directive', expect.objectContaining(['d', 'dd'])],
+      ['$compileProvider', 'component', expect.objectContaining(['c', 'cc'])],
+      ['$controllerProvider', 'register', expect.objectContaining(['ctrl', 'ccc'])]
     ]);
     expect(myModule._configBlocks).toEqual([
-      ['$injector', 'invoke', jasmine.objectContaining(['config'])],
-      ['$provide', 'decorator', jasmine.objectContaining(['dk', 'dv'])],
-      ['$injector', 'invoke', jasmine.objectContaining(['init2'])]
+      ['$injector', 'invoke', expect.objectContaining(['config'])],
+      ['$provide', 'decorator', expect.objectContaining(['dk', 'dv'])],
+      ['$injector', 'invoke', expect.objectContaining(['init2'])]
     ]);
     expect(myModule._runBlocks).toEqual(['runBlock']);
   });
@@ -72,7 +69,7 @@ describe('module loader', function() {
       factory('theProvider', function() { return {}; });
 
     expect(function() {
-      createInjector(['theModule']);
+      angular.injector(['theModule']);
     }).not.toThrow();
   });
 
@@ -102,7 +99,7 @@ describe('module loader', function() {
         log = theProvider.api;
       });
 
-      createInjector(['theModule']);
+      angular.injector(['theModule']);
       expect(log).toBe('provider-first-second-third');
   });
 
@@ -129,7 +126,7 @@ describe('module loader', function() {
         log = theProvider.api;
       });
 
-    createInjector(['theModule']);
+    angular.injector(['theModule']);
     expect(log).toBe('secondProvider-decorator');
   });
 
@@ -154,7 +151,7 @@ describe('module loader', function() {
   });
 
   it('should expose `$$minErr` on the `angular` object', function() {
-    expect(window.angular.$$minErr).toEqual(jasmine.any(Function));
+    expect(window.angular.$$minErr).toEqual(expect.any(Function));
   });
 
   describe('Module', function() {

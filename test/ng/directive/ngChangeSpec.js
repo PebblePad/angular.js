@@ -3,31 +3,31 @@
 /* globals generateInputCompilerHelper: false */
 
 describe('ngChange', function() {
-
-  var helper = {}, $rootScope;
+  var helper = {};
+  var $rootScope;
 
   generateInputCompilerHelper(helper);
 
-  beforeEach(inject(function(_$rootScope_) {
+  beforeEach(angular.mock.inject(function(_$rootScope_) {
     $rootScope = _$rootScope_;
   }));
 
   it('should $eval expression after new value is set in the model', function() {
     helper.compileInput('<input type="text" ng-model="value" ng-change="change()" />');
 
-    $rootScope.change = jasmine.createSpy('change').and.callFake(function() {
+    $rootScope.change = jest.fn(function() {
       expect($rootScope.value).toBe('new value');
     });
 
     helper.changeInputValueTo('new value');
-    expect($rootScope.change).toHaveBeenCalledOnce();
+    expect($rootScope.change).toHaveBeenCalledTimes(1);
   });
 
 
   it('should not $eval the expression if changed from model', function() {
     helper.compileInput('<input type="text" ng-model="value" ng-change="change()" />');
 
-    $rootScope.change = jasmine.createSpy('change');
+    $rootScope.change = jest.fn();
     $rootScope.$apply('value = true');
 
     expect($rootScope.change).not.toHaveBeenCalled();
@@ -37,11 +37,11 @@ describe('ngChange', function() {
   it('should $eval ngChange expression on checkbox', function() {
     var inputElm = helper.compileInput('<input type="checkbox" ng-model="foo" ng-change="changeFn()">');
 
-    $rootScope.changeFn = jasmine.createSpy('changeFn');
+    $rootScope.changeFn = jest.fn();
     expect($rootScope.changeFn).not.toHaveBeenCalled();
 
     browserTrigger(inputElm, 'click');
-    expect($rootScope.changeFn).toHaveBeenCalledOnce();
+    expect($rootScope.changeFn).toHaveBeenCalledTimes(1);
   });
 
 

@@ -55,8 +55,8 @@
  * Use the `$logProvider` to configure how the application logs messages
  */
 function $LogProvider() {
-  var debug = true,
-      self = this;
+  var debug = true;
+  var self = this;
 
   /**
    * @ngdoc method
@@ -75,14 +75,14 @@ function $LogProvider() {
   };
 
   this.$get = ['$window', function($window) {
-    // Support: IE 9-11, Edge 12-14+
+    // Support: Edge 12-14+
     // IE/Edge display errors in such a way that it requires the user to click in 4 places
     // to see the stack trace. There is no way to feature-detect it so there's a chance
     // of the user agent sniffing to go wrong but since it's only about logging, this shouldn't
     // break apps. Other browsers display errors in a sensible way and some of them map stack
     // traces along source maps if available so it makes sense to let browsers display it
     // as they want.
-    var formatStackTrace = msie || /\bEdge\//.test($window.navigator && $window.navigator.userAgent);
+    var formatStackTrace = /\bEdge\//.test($window.navigator && $window.navigator.userAgent);
 
     return {
       /**
@@ -142,7 +142,7 @@ function $LogProvider() {
     function formatError(arg) {
       if (isError(arg)) {
         if (arg.stack && formatStackTrace) {
-          arg = (arg.message && arg.stack.indexOf(arg.message) === -1)
+          arg = (arg.message && !arg.stack.includes(arg.message))
               ? 'Error: ' + arg.message + '\n' + arg.stack
               : arg.stack;
         } else if (arg.sourceURL) {
@@ -153,18 +153,15 @@ function $LogProvider() {
     }
 
     function consoleLog(type) {
-      var console = $window.console || {},
-          logFn = console[type] || console.log || noop;
+      var console = $window.console || {};
+      var logFn = console[type] || console.log || noop;
 
       return function() {
         var args = [];
         forEach(arguments, function(arg) {
           args.push(formatError(arg));
         });
-        // Support: IE 9 only
-        // console methods don't inherit from Function.prototype in IE 9 so we can't
-        // call `logFn.apply(console, args)` directly.
-        return Function.prototype.apply.call(logFn, console, args);
+        return logFn.apply(console, args);
       };
     }
   }];

@@ -44,15 +44,15 @@ function $TimeoutProvider() {
         fn = noop;
       }
 
-      var args = sliceArgs(arguments, 3),
-          skipApply = (isDefined(invokeApply) && !invokeApply),
-          deferred = (skipApply ? $$q : $q).defer(),
-          promise = deferred.promise,
-          timeoutId;
+      var args = sliceArgs(arguments, 3);
+      var skipApply = (isDefined(invokeApply) && !invokeApply);
+      var deferred = (skipApply ? $$q : $q).defer();
+      var promise = deferred.promise;
+      var timeoutId;
 
       timeoutId = $browser.defer(function() {
         try {
-          deferred.resolve(fn.apply(null, args));
+          deferred.resolve(fn(...args));
         } catch (e) {
           deferred.reject(e);
           $exceptionHandler(e);

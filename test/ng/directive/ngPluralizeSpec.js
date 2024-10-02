@@ -1,8 +1,8 @@
 'use strict';
 
 describe('ngPluralize', function() {
-  var element,
-    elementAlt;
+  var element;
+  var elementAlt;
 
 
   afterEach(function() {
@@ -12,7 +12,7 @@ describe('ngPluralize', function() {
 
 
   describe('deal with pluralized strings without offset', function() {
-    beforeEach(inject(function($rootScope, $compile) {
+    beforeEach(angular.mock.inject(function($rootScope, $compile) {
       element = $compile(
           '<ng:pluralize count="email"' +
                          'when="{\'-1\': \'You have negative email. Whohoo!\',' +
@@ -30,7 +30,7 @@ describe('ngPluralize', function() {
     }));
 
 
-    it('should show single/plural strings', inject(function($rootScope) {
+    it('should show single/plural strings', angular.mock.inject(function($rootScope) {
       $rootScope.email = 0;
       $rootScope.$digest();
       expect(element.text()).toBe('You have no new email');
@@ -83,7 +83,7 @@ describe('ngPluralize', function() {
     }));
 
 
-    it('should show single/plural strings with mal-formed inputs', inject(
+    it('should show single/plural strings with mal-formed inputs', angular.mock.inject(
       function($log, $rootScope) {
         $rootScope.email = '';
         $rootScope.$digest();
@@ -145,7 +145,7 @@ describe('ngPluralize', function() {
 
 
   describe('edge cases', function() {
-    it('should be able to handle empty strings as possible values', inject(function($rootScope, $compile) {
+    it('should be able to handle empty strings as possible values', angular.mock.inject(function($rootScope, $compile) {
       element = $compile(
           '<ng:pluralize count="email"' +
                          'when="{\'0\': \'\',' +
@@ -157,7 +157,7 @@ describe('ngPluralize', function() {
       expect(element.text()).toBe('');
     }));
 
-    it('should be able to specify a message for null/undefined values', inject(
+    it('should be able to specify a message for null/undefined values', angular.mock.inject(
       function($compile, $rootScope) {
         element = $compile(
             '<ng:pluralize count="email"' +
@@ -186,17 +186,18 @@ describe('ngPluralize', function() {
   });
 
   describe('undefined rule cases', function() {
-    var $locale, $log;
-    beforeEach(inject(function(_$locale_, _$log_) {
+    var $locale;
+    var $log;
+    beforeEach(angular.mock.inject(function(_$locale_, _$log_) {
       $locale = _$locale_;
       $log = _$log_;
     }));
-    afterEach(inject(function($log) {
+    afterEach(angular.mock.inject(function($log) {
       $log.reset();
     }));
 
     it('should generate a warning when being asked to use a rule that is not defined',
-      inject(function($rootScope, $compile) {
+      angular.mock.inject(function($rootScope, $compile) {
       element = $compile(
           '<ng:pluralize count="email"' +
                          'when="{\'0\': \'Zero\',' +
@@ -214,7 +215,7 @@ describe('ngPluralize', function() {
     }));
 
     it('should empty the element content when using a rule that is not defined',
-      inject(function($rootScope, $compile) {
+      angular.mock.inject(function($rootScope, $compile) {
       element = $compile(
           '<ng:pluralize count="email"' +
                          'when="{\'0\': \'Zero\',' +
@@ -242,7 +243,7 @@ describe('ngPluralize', function() {
   });
 
   describe('deal with pluralized strings with offset', function() {
-    it('should show single/plural strings with offset', inject(function($rootScope, $compile) {
+    it('should show single/plural strings with offset', angular.mock.inject(function($rootScope, $compile) {
       element = $compile(
         '<ng:pluralize count=\'viewCount\'  offset=\'2\' ' +
             'when="{\'0\': \'Nobody is viewing.\',' +
@@ -298,11 +299,11 @@ describe('ngPluralize', function() {
   describe('interpolation', function() {
 
     it('should support custom interpolation symbols', function() {
-      module(function($interpolateProvider) {
+      angular.mock.module(function($interpolateProvider) {
         $interpolateProvider.startSymbol('[[').endSymbol('%%');
       });
 
-      inject(function($compile, $rootScope) {
+      angular.mock.inject(function($compile, $rootScope) {
         element = $compile(
             '<ng:pluralize count="viewCount" offset="1"' +
               'when="{\'0\': \'Nobody is viewing.\',' +
@@ -345,7 +346,7 @@ describe('ngPluralize', function() {
 
   describe('bind-once', function() {
     it('should support for `count` to be a one-time expression',
-      inject(function($compile, $rootScope) {
+      angular.mock.inject(function($compile, $rootScope) {
         element = $compile(
             '<ng:pluralize count="::email"' +
                            'when="{\'one\': \'You have one new email\',' +
@@ -386,7 +387,7 @@ describe('ngPluralize', function() {
 
 
     it('should still update other embedded expressions',
-      inject(function($compile, $rootScope) {
+      angular.mock.inject(function($compile, $rootScope) {
         element = $compile(
             '<ng:pluralize count="::email"' +
                            'when="{\'one\': \'You, {{user}}, have one new email\',' +

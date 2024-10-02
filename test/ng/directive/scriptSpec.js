@@ -9,7 +9,7 @@ describe('scriptDirective', function() {
   });
 
 
-  it('should populate $templateCache with contents of a ng-template script element', inject(
+  it('should populate $templateCache with contents of a ng-template script element', angular.mock.inject(
       function($compile, $templateCache) {
         $compile('<div>foo' +
                    '<script id="/ignore">ignore me</script>' +
@@ -21,8 +21,8 @@ describe('scriptDirective', function() {
   ));
 
 
-  it('should not compile scripts', inject(function($compile, $templateCache, $rootScope) {
-    var doc = jqLite('<div></div>');
+  it('should not compile scripts', angular.mock.inject(function($compile, $templateCache, $rootScope) {
+    var doc = angular.element('<div></div>');
     // jQuery is too smart and removes script tags
     doc[0].innerHTML = 'foo' +
         '<script type="text/javascript">some {{binding}}</script>' +

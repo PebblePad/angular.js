@@ -25,7 +25,6 @@ piece of cake. Best of all? It makes development fun!
 * API Docs: https://docs.angularjs.org/api
 * Developer Guide: https://docs.angularjs.org/guide
 * Contribution guidelines: [CONTRIBUTING.md](CONTRIBUTING.md)
-* Core Development: [DEVELOPERS.md](DEVELOPERS.md)
 * Dashboard: https://dashboard.angularjs.org
 
 
@@ -38,15 +37,6 @@ Contribute
 
 We've set up a separate document for our
 [contribution guidelines](https://github.com/angular/angular.js/blob/master/CONTRIBUTING.md).
-
-Develop
---------------------
-
-We've set up a separate document for
-[developers](https://github.com/angular/angular.js/blob/master/DEVELOPERS.md).
-
-
-[![Analytics](https://ga-beacon.appspot.com/UA-8594346-11/angular.js/README.md?pixel)](https://github.com/igrigorik/ga-beacon)
 
 What to use AngularJS for and when to use it
 ---------

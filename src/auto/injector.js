@@ -75,8 +75,8 @@ function stringifyFn(fn) {
 }
 
 function extractArgs(fn) {
-  var fnText = stringifyFn(fn).replace(STRIP_COMMENTS, ''),
-      args = fnText.match(ARROW_ARG) || fnText.match(FN_ARGS);
+  var fnText = stringifyFn(fn).replace(STRIP_COMMENTS, '');
+  var args = fnText.match(ARROW_ARG) || fnText.match(FN_ARGS);
   return args;
 }
 
@@ -91,9 +91,9 @@ function anonFn(fn) {
 }
 
 function annotate(fn, strictDi, name) {
-  var $inject,
-      argDecl,
-      last;
+  var $inject;
+  var argDecl;
+  var last;
 
   if (typeof fn === 'function') {
     if (!($inject = fn.$inject)) {
@@ -705,35 +705,40 @@ function annotate(fn, strictDi, name) {
 
 function createInjector(modulesToLoad, strictDi) {
   strictDi = (strictDi === true);
-  var INSTANTIATING = {},
-      providerSuffix = 'Provider',
-      path = [],
-      loadedModules = new NgMap(),
-      providerCache = {
-        $provide: {
-            provider: supportObject(provider),
-            factory: supportObject(factory),
-            service: supportObject(service),
-            value: supportObject(value),
-            constant: supportObject(constant),
-            decorator: decorator
-          }
-      },
-      providerInjector = (providerCache.$injector =
-          createInternalInjector(providerCache, function(serviceName, caller) {
-            if (angular.isString(caller)) {
-              path.push(caller);
-            }
-            throw $injectorMinErr('unpr', 'Unknown provider: {0}', path.join(' <- '));
-          })),
-      instanceCache = {},
-      protoInstanceInjector =
-          createInternalInjector(instanceCache, function(serviceName, caller) {
-            var provider = providerInjector.get(serviceName + providerSuffix, caller);
-            return instanceInjector.invoke(
-                provider.$get, provider, undefined, serviceName);
-          }),
-      instanceInjector = protoInstanceInjector;
+  var INSTANTIATING = {};
+  var providerSuffix = 'Provider';
+  var path = [];
+  var loadedModules = new NgMap();
+
+  var providerCache = {
+    $provide: {
+        provider: supportObject(provider),
+        factory: supportObject(factory),
+        service: supportObject(service),
+        value: supportObject(value),
+        constant: supportObject(constant),
+        decorator: decorator
+      }
+  };
+
+  var providerInjector = (providerCache.$injector =
+      createInternalInjector(providerCache, function(serviceName, caller) {
+        if (angular.isString(caller)) {
+          path.push(caller);
+        }
+        throw $injectorMinErr('unpr', 'Unknown provider: {0}', path.join(' <- '));
+      }));
+
+  var instanceCache = {};
+
+  var protoInstanceInjector =
+      createInternalInjector(instanceCache, function(serviceName, caller) {
+        var provider = providerInjector.get(serviceName + providerSuffix, caller);
+        return instanceInjector.invoke(
+            provider.$get, provider, undefined, serviceName);
+      });
+
+  var instanceInjector = protoInstanceInjector;
 
   providerCache['$injector' + providerSuffix] = { $get: valueFn(protoInstanceInjector) };
   instanceInjector.modules = providerInjector.modules = createMap();
@@ -805,8 +810,8 @@ function createInjector(modulesToLoad, strictDi) {
   }
 
   function decorator(serviceName, decorFn) {
-    var origProvider = providerInjector.get(serviceName + providerSuffix),
-        orig$get = origProvider.$get;
+    var origProvider = providerInjector.get(serviceName + providerSuffix);
+    var orig$get = origProvider.$get;
 
     origProvider.$get = function() {
       var origInstance = instanceInjector.invoke(orig$get, origProvider);
@@ -819,18 +824,20 @@ function createInjector(modulesToLoad, strictDi) {
   ////////////////////////////////////
   function loadModules(modulesToLoad) {
     assertArg(isUndefined(modulesToLoad) || isArray(modulesToLoad), 'modulesToLoad', 'not an array');
-    var runBlocks = [], moduleFn;
+    var runBlocks = [];
+    var moduleFn;
     forEach(modulesToLoad, function(module) {
       if (loadedModules.get(module)) return;
       loadedModules.set(module, true);
 
       function runInvokeQueue(queue) {
-        var i, ii;
+        var i;
+        var ii;
         for (i = 0, ii = queue.length; i < ii; i++) {
-          var invokeArgs = queue[i],
-              provider = providerInjector.get(invokeArgs[0]);
+          var invokeArgs = queue[i];
+          var provider = providerInjector.get(invokeArgs[0]);
 
-          provider[invokeArgs[1]].apply(provider, invokeArgs[2]);
+          provider[invokeArgs[1]](...invokeArgs[2]);
         }
       }
 
@@ -852,7 +859,7 @@ function createInjector(modulesToLoad, strictDi) {
         if (isArray(module)) {
           module = module[module.length - 1];
         }
-        if (e.message && e.stack && e.stack.indexOf(e.message) === -1) {
+        if (e.message && e.stack && !e.stack.includes(e.message)) {
           // Safari & FF's stack traces don't contain error.message content
           // unlike those of Chrome and IE
           // So if stack doesn't contain message, we create a new string that contains both.
@@ -899,8 +906,8 @@ function createInjector(modulesToLoad, strictDi) {
 
 
     function injectionArgs(fn, locals, serviceName) {
-      var args = [],
-          $inject = createInjector.$$annotate(fn, strictDi, serviceName);
+      var args = [];
+      var $inject = createInjector.$$annotate(fn, strictDi, serviceName);
 
       for (var i = 0, length = $inject.length; i < length; i++) {
         var key = $inject[i];
@@ -915,9 +922,7 @@ function createInjector(modulesToLoad, strictDi) {
     }
 
     function isClass(func) {
-      // Support: IE 9-11 only
-      // IE 9-11 do not support classes and IE9 leaks with the code below.
-      if (msie || typeof func !== 'function') {
+      if (typeof func !== 'function') {
         return false;
       }
       var result = func.$$ngIsClass;
@@ -972,7 +977,7 @@ function createInjector(modulesToLoad, strictDi) {
       instantiate: instantiate,
       get: getService,
       annotate: createInjector.$$annotate,
-      has: function(name) {
+      has(name) {
         return providerCache.hasOwnProperty(name + providerSuffix) || cache.hasOwnProperty(name);
       }
     };

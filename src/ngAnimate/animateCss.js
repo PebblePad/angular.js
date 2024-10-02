@@ -16,7 +16,7 @@ var ANIMATE_TIMER_KEY = '$$animateCss';
  * directives to create more complex animations that can be purely driven using CSS code.
  *
  * Note that only browsers that support CSS transitions and/or keyframe animations are capable of
- * rendering animations triggered via `$animateCss` (bad news for IE9 and lower).
+ * rendering animations triggered via `$animateCss`.
  *
  * ## General Use
  * Once again, `$animateCss` is designed to be used inside of a registered JavaScript animation that
@@ -307,21 +307,21 @@ function getCssTransitionDurationStyle(duration, applyOnlyDuration) {
 function createLocalCacheLookup() {
   var cache = Object.create(null);
   return {
-    flush: function() {
+    flush() {
       cache = Object.create(null);
     },
 
-    count: function(key) {
+    count(key) {
       var entry = cache[key];
       return entry ? entry.total : 0;
     },
 
-    get: function(key) {
+    get(key) {
       var entry = cache[key];
       return entry && entry.value;
     },
 
-    put: function(key, value) {
+    put(key, value) {
       if (!cache[key]) {
         cache[key] = { total: 1, value: value };
       } else {
@@ -533,7 +533,8 @@ var $AnimateCssProvider = ['$animateProvider', /** @this */ function($animatePro
         return closeAndReturnNoopAnimator();
       }
 
-      var cacheKey, stagger;
+      var cacheKey;
+      var stagger;
       if (options.stagger > 0) {
         var staggerVal = parseFloat(options.stagger);
         stagger = {
@@ -680,7 +681,7 @@ var $AnimateCssProvider = ['$animateProvider', /** @this */ function($animatePro
       return {
         $$willAnimate: true,
         end: endFn,
-        start: function() {
+        start() {
           if (animationClosed) return;
 
           runnerHost = {
@@ -794,7 +795,7 @@ var $AnimateCssProvider = ['$animateProvider', /** @this */ function($animatePro
 
         return {
           $$willAnimate: false,
-          start: function() {
+          start() {
             return runner;
           },
           end: endFn
@@ -936,7 +937,8 @@ var $AnimateCssProvider = ['$animateProvider', /** @this */ function($animatePro
           maxDurationTime = maxDuration * ONE_SECOND;
 
           if (options.easing) {
-            var easeProp, easeVal = options.easing;
+            var easeProp;
+            var easeVal = options.easing;
             if (flags.hasTransitions) {
               easeProp = TRANSITION_PROP + TIMING_KEY;
               temporaryStyles.push([easeProp, easeVal]);

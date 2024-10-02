@@ -13,7 +13,12 @@ var NG_ANIMATE_CLASSNAME = 'ng-animate';
 var NG_ANIMATE_CHILDREN_DATA = '$$ngAnimateChildren';
 
 // Detect proper transitionend/animationend event names.
-var CSS_PREFIX = '', TRANSITION_PROP, TRANSITIONEND_EVENT, ANIMATION_PROP, ANIMATIONEND_EVENT;
+var CSS_PREFIX = '';
+
+var TRANSITION_PROP;
+var TRANSITIONEND_EVENT;
+var ANIMATION_PROP;
+var ANIMATIONEND_EVENT;
 
 // If unprefixed events are not supported but webkit-prefixed are, use the latter.
 // Otherwise, just use W3C names, browsers not supporting them at all will just ignore them.
@@ -262,7 +267,8 @@ function resolveElementClasses(existing, toAdd, toRemove) {
   };
 
   forEach(flags, function(val, klass) {
-    var prop, allow;
+    var prop;
+    var allow;
     if (val === ADD_CLASS) {
       prop = 'addClass';
       allow = !existing[klass] || existing[klass + REMOVE_CLASS_SUFFIX];

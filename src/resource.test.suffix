@@ -1,0 +1,3 @@
+  window.ngInternals.isValidDottedPath = isValidDottedPath;
+  window.ngInternals.lookupDottedPath = lookupDottedPath;
+  window.ngInternals.shallowClearAndCopy = shallowClearAndCopy;

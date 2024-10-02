@@ -2,10 +2,10 @@
 
 describe('$timeout', function() {
 
-  beforeEach(module(provideLog));
+  beforeEach(angular.mock.module(provideLog));
 
 
-  it('should delegate functions to $browser.defer', inject(function($timeout, $browser) {
+  it('should delegate functions to $browser.defer', angular.mock.inject(function($timeout, $browser) {
     var counter = 0;
     $timeout(function() { counter++; });
 
@@ -19,28 +19,28 @@ describe('$timeout', function() {
   }));
 
 
-  it('should call $apply after each callback is executed', inject(function($timeout, $rootScope) {
-    var applySpy = spyOn($rootScope, '$apply').and.callThrough();
+  it('should call $apply after each callback is executed', angular.mock.inject(function($timeout, $rootScope) {
+    var applySpy = jest.spyOn($rootScope, '$apply');
 
-    $timeout(noop);
+    $timeout(angular.noop);
     expect(applySpy).not.toHaveBeenCalled();
 
     $timeout.flush();
-    expect(applySpy).toHaveBeenCalledOnce();
+    expect(applySpy).toHaveBeenCalledTimes(1);
 
-    applySpy.calls.reset();
+    applySpy.mockReset();
 
-    $timeout(noop);
-    $timeout(noop);
+    $timeout(angular.noop);
+    $timeout(angular.noop);
     $timeout.flush();
     expect(applySpy).toHaveBeenCalledTimes(2);
   }));
 
 
-  it('should NOT call $apply if skipApply is set to true', inject(function($timeout, $rootScope) {
-    var applySpy = spyOn($rootScope, '$apply').and.callThrough();
+  it('should NOT call $apply if skipApply is set to true', angular.mock.inject(function($timeout, $rootScope) {
+    var applySpy = jest.spyOn($rootScope, '$apply');
 
-    $timeout(noop, 12, false);
+    $timeout(angular.noop, 12, false);
     expect(applySpy).not.toHaveBeenCalled();
 
     $timeout.flush();
@@ -49,31 +49,31 @@ describe('$timeout', function() {
 
 
   it('should NOT call $evalAsync or $digest if invokeApply is set to false',
-      inject(function($timeout, $rootScope) {
-    var evalAsyncSpy = spyOn($rootScope, '$evalAsync').and.callThrough();
-    var digestSpy = spyOn($rootScope, '$digest').and.callThrough();
-    var fulfilledSpy = jasmine.createSpy('fulfilled');
+      angular.mock.inject(function($timeout, $rootScope) {
+    var evalAsyncSpy = jest.spyOn($rootScope, '$evalAsync');
+    var digestSpy = jest.spyOn($rootScope, '$digest');
+    var fulfilledSpy = jest.fn();
 
     $timeout(fulfilledSpy, 1000, false);
 
     $timeout.flush();
 
-    expect(fulfilledSpy).toHaveBeenCalledOnce();
+    expect(fulfilledSpy).toHaveBeenCalledTimes(1);
     expect(evalAsyncSpy).not.toHaveBeenCalled();
     expect(digestSpy).not.toHaveBeenCalled();
   }));
 
 
-  it('should allow you to specify the delay time', inject(function($timeout, $browser) {
-    var defer = spyOn($browser, 'defer');
-    $timeout(noop, 123);
+  it('should allow you to specify the delay time', angular.mock.inject(function($timeout, $browser) {
+    var defer = jest.spyOn($browser, 'defer');
+    $timeout(angular.noop, 123);
     expect(defer).toHaveBeenCalledTimes(1);
-    expect(defer.calls.mostRecent().args[1]).toEqual(123);
+    expect(defer.mock.calls[defer.mock.calls.length - 1][1]).toEqual(123);
   }));
 
 
   it('should return a promise which will be resolved with return value of the timeout callback',
-      inject(function($timeout, log) {
+      angular.mock.inject(function($timeout, log) {
     var promise = $timeout(function() { log('timeout'); return 'buba'; });
 
     promise.then(function(value) { log('promise success: ' + value); }, log.fn('promise error'));
@@ -85,12 +85,12 @@ describe('$timeout', function() {
 
 
   it('should forget references to deferreds when callback called even if skipApply is true',
-      inject(function($timeout, $browser) {
+      angular.mock.inject(function($timeout, $browser) {
     // $browser.defer.cancel is only called on cancel if the deferred object is still referenced
-    var cancelSpy = spyOn($browser.defer, 'cancel').and.callThrough();
+    var cancelSpy = jest.spyOn($browser.defer, 'cancel');
 
-    var promise1 = $timeout(noop, 0, false);
-    var promise2 = $timeout(noop, 100, false);
+    var promise1 = $timeout(angular.noop, 0, false);
+    var promise2 = $timeout(angular.noop, 100, false);
     expect(cancelSpy).not.toHaveBeenCalled();
 
     $timeout.flush(0);
@@ -104,7 +104,7 @@ describe('$timeout', function() {
     expect(cancelSpy).toHaveBeenCalled();
   }));
 
-  it('should allow the `fn` parameter to be optional', inject(function($timeout, log) {
+  it('should allow the `fn` parameter to be optional', angular.mock.inject(function($timeout, log) {
 
     $timeout().then(function(value) { log('promise success: ' + value); }, log.fn('promise error'));
     expect(log).toEqual([]);
@@ -123,43 +123,42 @@ describe('$timeout', function() {
   }));
 
   it('should pass the timeout arguments in the timeout callback',
-      inject(function($timeout, $browser, log) {
-    var task1 = jasmine.createSpy('Nappa'),
-        task2 = jasmine.createSpy('Vegeta');
+      angular.mock.inject(function($timeout, $browser, log) {
+        var task1 = jest.fn();
+        var task2 = jest.fn();
 
-    $timeout(task1, 9000, true, 'What does', 'the timeout', 'say about', 'its delay level');
-    expect($browser.deferredFns.length).toBe(1);
+        $timeout(task1, 9000, true, 'What does', 'the timeout', 'say about', 'its delay level');
+        expect($browser.deferredFns.length).toBe(1);
 
-    $timeout(task2, 9001, false, 'It\'s', 'over', 9000);
-    expect($browser.deferredFns.length).toBe(2);
+        $timeout(task2, 9001, false, 'It\'s', 'over', 9000);
+        expect($browser.deferredFns.length).toBe(2);
 
-    $timeout(9000, false, 'What!', 9000).then(function(value) { log('There\'s no way that can be right! ' + value); }, log.fn('It can\'t!'));
-    expect($browser.deferredFns.length).toBe(3);
-    expect(log).toEqual([]);
+        $timeout(9000, false, 'What!', 9000).then(function(value) { log('There\'s no way that can be right! ' + value); }, log.fn('It can\'t!'));
+        expect($browser.deferredFns.length).toBe(3);
+        expect(log).toEqual([]);
 
-    $timeout.flush(0);
-    expect(task1).not.toHaveBeenCalled();
+        $timeout.flush(0);
+        expect(task1).not.toHaveBeenCalled();
 
-    $timeout.flush(9000);
-    expect(task1).toHaveBeenCalledWith('What does', 'the timeout', 'say about', 'its delay level');
+        $timeout.flush(9000);
+        expect(task1).toHaveBeenCalledWith('What does', 'the timeout', 'say about', 'its delay level');
 
-    $timeout.flush(1);
-    expect(task2).toHaveBeenCalledWith('It\'s', 'over', 9000);
+        $timeout.flush(1);
+        expect(task2).toHaveBeenCalledWith('It\'s', 'over', 9000);
 
-    $timeout.flush(9000);
-    expect(log).toEqual(['There\'s no way that can be right! undefined']);
-
-  }));
+        $timeout.flush(9000);
+        expect(log).toEqual(['There\'s no way that can be right! undefined']);
+      }));
 
 
   describe('exception handling', function() {
 
-    beforeEach(module(function($exceptionHandlerProvider) {
+    beforeEach(angular.mock.module(function($exceptionHandlerProvider) {
       $exceptionHandlerProvider.mode('log');
     }));
 
 
-    it('should delegate exception to the $exceptionHandler service', inject(
+    it('should delegate exception to the $exceptionHandler service', angular.mock.inject(
         function($timeout, $exceptionHandler) {
       $timeout(function() { throw 'Test Error'; });
       expect($exceptionHandler.errors).toEqual([]);
@@ -169,9 +168,9 @@ describe('$timeout', function() {
     }));
 
 
-    it('should call $apply even if an exception is thrown in callback', inject(
+    it('should call $apply even if an exception is thrown in callback', angular.mock.inject(
         function($timeout, $rootScope) {
-      var applySpy = spyOn($rootScope, '$apply').and.callThrough();
+      var applySpy = jest.spyOn($rootScope, '$apply');
 
       $timeout(function() { throw 'Test Error'; });
       expect(applySpy).not.toHaveBeenCalled();
@@ -182,7 +181,7 @@ describe('$timeout', function() {
 
 
     it('should reject the timeout promise when an exception is thrown in the timeout callback',
-        inject(function($timeout, log) {
+        angular.mock.inject(function($timeout, log) {
       var promise = $timeout(function() { throw 'Some Error'; });
 
       promise.then(log.fn('success'), function(reason) { log('error: ' + reason); });
@@ -193,7 +192,7 @@ describe('$timeout', function() {
 
 
     it('should pass the timeout arguments in the timeout callback even if an exception is thrown',
-        inject(function($timeout, log) {
+        angular.mock.inject(function($timeout, log) {
       var promise1 = $timeout(function(arg) { throw arg; }, 9000, true, 'Some Arguments');
       var promise2 = $timeout(function(arg1, args2) { throw arg1 + ' ' + args2; }, 9001, false, 'Are Meant', 'To Be Thrown');
 
@@ -212,9 +211,9 @@ describe('$timeout', function() {
 
 
     it('should forget references to relevant deferred even when exception is thrown',
-        inject(function($timeout, $browser) {
+        angular.mock.inject(function($timeout, $browser) {
       // $browser.defer.cancel is only called on cancel if the deferred object is still referenced
-      var cancelSpy = spyOn($browser.defer, 'cancel').and.callThrough();
+      var cancelSpy = jest.spyOn($browser.defer, 'cancel');
 
       var promise = $timeout(function() { throw 'Test Error'; }, 0, false);
       $timeout.flush();
@@ -227,18 +226,20 @@ describe('$timeout', function() {
 
 
   describe('cancel', function() {
-    it('should cancel tasks', inject(function($timeout) {
-      var task1 = jasmine.createSpy('task1'),
-          task2 = jasmine.createSpy('task2'),
-          task3 = jasmine.createSpy('task3'),
-          task4 = jasmine.createSpy('task4'),
-          promise1, promise3, promise4;
+    it('should cancel tasks', angular.mock.inject(function($timeout) {
+      var task1 = jest.fn();
+      var task2 = jest.fn();
+      var task3 = jest.fn();
+      var task4 = jest.fn();
+      var promise1;
+      var promise3;
+      var promise4;
 
       promise1 = $timeout(task1);
       $timeout(task2);
       promise3 = $timeout(task3, 333);
       promise4 = $timeout(333);
-      promise3.then(task4, noop);
+      promise3.then(task4, angular.noop);
 
       $timeout.cancel(promise1);
       $timeout.cancel(promise3);
@@ -246,14 +247,14 @@ describe('$timeout', function() {
       $timeout.flush();
 
       expect(task1).not.toHaveBeenCalled();
-      expect(task2).toHaveBeenCalledOnce();
+      expect(task2).toHaveBeenCalledTimes(1);
       expect(task3).not.toHaveBeenCalled();
       expect(task4).not.toHaveBeenCalled();
     }));
 
 
-    it('should cancel the promise', inject(function($timeout, log) {
-      var promise = $timeout(noop);
+    it('should cancel the promise', angular.mock.inject(function($timeout, log) {
+      var promise = $timeout(angular.noop);
       promise.then(function(value) { log('promise success: ' + value); },
                  function(err) { log('promise error: ' + err); },
                  function(note) { log('promise update: ' + note); });
@@ -266,10 +267,11 @@ describe('$timeout', function() {
     }));
 
 
-    it('should return true if a task was successfully canceled', inject(function($timeout) {
-      var task1 = jasmine.createSpy('task1'),
-          task2 = jasmine.createSpy('task2'),
-          promise1, promise2;
+    it('should return true if a task was successfully canceled', angular.mock.inject(function($timeout) {
+      var task1 = jest.fn();
+      var task2 = jest.fn();
+      var promise1;
+      var promise2;
 
       promise1 = $timeout(task1);
       $timeout.flush();
@@ -280,29 +282,29 @@ describe('$timeout', function() {
     }));
 
 
-    it('should not throw a runtime exception when given an undefined promise', inject(function($timeout) {
+    it('should not throw a runtime exception when given an undefined promise', angular.mock.inject(function($timeout) {
       expect($timeout.cancel()).toBe(false);
     }));
 
 
-    it('should forget references to relevant deferred', inject(function($timeout, $browser) {
+    it('should forget references to relevant deferred', angular.mock.inject(function($timeout, $browser) {
       // $browser.defer.cancel is only called on cancel if the deferred object is still referenced
-      var cancelSpy = spyOn($browser.defer, 'cancel').and.callThrough();
+      var cancelSpy = jest.spyOn($browser.defer, 'cancel');
 
-      var promise = $timeout(noop, 0, false);
+      var promise = $timeout(angular.noop, 0, false);
 
       expect(cancelSpy).not.toHaveBeenCalled();
       $timeout.cancel(promise);
-      expect(cancelSpy).toHaveBeenCalledOnce();
+      expect(cancelSpy).toHaveBeenCalledTimes(1);
 
       // Promise deferred object should already be removed from the list and not cancellable again
       $timeout.cancel(promise);
-      expect(cancelSpy).toHaveBeenCalledOnce();
+      expect(cancelSpy).toHaveBeenCalledTimes(1);
     }));
 
 
-    it('should not trigger digest when cancelled', inject(function($timeout, $rootScope, $browser) {
-      var watchSpy = jasmine.createSpy('watchSpy');
+    it('should not trigger digest when cancelled', angular.mock.inject(function($timeout, $rootScope, $browser) {
+      var watchSpy = jest.fn();
       $rootScope.$watch(watchSpy);
 
       var t = $timeout();

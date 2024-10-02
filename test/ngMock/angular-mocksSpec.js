@@ -67,7 +67,7 @@ describe('ngMock', function() {
 
       //0:00 in +3h
       var t2 = new angular.mock.TzDate(3, jan2);
-      expect(t2.getHours()).toMatch('21');
+      expect(t2.getHours()).toBe(21);
     });
 
 
@@ -90,11 +90,11 @@ describe('ngMock', function() {
 
       //0:15 in +3h
       var t2 = new angular.mock.TzDate(3, minutes(15));
-      expect(t2.getMinutes()).toMatch('15');
+      expect(t2.getMinutes()).toBe(15);
 
       //0:15 in +3.25h
       var t2a = new angular.mock.TzDate(3.25, minutes(15));
-      expect(t2a.getMinutes()).toMatch('0');
+      expect(t2a.getMinutes()).toBe(0);
     });
 
 
@@ -109,7 +109,7 @@ describe('ngMock', function() {
 
       //0 in +3h
       var t2 = new angular.mock.TzDate(3, 0);
-      expect(t2.getSeconds()).toMatch('0');
+      expect(t2.getSeconds()).toBe(0);
     });
 
 
@@ -164,26 +164,26 @@ describe('ngMock', function() {
   describe('$log', function() {
     angular.forEach([true, false], function(debugEnabled) {
       describe('debug ' + debugEnabled, function() {
-        beforeEach(module(function($logProvider) {
+        beforeEach(angular.mock.module(function($logProvider) {
           $logProvider.debugEnabled(debugEnabled);
         }));
 
-        afterEach(inject(function($log) {
+        afterEach(angular.mock.inject(function($log) {
           $log.reset();
         }));
 
-        it('should skip debugging output if disabled (' + debugEnabled + ')', inject(function($log) {
+        it('should skip debugging output if disabled (' + debugEnabled + ')', angular.mock.inject(function($log) {
             $log.log('fake log');
             $log.info('fake log');
             $log.warn('fake log');
             $log.error('fake log');
             $log.debug('fake log');
-            expect($log.log.logs).toContain(['fake log']);
-            expect($log.info.logs).toContain(['fake log']);
-            expect($log.warn.logs).toContain(['fake log']);
-            expect($log.error.logs).toContain(['fake log']);
+            expect($log.log.logs).toContainEqual(['fake log']);
+            expect($log.info.logs).toContainEqual(['fake log']);
+            expect($log.warn.logs).toContainEqual(['fake log']);
+            expect($log.error.logs).toContainEqual(['fake log']);
             if (debugEnabled) {
-              expect($log.debug.logs).toContain(['fake log']);
+              expect($log.debug.logs).toContainEqual(['fake log']);
             } else {
               expect($log.debug.logs).toEqual([]);
             }
@@ -193,11 +193,11 @@ describe('ngMock', function() {
 
     describe('debug enabled (default)', function() {
       var $log;
-      beforeEach(inject(['$log', function(log) {
+      beforeEach(angular.mock.inject(['$log', function(log) {
         $log = log;
       }]));
 
-      afterEach(inject(function($log) {
+      afterEach(angular.mock.inject(function($log) {
         $log.reset();
       }));
 
@@ -223,27 +223,27 @@ describe('ngMock', function() {
 
       it('should store log messages', function() {
         $log.log('fake log');
-        expect($log.log.logs).toContain(['fake log']);
+        expect($log.log.logs).toContainEqual(['fake log']);
       });
 
       it('should store info messages', function() {
         $log.info('fake log');
-        expect($log.info.logs).toContain(['fake log']);
+        expect($log.info.logs).toContainEqual(['fake log']);
       });
 
       it('should store warn messages', function() {
         $log.warn('fake log');
-        expect($log.warn.logs).toContain(['fake log']);
+        expect($log.warn.logs).toContainEqual(['fake log']);
       });
 
       it('should store error messages', function() {
         $log.error('fake log');
-        expect($log.error.logs).toContain(['fake log']);
+        expect($log.error.logs).toContainEqual(['fake log']);
       });
 
       it('should store debug messages', function() {
         $log.debug('fake log');
-        expect($log.debug.logs).toContain(['fake log']);
+        expect($log.debug.logs).toContainEqual(['fake log']);
       });
 
       it('should assertEmpty', function() {
@@ -286,7 +286,7 @@ describe('ngMock', function() {
 
 
   describe('$interval', function() {
-    it('should run tasks repeatedly', inject(function($interval) {
+    it('should run tasks repeatedly', angular.mock.inject(function($interval) {
       var counter = 0;
       $interval(function() { counter++; }, 1000);
 
@@ -303,27 +303,27 @@ describe('ngMock', function() {
     }));
 
 
-    it('should call $apply after each task is executed', inject(function($interval, $rootScope) {
-      var applySpy = spyOn($rootScope, '$apply').and.callThrough();
+    it('should call $apply after each task is executed', angular.mock.inject(function($interval, $rootScope) {
+      var applySpy = jest.spyOn($rootScope, '$apply');
 
-      $interval(noop, 1000);
+      $interval(angular.noop, 1000);
       expect(applySpy).not.toHaveBeenCalled();
 
       $interval.flush(1000);
-      expect(applySpy).toHaveBeenCalledOnce();
+      expect(applySpy).toHaveBeenCalledTimes(1);
 
-      applySpy.calls.reset();
+      applySpy.mockReset();
 
-      $interval(noop, 1000);
-      $interval(noop, 1000);
+      $interval(angular.noop, 1000);
+      $interval(angular.noop, 1000);
       $interval.flush(1000);
       expect(applySpy).toHaveBeenCalledTimes(3);
     }));
 
 
     it('should NOT call $apply if invokeApply is set to false',
-        inject(function($interval, $rootScope) {
-      var applySpy = spyOn($rootScope, '$apply').and.callThrough();
+        angular.mock.inject(function($interval, $rootScope) {
+      var applySpy = jest.spyOn($rootScope, '$apply');
 
       var counter = 0;
       $interval(function increment() { counter++; }, 1000, 0, false);
@@ -337,7 +337,7 @@ describe('ngMock', function() {
     }));
 
 
-    it('should allow you to specify the delay time', inject(function($interval) {
+    it('should allow you to specify the delay time', angular.mock.inject(function($interval) {
       var counter = 0;
       $interval(function() { counter++; }, 123);
 
@@ -351,7 +351,7 @@ describe('ngMock', function() {
     }));
 
 
-    it('should allow you to NOT specify the delay time', inject(function($interval) {
+    it('should allow you to NOT specify the delay time', angular.mock.inject(function($interval) {
       var counterA = 0;
       var counterB = 0;
 
@@ -367,7 +367,7 @@ describe('ngMock', function() {
     }));
 
 
-    it('should run tasks in correct relative order', inject(function($interval) {
+    it('should run tasks in correct relative order', angular.mock.inject(function($interval) {
       var counterA = 0;
       var counterB = 0;
       $interval(function() { counterA++; }, 0);
@@ -385,7 +385,7 @@ describe('ngMock', function() {
     }));
 
 
-    it('should NOT trigger zero-delay interval when flush has ran before', inject(function($interval) {
+    it('should NOT trigger zero-delay interval when flush has ran before', angular.mock.inject(function($interval) {
       var counterA = 0;
       var counterB = 0;
 
@@ -404,7 +404,7 @@ describe('ngMock', function() {
     }));
 
 
-    it('should trigger zero-delay interval only once on flush zero', inject(function($interval) {
+    it('should trigger zero-delay interval only once on flush zero', angular.mock.inject(function($interval) {
       var counterA = 0;
       var counterB = 0;
 
@@ -420,7 +420,7 @@ describe('ngMock', function() {
     }));
 
 
-    it('should allow you to specify a number of iterations', inject(function($interval) {
+    it('should allow you to specify a number of iterations', angular.mock.inject(function($interval) {
       var counter = 0;
       $interval(function() {counter++;}, 1000, 2);
 
@@ -434,7 +434,7 @@ describe('ngMock', function() {
 
 
     describe('flush', function() {
-      it('should move the clock forward by the specified time', inject(function($interval) {
+      it('should move the clock forward by the specified time', angular.mock.inject(function($interval) {
         var counterA = 0;
         var counterB = 0;
         $interval(function() { counterA++; }, 100);
@@ -451,51 +451,50 @@ describe('ngMock', function() {
 
 
     it('should return a promise which will be updated with the count on each iteration',
-        inject(function($interval) {
-      var log = [],
-          promise = $interval(function() { log.push('tick'); }, 1000);
+        angular.mock.inject(function($interval) {
+          var log = [];
+          var promise = $interval(function() { log.push('tick'); }, 1000);
 
-      promise.then(function(value) { log.push('promise success: ' + value); },
-                   function(err) { log.push('promise error: ' + err); },
-                   function(note) { log.push('promise update: ' + note); });
-      expect(log).toEqual([]);
+          promise.then(function(value) { log.push('promise success: ' + value); },
+                       function(err) { log.push('promise error: ' + err); },
+                       function(note) { log.push('promise update: ' + note); });
+          expect(log).toEqual([]);
 
-      $interval.flush(1000);
-      expect(log).toEqual(['tick', 'promise update: 0']);
+          $interval.flush(1000);
+          expect(log).toEqual(['tick', 'promise update: 0']);
 
-      $interval.flush(1000);
-      expect(log).toEqual(['tick', 'promise update: 0', 'tick', 'promise update: 1']);
-    }));
+          $interval.flush(1000);
+          expect(log).toEqual(['tick', 'promise update: 0', 'tick', 'promise update: 1']);
+        }));
 
 
     it('should return a promise which will be resolved after the specified number of iterations',
-        inject(function($interval) {
-      var log = [],
-          promise = $interval(function() { log.push('tick'); }, 1000, 2);
+        angular.mock.inject(function($interval) {
+          var log = [];
+          var promise = $interval(function() { log.push('tick'); }, 1000, 2);
 
-      promise.then(function(value) { log.push('promise success: ' + value); },
-                   function(err) { log.push('promise error: ' + err); },
-                   function(note) { log.push('promise update: ' + note); });
-      expect(log).toEqual([]);
+          promise.then(function(value) { log.push('promise success: ' + value); },
+                       function(err) { log.push('promise error: ' + err); },
+                       function(note) { log.push('promise update: ' + note); });
+          expect(log).toEqual([]);
 
-      $interval.flush(1000);
-      expect(log).toEqual(['tick', 'promise update: 0']);
-      $interval.flush(1000);
+          $interval.flush(1000);
+          expect(log).toEqual(['tick', 'promise update: 0']);
+          $interval.flush(1000);
 
-      expect(log).toEqual([
-        'tick', 'promise update: 0', 'tick', 'promise update: 1', 'promise success: 2'
-      ]);
-
-    }));
+          expect(log).toEqual([
+            'tick', 'promise update: 0', 'tick', 'promise update: 1', 'promise success: 2'
+          ]);
+        }));
 
 
     describe('exception handling', function() {
-      beforeEach(module(function($exceptionHandlerProvider) {
+      beforeEach(angular.mock.module(function($exceptionHandlerProvider) {
         $exceptionHandlerProvider.mode('log');
       }));
 
 
-      it('should delegate exception to the $exceptionHandler service', inject(
+      it('should delegate exception to the $exceptionHandler service', angular.mock.inject(
           function($interval, $exceptionHandler) {
         $interval(function() { throw 'Test Error'; }, 1000);
         expect($exceptionHandler.errors).toEqual([]);
@@ -508,9 +507,9 @@ describe('ngMock', function() {
       }));
 
 
-      it('should call $apply even if an exception is thrown in callback', inject(
+      it('should call $apply even if an exception is thrown in callback', angular.mock.inject(
           function($interval, $rootScope) {
-        var applySpy = spyOn($rootScope, '$apply').and.callThrough();
+        var applySpy = jest.spyOn($rootScope, '$apply');
 
         $interval(function() { throw new Error('Test Error'); }, 1000);
         expect(applySpy).not.toHaveBeenCalled();
@@ -521,26 +520,27 @@ describe('ngMock', function() {
 
 
       it('should still update the interval promise when an exception is thrown',
-          inject(function($interval) {
-        var log = [],
-            promise = $interval(function() { throw new Error('Some Error'); }, 1000);
+          angular.mock.inject(function($interval) {
+            var log = [];
+            var promise = $interval(function() { throw new Error('Some Error'); }, 1000);
 
-        promise.then(function(value) { log.push('promise success: ' + value); },
-                   function(err) { log.push('promise error: ' + err); },
-                   function(note) { log.push('promise update: ' + note); });
-        $interval.flush(1000);
+            promise.then(function(value) { log.push('promise success: ' + value); },
+                       function(err) { log.push('promise error: ' + err); },
+                       function(note) { log.push('promise update: ' + note); });
+            $interval.flush(1000);
 
-        expect(log).toEqual(['promise update: 0']);
-      }));
+            expect(log).toEqual(['promise update: 0']);
+          }));
     });
 
 
     describe('cancel', function() {
-      it('should cancel tasks', inject(function($interval) {
-        var task1 = jasmine.createSpy('task1', 1000),
-            task2 = jasmine.createSpy('task2', 1000),
-            task3 = jasmine.createSpy('task3', 1000),
-            promise1, promise3;
+      it('should cancel tasks', angular.mock.inject(function($interval) {
+        var task1 = jest.fn();
+        var task2 = jest.fn();
+        var task3 = jest.fn();
+        var promise1;
+        var promise3;
 
         promise1 = $interval(task1, 200);
         $interval(task2, 1000);
@@ -551,14 +551,14 @@ describe('ngMock', function() {
         $interval.flush(1000);
 
         expect(task1).not.toHaveBeenCalled();
-        expect(task2).toHaveBeenCalledOnce();
+        expect(task2).toHaveBeenCalledTimes(1);
         expect(task3).not.toHaveBeenCalled();
       }));
 
 
-      it('should cancel the promise', inject(function($interval, $rootScope) {
-        var promise = $interval(noop, 1000),
-            log = [];
+      it('should cancel the promise', angular.mock.inject(function($interval, $rootScope) {
+        var promise = $interval(angular.noop, 1000);
+        var log = [];
         promise.then(function(value) { log.push('promise success: ' + value); },
                    function(err) { log.push('promise error: ' + err); },
                    function(note) { log.push('promise update: ' + note); });
@@ -568,16 +568,17 @@ describe('ngMock', function() {
         $interval.cancel(promise);
         $interval.flush(1000);
         $rootScope.$apply(); // For resolving the promise -
-                             // necessary since q uses $rootScope.evalAsync.
+        // necessary since q uses $rootScope.evalAsync.
 
         expect(log).toEqual(['promise update: 0', 'promise error: canceled']);
       }));
 
 
-      it('should return true if a task was successfully canceled', inject(function($interval) {
-        var task1 = jasmine.createSpy('task1'),
-            task2 = jasmine.createSpy('task2'),
-            promise1, promise2;
+      it('should return true if a task was successfully canceled', angular.mock.inject(function($interval) {
+        var task1 = jest.fn();
+        var task2 = jest.fn();
+        var promise1;
+        var promise2;
 
         promise1 = $interval(task1, 1000, 1);
         $interval.flush(1000);
@@ -589,12 +590,10 @@ describe('ngMock', function() {
 
 
       it('should not throw a runtime exception when given an undefined promise',
-          inject(function($interval) {
-        var task1 = jasmine.createSpy('task1'),
-            promise1;
+          angular.mock.inject(function($interval) {
+        var task1 = jest.fn();
 
-        promise1 = $interval(task1, 1000, 1);
-
+        $interval(task1, 1000, 1);
         expect($interval.cancel()).toBe(false);
       }));
     });
@@ -602,8 +601,9 @@ describe('ngMock', function() {
 
 
   describe('defer', function() {
-    var browser, log;
-    beforeEach(inject(function($browser) {
+    var browser;
+    var log;
+    beforeEach(angular.mock.inject(function($browser) {
       browser = $browser;
       log = '';
     }));
@@ -660,16 +660,16 @@ describe('ngMock', function() {
 
 
   describe('$exceptionHandler', function() {
-    it('should rethrow exceptions', inject(function($exceptionHandler) {
+    it('should rethrow exceptions', angular.mock.inject(function($exceptionHandler) {
       expect(function() { $exceptionHandler('myException'); }).toThrow('myException');
     }));
 
 
     it('should log exceptions', function() {
-      module(function($exceptionHandlerProvider) {
+      angular.mock.module(function($exceptionHandlerProvider) {
         $exceptionHandlerProvider.mode('log');
       });
-      inject(function($exceptionHandler) {
+      angular.mock.inject(function($exceptionHandler) {
         $exceptionHandler('MyError');
         expect($exceptionHandler.errors).toEqual(['MyError']);
 
@@ -679,10 +679,10 @@ describe('ngMock', function() {
     });
 
     it('should log and rethrow exceptions', function() {
-      module(function($exceptionHandlerProvider) {
+      angular.mock.module(function($exceptionHandlerProvider) {
         $exceptionHandlerProvider.mode('rethrow');
       });
-      inject(function($exceptionHandler) {
+      angular.mock.inject(function($exceptionHandler) {
         expect(function() { $exceptionHandler('MyError'); }).toThrow('MyError');
         expect($exceptionHandler.errors).toEqual(['MyError']);
 
@@ -692,55 +692,55 @@ describe('ngMock', function() {
     });
 
     it('should throw on wrong argument', function() {
-      module(function($exceptionHandlerProvider) {
+      angular.mock.module(function($exceptionHandlerProvider) {
         expect(function() {
           $exceptionHandlerProvider.mode('XXX');
         }).toThrowError('Unknown mode \'XXX\', only \'log\'/\'rethrow\' modes are allowed!');
       });
 
-      inject(); // Trigger the tests in `module`
+      angular.mock.inject(); // Trigger the tests in `module`
     });
   });
 
 
   describe('$timeout', function() {
-    it('should expose flush method that will flush the pending queue of tasks', inject(
+    it('should expose flush method that will flush the pending queue of tasks', angular.mock.inject(
         function($timeout) {
-      var logger = [],
-          logFn = function(msg) { return function() { logger.push(msg); }; };
+          var logger = [];
+          var logFn = function(msg) { return function() { logger.push(msg); }; };
 
-      $timeout(logFn('t1'));
-      $timeout(logFn('t2'), 200);
-      $timeout(logFn('t3'));
-      expect(logger).toEqual([]);
+          $timeout(logFn('t1'));
+          $timeout(logFn('t2'), 200);
+          $timeout(logFn('t3'));
+          expect(logger).toEqual([]);
 
-      $timeout.flush();
-      expect(logger).toEqual(['t1', 't3', 't2']);
-    }));
+          $timeout.flush();
+          expect(logger).toEqual(['t1', 't3', 't2']);
+        }));
 
 
-    it('should throw an exception when not flushed', inject(function($timeout) {
-      $timeout(noop);
+    it('should throw an exception when not flushed', angular.mock.inject(function($timeout) {
+      $timeout(angular.noop);
 
       var expectedError = 'Deferred tasks to flush (1): {id: 0, time: 0}';
       expect(function() {$timeout.verifyNoPendingTasks();}).toThrowError(expectedError);
     }));
 
 
-    it('should do nothing when all tasks have been flushed', inject(function($timeout) {
-      $timeout(noop);
+    it('should do nothing when all tasks have been flushed', angular.mock.inject(function($timeout) {
+      $timeout(angular.noop);
 
       $timeout.flush();
       expect(function() {$timeout.verifyNoPendingTasks();}).not.toThrow();
     }));
 
 
-    it('should check against the delay if provided within timeout', inject(function($timeout) {
-      $timeout(noop, 100);
+    it('should check against the delay if provided within timeout', angular.mock.inject(function($timeout) {
+      $timeout(angular.noop, 100);
       $timeout.flush(100);
       expect(function() {$timeout.verifyNoPendingTasks();}).not.toThrow();
 
-      $timeout(noop, 1000);
+      $timeout(angular.noop, 1000);
       $timeout.flush(100);
       expect(function() {$timeout.verifyNoPendingTasks();}).toThrow();
 
@@ -749,7 +749,7 @@ describe('ngMock', function() {
     }));
 
 
-    it('should assert against the delay value', inject(function($timeout) {
+    it('should assert against the delay value', angular.mock.inject(function($timeout) {
       var count = 0;
       var iterate = function() {
         count++;
@@ -763,8 +763,9 @@ describe('ngMock', function() {
       expect(count).toBe(2);
     }));
 
-    it('should resolve timeout functions following the timeline', inject(function($timeout) {
-      var count1 = 0, count2 = 0;
+    it('should resolve timeout functions following the timeline', angular.mock.inject(function($timeout) {
+      var count1 = 0;
+      var count2 = 0;
       var iterate1 = function() {
         count1++;
         $timeout(iterate1, 100);
@@ -807,13 +808,13 @@ describe('ngMock', function() {
       expect(d(e[0]).toLowerCase()).toEqual('<div>abc</div>');
     });
 
-    it('should serialize scope', inject(function($rootScope) {
+    it('should serialize scope', angular.mock.inject(function($rootScope) {
       $rootScope.obj = {abc:'123'};
       expect(d($rootScope)).toMatch(/Scope\(.*\): \{/);
       expect(d($rootScope)).toMatch(/{"abc":"123"}/);
     }));
 
-    it('should serialize scope that has overridden "hasOwnProperty"', inject(function($rootScope, $sniffer) {
+    it('should serialize scope that has overridden "hasOwnProperty"', angular.mock.inject(function($rootScope) {
       $rootScope.hasOwnProperty = 'X';
       expect(d($rootScope)).toMatch(/Scope\(.*\): \{/);
       expect(d($rootScope)).toMatch(/hasOwnProperty: "X"/);
@@ -834,7 +835,7 @@ describe('ngMock', function() {
         var mock = { log: 'module' };
 
         beforeEach(function() {
-          module({
+          angular.mock.module({
               'service': mock,
               'other': { some: 'replacement'}
             },
@@ -844,20 +845,20 @@ describe('ngMock', function() {
         });
 
         it('should inject the mocked module', function() {
-          inject(function(service) {
+          angular.mock.inject(function(service) {
             expect(service).toEqual(mock);
           });
         });
 
         it('should support multiple key value pairs', function() {
-          inject(function(service, other) {
+          angular.mock.inject(function(service, other) {
             expect(other.some).toEqual('replacement');
             expect(service).toEqual(mock);
           });
         });
 
         it('should integrate with string and function', function() {
-          inject(function(service, $resource, example) {
+          angular.mock.inject(function(service, $resource, example) {
             expect(service).toEqual(mock);
             expect($resource).toBeDefined();
             expect(example).toEqual('win');
@@ -869,7 +870,7 @@ describe('ngMock', function() {
 
           }
 
-          it('should add $inject when invoking test function', inject(function($injector) {
+          it('should add $inject when invoking test function', angular.mock.inject(function($injector) {
             $injector.invoke(testFn);
             expect(testFn.$inject).toBeDefined();
           }));
@@ -878,7 +879,7 @@ describe('ngMock', function() {
             expect(testFn.$inject).toBeUndefined();
           });
 
-          it('should add $inject when annotating test function', inject(function($injector) {
+          it('should add $inject when annotating test function', angular.mock.inject(function($injector) {
             $injector.annotate(testFn);
             expect(testFn.$inject).toBeDefined();
           }));
@@ -887,7 +888,7 @@ describe('ngMock', function() {
             expect(testFn.$inject).toBeUndefined();
           });
 
-          it('should invoke an already annotated function', inject(function($injector) {
+          it('should invoke an already annotated function', angular.mock.inject(function($injector) {
             testFn.$inject = [];
             $injector.invoke(testFn);
           }));
@@ -899,25 +900,25 @@ describe('ngMock', function() {
       });
 
       describe('in DSL', function() {
-        it('should load module', module(function() {
+        it('should load module', angular.mock.module(function() {
           log += 'module';
         }));
 
         afterEach(function() {
-          inject();
+          angular.mock.inject();
           expect(log).toEqual('module');
         });
       });
 
       describe('nested calls', function() {
         it('should invoke nested module calls immediately', function() {
-          module(function($provide) {
+          angular.mock.module(function($provide) {
             $provide.constant('someConst', 'blah');
-            module(function(someConst) {
+            angular.mock.module(function(someConst) {
               log = someConst;
             });
           });
-          inject(function() {
+          angular.mock.inject(function() {
             expect(log).toBe('blah');
           });
         });
@@ -925,10 +926,10 @@ describe('ngMock', function() {
 
       describe('inline in test', function() {
         it('should load module', function() {
-          module(function() {
+          angular.mock.module(function() {
             log += 'module';
           });
-          inject();
+          angular.mock.inject();
         });
 
         afterEach(function() {
@@ -939,7 +940,7 @@ describe('ngMock', function() {
 
     describe('inject', function() {
       describe('in DSL', function() {
-        it('should load module', inject(function() {
+        it('should load module', angular.mock.inject(function() {
           log += 'inject';
         }));
 
@@ -951,7 +952,7 @@ describe('ngMock', function() {
 
       describe('inline in test', function() {
         it('should load module', function() {
-          inject(function() {
+          angular.mock.inject(function() {
             log += 'inject';
           });
         });
@@ -962,11 +963,11 @@ describe('ngMock', function() {
       });
 
       describe('module with inject', function() {
-        beforeEach(module(function() {
+        beforeEach(angular.mock.module(function() {
           log += 'module;';
         }));
 
-        it('should inject', inject(function() {
+        it('should inject', angular.mock.inject(function() {
           log += 'inject;';
         }));
 
@@ -975,17 +976,17 @@ describe('ngMock', function() {
         });
       });
 
-      it('should not change thrown Errors', inject(function($sniffer) {
+      it('should not change thrown Errors', angular.mock.inject(function($sniffer) {
         expect(function() {
-          inject(function() {
+          angular.mock.inject(function() {
             throw new Error('test message');
           });
-        }).toThrow(jasmine.objectContaining({message: 'test message'}));
+        }).toThrow(expect.objectContaining({message: 'test message'}));
       }));
 
-      it('should not change thrown strings', inject(function($sniffer) {
+      it('should not change thrown strings', angular.mock.inject(function() {
         expect(function() {
-          inject(function() {
+          angular.mock.inject(function() {
             throw 'test message';
           });
         }).toThrow('test message');
@@ -993,8 +994,7 @@ describe('ngMock', function() {
 
       describe('error stack trace when called outside of spec context', function() {
         // - Chrome, Firefox, Edge give us the stack trace as soon as an Error is created
-        // - IE10+, PhantomJS give us the stack trace only once the error is thrown
-        // - IE9 does not provide stack traces
+        // - PhantomJS give us the stack trace only once the error is thrown
         var stackTraceSupported = (function() {
           var error = new Error();
           if (!error.stack) {
@@ -1007,7 +1007,7 @@ describe('ngMock', function() {
         })();
 
         function testCaller() {
-          return inject(function injectableError() {
+          return angular.mock.inject(function injectableError() {
             throw new Error();
           });
         }
@@ -1039,13 +1039,13 @@ describe('ngMock', function() {
       describe('ErrorAddingDeclarationLocationStack', function() {
         it('should be caught by Jasmine\'s `toThrowError()`', function() {
           function throwErrorAddingDeclarationStack() {
-            module(function($provide) {
+            angular.mock.module(function($provide) {
               $provide.factory('badFactory', function() {
                 throw new Error('BadFactoryError');
               });
             });
 
-            inject(function(badFactory) {});
+            angular.mock.inject(function(badFactory) {});
           }
 
           expect(throwErrorAddingDeclarationStack).toThrowError(/BadFactoryError/);
@@ -1056,10 +1056,11 @@ describe('ngMock', function() {
 
 
   describe('$httpBackend', function() {
-    var hb, callback, realBackendSpy;
+    var hb;
+    var callback;
 
-    beforeEach(inject(function($httpBackend) {
-      callback = jasmine.createSpy('callback');
+    beforeEach(angular.mock.inject(function($httpBackend) {
+      callback = jest.fn();
       hb = $httpBackend;
     }));
 
@@ -1094,7 +1095,7 @@ describe('ngMock', function() {
       hb.when('GET', '/url1').respond(200, 'content', {});
       hb.when('GET', '/url1').respond(201, 'another', {});
 
-      callback.and.callFake(function(status, response) {
+      callback.mockImplementation(function(status, response) {
         expect(status).toBe(200);
         expect(response).toBe('content');
       });
@@ -1102,7 +1103,7 @@ describe('ngMock', function() {
       hb('GET', '/url1', null, callback);
       expect(callback).not.toHaveBeenCalled();
       hb.flush();
-      expect(callback).toHaveBeenCalledOnce();
+      expect(callback).toHaveBeenCalledTimes(1);
     });
 
 
@@ -1111,7 +1112,7 @@ describe('ngMock', function() {
 
       hb.when('GET', '/url1').respond(200, mockObject, {});
 
-      callback.and.callFake(function(status, response) {
+      callback.mockImplementation(function(status, response) {
         expect(status).toBe(200);
         expect(response).toEqual({a: 'b'});
         expect(response).not.toBe(mockObject);
@@ -1120,14 +1121,14 @@ describe('ngMock', function() {
 
       hb('GET', '/url1', null, callback);
       hb.flush();
-      expect(callback).toHaveBeenCalledOnce();
+      expect(callback).toHaveBeenCalledTimes(1);
 
       // Fire it again and verify that the returned mock data has not been
       // modified.
-      callback.calls.reset();
+      callback.mockReset();
       hb('GET', '/url1', null, callback);
       hb.flush();
-      expect(callback).toHaveBeenCalledOnce();
+      expect(callback).toHaveBeenCalledTimes(1);
       expect(mockObject).toEqual({a: 'b'});
     });
 
@@ -1139,7 +1140,7 @@ describe('ngMock', function() {
 
         hb.when('GET', '/url1').respond(200, mockBlob, {});
 
-        callback.and.callFake(function(status, response) {
+        callback.mockImplementation(function(status, response) {
           expect(response).not.toBe(mockBlob);
           expect(response.size).toBe(13);
           expect(response.type).toBe('application/json');
@@ -1148,7 +1149,7 @@ describe('ngMock', function() {
 
         hb('GET', '/url1', null, callback);
         hb.flush();
-        expect(callback).toHaveBeenCalledOnce();
+        expect(callback).toHaveBeenCalledTimes(1);
       }
     });
 
@@ -1228,7 +1229,7 @@ describe('ngMock', function() {
 
     it('should match only method', function() {
       hb.when('GET').respond(202, 'c');
-      callback.and.callFake(function(status, response) {
+      callback.mockImplementation(function(status, response) {
         expect(status).toBe(202);
         expect(response).toBe('c');
       });
@@ -1343,8 +1344,8 @@ describe('ngMock', function() {
       hb.flush();
 
       expect(callback).toHaveBeenCalledTimes(2);
-      expect(callback.calls.argsFor(0)).toEqual([201, 'second', '', '', 'complete']);
-      expect(callback.calls.argsFor(1)).toEqual([200, 'first', '', '', 'complete']);
+      expect(callback.mock.calls[0]).toEqual([201, 'second', '', '', 'complete']);
+      expect(callback.mock.calls[1]).toEqual([200, 'first', '', '', 'complete']);
     });
 
 
@@ -1358,7 +1359,7 @@ describe('ngMock', function() {
       });
 
       it('should default status code to 200', function() {
-        callback.and.callFake(function(status, response) {
+        callback.mockImplementation(function(status, response) {
           expect(status).toBe(200);
           expect(response).toBe('some-data');
         });
@@ -1381,7 +1382,7 @@ describe('ngMock', function() {
       });
 
       it('should default xhrStatus to complete', function() {
-        callback.and.callFake(function(status, response, headers, x, xhrStatus) {
+        callback.mockImplementation(function(status, response, headers, x, xhrStatus) {
           expect(xhrStatus).toBe('complete');
         });
 
@@ -1437,8 +1438,8 @@ describe('ngMock', function() {
         hb.flush();
 
         expect(callback).toHaveBeenCalledTimes(2);
-        expect(callback.calls.argsFor(0)).toEqual([200, 'first', '', '', 'complete']);
-        expect(callback.calls.argsFor(1)).toEqual([200, 'second', '', '', 'complete']);
+        expect(callback.mock.calls[0]).toEqual([200, 'first', '', '', 'complete']);
+        expect(callback.mock.calls[1]).toEqual([200, 'second', '', '', 'complete']);
       });
 
       it('should be able to override response of expect definition', function() {
@@ -1493,7 +1494,7 @@ describe('ngMock', function() {
 
 
       it('should have precedence over when()', function() {
-        callback.and.callFake(function(status, response) {
+        callback.mockImplementation(function(status, response) {
           expect(status).toBe(300);
           expect(response).toBe('expect');
         });
@@ -1503,7 +1504,7 @@ describe('ngMock', function() {
 
         hb('GET', '/url', null, callback, {});
         hb.flush();
-        expect(callback).toHaveBeenCalledOnce();
+        expect(callback).toHaveBeenCalledTimes(1);
       });
 
 
@@ -1556,7 +1557,7 @@ describe('ngMock', function() {
 
 
       it('should use when\'s respond() when no expect() respond is defined', function() {
-        callback.and.callFake(function(status, response) {
+        callback.mockImplementation(function(status, response) {
           expect(status).toBe(201);
           expect(response).toBe('data');
         });
@@ -1597,7 +1598,7 @@ describe('ngMock', function() {
 
 
       it('should flush given number of pending requests beginning at specified request', function() {
-        var dontCallMe = jasmine.createSpy('dontCallMe');
+        var dontCallMe = jest.fn();
 
         hb.when('GET').respond(200, '');
         hb('GET', '/some', null, dontCallMe);
@@ -1612,7 +1613,7 @@ describe('ngMock', function() {
 
 
       it('should flush all pending requests beginning at specified request', function() {
-        var dontCallMe = jasmine.createSpy('dontCallMe');
+        var dontCallMe = jest.fn();
 
         hb.when('GET').respond(200, '');
         hb('GET', '/some', null, dontCallMe);
@@ -1631,7 +1632,7 @@ describe('ngMock', function() {
         hb('GET', '/url', null, callback);
 
         expect(function() {hb.flush(2);}).toThrowError('No more pending request to flush !');
-        expect(callback).toHaveBeenCalledOnce();
+        expect(callback).toHaveBeenCalledTimes(1);
       });
 
 
@@ -1660,7 +1661,9 @@ describe('ngMock', function() {
     it('should abort requests when timeout promise resolves', function() {
       hb.expect('GET', '/url1').respond(200);
 
-      var canceler, then = jasmine.createSpy('then').and.callFake(function(fn) {
+      var canceler;
+
+      var then = jest.fn(function(fn) {
         canceler = fn;
       });
 
@@ -1675,7 +1678,7 @@ describe('ngMock', function() {
     });
 
 
-    it('should abort requests when timeout passed as a numeric value', inject(function($timeout) {
+    it('should abort requests when timeout passed as a numeric value', angular.mock.inject(function($timeout) {
       hb.expect('GET', '/url1').respond(200);
 
       hb('GET', '/url1', null, callback, null, 200);
@@ -1743,8 +1746,8 @@ describe('ngMock', function() {
         hb.expect('POST', '/u3').respond(201, '', {});
         hb.when('DELETE', '/some').respond(200, '');
 
-        hb('GET', '/u2', noop);
-        hb('POST', '/u3', noop);
+        hb('GET', '/u2', angular.noop);
+        hb('POST', '/u3', angular.noop);
 
         expect(function() {hb.verifyNoOutstandingExpectation();}).not.toThrow();
       });
@@ -1764,7 +1767,7 @@ describe('ngMock', function() {
       });
 
 
-      it('should verify requests fired asynchronously', inject(function($q) {
+      it('should verify requests fired asynchronously', angular.mock.inject(function($q) {
         hb.when('GET').respond(200);
         $q.resolve().then(function() {
           hb('GET', '/some', null, noop, {});
@@ -1804,7 +1807,7 @@ describe('ngMock', function() {
 
 
       it('should remove all pending responses', function() {
-        var cancelledClb = jasmine.createSpy('cancelled');
+        var cancelledClb = jest.fn();
 
         hb.expect('GET', '/url').respond(200, '');
         hb('GET', '/url', null, cancelledClb);
@@ -1814,13 +1817,13 @@ describe('ngMock', function() {
         hb('GET', '/url', null, callback, {});
         hb.flush();
 
-        expect(callback).toHaveBeenCalledOnce();
+        expect(callback).toHaveBeenCalledTimes(1);
         expect(cancelledClb).not.toHaveBeenCalled();
       });
 
 
       it('should not remove definitions', function() {
-        var cancelledClb = jasmine.createSpy('cancelled');
+        var cancelledClb = jest.fn();
 
         hb.when('GET', '/url').respond(200, 'success');
         hb('GET', '/url', null, cancelledClb);
@@ -1829,7 +1832,7 @@ describe('ngMock', function() {
         hb('GET', '/url', null, callback, {});
         hb.flush();
 
-        expect(callback).toHaveBeenCalledOnce();
+        expect(callback).toHaveBeenCalledTimes(1);
         expect(cancelledClb).not.toHaveBeenCalled();
       });
     });
@@ -1853,7 +1856,7 @@ describe('ngMock', function() {
     describe('expectRoute/whenRoute shortcuts', function() {
       angular.forEach(['expectRoute', 'whenRoute'], function(routeShortcut) {
         var methods = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'JSONP'];
-        they('should provide ' + routeShortcut + ' shortcut with $prop method', methods,
+        test.each(methods)('should provide ' + routeShortcut + ' shortcut with $prop method',
           function() {
             hb[routeShortcut](this, '/route').respond('path');
             hb(this, '/route', undefined, callback);
@@ -1861,7 +1864,7 @@ describe('ngMock', function() {
             expect(callback).toHaveBeenCalledOnceWith(200, 'path', '', '', 'complete');
           }
         );
-        they('should match colon delimited parameters in ' + routeShortcut + ' $prop method', methods,
+        test.each(methods)('should match colon delimited parameters in ' + routeShortcut + ' $prop method',
           function() {
             hb[routeShortcut](this, '/route/:id/path/:s_id').respond('path');
             hb(this, '/route/123/path/456', undefined, callback);
@@ -1869,7 +1872,7 @@ describe('ngMock', function() {
             expect(callback).toHaveBeenCalledOnceWith(200, 'path', '', '', 'complete');
           }
         );
-        they('should ignore query param when matching in ' + routeShortcut + ' $prop method', methods,
+        test.each(methods)('should ignore query param when matching in ' + routeShortcut + ' $prop method',
           function() {
             hb[routeShortcut](this, '/route/:id').respond('path');
             hb(this, '/route/123?q=str&foo=bar', undefined, callback);
@@ -1885,7 +1888,7 @@ describe('ngMock', function() {
       /* global MockHttpExpectation */
 
       it('should accept url as regexp', function() {
-        var exp = new MockHttpExpectation('GET', /^\/x/);
+        var exp = new angular.mock.MockHttpExpectation('GET', /^\/x/);
 
         expect(exp.match('GET', '/x')).toBe(true);
         expect(exp.match('GET', '/xxx/x')).toBe(true);
@@ -1894,7 +1897,7 @@ describe('ngMock', function() {
       });
 
       it('should match url with same query params, but different order', function() {
-        var exp = new MockHttpExpectation('GET', 'www.example.com/x/y?a=b&c=d&e=f');
+        var exp = new angular.mock.MockHttpExpectation('GET', 'www.example.com/x/y?a=b&c=d&e=f');
 
         expect(exp.matchUrl('www.example.com/x/y?e=f&c=d&a=b')).toBe(true);
       });
@@ -1903,7 +1906,7 @@ describe('ngMock', function() {
         var urlValidator = function(url) {
           return url !== '/not-accepted';
         };
-        var exp = new MockHttpExpectation('POST', urlValidator);
+        var exp = new angular.mock.MockHttpExpectation('POST', urlValidator);
 
         expect(exp.match('POST', '/url')).toBe(true);
         expect(exp.match('POST', '/not-accepted')).toBe(false);
@@ -1911,7 +1914,7 @@ describe('ngMock', function() {
 
 
       it('should accept data as regexp', function() {
-        var exp = new MockHttpExpectation('POST', '/url', /\{.*?\}/);
+        var exp = new angular.mock.MockHttpExpectation('POST', '/url', /\{.*?\}/);
 
         expect(exp.match('POST', '/url', '{"a": "aa"}')).toBe(true);
         expect(exp.match('POST', '/url', '{"one": "two"}')).toBe(true);
@@ -1924,7 +1927,7 @@ describe('ngMock', function() {
           var json = angular.fromJson(data);
           return !!json.id && json.status === 'N';
         };
-        var exp = new MockHttpExpectation('POST', '/url', dataValidator);
+        var exp = new angular.mock.MockHttpExpectation('POST', '/url', dataValidator);
 
         expect(exp.matchData({})).toBe(false);
         expect(exp.match('POST', '/url', '{"id": "xxx", "status": "N"}')).toBe(true);
@@ -1933,18 +1936,18 @@ describe('ngMock', function() {
 
 
       it('should ignore data only if undefined (not null or false)', function() {
-        var exp = new MockHttpExpectation('POST', '/url', null);
+        var exp = new angular.mock.MockHttpExpectation('POST', '/url', null);
         expect(exp.matchData(null)).toBe(true);
         expect(exp.matchData('some-data')).toBe(false);
 
-        exp = new MockHttpExpectation('POST', '/url', undefined);
+        exp = new angular.mock.MockHttpExpectation('POST', '/url', undefined);
         expect(exp.matchData(null)).toBe(true);
         expect(exp.matchData('some-data')).toBe(true);
       });
 
 
       it('should accept headers as function', function() {
-        var exp = new MockHttpExpectation('GET', '/url', undefined, function(h) {
+        var exp = new angular.mock.MockHttpExpectation('GET', '/url', undefined, function(h) {
           return h['Content-Type'] === 'application/json';
         });
 
@@ -1956,11 +1959,11 @@ describe('ngMock', function() {
 
 
   describe('$rootElement', function() {
-    it('should create mock application root', inject(function($rootElement) {
+    it('should create mock application root', angular.mock.inject(function($rootElement) {
       expect($rootElement.text()).toEqual('');
     }));
 
-    it('should attach the `$injector` to `$rootElement`', inject(function($injector, $rootElement) {
+    it('should attach the `$injector` to `$rootElement`', angular.mock.inject(function($injector, $rootElement) {
       expect($rootElement.injector()).toBe($injector);
     }));
   });
@@ -1970,7 +1973,7 @@ describe('ngMock', function() {
 
     describe('$countChildScopes', function() {
 
-      it('should return 0 when no child scopes', inject(function($rootScope) {
+      it('should return 0 when no child scopes', angular.mock.inject(function($rootScope) {
         expect($rootScope.$countChildScopes()).toBe(0);
 
         var childScope = $rootScope.$new();
@@ -1983,7 +1986,7 @@ describe('ngMock', function() {
       }));
 
 
-      it('should correctly navigate complex scope tree', inject(function($rootScope) {
+      it('should correctly navigate complex scope tree', angular.mock.inject(function($rootScope) {
         var child;
 
         $rootScope.$new();
@@ -1997,7 +2000,7 @@ describe('ngMock', function() {
       }));
 
 
-      it('should provide the current count even after child destructions', inject(function($rootScope) {
+      it('should provide the current count even after child destructions', angular.mock.inject(function($rootScope) {
         expect($rootScope.$countChildScopes()).toBe(0);
 
         var childScope1 = $rootScope.$new();
@@ -2014,7 +2017,7 @@ describe('ngMock', function() {
       }));
 
 
-      it('should work with isolate scopes', inject(function($rootScope) {
+      it('should work with isolate scopes', angular.mock.inject(function($rootScope) {
         /*
                   RS
                   |
@@ -2026,11 +2029,11 @@ describe('ngMock', function() {
         var childIsolateScope = $rootScope.$new(true);
         expect($rootScope.$countChildScopes()).toBe(1);
 
-        var grandChildScope = childIsolateScope.$new();
+        childIsolateScope.$new();
         expect($rootScope.$countChildScopes()).toBe(2);
         expect(childIsolateScope.$countChildScopes()).toBe(1);
 
-        var grandChildIsolateScope = childIsolateScope.$new(true);
+        childIsolateScope.$new(true);
         expect($rootScope.$countChildScopes()).toBe(3);
         expect(childIsolateScope.$countChildScopes()).toBe(2);
 
@@ -2042,7 +2045,7 @@ describe('ngMock', function() {
 
     describe('$countWatchers', function() {
 
-      it('should return the sum of watchers for the current scope and all of its children', inject(
+      it('should return the sum of watchers for the current scope and all of its children', angular.mock.inject(
         function($rootScope) {
 
           expect($rootScope.$countWatchers()).toBe(0);
@@ -2061,7 +2064,7 @@ describe('ngMock', function() {
       }));
 
 
-      it('should correctly navigate complex scope tree', inject(function($rootScope) {
+      it('should correctly navigate complex scope tree', angular.mock.inject(function($rootScope) {
         var child;
 
         $rootScope.$watch('foo1');
@@ -2082,7 +2085,7 @@ describe('ngMock', function() {
 
 
       it('should provide the current count even after child destruction and watch deregistration',
-          inject(function($rootScope) {
+          angular.mock.inject(function($rootScope) {
 
         var deregisterWatch1 = $rootScope.$watch('exp1');
 
@@ -2099,7 +2102,7 @@ describe('ngMock', function() {
       }));
 
 
-      it('should work with isolate scopes', inject(function($rootScope) {
+      it('should work with isolate scopes', angular.mock.inject(function($rootScope) {
         /*
                  RS=1
                    |
@@ -2138,7 +2141,7 @@ describe('ngMock', function() {
 
     describe('with `preAssignBindingsEnabled(true)`', function() {
 
-      beforeEach(module(function($compileProvider) {
+      beforeEach(angular.mock.module(function($compileProvider) {
         $compileProvider.preAssignBindingsEnabled(true);
       }));
 
@@ -2150,13 +2153,13 @@ describe('ngMock', function() {
           { name: 'testname', id: 1 },
           { name: 'flurp', id: 2 }
         ];
-        module(function($controllerProvider) {
+        angular.mock.module(function($controllerProvider) {
           $controllerProvider.register('testCtrl', function() {
             expect(this.data).toBe(data);
             called = true;
           });
         });
-        inject(function($controller, $rootScope) {
+        angular.mock.inject(function($controller, $rootScope) {
           var ctrl = $controller('testCtrl', { scope: $rootScope }, { data: data });
           expect(ctrl.data).toBe(data);
           expect(called).toBe(true);
@@ -2172,14 +2175,14 @@ describe('ngMock', function() {
             { name: 'testname', id: 1 },
             { name: 'flurp', id: 2 }
           ];
-          module(function($controllerProvider) {
+          angular.mock.module(function($controllerProvider) {
             $controllerProvider.register('testCtrl', function() {
               expect(this.data).toBe(data);
               called = true;
               return {};
             });
           });
-          inject(function($controller, $rootScope) {
+          angular.mock.inject(function($controller, $rootScope) {
             var ctrl = $controller('testCtrl', { scope: $rootScope }, { data: data });
             expect(ctrl.data).toBe(data);
             expect(called).toBe(true);
@@ -2196,12 +2199,12 @@ describe('ngMock', function() {
             { name: 'testname', id: 1 },
             { name: 'flurp', id: 2 }
           ];
-          module(function($controllerProvider) {
+          angular.mock.module(function($controllerProvider) {
             // eslint-disable-next-line no-eval
             var TestCtrl = eval('(class { constructor() { called = true; } })');
             $controllerProvider.register('testCtrl', TestCtrl);
           });
-          inject(function($controller, $rootScope) {
+          angular.mock.inject(function($controller, $rootScope) {
             var ctrl = $controller('testCtrl', { scope: $rootScope }, { data: data });
             expect(ctrl.data).toBe(data);
             expect(called).toBe(true);
@@ -2213,7 +2216,7 @@ describe('ngMock', function() {
 
     describe('with `preAssignBindingsEnabled(false)`', function() {
 
-      beforeEach(module(function($compileProvider) {
+      beforeEach(angular.mock.module(function($compileProvider) {
         $compileProvider.preAssignBindingsEnabled(false);
       }));
 
@@ -2225,13 +2228,13 @@ describe('ngMock', function() {
           { name: 'testname', id: 1 },
           { name: 'flurp', id: 2 }
         ];
-        module(function($controllerProvider) {
+        angular.mock.module(function($controllerProvider) {
           $controllerProvider.register('testCtrl', function() {
             expect(this.data).toBeUndefined();
             called = true;
           });
         });
-        inject(function($controller, $rootScope) {
+        angular.mock.inject(function($controller, $rootScope) {
           var ctrl = $controller('testCtrl', { scope: $rootScope }, { data: data });
           expect(ctrl.data).toBe(data);
           expect(called).toBe(true);
@@ -2247,14 +2250,14 @@ describe('ngMock', function() {
             { name: 'testname', id: 1 },
             { name: 'flurp', id: 2 }
           ];
-          module(function($controllerProvider) {
+          angular.mock.module(function($controllerProvider) {
             $controllerProvider.register('testCtrl', function() {
               expect(this.data).toBeUndefined();
               called = true;
               return {};
             });
           });
-          inject(function($controller, $rootScope) {
+          angular.mock.inject(function($controller, $rootScope) {
             var ctrl = $controller('testCtrl', { scope: $rootScope }, { data: data });
             expect(ctrl.data).toBe(data);
             expect(called).toBe(true);
@@ -2271,12 +2274,12 @@ describe('ngMock', function() {
             { name: 'testname', id: 1 },
             { name: 'flurp', id: 2 }
           ];
-          module(function($controllerProvider) {
+          angular.mock.module(function($controllerProvider) {
             // eslint-disable-next-line no-eval
             var TestCtrl = eval('(class { constructor() { called = true; } })');
             $controllerProvider.register('testCtrl', TestCtrl);
           });
-          inject(function($controller, $rootScope) {
+          angular.mock.inject(function($controller, $rootScope) {
             var ctrl = $controller('testCtrl', { scope: $rootScope }, { data: data });
             expect(ctrl.data).toBe(data);
             expect(called).toBe(true);
@@ -2294,15 +2297,15 @@ describe('ngMock', function() {
         this.a = a;
         this.b = b;
       }
-      module(function($compileProvider) {
+      angular.mock.module(function($compileProvider) {
         $compileProvider.component('test', {
           controller: TestController
         });
       });
-      inject(function($componentController, $rootScope) {
+      angular.mock.inject(function($componentController) {
         var $scope = {};
         var ctrl = $componentController('test', { $scope: $scope, a: 'A', b: 'B' }, { x: 'X', y: 'Y' });
-        expect(ctrl).toEqual(extend(new TestController($scope, 'A', 'B'), { x: 'X', y: 'Y' }));
+        expect(ctrl).toEqual(angular.extend(new TestController($scope, 'A', 'B'), { x: 'X', y: 'Y' }));
         expect($scope.$ctrl).toBe(ctrl);
       });
     });
@@ -2314,15 +2317,15 @@ describe('ngMock', function() {
         this.b = z;
       }
       TestController.$inject = ['$scope', 'a', 'b'];
-      module(function($compileProvider) {
+      angular.mock.module(function($compileProvider) {
         $compileProvider.component('test', {
           controller: TestController
         });
       });
-      inject(function($componentController, $rootScope) {
+      angular.mock.inject(function($componentController) {
         var $scope = {};
         var ctrl = $componentController('test', { $scope: $scope, a: 'A', b: 'B' }, { x: 'X', y: 'Y' });
-        expect(ctrl).toEqual(extend(new TestController($scope, 'A', 'B'), { x: 'X', y: 'Y' }));
+        expect(ctrl).toEqual(angular.extend(new TestController($scope, 'A', 'B'), { x: 'X', y: 'Y' }));
         expect($scope.$ctrl).toBe(ctrl);
       });
     });
@@ -2333,16 +2336,16 @@ describe('ngMock', function() {
         this.a = a;
         this.b = b;
       }
-      module(function($controllerProvider, $compileProvider) {
+      angular.mock.module(function($controllerProvider, $compileProvider) {
         $controllerProvider.register('TestController', TestController);
         $compileProvider.component('test', {
           controller: 'TestController'
         });
       });
-      inject(function($componentController, $rootScope) {
+      angular.mock.inject(function($componentController) {
         var $scope = {};
         var ctrl = $componentController('test', { $scope: $scope, a: 'A', b: 'B' }, { x: 'X', y: 'Y' });
-        expect(ctrl).toEqual(extend(new TestController($scope, 'A', 'B'), { x: 'X', y: 'Y' }));
+        expect(ctrl).toEqual(angular.extend(new TestController($scope, 'A', 'B'), { x: 'X', y: 'Y' }));
         expect($scope.$ctrl).toBe(ctrl);
       });
     });
@@ -2353,16 +2356,16 @@ describe('ngMock', function() {
         this.a = a;
         this.b = b;
       }
-      module(function($controllerProvider, $compileProvider) {
+      angular.mock.module(function($controllerProvider, $compileProvider) {
         $controllerProvider.register('TestController', TestController);
         $compileProvider.component('test', {
           controller: 'TestController as testCtrl'
         });
       });
-      inject(function($componentController, $rootScope) {
+      angular.mock.inject(function($componentController) {
         var $scope = {};
         var ctrl = $componentController('test', { $scope: $scope, a: 'A', b: 'B' }, { x: 'X', y: 'Y' });
-        expect(ctrl).toEqual(extend(new TestController($scope, 'A', 'B'), {x: 'X', y: 'Y'}));
+        expect(ctrl).toEqual(angular.extend(new TestController($scope, 'A', 'B'), {x: 'X', y: 'Y'}));
         expect($scope.testCtrl).toBe(ctrl);
       });
     });
@@ -2371,7 +2374,7 @@ describe('ngMock', function() {
       function TestController() {
         this.r = 6779;
       }
-      module(function($compileProvider) {
+      angular.mock.module(function($compileProvider) {
         $compileProvider.directive('test', function() {
           return { restrict: 'A' };
         });
@@ -2379,7 +2382,7 @@ describe('ngMock', function() {
           controller: TestController
         });
       });
-      inject(function($componentController, $rootScope) {
+      angular.mock.inject(function($componentController) {
         var ctrl = $componentController('test', { $scope: {} });
         expect(ctrl).toEqual(new TestController());
       });
@@ -2389,7 +2392,7 @@ describe('ngMock', function() {
       function TestController() {
         this.r = 22926;
       }
-      module(function($compileProvider) {
+      angular.mock.module(function($compileProvider) {
         $compileProvider.directive('test', function() {
           return { restrict: 'E' };
         });
@@ -2397,7 +2400,7 @@ describe('ngMock', function() {
           controller: TestController
         });
       });
-      inject(function($componentController, $rootScope) {
+      angular.mock.inject(function($componentController) {
         var ctrl = $componentController('test', { $scope: {} });
         expect(ctrl).toEqual(new TestController());
       });
@@ -2407,7 +2410,7 @@ describe('ngMock', function() {
       function TestController() {
         this.r = 18842;
       }
-      module(function($compileProvider) {
+      angular.mock.module(function($compileProvider) {
         $compileProvider.directive('test', function() {
           return { };
         });
@@ -2419,7 +2422,7 @@ describe('ngMock', function() {
           };
         });
       });
-      inject(function($componentController, $rootScope) {
+      angular.mock.inject(function($componentController) {
         var ctrl = $componentController('test', { $scope: {} });
         expect(ctrl).toEqual(new TestController());
       });
@@ -2429,7 +2432,7 @@ describe('ngMock', function() {
       function TestController() {
         this.r = 31145;
       }
-      module(function($compileProvider) {
+      angular.mock.module(function($compileProvider) {
         $compileProvider.directive('test', function() {
           return {
             restrict: 'AC',
@@ -2453,7 +2456,7 @@ describe('ngMock', function() {
           return { restrict: 'E' };
         });
       });
-      inject(function($componentController, $rootScope) {
+      angular.mock.inject(function($componentController) {
         expect(function() {
           $componentController('test', { $scope: {} });
         }).toThrowError('No component found');
@@ -2466,7 +2469,7 @@ describe('ngMock', function() {
         this.a = a;
         this.b = b;
       }
-      module(function($compileProvider) {
+      angular.mock.module(function($compileProvider) {
         $compileProvider.directive('test', function() {
           return {
             restrict: 'E',
@@ -2478,7 +2481,7 @@ describe('ngMock', function() {
           controller: TestController
         });
       });
-      inject(function($componentController, $rootScope) {
+      angular.mock.inject(function($componentController) {
         expect(function() {
           var $scope = {};
           $componentController('test', { $scope: $scope, a: 'A', b: 'B' }, { x: 'X', y: 'Y' });
@@ -2490,12 +2493,12 @@ describe('ngMock', function() {
       function TestController($scope) {
         this.$scope = $scope;
       }
-      module(function($compileProvider) {
+      angular.mock.module(function($compileProvider) {
         $compileProvider.component('test', {
           controller: TestController
         });
       });
-      inject(function($componentController, $rootScope) {
+      angular.mock.inject(function($componentController, $rootScope) {
         var $ctrl = $componentController('test');
         expect($ctrl.$scope).toBeDefined();
         expect($ctrl.$scope.$parent).toBe($rootScope);
@@ -2512,18 +2515,22 @@ describe('ngMock', function() {
 
 describe('ngMockE2E', function() {
   describe('$httpBackend', function() {
-    var hb, realHttpBackend, $http, realHttpBackendBrowser, callback;
+    var hb;
+    var realHttpBackend;
+    var $http;
+    var realHttpBackendBrowser;
+    var callback;
 
     beforeEach(function() {
-      callback = jasmine.createSpy('callback');
+      callback = jest.fn();
       angular.module('ng').config(function($provide) {
-        realHttpBackend = jasmine.createSpy('real $httpBackend');
+        realHttpBackend = jest.fn();
         $provide.factory('$httpBackend', ['$browser', function($browser) {
-          return realHttpBackend.and.callFake(function() { realHttpBackendBrowser = $browser; });
+          return realHttpBackend.mockImplementation(function() { realHttpBackendBrowser = $browser; });
         }]);
       });
-      module('ngMockE2E');
-      inject(function($injector) {
+      angular.mock.module('ngMockE2E');
+      angular.mock.inject(function($injector) {
         hb = $injector.get('$httpBackend');
         $http = $injector.get('$http');
       });
@@ -2532,7 +2539,7 @@ describe('ngMockE2E', function() {
 
     it('should throw error when unexpected request - without error callback', function() {
       expect(function() {
-        $http.get('/some').then(noop);
+        $http.get('/some').then(angular.noop);
 
         hb.verifyNoOutstandingRequest();
       }).toThrowError('Unexpected request: GET /some\nNo more request expected');
@@ -2541,7 +2548,7 @@ describe('ngMockE2E', function() {
 
     it('should throw error when unexpected request - with error callback', function() {
       expect(function() {
-        $http.get('/some').then(noop, noop);
+        $http.get('/some').then(angular.noop, angular.noop);
 
         hb.verifyNoOutstandingRequest();
       }).toThrowError('Unexpected request: GET /some\nNo more request expected');
@@ -2569,7 +2576,7 @@ describe('ngMockE2E', function() {
             'GET', '/passThrough/23', null, callback, {}, null, true, undefined, undefined, undefined);
       });
 
-      it('should be able to override a respond definition with passThrough', inject(function($browser) {
+      it('should be able to override a respond definition with passThrough', angular.mock.inject(function($browser) {
         var definition = hb.when('GET', /\/passThrough\/.*/).passThrough();
         definition.respond('passThrough override');
         hb('GET', '/passThrough/23', null, callback, {}, null, true);
@@ -2579,34 +2586,36 @@ describe('ngMockE2E', function() {
         expect(callback).toHaveBeenCalledOnceWith(200, 'passThrough override', '', '', 'complete');
       }));
 
-      it('should pass through to an httpBackend that uses the same $browser service', inject(function($browser) {
+      it('should pass through to an httpBackend that uses the same $browser service', angular.mock.inject(function($browser) {
         hb.when('GET', /\/passThrough\/.*/).passThrough();
         hb('GET', '/passThrough/23');
 
-        expect(realHttpBackend).toHaveBeenCalledOnce();
+        expect(realHttpBackend).toHaveBeenCalledTimes(1);
         expect(realHttpBackendBrowser).toBe($browser);
       }));
     });
 
 
     describe('autoflush', function() {
-      it('should flush responses via $browser.defer', inject(function($browser) {
+      it('should flush responses via $browser.defer', angular.mock.inject(function($browser) {
         hb.when('GET', '/foo').respond('bar');
         hb('GET', '/foo', null, callback);
 
         expect(callback).not.toHaveBeenCalled();
         $browser.defer.flush();
-        expect(callback).toHaveBeenCalledOnce();
+        expect(callback).toHaveBeenCalledTimes(1);
       }));
     });
   });
 
   describe('ngAnimateMock', function() {
+    beforeEach(angular.mock.module('ngAnimate'));
+    beforeEach(angular.mock.module('ngAnimateMock'));
 
-    beforeEach(module('ngAnimate'));
-    beforeEach(module('ngAnimateMock'));
-
-    var ss, element, trackedAnimations, animationLog;
+    var ss;
+    var element;
+    var trackedAnimations;
+    var animationLog;
 
     afterEach(function() {
       if (element) {
@@ -2617,7 +2626,7 @@ describe('ngMockE2E', function() {
       }
     });
 
-    beforeEach(module(function($animateProvider) {
+    beforeEach(angular.mock.module(function($animateProvider) {
       trackedAnimations = [];
       animationLog = [];
 
@@ -2658,7 +2667,7 @@ describe('ngMockE2E', function() {
     }));
 
     describe('$animate.queue', function() {
-      it('should maintain a queue of the executed animations', inject(function($animate) {
+      it('should maintain a queue of the executed animations', angular.mock.inject(function($animate) {
         element.removeClass('animate'); // we don't care to test any actual animations
         var options = {};
 
@@ -2683,14 +2692,14 @@ describe('ngMockE2E', function() {
     });
 
     describe('$animate.flush()', function() {
-      it('should throw an error if there is nothing to animate', inject(function($animate) {
+      it('should throw an error if there is nothing to animate', angular.mock.inject(function($animate) {
         expect(function() {
           $animate.flush();
         }).toThrowError('No pending animations ready to be closed or flushed');
       }));
 
       it('should trigger the animation to start',
-        inject(function($animate) {
+        angular.mock.inject(function($animate) {
 
         expect(trackedAnimations.length).toBe(0);
         $animate.leave(element);
@@ -2699,7 +2708,7 @@ describe('ngMockE2E', function() {
       }));
 
       it('should trigger the animation to end once run and called',
-        inject(function($animate) {
+        angular.mock.inject(function($animate) {
 
         $animate.leave(element);
         $animate.flush();
@@ -2711,9 +2720,9 @@ describe('ngMockE2E', function() {
       }));
 
       it('should trigger the animation promise callback to fire once run and closed',
-        inject(function($animate) {
+        angular.mock.inject(function($animate) {
 
-        var doneSpy = jasmine.createSpy();
+        var doneSpy = jest.fn();
         $animate.leave(element).then(doneSpy);
         $animate.flush();
 
@@ -2724,40 +2733,39 @@ describe('ngMockE2E', function() {
       }));
 
       it('should trigger a series of CSS animations to trigger and start once run',
-        inject(function($animate, $rootScope) {
+        angular.mock.inject(function($animate, $rootScope) {
+          ss.addRule('.leave-me.ng-leave', 'transition:1s linear all;');
 
-        if (!browserSupportsCssAnimations()) return;
+          var i;
+          var elm;
+          var elms = [];
+          for (i = 0; i < 5; i++) {
+            elm = angular.element('<div class="leave-me"></div>');
+            element.append(elm);
+            elms.push(elm);
 
-        ss.addRule('.leave-me.ng-leave', 'transition:1s linear all;');
+            $animate.leave(elm);
+          }
 
-        var i, elm, elms = [];
-        for (i = 0; i < 5; i++) {
-          elm = angular.element('<div class="leave-me"></div>');
-          element.append(elm);
-          elms.push(elm);
+          $rootScope.$digest();
 
-          $animate.leave(elm);
-        }
+          for (i = 0; i < 5; i++) {
+            elm = elms[i];
+            expect(elm.hasClass('ng-leave')).toBe(true);
+            expect(elm.hasClass('ng-leave-active')).toBe(false);
+          }
 
-        $rootScope.$digest();
+          $animate.flush();
 
-        for (i = 0; i < 5; i++) {
-          elm = elms[i];
-          expect(elm.hasClass('ng-leave')).toBe(true);
-          expect(elm.hasClass('ng-leave-active')).toBe(false);
-        }
-
-        $animate.flush();
-
-        for (i = 0; i < 5; i++) {
-          elm = elms[i];
-          expect(elm.hasClass('ng-leave')).toBe(true);
-          expect(elm.hasClass('ng-leave-active')).toBe(true);
-        }
-      }));
+          for (i = 0; i < 5; i++) {
+            elm = elms[i];
+            expect(elm.hasClass('ng-leave')).toBe(true);
+            expect(elm.hasClass('ng-leave-active')).toBe(true);
+          }
+        }));
 
       it('should trigger parent and child animations to run within the same flush',
-        inject(function($animate, $rootScope) {
+        angular.mock.inject(function($animate) {
 
         var child = angular.element('<div class="animate child"></div>');
         element.append(child);
@@ -2772,9 +2780,9 @@ describe('ngMockE2E', function() {
       }));
 
       it('should trigger animation callbacks when called',
-        inject(function($animate, $rootScope) {
+        angular.mock.inject(function($animate) {
 
-        var spy = jasmine.createSpy();
+        var spy = jest.fn();
         $animate.on('addClass', element, spy);
 
         $animate.addClass(element, 'on');
@@ -2791,11 +2799,9 @@ describe('ngMockE2E', function() {
 
     describe('$animate.closeAndFlush()', function() {
       it('should close the currently running $animateCss animations',
-        inject(function($animateCss, $animate) {
+        angular.mock.inject(function($animateCss, $animate) {
 
-        if (!browserSupportsCssAnimations()) return;
-
-        var spy = jasmine.createSpy();
+        var spy = jest.fn();
         var runner = $animateCss(element, {
           duration: 1,
           to: { color: 'red' }
@@ -2809,9 +2815,9 @@ describe('ngMockE2E', function() {
       }));
 
       it('should close the currently running $$animateJs animations',
-        inject(function($$animateJs, $animate) {
+        angular.mock.inject(function($$animateJs, $animate) {
 
-        var spy = jasmine.createSpy();
+        var spy = jest.fn();
         var runner = $$animateJs(element, 'leave', 'animate', {}).start();
         runner.then(spy);
 
@@ -2821,7 +2827,7 @@ describe('ngMockE2E', function() {
       }));
 
       it('should run the closing javascript animation function upon flush',
-        inject(function($$animateJs, $animate) {
+        angular.mock.inject(function($$animateJs, $animate) {
 
         $$animateJs(element, 'leave', 'animate', {}).start();
 
@@ -2831,11 +2837,9 @@ describe('ngMockE2E', function() {
       }));
 
       it('should not throw when a regular animation has no javascript animation',
-        inject(function($animate, $$animation, $rootElement) {
+        angular.mock.inject(function($animate, $$animation, $rootElement) {
 
-        if (!browserSupportsCssAnimations()) return;
-
-        var element = jqLite('<div></div>');
+        var element = angular.element('<div></div>');
         $rootElement.append(element);
 
         // Make sure the animation has valid $animateCss options
@@ -2854,7 +2858,7 @@ describe('ngMockE2E', function() {
       }));
 
       it('should throw an error if there are no animations to close and flush',
-        inject(function($animate) {
+        angular.mock.inject(function($animate) {
 
         expect(function() {
           $animate.closeAndFlush();
@@ -2884,20 +2888,20 @@ describe('`afterEach` clean-up', function() {
 
       it('should set up spies for the next test to verify that `$rootElement` was cleaned up',
         function() {
-          module(function($provide) {
+          angular.mock.module(function($provide) {
             $provide.decorator('$rootElement', function($delegate) {
               prevRootElement = $delegate;
 
               // Spy on `angular.element.cleanData()`, so the next test can verify
               // that it has been called as necessary
-              prevCleanDataSpy = spyOn(angular.element, 'cleanData').and.callThrough();
+              prevCleanDataSpy = jest.spyOn(angular.element, 'cleanData');
 
               return $delegate;
             });
           });
 
           // Inject the `$rootElement` to ensure it has been created
-          inject(function($rootElement) {
+          angular.mock.inject(function($rootElement) {
             expect($rootElement.injector()).toBeDefined();
           });
         }
@@ -2909,7 +2913,7 @@ describe('`afterEach` clean-up', function() {
         // We want to verify the subsequent call, made by `angular-mocks`
         expect(prevCleanDataSpy).toHaveBeenCalledTimes(2);
 
-        var cleanUpNodes = prevCleanDataSpy.calls.argsFor(1)[0];
+        var cleanUpNodes = prevCleanDataSpy.mock.calls[0][0];
         expect(cleanUpNodes.length).toBe(1);
         expect(cleanUpNodes[0]).toBe(prevRootElement[0]);
       });
@@ -2924,7 +2928,7 @@ describe('`afterEach` clean-up', function() {
 
       it('should set up spies for the next text to verify that `$rootElement` was cleaned up',
         function() {
-          module(function($provide) {
+          angular.mock.module(function($provide) {
             $provide.decorator('$rootElement', function($delegate) {
               prevOriginalRootElement = $delegate;
 
@@ -2933,14 +2937,14 @@ describe('`afterEach` clean-up', function() {
 
               // Spy on `angular.element.cleanData()`, so the next test can verify
               // that it has been called as necessary
-              prevCleanDataSpy = spyOn(angular.element, 'cleanData').and.callThrough();
+              prevCleanDataSpy = jest.spyOn(angular.element, 'cleanData');
 
               return prevRootElement;
             });
           });
 
           // Inject the `$rootElement` to ensure it has been created
-          inject(function($rootElement) {
+          angular.mock.inject(function($rootElement) {
             expect($rootElement).toBe(prevRootElement);
             expect(prevOriginalRootElement.injector()).toBeDefined();
             expect(prevRootElement.injector()).toBeUndefined();
@@ -2954,20 +2958,6 @@ describe('`afterEach` clean-up', function() {
           });
         }
       );
-
-
-      it('should clean up `$rootElement` (both original and decorated) after each test',
-        function() {
-          // One call is made by `testabilityPatch`'s `dealoc()`
-          // We want to verify the subsequent call, made by `angular-mocks`
-          expect(prevCleanDataSpy).toHaveBeenCalledTimes(2);
-
-          var cleanUpNodes = prevCleanDataSpy.calls.argsFor(1)[0];
-          expect(cleanUpNodes.length).toBe(2);
-          expect(cleanUpNodes[0]).toBe(prevOriginalRootElement[0]);
-          expect(cleanUpNodes[1]).toBe(prevRootElement[0]);
-        }
-      );
     });
 
 
@@ -2978,15 +2968,15 @@ describe('`afterEach` clean-up', function() {
         // (and thus never instantiated/created)
 
         // Ensure the `$injector` is created - if there is no `$injector`, no clean-up takes places
-        inject(function() {});
+        angular.mock.inject(function() {});
       });
 
 
       it('should not break if the decorated `$rootElement` is falsy (e.g. `null`)', function() {
-        module({$rootElement: null});
+        angular.mock.module({$rootElement: null});
 
         // Ensure the `$injector` is created - if there is no `$injector`, no clean-up takes places
-        inject(function() {});
+        angular.mock.inject(function() {});
       });
     });
   });
@@ -2999,16 +2989,16 @@ describe('`afterEach` clean-up', function() {
 
 
       it('should set up spies for the next test to verify that `$rootScope` was cleaned up',
-        inject(function($rootScope) {
+        angular.mock.inject(function($rootScope) {
           prevRootScope = $rootScope;
-          prevDestroySpy = spyOn($rootScope, '$destroy').and.callThrough();
+          prevDestroySpy = jest.spyOn($rootScope, '$destroy');
         })
       );
 
 
-      it('should clean up `$rootScope` after each test', inject(function($rootScope) {
+      it('should clean up `$rootScope` after each test', angular.mock.inject(function($rootScope) {
         expect($rootScope).not.toBe(prevRootScope);
-        expect(prevDestroySpy).toHaveBeenCalledOnce();
+        expect(prevDestroySpy).toHaveBeenCalledTimes(1);
         expect(prevRootScope.$$destroyed).toBe(true);
       }));
     });
@@ -3019,10 +3009,10 @@ describe('`afterEach` clean-up', function() {
         // Just an empty test to verify that `angular-mocks` doesn't break,
         // when trying to clean up a mocked `$rootScope` set to `null`
 
-        module({$rootScope: null});
+        angular.mock.module({$rootScope: null});
 
         // Ensure the `$injector` is created - if there is no `$injector`, no clean-up takes places
-        inject(function() {});
+        angular.mock.inject(function() {});
       });
 
 
@@ -3030,10 +3020,10 @@ describe('`afterEach` clean-up', function() {
         // Just an empty test to verify that `angular-mocks` doesn't break,
         // when trying to clean up a mocked `$rootScope` without a `$destroy()` method
 
-        module({$rootScope: {}});
+        angular.mock.module({$rootScope: {}});
 
         // Ensure the `$injector` is created - if there is no `$injector`, no clean-up takes places
-        inject(function() {});
+        angular.mock.inject(function() {});
       });
     });
   });
@@ -3058,15 +3048,15 @@ describe('sharedInjector', function() {
           return { state: 0 };
         });
 
-      module.sharedInjector();
+      angular.mock.module.sharedInjector();
 
-      sbeforeAll(module('sharedInjectorTestModuleA'));
+      sbeforeAll(angular.mock.module('sharedInjectorTestModuleA'));
 
-      sit('access and mutate', inject(function(testService) {
+      sit('access and mutate', angular.mock.inject(function(testService) {
         testService.state += 1;
       }));
 
-      sit('expect mutation to have persisted', inject(function(testService) {
+      sit('expect mutation to have persisted', angular.mock.inject(function(testService) {
         expect(testService.state).toEqual(1);
       }));
     });
@@ -3080,13 +3070,13 @@ describe('sharedInjector', function() {
           return { state: 0 };
         });
 
-      sbeforeEach(module('sharedInjectorTestModuleC'));
+      sbeforeEach(angular.mock.module('sharedInjectorTestModuleC'));
 
-      sit('access and mutate', inject(function(testService) {
+      sit('access and mutate', angular.mock.inject(function(testService) {
         testService.state += 1;
       }));
 
-      sit('expect mutation not to have persisted', inject(function(testService) {
+      sit('expect mutation not to have persisted', angular.mock.inject(function(testService) {
         expect(testService.state).toEqual(0);
       }));
     });
@@ -3098,13 +3088,13 @@ describe('sharedInjector', function() {
       angular.module('sharedInjectorTestModuleD', [])
         .value('testService', 43);
 
-      module.sharedInjector();
+      angular.mock.module.sharedInjector();
 
-      sbeforeAll(module('sharedInjectorTestModuleD', function($provide) {
+      sbeforeAll(angular.mock.module('sharedInjectorTestModuleD', function($provide) {
         $provide.value('testService', 42);
       }));
 
-      sit('expected access stubbed value', inject(function(testService) {
+      sit('expected access stubbed value', angular.mock.inject(function(testService) {
         expect(testService).toEqual(42);
       }));
     });
@@ -3118,29 +3108,29 @@ describe('sharedInjector', function() {
 
     sdescribe('with stubbed injector', function() {
 
-      module.sharedInjector();
+      angular.mock.module.sharedInjector();
 
-      sbeforeAll(module('sharedInjectorTestModuleE'));
+      sbeforeAll(angular.mock.module('sharedInjectorTestModuleE'));
 
-      sit('access and mutate', inject(function(testService) {
+      sit('access and mutate', angular.mock.inject(function(testService) {
         expect(testService.state).toEqual(0);
         testService.state += 1;
       }));
 
-      sit('expect mutation to have persisted', inject(function(testService) {
+      sit('expect mutation to have persisted', angular.mock.inject(function(testService) {
         expect(testService.state).toEqual(1);
       }));
     });
 
     sdescribe('without stubbed injector', function() {
-      sbeforeEach(module('sharedInjectorTestModuleE'));
+      sbeforeEach(angular.mock.module('sharedInjectorTestModuleE'));
 
-      sit('access and mutate', inject(function(testService) {
+      sit('access and mutate', angular.mock.inject(function(testService) {
         expect(testService.state).toEqual(0);
         testService.state += 1;
       }));
 
-      sit('expect original, unmutated value', inject(function(testService) {
+      sit('expect original, unmutated value', angular.mock.inject(function(testService) {
         expect(testService.state).toEqual(0);
       }));
     });
@@ -3150,11 +3140,11 @@ describe('sharedInjector', function() {
     var test = ngMockTest(function() {
       sdescribe('outer', function() {
 
-        module.sharedInjector();
+        angular.mock.module.sharedInjector();
 
         sdescribe('inner', function() {
 
-          module.sharedInjector();
+          angular.mock.module.sharedInjector();
 
           sit('should not get here', function() {
             throw Error('should have thrown before here!');
@@ -3170,7 +3160,7 @@ describe('sharedInjector', function() {
 
   it('warns that shared injector cannot be used unless test frameworks define before/after all hooks', function() {
     assertThrowsErrorMatching(function() {
-      module.sharedInjector();
+      angular.mock.module.sharedInjector();
     }, /sharedInjector()/);
   });
 
@@ -3190,26 +3180,26 @@ describe('sharedInjector', function() {
   function ngMockTest(define) {
     return function() {
       var spec = this;
-      module.$$currentSpec(null);
+      angular.mock.module.$$currentSpec(null);
 
       // configure our stubbed test framework and then hook ngMock into it
       // in much the same way
-      module.$$beforeAllHook = sbeforeAll;
-      module.$$afterAllHook = safterAll;
+      angular.mock.module.$$beforeAllHook = sbeforeAll;
+      angular.mock.module.$$afterAllHook = safterAll;
 
       sdescribe.root = sdescribe('root', function() {});
 
-      sdescribe.root.beforeEach.push(module.$$beforeEach);
-      sdescribe.root.afterEach.push(module.$$afterEach);
+      sdescribe.root.beforeEach.push(angular.mock.module.$$beforeEach);
+      sdescribe.root.afterEach.push(angular.mock.module.$$afterEach);
 
       try {
         define();
         sdescribe.root.run();
       } finally {
         // clear up
-        module.$$beforeAllHook = null;
-        module.$$afterAllHook = null;
-        module.$$currentSpec(spec);
+        angular.mock.module.$$beforeAllHook = null;
+        angular.mock.module.$$afterAllHook = null;
+        angular.mock.module.$$currentSpec(spec);
       }
     };
   }
@@ -3287,10 +3277,5 @@ describe('sharedInjector', function() {
   function sbeforeEach(fn) {
     if (typeof fn !== 'function') throw Error('not fn', fn);
     sdescribe.current.beforeEach.push(fn);
-  }
-
-  function safterEach(fn) {
-    if (typeof fn !== 'function') throw Error('not fn', fn);
-    sdescribe.current.afterEach.push(fn);
   }
 });

@@ -1,13 +1,14 @@
 'use strict';
 
 describe('$filter', function() {
-  var $filterProvider, $filter;
+  var $filterProvider;
+  var $filter;
 
-  beforeEach(module(function(_$filterProvider_) {
+  beforeEach(angular.mock.module(function(_$filterProvider_) {
     $filterProvider = _$filterProvider_;
   }));
 
-  beforeEach(inject(function(_$filter_) {
+  beforeEach(angular.mock.inject(function(_$filter_) {
     $filter = _$filter_;
   }));
 

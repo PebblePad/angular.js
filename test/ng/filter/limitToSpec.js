@@ -7,7 +7,7 @@ describe('Filter: limitTo', function() {
   var arrayLike;
   var limitTo;
 
-  beforeEach(inject(function($filter) {
+  beforeEach(angular.mock.inject(function($filter) {
     items = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
     str = 'tuvwxyz';
     number = 100.045;
@@ -230,7 +230,7 @@ describe('Filter: limitTo', function() {
     }
     var argsObj = getArguments({name: 'Misko'}, {name: 'Igor'}, {name: 'Brad'});
 
-    var nodeList = jqLite('<p><span>Misko</span><span>Igor</span><span>Brad</span></p>')[0].childNodes;
+    var nodeList = angular.element('<p><span>Misko</span><span>Igor</span><span>Brad</span></p>')[0].childNodes;
 
     expect(limitTo(argsObj, 2).length).toBe(2);
     expect(limitTo('abc', 1).length).toBe(1);

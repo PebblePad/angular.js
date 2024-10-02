@@ -168,7 +168,8 @@ function isJsonLike(str) {
  * @returns {Object} Parsed headers as key value object
  */
 function parseHeaders(headers) {
-  var parsed = createMap(), i;
+  var parsed = createMap();
+  var i;
 
   function fillInParsed(key, val) {
     if (key) {
@@ -1093,7 +1094,8 @@ function $HttpProvider() {
       }
 
       function executeHeaderFns(headers, config) {
-        var headerContent, processedHeaders = {};
+        var headerContent;
+        var processedHeaders = {};
 
         forEach(headers, function(headerFn, header) {
           if (isFunction(headerFn)) {
@@ -1110,9 +1112,11 @@ function $HttpProvider() {
       }
 
       function mergeHeaders(config) {
-        var defHeaders = defaults.headers,
-            reqHeaders = extend({}, config.headers),
-            defHeaderName, lowercaseDefHeaderName, reqHeaderName;
+        var defHeaders = defaults.headers;
+        var reqHeaders = extend({}, config.headers);
+        var defHeaderName;
+        var lowercaseDefHeaderName;
+        var reqHeaderName;
 
         defHeaders = extend({}, defHeaders.common, defHeaders[lowercase(config.method)]);
 
@@ -1345,13 +1349,13 @@ function $HttpProvider() {
      * $httpBackend, defaults, $log, $rootScope, defaultCache, $http.pendingRequests
      */
     function sendReq(config, reqData) {
-      var deferred = $q.defer(),
-          promise = deferred.promise,
-          cache,
-          cachedResp,
-          reqHeaders = config.headers,
-          isJsonp = lowercase(config.method) === 'jsonp',
-          url = config.url;
+      var deferred = $q.defer();
+      var promise = deferred.promise;
+      var cache;
+      var cachedResp;
+      var reqHeaders = config.headers;
+      var isJsonp = lowercase(config.method) === 'jsonp';
+      var url = config.url;
 
       if (isJsonp) {
         // JSONP is a pretty sensitive operation where we're allowing a script to have full access to
@@ -1501,7 +1505,7 @@ function $HttpProvider() {
 
     function buildUrl(url, serializedParams) {
       if (serializedParams.length > 0) {
-        url += ((url.indexOf('?') === -1) ? '?' : '&') + serializedParams;
+        url += ((!url.includes('?')) ? '?' : '&') + serializedParams;
       }
       return url;
     }
@@ -1525,7 +1529,7 @@ function $HttpProvider() {
       });
 
       // Add in the JSON_CALLBACK callback param value
-      url += ((url.indexOf('?') === -1) ? '?' : '&') + cbKey + '=JSON_CALLBACK';
+      url += ((!url.includes('?')) ? '?' : '&') + cbKey + '=JSON_CALLBACK';
 
       return url;
     }

@@ -52,7 +52,7 @@
  * {@link guide/accessibility Developer Guide}.
  */
 var ngAriaModule = angular.module('ngAria', ['ng']).
-                        info({ angularVersion: '"NG_VERSION_FULL"' }).
+                        info({ angularVersion: 'NG_VERSION_FULL' }).
                         provider('$aria', $AriaProvider);
 
 /**
@@ -61,7 +61,7 @@ var ngAriaModule = angular.module('ngAria', ['ng']).
 var nodeBlackList = ['BUTTON', 'A', 'INPUT', 'TEXTAREA', 'SELECT', 'DETAILS', 'SUMMARY'];
 
 var isNodeOneOf = function(elem, nodeTypeArray) {
-  if (nodeTypeArray.indexOf(elem[0].nodeName) !== -1) {
+  if (nodeTypeArray.includes(elem[0].nodeName)) {
     return true;
   }
 };
@@ -194,7 +194,7 @@ function $AriaProvider() {
    */
   this.$get = function() {
     return {
-      config: function(key) {
+      config(key) {
         return config[key];
       },
       $$watchExpr: watchExpr
@@ -235,8 +235,8 @@ ngAriaModule.directive('ngShow', ['$aria', function($aria) {
   }
 
   function getShape(attr, elem) {
-    var type = attr.type,
-        role = attr.role;
+    var type = attr.type;
+    var role = attr.role;
 
     return ((type || role) === 'checkbox' || role === 'menuitemcheckbox') ? 'checkbox' :
            ((type || role) === 'radio'    || role === 'menuitemradio') ? 'radio' :
@@ -247,11 +247,11 @@ ngAriaModule.directive('ngShow', ['$aria', function($aria) {
     restrict: 'A',
     require: 'ngModel',
     priority: 200, //Make sure watches are fired after any other directives that affect the ngModel value
-    compile: function(elem, attr) {
+    compile(elem, attr) {
       var shape = getShape(attr, elem);
 
       return {
-        post: function(scope, elem, attr, ngModel) {
+        post(scope, elem, attr, ngModel) {
           var needsTabIndex = shouldAttachAttr('tabindex', 'tabindex', elem, false);
 
           function ngAriaWatchModelValue() {
@@ -343,7 +343,7 @@ ngAriaModule.directive('ngShow', ['$aria', function($aria) {
   return {
     restrict: 'A',
     require: '?ngMessages',
-    link: function(scope, elem, attr, ngMessages) {
+    link(scope, elem, attr, ngMessages) {
       if (!elem.attr('aria-live')) {
         elem.attr('aria-live', 'assertive');
       }
@@ -353,7 +353,7 @@ ngAriaModule.directive('ngShow', ['$aria', function($aria) {
 .directive('ngClick',['$aria', '$parse', function($aria, $parse) {
   return {
     restrict: 'A',
-    compile: function(elem, attr) {
+    compile(elem, attr) {
       var fn = $parse(attr.ngClick);
       return function(scope, elem, attr) {
 

@@ -436,7 +436,7 @@ function shallowClearAndCopy(src, dst) {
  *
  */
 angular.module('ngResource', ['ng']).
-  info({ angularVersion: '"NG_VERSION_FULL"' }).
+  info({ angularVersion: 'NG_VERSION_FULL' }).
   provider('$resource', function ResourceProvider() {
     var PROTOCOL_AND_IPV6_REGEX = /^https?:\/\/\[[^\]]*][^/]*/;
 
@@ -525,17 +525,16 @@ angular.module('ngResource', ['ng']).
     };
 
     this.$get = ['$http', '$log', '$q', '$timeout', function($http, $log, $q, $timeout) {
-
-      var noop = angular.noop,
-          forEach = angular.forEach,
-          extend = angular.extend,
-          copy = angular.copy,
-          isArray = angular.isArray,
-          isDefined = angular.isDefined,
-          isFunction = angular.isFunction,
-          isNumber = angular.isNumber,
-          encodeUriQuery = angular.$$encodeUriQuery,
-          encodeUriSegment = angular.$$encodeUriSegment;
+      var noop = angular.noop;
+      var forEach = angular.forEach;
+      var extend = angular.extend;
+      var copy = angular.copy;
+      var isArray = angular.isArray;
+      var isDefined = angular.isDefined;
+      var isFunction = angular.isFunction;
+      var isNumber = angular.isNumber;
+      var encodeUriQuery = angular.$$encodeUriQuery;
+      var encodeUriSegment = angular.$$encodeUriSegment;
 
       function Route(template, defaults) {
         this.template = template;
@@ -544,12 +543,12 @@ angular.module('ngResource', ['ng']).
       }
 
       Route.prototype = {
-        setUrlParams: function(config, params, actionUrl) {
-          var self = this,
-            url = actionUrl || self.template,
-            val,
-            encodedVal,
-            protocolAndIpv6 = '';
+        setUrlParams(config, params, actionUrl) {
+          var self = this;
+          var url = actionUrl || self.template;
+          var val;
+          var encodedVal;
+          var protocolAndIpv6 = '';
 
           var urlParams = self.urlParams = Object.create(null);
           forEach(url.split(/\W/), function(param) {
@@ -594,8 +593,18 @@ angular.module('ngResource', ['ng']).
           });
 
           // strip trailing slashes and set the url (unless this behavior is specifically disabled)
-          if (self.defaults.stripTrailingSlashes) {
-            url = url.replace(/\/+$/, '') || '/';
+          if (self.defaults.stripTrailingSlashes && url.length > 1 && url[url.length - 1] === "/") {
+            // Remove trailing slashes via reverse iteration instead of regex to avoid possible ReDoS vulnerability or the need for multiple regex instead - https://www.cve.org/CVERecord?id=CVE-2023-26117
+            let endIndex = url.length - 1;
+            for (let i = endIndex - 1; i >= 0; i--) {
+              if (url[i] !== "/") {
+                break;
+              }
+
+              endIndex = i;
+            }
+
+            url = url.slice(0, endIndex)
           }
 
           // Collapse `/.` if found in the last URL path segment before the query.
@@ -666,7 +675,10 @@ angular.module('ngResource', ['ng']).
           }
 
           Resource[name] = function(a1, a2, a3, a4) {
-            var params = {}, data, success, error;
+            var params = {};
+            var data;
+            var success;
+            var error;
 
             switch (arguments.length) {
               case 4:

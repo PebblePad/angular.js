@@ -3,9 +3,9 @@
 describe('linky', function() {
   var linky;
 
-  beforeEach(module('ngSanitize'));
+  beforeEach(angular.mock.module('ngSanitize'));
 
-  beforeEach(inject(function($filter) {
+  beforeEach(angular.mock.inject(function($filter) {
     linky = $filter('linky');
   }));
 
@@ -46,7 +46,7 @@ describe('linky', function() {
       expect(function() { linky([]); }).
         toThrowMinErr('linky', 'notstring', 'Expected string but received: []');
 
-      expect(function() { linky(noop); }).
+      expect(function() { linky(angular.noop); }).
         toThrowMinErr('linky', 'notstring', 'Expected string but received: function noop()');
     }
   );
@@ -109,7 +109,7 @@ describe('linky', function() {
 
 
     it('should optionally add custom attributes from function', function() {
-      expect(linky('http://example.com', '_self', function(url) {return {'class': 'blue'};})).
+      expect(linky('http://example.com', '_self', function() {return {'class': 'blue'};})).
         toBeOneOf('<a class="blue" target="_self" href="http://example.com">http://example.com</a>',
                   '<a href="http://example.com" target="_self" class="blue">http://example.com</a>',
                   '<a class="blue" href="http://example.com" target="_self">http://example.com</a>');
@@ -117,16 +117,18 @@ describe('linky', function() {
 
 
     it('should pass url as parameter to custom attribute function', function() {
-      var linkParameters = jasmine.createSpy('linkParameters').and.returnValue({'class': 'blue'});
+      var linkParameters = jest.fn(() => ({
+        'class': 'blue'
+      }));
       linky('http://example.com', '_self', linkParameters);
       expect(linkParameters).toHaveBeenCalledWith('http://example.com');
     });
 
 
     it('should call the attribute function for all links in the input', function() {
-      var attributeFn = jasmine.createSpy('attributeFn').and.returnValue({});
+      var attributeFn = jest.fn(() => ({}));
       linky('http://example.com and http://google.com', '_self', attributeFn);
-      expect(attributeFn.calls.allArgs()).toEqual([['http://example.com'], ['http://google.com']]);
+      expect(attributeFn.mock.calls).toEqual([['http://example.com'], ['http://google.com']]);
     });
 
 

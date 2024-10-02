@@ -19,7 +19,7 @@
 /* global -ngTouch */
 var ngTouch = angular.module('ngTouch', []);
 
-ngTouch.info({ angularVersion: '"NG_VERSION_FULL"' });
+ngTouch.info({ angularVersion: 'NG_VERSION_FULL' });
 
 ngTouch.provider('$touch', $TouchProvider);
 
@@ -117,7 +117,7 @@ function $TouchProvider($provide, $compileProvider) {
        *
        * @kind function
        */
-      ngClickOverrideEnabled: function() {
+      ngClickOverrideEnabled() {
         return ngClickOverrideEnabled;
       }
     };

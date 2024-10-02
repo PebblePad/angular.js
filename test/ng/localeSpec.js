@@ -4,7 +4,7 @@ describe('$locale', function() {
   /* global $LocaleProvider: false */
 
   var $locale;
-  beforeEach(inject(function(_$locale_) {
+  beforeEach(angular.mock.inject(function(_$locale_) {
     $locale = _$locale_;
   }));
 

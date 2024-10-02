@@ -1,3 +1,32 @@
+<a name="2.0.0"></a>
+# 2.0.0
+
+## Bug Fixes
+- Fixed CVE-2019-10768 vulnerability (patched from main AngularJS)
+- Fixed CVE-2020-7676O vulnerability (patched from main AngularJS)
+- Fixed CVE-2022-25844 vulnerability
+- Fixed CVE-2022-25869 vulnerability
+- Fixed CVE-2023-26117 vulnerability
+- Fixed CVE-2023-26118 vulnerability
+- Fixed CVE-2023-26116 vulnerability
+- Fixed CVE-2024-21490 vulnerability
+- Fixed CVE-2024-8373 vulnerability
+- Fixed CVE-2024-8372 vulnerability
+
+## Breaking changes
+- Dropped support for IE
+- Dropped compatibility support for jQuery
+- Dropped angular-scenario
+- Url validation now relies on ES's URL class. Some urls which were previously invalid are now valid.
+
+
+<a name="1.6.11"></a>
+# 1.6.11
+
+## New Features
+- Added support for ES6 Class controllers work with `preAssignBindingsEnabled`. ES6 Class controllers can extend `NgComponent` from `angular/ngComponent.js`
+
+
 <a name="1.6.10"></a>
 # 1.6.10 crystalline-persuasion (2018-04-17)
 

@@ -6,15 +6,15 @@ var supportTests = {
   shorthandMethods: '({ fn(x) { return; } })'
 };
 
-var support = {};
+window.support = {};
 
 for (var prop in supportTests) {
   if (supportTests.hasOwnProperty(prop)) {
     try {
       // eslint-disable-next-line no-eval
-      support[prop] = !!eval(supportTests[prop]);
+      window.support[prop] = !!eval(supportTests[prop]);
     } catch (e) {
-      support[prop] = false;
+      window.support[prop] = false;
     }
   }
 }

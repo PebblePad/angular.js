@@ -1,14 +1,15 @@
 'use strict';
 
 describe('$controller', function() {
-  var $controllerProvider, $controller;
+  var $controllerProvider;
+  var $controller;
 
-  beforeEach(module(function(_$controllerProvider_) {
+  beforeEach(angular.mock.module(function(_$controllerProvider_) {
     $controllerProvider = _$controllerProvider_;
   }));
 
 
-  beforeEach(inject(function(_$controller_) {
+  beforeEach(angular.mock.inject(function(_$controller_) {
     $controller = _$controller_;
   }));
 
@@ -16,9 +17,9 @@ describe('$controller', function() {
   describe('provider', function() {
 
     it('should allow registration of controllers', function() {
-      var FooCtrl = function($scope) { $scope.foo = 'bar'; },
-        scope = {},
-        ctrl;
+      var FooCtrl = function($scope) { $scope.foo = 'bar'; };
+      var scope = {};
+      var ctrl;
 
       $controllerProvider.register('FooCtrl', FooCtrl);
       ctrl = $controller('FooCtrl', {$scope: scope});
@@ -28,23 +29,22 @@ describe('$controller', function() {
     });
 
     it('should allow registration of bound controller functions', function() {
-      var FooCtrl = function($scope) { $scope.foo = 'bar'; },
-        scope = {},
-        ctrl;
+      var FooCtrl = function($scope) { $scope.foo = 'bar'; };
+      var scope = {};
 
       var BoundFooCtrl = FooCtrl.bind(null);
 
       $controllerProvider.register('FooCtrl', ['$scope', BoundFooCtrl]);
-      ctrl = $controller('FooCtrl', {$scope: scope});
+      $controller('FooCtrl', {$scope: scope});
 
       expect(scope.foo).toBe('bar');
     });
 
     it('should allow registration of map of controllers', function() {
-      var FooCtrl = function($scope) { $scope.foo = 'foo'; },
-          BarCtrl = function($scope) { $scope.bar = 'bar'; },
-          scope = {},
-          ctrl;
+      var FooCtrl = function($scope) { $scope.foo = 'foo'; };
+      var BarCtrl = function($scope) { $scope.bar = 'bar'; };
+      var scope = {};
+      var ctrl;
 
       $controllerProvider.register({FooCtrl: FooCtrl, BarCtrl: BarCtrl});
 
@@ -59,9 +59,9 @@ describe('$controller', function() {
 
 
     it('should allow registration of controllers annotated with arrays', function() {
-      var FooCtrl = function($scope) { $scope.foo = 'bar'; },
-          scope = {},
-          ctrl;
+      var FooCtrl = function($scope) { $scope.foo = 'bar'; };
+      var scope = {};
+      var ctrl;
 
       $controllerProvider.register('FooCtrl', ['$scope', FooCtrl]);
       ctrl = $controller('FooCtrl', {$scope: scope});
@@ -79,11 +79,11 @@ describe('$controller', function() {
 
 
     it('should allow checking the availability of a controller', function() {
-      $controllerProvider.register('FooCtrl', noop);
-      $controllerProvider.register('BarCtrl', ['dep1', 'dep2', noop]);
+      $controllerProvider.register('FooCtrl', angular.noop);
+      $controllerProvider.register('BarCtrl', ['dep1', 'dep2', angular.noop]);
       $controllerProvider.register({
-        'BazCtrl': noop,
-        'QuxCtrl': ['dep1', 'dep2', noop]
+        'BazCtrl': angular.noop,
+        'QuxCtrl': ['dep1', 'dep2', angular.noop]
       });
 
       expect($controllerProvider.has('FooCtrl')).toBe(true);
@@ -96,7 +96,7 @@ describe('$controller', function() {
 
 
     it('should instantiate a controller defined on window if allowGlobals is set',
-      inject(function($window) {
+      angular.mock.inject(function($window) {
         var scope = {};
         var Foo = function() {};
 
@@ -121,14 +121,14 @@ describe('$controller', function() {
 
 
   it('should return instance of given controller class', function() {
-    var MyClass = function() {},
-        ctrl = $controller(MyClass);
+    var MyClass = function() {};
+    var ctrl = $controller(MyClass);
 
     expect(ctrl).toBeDefined();
     expect(ctrl instanceof MyClass).toBe(true);
   });
 
-  it('should inject arguments', inject(function($http) {
+  it('should inject arguments', angular.mock.inject(function($http) {
     var MyClass = function($http) {
       this.$http = $http;
     };
@@ -143,14 +143,14 @@ describe('$controller', function() {
       this.$scope = $scope;
     };
 
-    var scope = {},
-        ctrl = $controller(MyClass, {$scope: scope});
+    var scope = {};
+    var ctrl = $controller(MyClass, {$scope: scope});
 
     expect(ctrl.$scope).toBe(scope);
   });
 
 
-  it('should not instantiate a controller defined on window', inject(function($window) {
+  it('should not instantiate a controller defined on window', angular.mock.inject(function($window) {
     var scope = {};
     var Foo = function() {};
 

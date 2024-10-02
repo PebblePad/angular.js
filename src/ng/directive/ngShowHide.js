@@ -191,8 +191,7 @@ var NG_HIDE_IN_PROGRESS_CLASS = 'ng-hide-animate';
  * happen that both the element to show and the element to hide are visible for a very short time.
  *
  * This usually happens when the {@link ngAnimate ngAnimate module} is included, but no actual animations
- * are defined for {@link ngShow} / {@link ngHide}. Internet Explorer is affected more often than
- * other browsers.
+ * are defined for {@link ngShow} / {@link ngHide}.
  *
  * There are several way to mitigate this problem:
  *
@@ -206,7 +205,7 @@ var ngShowDirective = ['$animate', function($animate) {
   return {
     restrict: 'A',
     multiElement: true,
-    link: function(scope, element, attr) {
+    link(scope, element, attr) {
       scope.$watch(attr.ngShow, function ngShowWatchAction(value) {
         // we're adding a temporary, animation-specific class for ng-hide since this way
         // we can control when the element is actually displayed on screen without having
@@ -410,8 +409,7 @@ var ngShowDirective = ['$animate', function($animate) {
  * happen that both the element to show and the element to hide are visible for a very short time.
  *
  * This usually happens when the {@link ngAnimate ngAnimate module} is included, but no actual animations
- * are defined for {@link ngShow} / {@link ngHide}. Internet Explorer is affected more often than
- * other browsers.
+ * are defined for {@link ngShow} / {@link ngHide}.
  *
  * There are several way to mitigate this problem:
  *
@@ -425,7 +423,7 @@ var ngHideDirective = ['$animate', function($animate) {
   return {
     restrict: 'A',
     multiElement: true,
-    link: function(scope, element, attr) {
+    link(scope, element, attr) {
       scope.$watch(attr.ngHide, function ngHideWatchAction(value) {
         // The comment inside of the ngShowDirective explains why we add and
         // remove a temporary class for the show/hide animation

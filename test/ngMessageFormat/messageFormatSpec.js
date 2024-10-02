@@ -17,27 +17,31 @@
 
 describe('$$ngMessageFormat', function() {
   describe('core', function() {
-    var $$messageFormat, $parse, $interpolate, $locale, $rootScope;
+    var $$messageFormat;
+    var $parse;
+    var $interpolate;
+    var $locale;
+    var $rootScope;
 
     function Person(name, gender) {
       this.name = name;
       this.gender = gender;
     }
 
-    var alice   = new Person('Alice', 'female'),
-        bob     = new Person('Bob', 'male'),
-        charlie = new Person('Charlie', 'male'),
-        harry   = new Person('Harry Potter', 'male');
+    var alice   = new Person('Alice', 'female');
+    var bob     = new Person('Bob', 'male');
+    var charlie = new Person('Charlie', 'male');
+    var harry   = new Person('Harry Potter', 'male');
 
     function initScope($scope) {
       $scope.recipients = [alice, bob, charlie];
       $scope.sender = harry;
     }
 
-    beforeEach(module('ngMessageFormat'));
+    beforeEach(angular.mock.module('ngMessageFormat'));
 
     beforeEach(function() {
-      inject(['$$messageFormat', '$parse', '$locale', '$interpolate', '$rootScope', function(
+      angular.mock.inject(['$$messageFormat', '$parse', '$locale', '$interpolate', '$rootScope', function(
                  messageFormat,    parse,    locale,    interpolate,    rootScope) {
         $$messageFormat = messageFormat;
         $parse = parse;
@@ -69,7 +73,7 @@ describe('$$ngMessageFormat', function() {
         assertMustache('{{ sender }}', '{"name":"Harry Potter","gender":"male"}');
       });
 
-      it('should return function that can be called with no context', inject(function($interpolate) {
+      it('should return function that can be called with no context', angular.mock.inject(function($interpolate) {
         expect($interpolate('{{sender.name}}')()).toEqual('');
       }));
 
@@ -95,7 +99,7 @@ describe('$$ngMessageFormat', function() {
 
 
         it('should stop watching strings with no expressions after first execution', function() {
-          var spy = jasmine.createSpy();
+          var spy = jest.fn();
           $rootScope.$watch($$messageFormat.interpolate('foo'), spy);
           $rootScope.$digest();
           expect($rootScope.$countWatchers()).toBe(0);
@@ -104,7 +108,7 @@ describe('$$ngMessageFormat', function() {
         });
 
         it('should stop watching strings with only constant expressions after first execution', function() {
-          var spy = jasmine.createSpy();
+          var spy = jest.fn();
           $rootScope.$watch($$messageFormat.interpolate('foo {{42}}'), spy);
           $rootScope.$digest();
           expect($rootScope.$countWatchers()).toBe(0);
@@ -230,7 +234,7 @@ describe('$$ngMessageFormat', function() {
   /* NOTE: This describe block includes a copy of interpolateSpec.js to test that
    *       $$messageFormat.interpolate behaves the same as $interpolate.
    *       ONLY the following changes have been made.
-   *       - Add beforeEach(module('ngMessageFormat')) at top level of describe()
+   *       - Add beforeEach(angular.mock.module('ngMessageFormat')) at top level of describe()
    *       - Add extra "}" for it('should not unescape markers within expressions'). Original
    *         $interpolate has a bug/feature where a "}}" inside a string is also treated as a
    *         closing symbol.  The new service understands the string context and fixes this.
@@ -241,44 +245,44 @@ describe('$$ngMessageFormat', function() {
    *         others.  allow you to change them as of now.
    */
   describe('$interpolate', function() {
-    beforeEach(module('ngMessageFormat'));
+    beforeEach(angular.mock.module('ngMessageFormat'));
 
     describe('startSymbol', function() {
-      it('should expose the startSymbol in run phase', inject(function($interpolate) {
+      it('should expose the startSymbol in run phase', angular.mock.inject(function($interpolate) {
         expect($interpolate.startSymbol()).toBe('{{');
       }));
       describe('redefinition', function() {
-        beforeEach(module(function($interpolateProvider) {
+        beforeEach(angular.mock.module(function($interpolateProvider) {
           expect($interpolateProvider.startSymbol()).toBe('{{');
           $interpolateProvider.startSymbol('((');
         }));
         it('should not work when the startSymbol is redefined', function() {
           expect(function() {
-            inject(inject(function($interpolate) {}));
+            angular.mock.inject(inject(function($interpolate) {}));
           }).toThrowMinErr('$interpolate', 'nochgmustache');
         });
       });
     });
 
     describe('endSymbol', function() {
-      it('should expose the endSymbol in run phase', inject(function($interpolate) {
+      it('should expose the endSymbol in run phase', angular.mock.inject(function($interpolate) {
         expect($interpolate.endSymbol()).toBe('}}');
       }));
       describe('redefinition', function() {
-        beforeEach(module(function($interpolateProvider) {
+        beforeEach(angular.mock.module(function($interpolateProvider) {
           expect($interpolateProvider.endSymbol()).toBe('}}');
           $interpolateProvider.endSymbol('))');
         }));
         it('should not work when the endSymbol is redefined', function() {
           expect(function() {
-            inject(inject(function($interpolate) {}));
+            angular.mock.inject(inject(function($interpolate) {}));
           }).toThrowMinErr('$interpolate', 'nochgmustache');
         });
       });
     });
 
     it('should return the interpolation object when there are no bindings and textOnly is undefined',
-        inject(function($interpolate) {
+        angular.mock.inject(function($interpolate) {
       var interpolateFn = $interpolate('some text');
 
       expect(interpolateFn.exp).toBe('some text');
@@ -289,32 +293,32 @@ describe('$$ngMessageFormat', function() {
 
 
     it('should return undefined when there are no bindings and textOnly is set to true',
-        inject(function($interpolate) {
+        angular.mock.inject(function($interpolate) {
       expect($interpolate('some text', true)).toBeUndefined();
     }));
 
     it('should return undefined when there are bindings and strict is set to true',
-        inject(function($interpolate) {
+        angular.mock.inject(function($interpolate) {
       expect($interpolate('test {{foo}}', false, null, true)({})).toBeUndefined();
     }));
 
-    it('should suppress falsy objects', inject(function($interpolate) {
+    it('should suppress falsy objects', angular.mock.inject(function($interpolate) {
       expect($interpolate('{{undefined}}')({})).toEqual('');
       expect($interpolate('{{null}}')({})).toEqual('');
       expect($interpolate('{{a.b}}')({})).toEqual('');
     }));
 
-    it('should jsonify objects', inject(function($interpolate) {
+    it('should jsonify objects', angular.mock.inject(function($interpolate) {
       expect($interpolate('{{ {} }}')({})).toEqual('{}');
       expect($interpolate('{{ true }}')({})).toEqual('true');
       expect($interpolate('{{ false }}')({})).toEqual('false');
     }));
 
 
-    it('should use custom toString when present', inject(function($interpolate, $rootScope) {
+    it('should use custom toString when present', angular.mock.inject(function($interpolate) {
        var context = {
         a: {
-          toString: function() {
+          toString() {
             return 'foo';
           }
         }
@@ -323,19 +327,19 @@ describe('$$ngMessageFormat', function() {
       expect($interpolate('{{ a }}')(context)).toEqual('foo');
     }));
 
-    it('should NOT use toString on array objects', inject(function($interpolate) {
+    it('should NOT use toString on array objects', angular.mock.inject(function($interpolate) {
       expect($interpolate('{{a}}')({ a: [] })).toEqual('[]');
     }));
 
 
-    it('should NOT use toString on Date objects', inject(function($interpolate) {
+    it('should NOT use toString on Date objects', angular.mock.inject(function($interpolate) {
       var date = new Date(2014, 10, 10);
       expect($interpolate('{{a}}')({ a: date })).toBe(JSON.stringify(date));
       expect($interpolate('{{a}}')({ a: date })).not.toEqual(date.toString());
     }));
 
 
-    it('should return interpolation function', inject(function($interpolate, $rootScope) {
+    it('should return interpolation function', angular.mock.inject(function($interpolate, $rootScope) {
       var interpolateFn = $interpolate('Hello {{name}}!');
 
       expect(interpolateFn.exp).toBe('Hello {{name}}!');
@@ -348,17 +352,17 @@ describe('$$ngMessageFormat', function() {
     }));
 
 
-    it('should ignore undefined model', inject(function($interpolate) {
+    it('should ignore undefined model', angular.mock.inject(function($interpolate) {
       expect($interpolate('Hello {{\'World\'}}{{foo}}')({})).toBe('Hello World');
     }));
 
 
-    it('should interpolate with undefined context', inject(function($interpolate) {
+    it('should interpolate with undefined context', angular.mock.inject(function($interpolate) {
       expect($interpolate('Hello, world!{{bloop}}')()).toBe('Hello, world!');
     }));
 
     describe('watching', function() {
-      it('should be watchable with any input types', inject(function($interpolate, $rootScope) {
+      it('should be watchable with any input types', angular.mock.inject(function($interpolate, $rootScope) {
         var lastVal;
         $rootScope.$watch($interpolate('{{i}}'), function(val) {
           lastVal = val;
@@ -387,7 +391,7 @@ describe('$$ngMessageFormat', function() {
         expect(lastVal).toBe('{"a":1,"b":2}');
       }));
 
-      it('should be watchable with literal values', inject(function($interpolate, $rootScope) {
+      it('should be watchable with literal values', angular.mock.inject(function($interpolate, $rootScope) {
         var lastVal;
         $rootScope.$watch($interpolate('{{1}}{{"2"}}{{true}}{{[false]}}{{ {a: 2} }}'), function(val) {
           lastVal = val;
@@ -398,7 +402,7 @@ describe('$$ngMessageFormat', function() {
         expect($rootScope.$countWatchers()).toBe(0);
       }));
 
-      it('should respect one-time bindings for each individual expression', inject(function($interpolate, $rootScope) {
+      it('should respect one-time bindings for each individual expression', angular.mock.inject(function($interpolate, $rootScope) {
         var calls = [];
         $rootScope.$watch($interpolate('{{::a | limitTo:1}} {{::s}} {{::i | number}}'), function(val) {
           calls.push(val);
@@ -426,8 +430,8 @@ describe('$$ngMessageFormat', function() {
       }));
 
       it('should stop watching strings with no expressions after first execution',
-        inject(function($interpolate, $rootScope) {
-          var spy = jasmine.createSpy();
+        angular.mock.inject(function($interpolate, $rootScope) {
+          var spy = jest.fn();
           $rootScope.$watch($interpolate('foo'), spy);
           $rootScope.$digest();
           expect($rootScope.$countWatchers()).toBe(0);
@@ -437,8 +441,8 @@ describe('$$ngMessageFormat', function() {
       );
 
       it('should stop watching strings with only constant expressions after first execution',
-        inject(function($interpolate, $rootScope) {
-          var spy = jasmine.createSpy();
+        angular.mock.inject(function($interpolate, $rootScope) {
+          var spy = jest.fn();
           $rootScope.$watch($interpolate('foo {{42}}'), spy);
           $rootScope.$digest();
           expect($rootScope.$countWatchers()).toBe(0);
@@ -455,13 +459,13 @@ describe('$$ngMessageFormat', function() {
       });
 
 
-      it('should support escaping interpolation signs', inject(function($interpolate) {
+      it('should support escaping interpolation signs', angular.mock.inject(function($interpolate) {
         expect($interpolate('{{foo}} \\{\\{bar\\}\\}')(obj)).toBe('Hello {{bar}}');
         expect($interpolate('\\{\\{foo\\}\\} {{bar}}')(obj)).toBe('{{foo}} World');
       }));
 
 
-      it('should unescape multiple expressions', inject(function($interpolate) {
+      it('should unescape multiple expressions', angular.mock.inject(function($interpolate) {
         expect($interpolate('\\{\\{foo\\}\\}\\{\\{bar\\}\\} {{foo}}')(obj)).toBe('{{foo}}{{bar}} Hello');
         expect($interpolate('{{foo}}\\{\\{foo\\}\\}\\{\\{bar\\}\\}')(obj)).toBe('Hello{{foo}}{{bar}}');
         expect($interpolate('\\{\\{foo\\}\\}{{foo}}\\{\\{bar\\}\\}')(obj)).toBe('{{foo}}Hello{{bar}}');
@@ -471,18 +475,18 @@ describe('$$ngMessageFormat', function() {
 
       /*
        *it('should support escaping custom interpolation start/end symbols', function() {
-       *  module(function($interpolateProvider) {
+       *  angular.mock.module(function($interpolateProvider) {
        *    $interpolateProvider.startSymbol('[[');
        *    $interpolateProvider.endSymbol(']]');
        *  });
-       *  inject(function($interpolate) {
+       *  angular.mock.inject(function($interpolate) {
        *    expect($interpolate('[[foo]] \\[\\[bar\\]\\]')(obj)).toBe('Hello [[bar]]');
        *  });
        *});
        */
 
 
-      it('should unescape incomplete escaped expressions', inject(function($interpolate) {
+      it('should unescape incomplete escaped expressions', angular.mock.inject(function($interpolate) {
         expect($interpolate('\\{\\{foo{{foo}}')(obj)).toBe('{{fooHello');
         expect($interpolate('\\}\\}foo{{foo}}')(obj)).toBe('}}fooHello');
         expect($interpolate('foo{{foo}}\\{\\{')(obj)).toBe('fooHello{{');
@@ -490,7 +494,7 @@ describe('$$ngMessageFormat', function() {
       }));
 
 
-      it('should not unescape markers within expressions', inject(function($interpolate) {
+      it('should not unescape markers within expressions', angular.mock.inject(function($interpolate) {
         expect($interpolate('{{"\\\\{\\\\{Hello, world!\\\\}\\\\}"}}')(obj)).toBe('\\{\\{Hello, world!\\}\\}');
         expect($interpolate('{{"\\{\\{Hello, world!\\}\\}"}}')(obj)).toBe('{{Hello, world!}}');
         expect(function() {
@@ -504,7 +508,7 @@ describe('$$ngMessageFormat', function() {
       // of interpolation start/end markers in an expression which they do not wish to evaluate,
       // because AngularJS will not protect them from being evaluated (due to the added complexity
       // and maintenance burden of context-sensitive escaping)
-      it('should evaluate expressions between escaped start/end symbols', inject(function($interpolate) {
+      it('should evaluate expressions between escaped start/end symbols', angular.mock.inject(function($interpolate) {
         expect($interpolate('\\{\\{Hello, {{bar}}!\\}\\}')(obj)).toBe('{{Hello, World!}}');
       }));
     });
@@ -515,14 +519,14 @@ describe('$$ngMessageFormat', function() {
       beforeEach(function() {
         function log() {}
         var fakeLog = {log: log, warn: log, info: log, error: log};
-        module(function($provide, $sceProvider) {
+        angular.mock.module(function($provide, $sceProvider) {
           $provide.value('$log', fakeLog);
           $sceProvider.enabled(true);
         });
-        inject(['$sce', function($sce) { sce = $sce; }]);
+        angular.mock.inject(['$sce', function($sce) { sce = $sce; }]);
       });
 
-      it('should NOT interpolate non-trusted expressions', inject(function($interpolate, $rootScope) {
+      it('should NOT interpolate non-trusted expressions', angular.mock.inject(function($interpolate, $rootScope) {
         var scope = $rootScope.$new();
         scope.foo = 'foo';
 
@@ -531,7 +535,7 @@ describe('$$ngMessageFormat', function() {
         }).toThrowMinErr('$interpolate', 'interr');
       }));
 
-      it('should NOT interpolate mistyped expressions', inject(function($interpolate, $rootScope) {
+      it('should NOT interpolate mistyped expressions', angular.mock.inject(function($interpolate, $rootScope) {
         var scope = $rootScope.$new();
         scope.foo = sce.trustAsCss('foo');
 
@@ -540,12 +544,12 @@ describe('$$ngMessageFormat', function() {
         }).toThrowMinErr('$interpolate', 'interr');
       }));
 
-      it('should interpolate trusted expressions in a regular context', inject(function($interpolate) {
+      it('should interpolate trusted expressions in a regular context', angular.mock.inject(function($interpolate) {
         var foo = sce.trustAsCss('foo');
         expect($interpolate('{{foo}}', true)({foo: foo})).toBe('foo');
       }));
 
-      it('should interpolate trusted expressions in a specific trustedContext', inject(function($interpolate) {
+      it('should interpolate trusted expressions in a specific trustedContext', angular.mock.inject(function($interpolate) {
         var foo = sce.trustAsCss('foo');
         expect($interpolate('{{foo}}', true, sce.CSS)({foo: foo})).toBe('foo');
       }));
@@ -553,7 +557,7 @@ describe('$$ngMessageFormat', function() {
       // The concatenation of trusted values does not necessarily result in a trusted value.  (For
       // instance, you can construct evil JS code by putting together pieces of JS strings that are by
       // themselves safe to execute in isolation.)
-      it('should NOT interpolate trusted expressions with multiple parts', inject(function($interpolate) {
+      it('should NOT interpolate trusted expressions with multiple parts', angular.mock.inject(function($interpolate) {
         var foo = sce.trustAsCss('foo');
         var bar = sce.trustAsCss('bar');
         expect(function() {
@@ -569,12 +573,12 @@ describe('$$ngMessageFormat', function() {
 
 /*
  *    describe('provider', function() {
- *      beforeEach(module(function($interpolateProvider) {
+ *      beforeEach(angular.mock.module(function($interpolateProvider) {
  *        $interpolateProvider.startSymbol('--');
  *        $interpolateProvider.endSymbol('--');
  *      }));
  *
- *      it('should not get confused with same markers', inject(function($interpolate) {
+ *      it('should not get confused with same markers', angular.mock.inject(function($interpolate) {
  *        expect($interpolate('---').expressions).toEqual([]);
  *        expect($interpolate('----')({})).toEqual('');
  *        expect($interpolate('--1--')({})).toEqual('1');
@@ -583,59 +587,59 @@ describe('$$ngMessageFormat', function() {
  */
 
     describe('parseBindings', function() {
-      it('should Parse Text With No Bindings', inject(function($interpolate) {
+      it('should Parse Text With No Bindings', angular.mock.inject(function($interpolate) {
         expect($interpolate('a').expressions).toEqual([]);
       }));
 
-      it('should Parse Empty Text', inject(function($interpolate) {
+      it('should Parse Empty Text', angular.mock.inject(function($interpolate) {
         expect($interpolate('').expressions).toEqual([]);
       }));
 
-      it('should Parse Inner Binding', inject(function($interpolate) {
-        var interpolateFn = $interpolate('a{{b}}C'),
-            expressions = interpolateFn.expressions;
+      it('should Parse Inner Binding', angular.mock.inject(function($interpolate) {
+        var interpolateFn = $interpolate('a{{b}}C');
+        var expressions = interpolateFn.expressions;
         expect(expressions).toEqual(['b']);
         expect(interpolateFn({b: 123})).toEqual('a123C');
       }));
 
-      it('should Parse Ending Binding', inject(function($interpolate) {
-        var interpolateFn = $interpolate('a{{b}}'),
-          expressions = interpolateFn.expressions;
+      it('should Parse Ending Binding', angular.mock.inject(function($interpolate) {
+        var interpolateFn = $interpolate('a{{b}}');
+        var expressions = interpolateFn.expressions;
         expect(expressions).toEqual(['b']);
         expect(interpolateFn({b: 123})).toEqual('a123');
       }));
 
-      it('should Parse Begging Binding', inject(function($interpolate) {
-        var interpolateFn = $interpolate('{{b}}c'),
-          expressions = interpolateFn.expressions;
+      it('should Parse Begging Binding', angular.mock.inject(function($interpolate) {
+        var interpolateFn = $interpolate('{{b}}c');
+        var expressions = interpolateFn.expressions;
         expect(expressions).toEqual(['b']);
         expect(interpolateFn({b: 123})).toEqual('123c');
       }));
 
-      it('should Parse Loan Binding', inject(function($interpolate) {
-        var interpolateFn = $interpolate('{{b}}'),
-          expressions = interpolateFn.expressions;
+      it('should Parse Loan Binding', angular.mock.inject(function($interpolate) {
+        var interpolateFn = $interpolate('{{b}}');
+        var expressions = interpolateFn.expressions;
         expect(expressions).toEqual(['b']);
         expect(interpolateFn({b: 123})).toEqual('123');
       }));
 
-      it('should Parse Two Bindings', inject(function($interpolate) {
-        var interpolateFn = $interpolate('{{b}}{{c}}'),
-          expressions = interpolateFn.expressions;
+      it('should Parse Two Bindings', angular.mock.inject(function($interpolate) {
+        var interpolateFn = $interpolate('{{b}}{{c}}');
+        var expressions = interpolateFn.expressions;
         expect(expressions).toEqual(['b', 'c']);
         expect(interpolateFn({b: 111, c: 222})).toEqual('111222');
       }));
 
-      it('should Parse Two Bindings With Text In Middle', inject(function($interpolate) {
-        var interpolateFn = $interpolate('{{b}}x{{c}}'),
-          expressions = interpolateFn.expressions;
+      it('should Parse Two Bindings With Text In Middle', angular.mock.inject(function($interpolate) {
+        var interpolateFn = $interpolate('{{b}}x{{c}}');
+        var expressions = interpolateFn.expressions;
         expect(expressions).toEqual(['b', 'c']);
         expect(interpolateFn({b: 111, c: 222})).toEqual('111x222');
       }));
 
-      it('should Parse Multiline', inject(function($interpolate) {
-        var interpolateFn = $interpolate('"X\nY{{A\n+B}}C\nD"'),
-          expressions = interpolateFn.expressions;
+      it('should Parse Multiline', angular.mock.inject(function($interpolate) {
+        var interpolateFn = $interpolate('"X\nY{{A\n+B}}C\nD"');
+        var expressions = interpolateFn.expressions;
         expect(expressions).toEqual(['A\n+B']);
         expect(interpolateFn({'A': 'aa', 'B': 'bb'})).toEqual('"X\nYaabbC\nD"');
       }));
@@ -643,7 +647,7 @@ describe('$$ngMessageFormat', function() {
 
 
     describe('isTrustedContext', function() {
-      it('should NOT interpolate a multi-part expression when isTrustedContext is true', inject(function($interpolate) {
+      it('should NOT interpolate a multi-part expression when isTrustedContext is true', angular.mock.inject(function($interpolate) {
         var isTrustedContext = true;
         expect(function() {
             $interpolate('constant/{{var}}', true, isTrustedContext);
@@ -665,7 +669,7 @@ describe('$$ngMessageFormat', function() {
               'when a trusted value is required.  See http://docs.angularjs.org/api/ng.$sce');
       }));
 
-      it('should interpolate a multi-part expression when isTrustedContext is false', inject(function($interpolate) {
+      it('should interpolate a multi-part expression when isTrustedContext is false', angular.mock.inject(function($interpolate) {
         expect($interpolate('some/{{id}}')({})).toEqual('some/');
         expect($interpolate('some/{{id}}')({id: 1})).toEqual('some/1');
         expect($interpolate('{{foo}}{{bar}}')({foo: 1, bar: 2})).toEqual('12');
@@ -675,29 +679,29 @@ describe('$$ngMessageFormat', function() {
 /*
  *    describe('startSymbol', function() {
  *
- *      beforeEach(module(function($interpolateProvider) {
+ *      beforeEach(angular.mock.module(function($interpolateProvider) {
  *        expect($interpolateProvider.startSymbol()).toBe('{{');
  *        $interpolateProvider.startSymbol('((');
  *      }));
  *
  *
- *      it('should expose the startSymbol in config phase', module(function($interpolateProvider) {
+ *      it('should expose the startSymbol in config phase', angular.mock.module(function($interpolateProvider) {
  *        expect($interpolateProvider.startSymbol()).toBe('((');
  *      }));
  *
  *
- *      it('should expose the startSymbol in run phase', inject(function($interpolate) {
+ *      it('should expose the startSymbol in run phase', angular.mock.inject(function($interpolate) {
  *        expect($interpolate.startSymbol()).toBe('((');
  *      }));
  *
  *
  *      it('should not get confused by matching start and end symbols', function() {
- *        module(function($interpolateProvider) {
+ *        angular.mock.module(function($interpolateProvider) {
  *          $interpolateProvider.startSymbol('--');
  *          $interpolateProvider.endSymbol('--');
  *        });
  *
- *        inject(function($interpolate) {
+ *        angular.mock.inject(function($interpolate) {
  *          expect($interpolate('---').expressions).toEqual([]);
  *          expect($interpolate('----')({})).toEqual('');
  *          expect($interpolate('--1--')({})).toEqual('1');
@@ -710,18 +714,18 @@ describe('$$ngMessageFormat', function() {
 /*
  *    describe('endSymbol', function() {
  *
- *      beforeEach(module(function($interpolateProvider) {
+ *      beforeEach(angular.mock.module(function($interpolateProvider) {
  *        expect($interpolateProvider.endSymbol()).toBe('}}');
  *        $interpolateProvider.endSymbol('))');
  *      }));
  *
  *
- *      it('should expose the endSymbol in config phase', module(function($interpolateProvider) {
+ *      it('should expose the endSymbol in config phase', angular.mock.module(function($interpolateProvider) {
  *        expect($interpolateProvider.endSymbol()).toBe('))');
  *      }));
  *
  *
- *      it('should expose the endSymbol in run phase', inject(function($interpolate) {
+ *      it('should expose the endSymbol in run phase', angular.mock.inject(function($interpolate) {
  *        expect($interpolate.endSymbol()).toBe('))');
  *      }));
  *    });

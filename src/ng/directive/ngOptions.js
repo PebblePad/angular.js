@@ -249,7 +249,6 @@ var NG_OPTIONS_REGEXP = /^\s*([\s\S]+?)(?:\s+as\s+([\s\S]+?))?(?:\s+group\s+by\s
 
 
 var ngOptionsDirective = ['$compile', '$document', '$parse', function($compile, $document, $parse) {
-
   function parseOptionsExpression(optionsExp, selectElement, scope) {
 
     var match = optionsExp.match(NG_OPTIONS_REGEXP);
@@ -364,7 +363,7 @@ var ngOptionsDirective = ['$compile', '$document', '$parse', function($compile, 
         return watchedArray;
       }),
 
-      getOptions: function() {
+      getOptions() {
 
         var optionItems = [];
         var selectValueMap = {};
@@ -393,10 +392,10 @@ var ngOptionsDirective = ['$compile', '$document', '$parse', function($compile, 
         return {
           items: optionItems,
           selectValueMap: selectValueMap,
-          getOptionFromViewValue: function(value) {
+          getOptionFromViewValue(value) {
             return selectValueMap[getTrackByValue(value)];
           },
-          getViewValueFromOption: function(option) {
+          getViewValueFromOption(option) {
             // If the viewValue could be an object that may be mutated by the application,
             // we need to make a copy and not return the reference to the value on the option.
             return trackBy ? copy(option.viewValue) : option.viewValue;
@@ -406,299 +405,298 @@ var ngOptionsDirective = ['$compile', '$document', '$parse', function($compile, 
     };
   }
 
-
-  // Support: IE 9 only
   // We can't just jqLite('<option>') since jqLite is not smart enough
   // to create it in <select> and IE barfs otherwise.
-  var optionTemplate = window.document.createElement('option'),
-      optGroupTemplate = window.document.createElement('optgroup');
+  var optionTemplate = window.document.createElement('option');
 
-    function ngOptionsPostLink(scope, selectElement, attr, ctrls) {
+  var optGroupTemplate = window.document.createElement('optgroup');
 
-      var selectCtrl = ctrls[0];
-      var ngModelCtrl = ctrls[1];
-      var multiple = attr.multiple;
+  function ngOptionsPostLink(scope, selectElement, attr, ctrls) {
 
-      // The emptyOption allows the application developer to provide their own custom "empty"
-      // option when the viewValue does not match any of the option values.
-      for (var i = 0, children = selectElement.children(), ii = children.length; i < ii; i++) {
-        if (children[i].value === '') {
-          selectCtrl.hasEmptyOption = true;
-          selectCtrl.emptyOption = children.eq(i);
-          break;
-        }
+    var selectCtrl = ctrls[0];
+    var ngModelCtrl = ctrls[1];
+    var multiple = attr.multiple;
+
+    // The emptyOption allows the application developer to provide their own custom "empty"
+    // option when the viewValue does not match any of the option values.
+    for (var i = 0, children = selectElement.children(), ii = children.length; i < ii; i++) {
+      if (children[i].value === '') {
+        selectCtrl.hasEmptyOption = true;
+        selectCtrl.emptyOption = children.eq(i);
+        break;
       }
+    }
 
-      // The empty option will be compiled and rendered before we first generate the options
-      selectElement.empty();
+    // The empty option will be compiled and rendered before we first generate the options
+    selectElement.empty();
 
-      var providedEmptyOption = !!selectCtrl.emptyOption;
+    var providedEmptyOption = !!selectCtrl.emptyOption;
 
-      var unknownOption = jqLite(optionTemplate.cloneNode(false));
-      unknownOption.val('?');
+    var unknownOption = jqLite(optionTemplate.cloneNode(false));
+    unknownOption.val('?');
 
-      var options;
-      var ngOptions = parseOptionsExpression(attr.ngOptions, selectElement, scope);
-      // This stores the newly created options before they are appended to the select.
-      // Since the contents are removed from the fragment when it is appended,
-      // we only need to create it once.
-      var listFragment = $document[0].createDocumentFragment();
+    var options;
+    var ngOptions = parseOptionsExpression(attr.ngOptions, selectElement, scope);
+    // This stores the newly created options before they are appended to the select.
+    // Since the contents are removed from the fragment when it is appended,
+    // we only need to create it once.
+    var listFragment = $document[0].createDocumentFragment();
 
-      // Overwrite the implementation. ngOptions doesn't use hashes
-      selectCtrl.generateUnknownOptionValue = function(val) {
-        return '?';
+    // Overwrite the implementation. ngOptions doesn't use hashes
+    selectCtrl.generateUnknownOptionValue = function(val) {
+      return '?';
+    };
+
+    // Update the controller methods for multiple selectable options
+    if (!multiple) {
+
+      selectCtrl.writeValue = function writeNgOptionsValue(value) {
+        // The options might not be defined yet when ngModel tries to render
+        if (!options) return;
+
+        var selectedOption = selectElement[0].options[selectElement[0].selectedIndex];
+        var option = options.getOptionFromViewValue(value);
+
+        // Make sure to remove the selected attribute from the previously selected option
+        // Otherwise, screen readers might get confused
+        if (selectedOption) selectedOption.removeAttribute('selected');
+
+        if (option) {
+          // Don't update the option when it is already selected.
+          // For example, the browser will select the first option by default. In that case,
+          // most properties are set automatically - except the `selected` attribute, which we
+          // set always
+
+          if (selectElement[0].value !== option.selectValue) {
+            selectCtrl.removeUnknownOption();
+
+            selectElement[0].value = option.selectValue;
+            option.element.selected = true;
+          }
+
+          option.element.setAttribute('selected', 'selected');
+        } else {
+          selectCtrl.selectUnknownOrEmptyOption(value);
+        }
       };
 
-      // Update the controller methods for multiple selectable options
-      if (!multiple) {
+      selectCtrl.readValue = function readNgOptionsValue() {
 
-        selectCtrl.writeValue = function writeNgOptionsValue(value) {
-          // The options might not be defined yet when ngModel tries to render
-          if (!options) return;
+        var selectedOption = options.selectValueMap[selectElement.val()];
 
-          var selectedOption = selectElement[0].options[selectElement[0].selectedIndex];
-          var option = options.getOptionFromViewValue(value);
-
-          // Make sure to remove the selected attribute from the previously selected option
-          // Otherwise, screen readers might get confused
-          if (selectedOption) selectedOption.removeAttribute('selected');
-
-          if (option) {
-            // Don't update the option when it is already selected.
-            // For example, the browser will select the first option by default. In that case,
-            // most properties are set automatically - except the `selected` attribute, which we
-            // set always
-
-            if (selectElement[0].value !== option.selectValue) {
-              selectCtrl.removeUnknownOption();
-
-              selectElement[0].value = option.selectValue;
-              option.element.selected = true;
-            }
-
-            option.element.setAttribute('selected', 'selected');
-          } else {
-            selectCtrl.selectUnknownOrEmptyOption(value);
-          }
-        };
-
-        selectCtrl.readValue = function readNgOptionsValue() {
-
-          var selectedOption = options.selectValueMap[selectElement.val()];
-
-          if (selectedOption && !selectedOption.disabled) {
-            selectCtrl.unselectEmptyOption();
-            selectCtrl.removeUnknownOption();
-            return options.getViewValueFromOption(selectedOption);
-          }
-          return null;
-        };
-
-        // If we are using `track by` then we must watch the tracked value on the model
-        // since ngModel only watches for object identity change
-        // FIXME: When a user selects an option, this watch will fire needlessly
-        if (ngOptions.trackBy) {
-          scope.$watch(
-            function() { return ngOptions.getTrackByValue(ngModelCtrl.$viewValue); },
-            function() { ngModelCtrl.$render(); }
-          );
+        if (selectedOption && !selectedOption.disabled) {
+          selectCtrl.unselectEmptyOption();
+          selectCtrl.removeUnknownOption();
+          return options.getViewValueFromOption(selectedOption);
         }
+        return null;
+      };
 
-      } else {
-
-        selectCtrl.writeValue = function writeNgOptionsMultiple(values) {
-          // The options might not be defined yet when ngModel tries to render
-          if (!options) return;
-
-          // Only set `<option>.selected` if necessary, in order to prevent some browsers from
-          // scrolling to `<option>` elements that are outside the `<select>` element's viewport.
-          var selectedOptions = values && values.map(getAndUpdateSelectedOption) || [];
-
-          options.items.forEach(function(option) {
-            if (option.element.selected && !includes(selectedOptions, option)) {
-              option.element.selected = false;
-            }
-          });
-        };
-
-
-        selectCtrl.readValue = function readNgOptionsMultiple() {
-          var selectedValues = selectElement.val() || [],
-              selections = [];
-
-          forEach(selectedValues, function(value) {
-            var option = options.selectValueMap[value];
-            if (option && !option.disabled) selections.push(options.getViewValueFromOption(option));
-          });
-
-          return selections;
-        };
-
-        // If we are using `track by` then we must watch these tracked values on the model
-        // since ngModel only watches for object identity change
-        if (ngOptions.trackBy) {
-
-          scope.$watchCollection(function() {
-            if (isArray(ngModelCtrl.$viewValue)) {
-              return ngModelCtrl.$viewValue.map(function(value) {
-                return ngOptions.getTrackByValue(value);
-              });
-            }
-          }, function() {
-            ngModelCtrl.$render();
-          });
-
-        }
+      // If we are using `track by` then we must watch the tracked value on the model
+      // since ngModel only watches for object identity change
+      // FIXME: When a user selects an option, this watch will fire needlessly
+      if (ngOptions.trackBy) {
+        scope.$watch(
+          function() { return ngOptions.getTrackByValue(ngModelCtrl.$viewValue); },
+          function() { ngModelCtrl.$render(); }
+        );
       }
 
-      if (providedEmptyOption) {
+    } else {
 
-        // compile the element since there might be bindings in it
-        $compile(selectCtrl.emptyOption)(scope);
+      selectCtrl.writeValue = function writeNgOptionsMultiple(values) {
+        // The options might not be defined yet when ngModel tries to render
+        if (!options) return;
 
-        selectElement.prepend(selectCtrl.emptyOption);
+        // Only set `<option>.selected` if necessary, in order to prevent some browsers from
+        // scrolling to `<option>` elements that are outside the `<select>` element's viewport.
+        var selectedOptions = values && values.map(getAndUpdateSelectedOption) || [];
 
-        if (selectCtrl.emptyOption[0].nodeType === NODE_TYPE_COMMENT) {
-          // This means the empty option has currently no actual DOM node, probably because
-          // it has been modified by a transclusion directive.
-          selectCtrl.hasEmptyOption = false;
-
-          // Redefine the registerOption function, which will catch
-          // options that are added by ngIf etc. (rendering of the node is async because of
-          // lazy transclusion)
-          selectCtrl.registerOption = function(optionScope, optionEl) {
-            if (optionEl.val() === '') {
-              selectCtrl.hasEmptyOption = true;
-              selectCtrl.emptyOption = optionEl;
-              selectCtrl.emptyOption.removeClass('ng-scope');
-              // This ensures the new empty option is selected if previously no option was selected
-              ngModelCtrl.$render();
-
-              optionEl.on('$destroy', function() {
-                var needsRerender = selectCtrl.$isEmptyOptionSelected();
-
-                selectCtrl.hasEmptyOption = false;
-                selectCtrl.emptyOption = undefined;
-
-                if (needsRerender) ngModelCtrl.$render();
-              });
-            }
-          };
-
-        } else {
-          // remove the class, which is added automatically because we recompile the element and it
-          // becomes the compilation root
-          selectCtrl.emptyOption.removeClass('ng-scope');
-        }
-
-      }
-
-      // We will re-render the option elements if the option values or labels change
-      scope.$watchCollection(ngOptions.getWatchables, updateOptions);
-
-      // ------------------------------------------------------------------ //
-
-      function addOptionElement(option, parent) {
-        var optionElement = optionTemplate.cloneNode(false);
-        parent.appendChild(optionElement);
-        updateOptionElement(option, optionElement);
-      }
-
-      function getAndUpdateSelectedOption(viewValue) {
-        var option = options.getOptionFromViewValue(viewValue);
-        var element = option && option.element;
-
-        if (element && !element.selected) element.selected = true;
-
-        return option;
-      }
-
-      function updateOptionElement(option, element) {
-        option.element = element;
-        element.disabled = option.disabled;
-        // Support: IE 11 only, Edge 12-13 only
-        // NOTE: The label must be set before the value, otherwise IE 11 & Edge create unresponsive
-        // selects in certain circumstances when multiple selects are next to each other and display
-        // the option list in listbox style, i.e. the select is [multiple], or specifies a [size].
-        // See https://github.com/angular/angular.js/issues/11314 for more info.
-        // This is unfortunately untestable with unit / e2e tests
-        if (option.label !== element.label) {
-          element.label = option.label;
-          element.textContent = option.label;
-        }
-        element.value = option.selectValue;
-      }
-
-      function updateOptions() {
-        var previousValue = options && selectCtrl.readValue();
-
-        // We must remove all current options, but cannot simply set innerHTML = null
-        // since the providedEmptyOption might have an ngIf on it that inserts comments which we
-        // must preserve.
-        // Instead, iterate over the current option elements and remove them or their optgroup
-        // parents
-        if (options) {
-
-          for (var i = options.items.length - 1; i >= 0; i--) {
-            var option = options.items[i];
-            if (isDefined(option.group)) {
-              jqLiteRemove(option.element.parentNode);
-            } else {
-              jqLiteRemove(option.element);
-            }
-          }
-        }
-
-        options = ngOptions.getOptions();
-
-        var groupElementMap = {};
-
-        options.items.forEach(function addOption(option) {
-          var groupElement;
-
-          if (isDefined(option.group)) {
-
-            // This option is to live in a group
-            // See if we have already created this group
-            groupElement = groupElementMap[option.group];
-
-            if (!groupElement) {
-
-              groupElement = optGroupTemplate.cloneNode(false);
-              listFragment.appendChild(groupElement);
-
-              // Update the label on the group element
-              // "null" is special cased because of Safari
-              groupElement.label = option.group === null ? 'null' : option.group;
-
-              // Store it for use later
-              groupElementMap[option.group] = groupElement;
-            }
-
-            addOptionElement(option, groupElement);
-
-          } else {
-
-            // This option is not in a group
-            addOptionElement(option, listFragment);
+        options.items.forEach(function(option) {
+          if (option.element.selected && !includes(selectedOptions, option)) {
+            option.element.selected = false;
           }
         });
+      };
 
-        selectElement[0].appendChild(listFragment);
 
-        ngModelCtrl.$render();
+      selectCtrl.readValue = function readNgOptionsMultiple() {
+        var selectedValues = selectElement.val() || [];
+        var selections = [];
 
-        // Check to see if the value has changed due to the update to the options
-        if (!ngModelCtrl.$isEmpty(previousValue)) {
-          var nextValue = selectCtrl.readValue();
-          var isNotPrimitive = ngOptions.trackBy || multiple;
-          if (isNotPrimitive ? !equals(previousValue, nextValue) : previousValue !== nextValue) {
-            ngModelCtrl.$setViewValue(nextValue);
+        forEach(selectedValues, function(value) {
+          var option = options.selectValueMap[value];
+          if (option && !option.disabled) selections.push(options.getViewValueFromOption(option));
+        });
+
+        return selections;
+      };
+
+      // If we are using `track by` then we must watch these tracked values on the model
+      // since ngModel only watches for object identity change
+      if (ngOptions.trackBy) {
+
+        scope.$watchCollection(function() {
+          if (isArray(ngModelCtrl.$viewValue)) {
+            return ngModelCtrl.$viewValue.map(function(value) {
+              return ngOptions.getTrackByValue(value);
+            });
+          }
+        }, function() {
+          ngModelCtrl.$render();
+        });
+
+      }
+    }
+
+    if (providedEmptyOption) {
+
+      // compile the element since there might be bindings in it
+      $compile(selectCtrl.emptyOption)(scope);
+
+      selectElement.prepend(selectCtrl.emptyOption);
+
+      if (selectCtrl.emptyOption[0].nodeType === NODE_TYPE_COMMENT) {
+        // This means the empty option has currently no actual DOM node, probably because
+        // it has been modified by a transclusion directive.
+        selectCtrl.hasEmptyOption = false;
+
+        // Redefine the registerOption function, which will catch
+        // options that are added by ngIf etc. (rendering of the node is async because of
+        // lazy transclusion)
+        selectCtrl.registerOption = function(optionScope, optionEl) {
+          if (optionEl.val() === '') {
+            selectCtrl.hasEmptyOption = true;
+            selectCtrl.emptyOption = optionEl;
+            selectCtrl.emptyOption.removeClass('ng-scope');
+            // This ensures the new empty option is selected if previously no option was selected
             ngModelCtrl.$render();
+
+            optionEl.on('$destroy', function() {
+              var needsRerender = selectCtrl.$isEmptyOptionSelected();
+
+              selectCtrl.hasEmptyOption = false;
+              selectCtrl.emptyOption = undefined;
+
+              if (needsRerender) ngModelCtrl.$render();
+            });
+          }
+        };
+
+      } else {
+        // remove the class, which is added automatically because we recompile the element and it
+        // becomes the compilation root
+        selectCtrl.emptyOption.removeClass('ng-scope');
+      }
+
+    }
+
+    // We will re-render the option elements if the option values or labels change
+    scope.$watchCollection(ngOptions.getWatchables, updateOptions);
+
+    // ------------------------------------------------------------------ //
+
+    function addOptionElement(option, parent) {
+      var optionElement = optionTemplate.cloneNode(false);
+      parent.appendChild(optionElement);
+      updateOptionElement(option, optionElement);
+    }
+
+    function getAndUpdateSelectedOption(viewValue) {
+      var option = options.getOptionFromViewValue(viewValue);
+      var element = option && option.element;
+
+      if (element && !element.selected) element.selected = true;
+
+      return option;
+    }
+
+    function updateOptionElement(option, element) {
+      option.element = element;
+      element.disabled = option.disabled;
+      // Support: Edge 12-13 only
+      // NOTE: The label must be set before the value, otherwise Edge create unresponsive
+      // selects in certain circumstances when multiple selects are next to each other and display
+      // the option list in listbox style, i.e. the select is [multiple], or specifies a [size].
+      // See https://github.com/angular/angular.js/issues/11314 for more info.
+      // This is unfortunately untestable with unit / e2e tests
+      if (option.label !== element.label) {
+        element.label = option.label;
+        element.textContent = option.label;
+      }
+      element.value = option.selectValue;
+    }
+
+    function updateOptions() {
+      var previousValue = options && selectCtrl.readValue();
+
+      // We must remove all current options, but cannot simply set innerHTML = null
+      // since the providedEmptyOption might have an ngIf on it that inserts comments which we
+      // must preserve.
+      // Instead, iterate over the current option elements and remove them or their optgroup
+      // parents
+      if (options) {
+
+        for (var i = options.items.length - 1; i >= 0; i--) {
+          var option = options.items[i];
+          if (isDefined(option.group)) {
+            jqLiteRemove(option.element.parentNode);
+          } else {
+            jqLiteRemove(option.element);
           }
         }
       }
-  }
+
+      options = ngOptions.getOptions();
+
+      var groupElementMap = {};
+
+      options.items.forEach(function addOption(option) {
+        var groupElement;
+
+        if (isDefined(option.group)) {
+
+          // This option is to live in a group
+          // See if we have already created this group
+          groupElement = groupElementMap[option.group];
+
+          if (!groupElement) {
+
+            groupElement = optGroupTemplate.cloneNode(false);
+            listFragment.appendChild(groupElement);
+
+            // Update the label on the group element
+            // "null" is special cased because of Safari
+            groupElement.label = option.group === null ? 'null' : option.group;
+
+            // Store it for use later
+            groupElementMap[option.group] = groupElement;
+          }
+
+          addOptionElement(option, groupElement);
+
+        } else {
+
+          // This option is not in a group
+          addOptionElement(option, listFragment);
+        }
+      });
+
+      selectElement[0].appendChild(listFragment);
+
+      ngModelCtrl.$render();
+
+      // Check to see if the value has changed due to the update to the options
+      if (!ngModelCtrl.$isEmpty(previousValue)) {
+        var nextValue = selectCtrl.readValue();
+        var isNotPrimitive = ngOptions.trackBy || multiple;
+        if (isNotPrimitive ? !equals(previousValue, nextValue) : previousValue !== nextValue) {
+          ngModelCtrl.$setViewValue(nextValue);
+          ngModelCtrl.$render();
+        }
+      }
+    }
+}
 
   return {
     restrict: 'A',

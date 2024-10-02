@@ -53,7 +53,7 @@ forEach(
     ngEventDirectives[directiveName] = ['$parse', '$rootScope', function($parse, $rootScope) {
       return {
         restrict: 'A',
-        compile: function($element, attr) {
+        compile($element, attr) {
           // NOTE:
           // We expose the powerful `$event` object on the scope that provides access to the Window,
           // etc. This is OK, because expressions are not sandboxed any more (and the expression

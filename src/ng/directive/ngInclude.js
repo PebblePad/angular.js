@@ -35,13 +35,6 @@
  * @param {string} ngInclude|src AngularJS expression evaluating to URL. If the source is a string constant,
  *                 make sure you wrap it in **single** quotes, e.g. `src="'myPartialTemplate.html'"`.
  * @param {string=} onload Expression to evaluate when a new partial is loaded.
- *                  <div class="alert alert-warning">
- *                  **Note:** When using onload on SVG elements in IE11, the browser will try to call
- *                  a function with the name on the window element, which will usually throw a
- *                  "function is undefined" error. To fix this, you can instead use `data-onload` or a
- *                  different form that {@link guide/directive#normalization matches} `onload`.
- *                  </div>
-   *
  * @param {string=} autoscroll Whether `ngInclude` should call {@link ng.$anchorScroll
  *                  $anchorScroll} to scroll the viewport after the content is loaded.
  *
@@ -192,16 +185,16 @@ var ngIncludeDirective = ['$templateRequest', '$anchorScroll', '$animate',
     terminal: true,
     transclude: 'element',
     controller: angular.noop,
-    compile: function(element, attr) {
-      var srcExp = attr.ngInclude || attr.src,
-          onloadExp = attr.onload || '',
-          autoScrollExp = attr.autoscroll;
+    compile(element, attr) {
+      var srcExp = attr.ngInclude || attr.src;
+      var onloadExp = attr.onload || '';
+      var autoScrollExp = attr.autoscroll;
 
       return function(scope, $element, $attr, ctrl, $transclude) {
-        var changeCounter = 0,
-            currentScope,
-            previousElement,
-            currentElement;
+        var changeCounter = 0;
+        var currentScope;
+        var previousElement;
+        var currentElement;
 
         var cleanupLastIncludeContent = function() {
           if (previousElement) {
@@ -286,7 +279,7 @@ var ngIncludeFillContentDirective = ['$compile',
       restrict: 'ECA',
       priority: -400,
       require: 'ngInclude',
-      link: function(scope, $element, $attr, ctrl) {
+      link(scope, $element, $attr, ctrl) {
         if (toString.call($element[0]).match(/SVG/)) {
           // WebKit: https://bugs.webkit.org/show_bug.cgi?id=135698 --- SVG elements do not
           // support innerHTML, so detect this here and try to generate the contents

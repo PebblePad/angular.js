@@ -3,12 +3,15 @@
 /* eslint-disable no-script-url */
 
 describe('sanitizeUri', function() {
-  var sanitizeHref, sanitizeImg, sanitizeUriProvider, testUrl;
+  var sanitizeHref;
+  var sanitizeImg;
+  var sanitizeUriProvider;
+  var testUrl;
   beforeEach(function() {
-    module(function(_$$sanitizeUriProvider_) {
+    angular.mock.module(function(_$$sanitizeUriProvider_) {
       sanitizeUriProvider = _$$sanitizeUriProvider_;
     });
-    inject(function($$sanitizeUri) {
+    angular.mock.inject(function($$sanitizeUri) {
       sanitizeHref = function(uri) {
         return $$sanitizeUri(uri, false);
       };
@@ -143,19 +146,19 @@ describe('sanitizeUri', function() {
 
   describe('a[href] sanitization', function() {
 
-    it('should sanitize javascript: urls', inject(function() {
+    it('should sanitize javascript: urls', angular.mock.inject(function() {
       testUrl = 'javascript:doEvilStuff()';
       expect(sanitizeHref(testUrl)).toBe('unsafe:javascript:doEvilStuff()');
     }));
 
 
-    it('should sanitize data: urls', inject(function() {
+    it('should sanitize data: urls', angular.mock.inject(function() {
       testUrl = 'data:evilPayload';
       expect(sanitizeHref(testUrl)).toBe('unsafe:data:evilPayload');
     }));
 
 
-    it('should sanitize obfuscated javascript: urls', inject(function() {
+    it('should sanitize obfuscated javascript: urls', angular.mock.inject(function() {
       // case-sensitive
       testUrl = 'JaVaScRiPt:doEvilStuff()';
       expect(sanitizeHref(testUrl)).toBe('unsafe:javascript:doEvilStuff()');
@@ -185,13 +188,13 @@ describe('sanitizeUri', function() {
     }));
 
 
-    it('should sanitize ngHref bindings as well', inject(function() {
+    it('should sanitize ngHref bindings as well', angular.mock.inject(function() {
       testUrl = 'javascript:doEvilStuff()';
       expect(sanitizeHref(testUrl)).toBe('unsafe:javascript:doEvilStuff()');
     }));
 
 
-    it('should not sanitize valid urls', inject(function() {
+    it('should not sanitize valid urls', angular.mock.inject(function() {
       testUrl = 'foo/bar';
       expect(sanitizeHref(testUrl)).toBe('foo/bar');
 
@@ -240,5 +243,4 @@ describe('sanitizeUri', function() {
     });
 
   });
-
 });

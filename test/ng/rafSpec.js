@@ -1,7 +1,7 @@
 'use strict';
 
 describe('$$rAF', function() {
-  it('should queue and block animation frames', inject(function($$rAF) {
+  it('should queue and block animation frames', angular.mock.inject(function($$rAF) {
     if (!$$rAF.supported) return;
 
     var message;
@@ -14,7 +14,7 @@ describe('$$rAF', function() {
     expect(message).toBe('yes');
   }));
 
-  it('should provide a cancellation method', inject(function($$rAF) {
+  it('should provide a cancellation method', angular.mock.inject(function($$rAF) {
     if (!$$rAF.supported) return;
 
     var present = true;
@@ -33,10 +33,10 @@ describe('$$rAF', function() {
 
   describe('$timeout fallback', function() {
     it('it should use a $timeout incase native rAF isn\'t supported', function() {
-      var timeoutSpy = jasmine.createSpy('callback');
+      var timeoutSpy = jest.fn();
 
       //we need to create our own injector to work around the ngMock overrides
-      var injector = createInjector(['ng', function($provide) {
+      var injector = angular.injector(['ng', function($provide) {
         $provide.value('$timeout', timeoutSpy);
         $provide.value('$window', {
           location: window.location
@@ -54,14 +54,14 @@ describe('$$rAF', function() {
       expect(message).toBeUndefined();
       expect(timeoutSpy).toHaveBeenCalled();
 
-      timeoutSpy.calls.mostRecent().args[0]();
+      timeoutSpy.mock.calls[timeoutSpy.mock.calls.length - 1][0]();
 
       expect(message).toBe('on');
     });
   });
 
   describe('mocks', function() {
-    it('should throw an error if no frames are present', inject(function($$rAF) {
+    it('should throw an error if no frames are present', angular.mock.inject(function($$rAF) {
       if ($$rAF.supported) {
         var failed = false;
         try {
@@ -77,12 +77,12 @@ describe('$$rAF', function() {
   describe('mobile', function() {
     it('should provide a cancellation method for an older version of Android', function() {
       //we need to create our own injector to work around the ngMock overrides
-      var injector = createInjector(['ng', function($provide) {
+      var injector = angular.injector(['ng', function($provide) {
         $provide.value('$window', {
           location: window.location,
           history: window.history,
-          webkitRequestAnimationFrame: jasmine.createSpy('$window.webkitRequestAnimationFrame'),
-          webkitCancelRequestAnimationFrame: jasmine.createSpy('$window.webkitCancelRequestAnimationFrame')
+          webkitRequestAnimationFrame: jest.fn(),
+          webkitCancelRequestAnimationFrame: jest.fn()
         });
       }]);
 

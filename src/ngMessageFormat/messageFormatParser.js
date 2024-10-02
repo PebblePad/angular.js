@@ -138,7 +138,9 @@ MessageFormatParser.prototype.assertRuleOrNull = function assertRuleOrNull(rule)
 var NEXT_WORD_RE = /\s*(\w+)\s*/g;
 MessageFormatParser.prototype.errorExpecting = function errorExpecting() {
   // What was wrong with the syntax? Unsupported type, missing comma, or something else?
-  var match = this.matchRe(NEXT_WORD_RE), position;
+  var match = this.matchRe(NEXT_WORD_RE);
+
+  var position;
   if (match == null) {
     position = indexToLineAndColumn(this.text, this.index);
     throw $interpolateMinErr('reqarg',
@@ -288,7 +290,8 @@ var INTERP_OR_END_MESSAGE_RE = /\\.|{{|}/g;
 var INTERP_OR_PLURALVALUE_OR_END_MESSAGE_RE = /\\.|{{|#|}/g;
 var ESCAPE_OR_MUSTACHE_BEGIN_RE = /\\.|{{/g;
 MessageFormatParser.prototype.advanceInInterpolationOrMessageText = function advanceInInterpolationOrMessageText() {
-  var currentIndex = this.index, match;
+  var currentIndex = this.index;
+  var match;
   if (this.ruleChoiceKeyword == null) { // interpolation
     match = this.searchRe(ESCAPE_OR_MUSTACHE_BEGIN_RE);
     if (match == null) { // End of interpolation text.  Nothing more to process.

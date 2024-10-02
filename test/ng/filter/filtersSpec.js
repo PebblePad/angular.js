@@ -3,14 +3,14 @@
 describe('filters', function() {
   var filter;
 
-  beforeEach(inject(function($filter) {
+  beforeEach(angular.mock.inject(function($filter) {
     filter = $filter;
   }));
 
   it('should call the filter when evaluating expression', function() {
-    var filter = jasmine.createSpy('myFilter');
-    createInjector(['ng', function($filterProvider) {
-      $filterProvider.register('myFilter', valueFn(filter));
+    var filter = jest.fn();
+    angular.injector(['ng', function($filterProvider) {
+      $filterProvider.register('myFilter', ngInternals.valueFn(filter));
     }]).invoke(function($rootScope) {
       $rootScope.$eval('10|myFilter');
     });
@@ -18,7 +18,7 @@ describe('filters', function() {
   });
 
   describe('formatNumber', function() {
-    /* global formatNumber: false */
+    /* global ngInternals.formatNumber: false */
     var pattern;
 
     beforeEach(function() {
@@ -35,117 +35,117 @@ describe('filters', function() {
 
     it('should format according to different patterns', function() {
       pattern.gSize = 2;
-      var num = formatNumber(99, pattern, ',', '.');
+      var num = ngInternals.formatNumber(99, pattern, ',', '.');
       expect(num).toBe('99');
-      num = formatNumber(888, pattern, ',', '.');
+      num = ngInternals.formatNumber(888, pattern, ',', '.');
       expect(num).toBe('888');
-      num = formatNumber(1234567.89, pattern, ',', '.');
+      num = ngInternals.formatNumber(1234567.89, pattern, ',', '.');
       expect(num).toBe('12,34,567.89');
-      num = formatNumber(1234.56, pattern, ',', '.');
+      num = ngInternals.formatNumber(1234.56, pattern, ',', '.');
       expect(num).toBe('1,234.56');
 
       pattern.negPre = '(';
       pattern.negSuf = '-)';
-      num = formatNumber(-1234, pattern, ',', '.');
+      num = ngInternals.formatNumber(-1234, pattern, ',', '.');
       expect(num).toBe('(1,234-)');
       pattern.posPre = '+';
       pattern.posSuf = '+';
-      num = formatNumber(1234, pattern, ',', '.');
+      num = ngInternals.formatNumber(1234, pattern, ',', '.');
       expect(num).toBe('+1,234+');
       pattern.posPre = pattern.posSuf = '';
 
       pattern.minFrac = 2;
-      num = formatNumber(1, pattern, ',', '.');
+      num = ngInternals.formatNumber(1, pattern, ',', '.');
       expect(num).toBe('1.00');
       pattern.maxFrac = 4;
-      num = formatNumber(1.11119, pattern, ',', '.');
+      num = ngInternals.formatNumber(1.11119, pattern, ',', '.');
       expect(num).toBe('1.1112');
     });
 
     it('should format according different separators', function() {
-      var num = formatNumber(1234567.1, pattern, '.', ',', 2);
+      var num = ngInternals.formatNumber(1234567.1, pattern, '.', ',', 2);
       expect(num).toBe('1.234.567,10');
-      num = formatNumber(1e-14, pattern, '.', ',', 14);
+      num = ngInternals.formatNumber(1e-14, pattern, '.', ',', 14);
       expect(num).toBe('0,00000000000001');
     });
 
     it('should format with or without fractionSize', function() {
-      var num = formatNumber(123.1, pattern, ',', '.', 3);
+      var num = ngInternals.formatNumber(123.1, pattern, ',', '.', 3);
       expect(num).toBe('123.100');
-      num = formatNumber(123.12, pattern, ',', '.');
+      num = ngInternals.formatNumber(123.12, pattern, ',', '.');
       expect(num).toBe('123.12');
-      num = formatNumber(123.1116, pattern, ',', '.');
+      num = ngInternals.formatNumber(123.1116, pattern, ',', '.');
       expect(num).toBe('123.112');
     });
 
     it('should format the same with string as well as numeric fractionSize', function() {
-      var num = formatNumber(123.1, pattern, ',', '.', '0');
+      var num = ngInternals.formatNumber(123.1, pattern, ',', '.', '0');
       expect(num).toBe('123');
-      num = formatNumber(123.1, pattern, ',', '.', 0);
+      num = ngInternals.formatNumber(123.1, pattern, ',', '.', 0);
       expect(num).toBe('123');
-      num = formatNumber(123.1, pattern, ',', '.', '3');
+      num = ngInternals.formatNumber(123.1, pattern, ',', '.', '3');
       expect(num).toBe('123.100');
-      num = formatNumber(123.1, pattern, ',', '.', 3);
+      num = ngInternals.formatNumber(123.1, pattern, ',', '.', 3);
       expect(num).toBe('123.100');
     });
 
     it('should work with negative fractionSize', function() {
-      expect(formatNumber(49, pattern, ',', '.', -2)).toBe('0');
-      expect(formatNumber(50, pattern, ',', '.', -2)).toBe('100');
-      expect(formatNumber(51, pattern, ',', '.', -2)).toBe('100');
-      expect(formatNumber(1234, pattern, ',', '.', -1)).toBe('1,230');
-      expect(formatNumber(1234.567, pattern, ',', '.', -1)).toBe('1,230');
-      expect(formatNumber(1235, pattern, ',', '.', -1)).toBe('1,240');
-      expect(formatNumber(1235, pattern, ',', '.', -2)).toBe('1,200');
-      expect(formatNumber(1235, pattern, ',', '.', -3)).toBe('1,000');
-      expect(formatNumber(1235, pattern, ',', '.', -4)).toBe('0');
-      expect(formatNumber(1250, pattern, ',', '.', -2)).toBe('1,300');
-      expect(formatNumber(1000, pattern, ',', '.', -3)).toBe('1,000');
-      expect(formatNumber(1000, pattern, ',', '.', -4)).toBe('0');
-      expect(formatNumber(1000, pattern, ',', '.', -5)).toBe('0');
-      expect(formatNumber(1, pattern, ',', '.', -1)).toBe('0');
-      expect(formatNumber(1, pattern, ',', '.', -2)).toBe('0');
-      expect(formatNumber(9, pattern, ',', '.', -1)).toBe('10');
-      expect(formatNumber(501, pattern, ',', '.', -3)).toBe('1,000');
+      expect(ngInternals.formatNumber(49, pattern, ',', '.', -2)).toBe('0');
+      expect(ngInternals.formatNumber(50, pattern, ',', '.', -2)).toBe('100');
+      expect(ngInternals.formatNumber(51, pattern, ',', '.', -2)).toBe('100');
+      expect(ngInternals.formatNumber(1234, pattern, ',', '.', -1)).toBe('1,230');
+      expect(ngInternals.formatNumber(1234.567, pattern, ',', '.', -1)).toBe('1,230');
+      expect(ngInternals.formatNumber(1235, pattern, ',', '.', -1)).toBe('1,240');
+      expect(ngInternals.formatNumber(1235, pattern, ',', '.', -2)).toBe('1,200');
+      expect(ngInternals.formatNumber(1235, pattern, ',', '.', -3)).toBe('1,000');
+      expect(ngInternals.formatNumber(1235, pattern, ',', '.', -4)).toBe('0');
+      expect(ngInternals.formatNumber(1250, pattern, ',', '.', -2)).toBe('1,300');
+      expect(ngInternals.formatNumber(1000, pattern, ',', '.', -3)).toBe('1,000');
+      expect(ngInternals.formatNumber(1000, pattern, ',', '.', -4)).toBe('0');
+      expect(ngInternals.formatNumber(1000, pattern, ',', '.', -5)).toBe('0');
+      expect(ngInternals.formatNumber(1, pattern, ',', '.', -1)).toBe('0');
+      expect(ngInternals.formatNumber(1, pattern, ',', '.', -2)).toBe('0');
+      expect(ngInternals.formatNumber(9, pattern, ',', '.', -1)).toBe('10');
+      expect(ngInternals.formatNumber(501, pattern, ',', '.', -3)).toBe('1,000');
     });
 
     it('should format numbers that round to zero as nonnegative', function() {
-      expect(formatNumber(-0.01, pattern, ',', '.', 1)).toBe('0.0');
-      expect(formatNumber(-1e-10, pattern, ',', '.', 1)).toBe('0.0');
-      expect(formatNumber(-0.0001, pattern, ',', '.', 3)).toBe('0.000');
-      expect(formatNumber(-0.0000001, pattern, ',', '.', 6)).toBe('0.000000');
+      expect(ngInternals.formatNumber(-0.01, pattern, ',', '.', 1)).toBe('0.0');
+      expect(ngInternals.formatNumber(-1e-10, pattern, ',', '.', 1)).toBe('0.0');
+      expect(ngInternals.formatNumber(-0.0001, pattern, ',', '.', 3)).toBe('0.000');
+      expect(ngInternals.formatNumber(-0.0000001, pattern, ',', '.', 6)).toBe('0.000000');
     });
 
     it('should work with numbers that are close to the limit for exponent notation', function() {
       // previously, numbers that n * (10 ^ fractionSize) > localLimitMax
       // were ending up with a second exponent in them, then coercing to
-      // NaN when formatNumber rounded them with the safe rounding
+      // NaN when ngInternals.formatNumber rounded them with the safe rounding
       // function.
 
-      var localLimitMax = 999999999999999900000,
-          localLimitMin = 10000000000000000000,
-          exampleNumber = 444444444400000000000;
+      var localLimitMax = 999999999999999900000;
 
-      expect(formatNumber(localLimitMax, pattern, ',', '.', 2))
+      var localLimitMin = 10000000000000000000;
+      var exampleNumber = 444444444400000000000;
+
+      expect(ngInternals.formatNumber(localLimitMax, pattern, ',', '.', 2))
         .toBe('999,999,999,999,999,900,000.00');
-      expect(formatNumber(localLimitMin, pattern, ',', '.', 2))
+      expect(ngInternals.formatNumber(localLimitMin, pattern, ',', '.', 2))
         .toBe('10,000,000,000,000,000,000.00');
-      expect(formatNumber(exampleNumber, pattern, ',', '.', 2))
+      expect(ngInternals.formatNumber(exampleNumber, pattern, ',', '.', 2))
         .toBe('444,444,444,400,000,000,000.00');
-
     });
 
     it('should format large number',function() {
       var num;
-      num = formatNumber(12345868059685210000, pattern, ',', '.', 2);
+      num = ngInternals.formatNumber(12345868059685210000, pattern, ',', '.', 2);
       expect(num).toBe('12,345,868,059,685,210,000.00');
-      num = formatNumber(79832749837498327498274983793234322432, pattern, ',', '.', 2);
+      num = ngInternals.formatNumber(79832749837498327498274983793234322432, pattern, ',', '.', 2);
       expect(num).toBe('7.98e+37');
-      num = formatNumber(8798327498374983274928, pattern, ',', '.', 2);
+      num = ngInternals.formatNumber(8798327498374983274928, pattern, ',', '.', 2);
       expect(num).toBe('8,798,327,498,374,983,000,000.00');
-      num = formatNumber(879832749374983274928, pattern, ',', '.', 2);
+      num = ngInternals.formatNumber(879832749374983274928, pattern, ',', '.', 2);
       expect(num).toBe('879,832,749,374,983,200,000.00');
-      num = formatNumber(879832749374983274928, pattern, ',', '.', 32);
+      num = ngInternals.formatNumber(879832749374983274928, pattern, ',', '.', 32);
       expect(num).toBe('879,832,749,374,983,200,000.00000000000000000000000000000000');
     });
   });
@@ -181,14 +181,14 @@ describe('filters', function() {
       expect(currency(0.003)).toBe('$0.00');
     });
 
-    it('should set the default fraction size to the max fraction size of the locale value', inject(function($locale) {
+    it('should set the default fraction size to the max fraction size of the locale value', angular.mock.inject(function($locale) {
       $locale.NUMBER_FORMATS.PATTERNS[1].maxFrac = 1;
 
       expect(currency(1.07)).toBe('$1.1');
     }));
 
     it('should trim whitespace around the currency symbol if it is empty',
-      inject(function($locale) {
+      angular.mock.inject(function($locale) {
         var pattern = $locale.NUMBER_FORMATS.PATTERNS[1];
         pattern.posPre = pattern.posSuf = '     \u00A4     ';
         pattern.negPre = pattern.negSuf = '  -  \u00A4  -  ';
@@ -284,10 +284,10 @@ describe('filters', function() {
 
   describe('json', function() {
     it('should do basic filter', function() {
-      expect(filter('json')({a:'b'})).toEqual(toJson({a:'b'}, true));
+      expect(filter('json')({a:'b'})).toEqual(angular.toJson({a:'b'}, true));
     });
     it('should allow custom indentation', function() {
-      expect(filter('json')({a:'b'}, 4)).toEqual(toJson({a:'b'}, 4));
+      expect(filter('json')({a:'b'}, 4)).toEqual(angular.toJson({a:'b'}, 4));
     });
   });
 
@@ -398,7 +398,7 @@ describe('filters', function() {
                       toEqual('September 03, 2010 Anno Domini');
     });
 
-    it('should support STANDALONEMONTH in format (`LLLL`)', inject(function($locale) {
+    it('should support STANDALONEMONTH in format (`LLLL`)', angular.mock.inject(function($locale) {
       var standAloneMonth = $locale.DATETIME_FORMATS.STANDALONEMONTH;
       var september = standAloneMonth[8];
       var standAloneSeptember = 'StandAlone' + september;
