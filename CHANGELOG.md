@@ -1,3 +1,10 @@
+<a name="2.0.1"></a>
+# 2.0.1
+
+## Bug Fixes
+- Fixed CVE-2025-0716 vulnerability
+
+
 <a name="2.0.0"></a>
 # 2.0.0
 

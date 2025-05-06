@@ -1772,7 +1772,10 @@ function $CompileProvider($provide, $$sanitizeUriProvider) {
 
           nodeName = nodeName_(this.$$element);
 
-          if ((nodeName === 'a' && (key === 'href' || key === 'xlinkHref')) || ((nodeName === 'img' || nodeName === 'source') && key === 'src')) {
+          if (
+            ((nodeName === 'a' || nodeName === 'image') && (key === 'href' || key === 'xlinkHref')) ||
+            ((nodeName === 'img' || nodeName === 'source') && key === 'src')
+          ) {
             // sanitize a[href] and img[src] values
             this[key] = value = (value == null) ? value : $$sanitizeUri(value, key === 'src');
           } else if ((nodeName === 'img' || nodeName === 'source') && key === 'srcset' && isDefined(value)) {
@@ -3328,7 +3331,9 @@ function $CompileProvider($provide, $$sanitizeUriProvider) {
         } else if (attrNormalizedName === 'xlinkHref' ||
             (tag === 'form' && attrNormalizedName === 'action') ||
             // links can be stylesheets or imports, which can run script in the current origin
-            (tag === 'link' && attrNormalizedName === 'href')
+            (tag === 'link' && attrNormalizedName === 'href') ||
+            // SVG image href can be abused (content spoofing)
+            (tag === "image" && attrNormalizedName === 'href')
         ) {
           return $sce.RESOURCE_URL;
         }
