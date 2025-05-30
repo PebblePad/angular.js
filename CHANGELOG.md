@@ -1,3 +1,10 @@
+<a name="2.1.0"></a>
+# 2.1.0
+
+## New Features
+- Added `createWith` method on `$injector`. Allows consumers to manually create instances or get results of factories with dependency arguments, bypassing traditional lookup.
+
+
 <a name="2.0.1"></a>
 # 2.0.1
 
