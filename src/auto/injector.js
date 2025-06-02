@@ -945,19 +945,23 @@ function createInjector(modulesToLoad, strictDi) {
         fn = fn[fn.length - 1];
       }
 
-      if (!isClass(fn)) {
+      return createWith(fn, self, args);
+    }
+
+    function createWith(functionOrClass, context, args) {
+      if (!isClass(functionOrClass)) {
         // http://jsperf.com/angularjs-invoke-apply-vs-switch
         // #5388
-        return fn.apply(self, args);
-      } else {
-        args.unshift(null);
-        compilationBindings.current = self;
-
-        var instance = new (Function.prototype.bind.apply(fn, args))();
-        compilationBindings.current = null;
-
-        return instance;
+        return functionOrClass.apply(context, args);
       }
+
+      args.unshift(null);
+      compilationBindings.current = context;
+
+      var instance = new (Function.prototype.bind.apply(functionOrClass, args))();
+      compilationBindings.current = null;
+
+      return instance;
     }
 
 
@@ -973,6 +977,7 @@ function createInjector(modulesToLoad, strictDi) {
 
 
     return {
+      createWith: createWith,
       invoke: invoke,
       instantiate: instantiate,
       get: getService,
