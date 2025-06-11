@@ -1,8 +1,8 @@
 {
   "name": "angularjs",
   "license": "MIT",
-  "version": "2.1.0",
-  "distTag": "2.1.0",
+  "version": "2.1.1",
+  "distTag": "2.1.1",
   "type": "module",
   "repository": {
     "type": "git",
