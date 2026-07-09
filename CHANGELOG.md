@@ -1,3 +1,11 @@
+<a name="2.1.2"></a>
+# 2.1.2
+
+## Bug Fixes
+-  Fix CVE-2026-11998
+   - Note: Regex based trusted resource config values for urls can still be vulnerable to ReDoS based attacks. Protection for that though must be provided by consumer, via ReDoS safe Regex which conform with AngularJS documented warnings.
+
+
 <a name="2.1.1"></a>
 # 2.1.1
 
