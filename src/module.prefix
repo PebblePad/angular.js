@@ -3,4 +3,5 @@
  * (c) 2010-2020 Google LLC. http://angularjs.org
  * License: MIT
  */
-(function(window, angular) {
+((window, angular) => {
+

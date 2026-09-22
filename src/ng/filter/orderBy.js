@@ -614,7 +614,8 @@ function orderByFilter($parse) {
 
   function processPredicates(sortPredicates) {
     return sortPredicates.map(function(predicate) {
-      var descending = 1, get = identity;
+      var descending = 1;
+      var get = identity;
 
       if (isFunction(predicate)) {
         get = predicate;

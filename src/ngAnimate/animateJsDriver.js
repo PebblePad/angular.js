@@ -10,7 +10,7 @@ var $$AnimateJsDriverProvider = ['$$animationProvider', /** @this */ function($$
         if (!fromAnimation && !toAnimation) return;
 
         return {
-          start: function() {
+          start() {
             var animationRunners = [];
 
             if (fromAnimation) {

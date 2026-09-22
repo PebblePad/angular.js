@@ -13,7 +13,7 @@
  */
 var htmlAnchorDirective = valueFn({
   restrict: 'E',
-  compile: function(element, attr) {
+  compile(element, attr) {
     if (!attr.href && !attr.xlinkHref) {
       return function(scope, element) {
         // If the linked element is not an anchor tag anymore, do nothing

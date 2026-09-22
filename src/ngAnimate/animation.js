@@ -30,7 +30,8 @@ var $$AnimationProvider = ['$animateProvider', /** @this */ function($animatePro
 
     function sortAnimations(animations) {
       var tree = { children: [] };
-      var i, lookup = new $$Map();
+      var i;
+      var lookup = new $$Map();
 
       // this is done first beforehand so that the map
       // is filled with a list of the elements that will be animated
@@ -114,15 +115,15 @@ var $$AnimationProvider = ['$animateProvider', /** @this */ function($animatePro
     // TODO(matsko): document the signature in a better way
     return function(element, event, options) {
       options = prepareAnimationOptions(options);
-      var isStructural = ['enter', 'move', 'leave'].indexOf(event) >= 0;
+      var isStructural = ['enter', 'move', 'leave'].includes(event);
 
       // there is no animation at the current moment, however
       // these runner methods will get later updated with the
       // methods leading into the driver's end/cancel methods
       // for now they just stop the animation from starting
       var runner = new $$AnimateRunner({
-        end: function() { close(); },
-        cancel: function() { close(true); }
+        end() { close(); },
+        cancel() { close(true); }
       });
 
       if (!drivers.length) {
@@ -192,7 +193,8 @@ var $$AnimationProvider = ['$animateProvider', /** @this */ function($animatePro
             element: element,
             domNode: getDomNode(element),
             fn: function triggerAnimationStart() {
-              var startAnimationFn, closeFn = animationEntry.close;
+              var startAnimationFn;
+              var closeFn = animationEntry.close;
 
               // in the event that we've cached the animation status for this element
               // and it's in fact an invalid animation (something that has duration = 0)
@@ -289,7 +291,7 @@ var $$AnimationProvider = ['$animateProvider', /** @this */ function($animatePro
           var element = animation.element;
           var node = getDomNode(element);
           var event = animation.event;
-          var enterOrMove = ['enter', 'move'].indexOf(event) >= 0;
+          var enterOrMove = ['enter', 'move'].includes(event);
           var anchorNodes = animation.structural ? getAnchorNodes(node) : [];
 
           if (anchorNodes.length) {
@@ -332,11 +334,11 @@ var $$AnimationProvider = ['$animateProvider', /** @this */ function($animatePro
           if (!anchorGroups[lookupKey]) {
             var group = anchorGroups[lookupKey] = {
               structural: true,
-              beforeStart: function() {
+              beforeStart() {
                 fromAnimation.beforeStart();
                 toAnimation.beforeStart();
               },
-              close: function() {
+              close() {
                 fromAnimation.close();
                 toAnimation.close();
               },

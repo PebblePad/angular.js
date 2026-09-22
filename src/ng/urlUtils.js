@@ -80,7 +80,7 @@ function urlResolve(url) {
 
   var hostname = urlParsingNode.hostname;
 
-  if (!ipv6InBrackets && hostname.indexOf(':') > -1) {
+  if (!ipv6InBrackets && hostname.includes(':')) {
     hostname = '[' + hostname + ']';
   }
 

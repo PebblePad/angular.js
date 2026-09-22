@@ -246,7 +246,7 @@ var ngRefDirective = ['$parse', function($parse) {
   return {
     priority: -1, // Needed for compatibility with element transclusion on the same element
     restrict: 'A',
-    compile: function(tElement, tAttrs) {
+    compile(tElement, tAttrs) {
       // Get the expected controller name, converts <data-some-thing> into "someThing"
       var controllerName = directiveNormalize(nodeName_(tElement));
 

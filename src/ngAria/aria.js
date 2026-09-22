@@ -67,7 +67,7 @@ var ngAriaModule = angular.module('ngAria', ['ng']).
 var nativeAriaNodeNames = ['BUTTON', 'A', 'INPUT', 'TEXTAREA', 'SELECT', 'DETAILS', 'SUMMARY'];
 
 var isNodeOneOf = function(elem, nodeTypeArray) {
-  if (nodeTypeArray.indexOf(elem[0].nodeName) !== -1) {
+  if (nodeTypeArray.includes(elem[0].nodeName)) {
     return true;
   }
 };
@@ -201,7 +201,7 @@ function $AriaProvider() {
    */
   this.$get = function() {
     return {
-      config: function(key) {
+      config(key) {
         return config[key];
       },
       $$watchExpr: watchExpr
@@ -245,8 +245,8 @@ ngAriaModule.directive('ngShow', ['$aria', function($aria) {
   }
 
   function getShape(attr, elem) {
-    var type = attr.type,
-        role = attr.role;
+    var type = attr.type;
+    var role = attr.role;
 
     return ((type || role) === 'checkbox' || role === 'menuitemcheckbox') ? 'checkbox' :
            ((type || role) === 'radio'    || role === 'menuitemradio') ? 'radio' :
@@ -257,13 +257,13 @@ ngAriaModule.directive('ngShow', ['$aria', function($aria) {
     restrict: 'A',
     require: 'ngModel',
     priority: 200, //Make sure watches are fired after any other directives that affect the ngModel value
-    compile: function(elem, attr) {
+    compile(elem, attr) {
       if (attr.hasOwnProperty(ARIA_DISABLE_ATTR)) return;
 
       var shape = getShape(attr, elem);
 
       return {
-        post: function(scope, elem, attr, ngModel) {
+        post(scope, elem, attr, ngModel) {
           var needsTabIndex = shouldAttachAttr('tabindex', 'tabindex', elem, false);
 
           function ngAriaWatchModelValue() {
@@ -355,7 +355,7 @@ ngAriaModule.directive('ngShow', ['$aria', function($aria) {
   return {
     restrict: 'A',
     require: '?ngMessages',
-    link: function(scope, elem, attr, ngMessages) {
+    link(scope, elem, attr, ngMessages) {
       if (attr.hasOwnProperty(ARIA_DISABLE_ATTR)) return;
 
       if (!elem.attr('aria-live')) {
@@ -367,7 +367,7 @@ ngAriaModule.directive('ngShow', ['$aria', function($aria) {
 .directive('ngClick',['$aria', '$parse', function($aria, $parse) {
   return {
     restrict: 'A',
-    compile: function(elem, attr) {
+    compile(elem, attr) {
       if (attr.hasOwnProperty(ARIA_DISABLE_ATTR)) return;
 
       var fn = $parse(attr.ngClick);
@@ -389,7 +389,7 @@ ngAriaModule.directive('ngShow', ['$aria', function($aria) {
 
               if (keyCode === 13 || keyCode === 32) {
                 // If the event is triggered on a non-interactive element ...
-                if (nativeAriaNodeNames.indexOf(event.target.nodeName) === -1 && !event.target.isContentEditable) {
+                if (!nativeAriaNodeNames.includes(event.target.nodeName) && !event.target.isContentEditable) {
                   // ... prevent the default browser behavior (e.g. scrolling when pressing spacebar)
                   // See https://github.com/angular/angular.js/issues/16664
                   event.preventDefault();

@@ -37,10 +37,10 @@ var scriptDirective = ['$templateCache', function($templateCache) {
   return {
     restrict: 'E',
     terminal: true,
-    compile: function(element, attr) {
+    compile(element, attr) {
       if (attr.type === 'text/ng-template') {
-        var templateUrl = attr.id,
-            text = element[0].text;
+        var templateUrl = attr.id;
+        var text = element[0].text;
 
         $templateCache.put(templateUrl, text);
       }

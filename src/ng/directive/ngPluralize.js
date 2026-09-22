@@ -176,21 +176,24 @@
     </example>
  */
 var ngPluralizeDirective = ['$locale', '$interpolate', '$log', function($locale, $interpolate, $log) {
-  var BRACE = /{}/g,
-      IS_WHEN = /^when(Minus)?(.+)$/;
+  var BRACE = /{}/g;
+  var IS_WHEN = /^when(Minus)?(.+)$/;
 
   return {
-    link: function(scope, element, attr) {
-      var numberExp = attr.count,
-          whenExp = attr.$attr.when && element.attr(attr.$attr.when), // we have {{}} in attrs
-          offset = attr.offset || 0,
-          whens = scope.$eval(whenExp) || {},
-          whensExpFns = {},
-          startSymbol = $interpolate.startSymbol(),
-          endSymbol = $interpolate.endSymbol(),
-          braceReplacement = startSymbol + numberExp + '-' + offset + endSymbol,
-          watchRemover = angular.noop,
-          lastCount;
+    link(scope, element, attr) {
+      var numberExp = attr.count;
+
+      var // we have {{}} in attrs
+      whenExp = attr.$attr.when && element.attr(attr.$attr.when);
+
+      var offset = attr.offset || 0;
+      var whens = scope.$eval(whenExp) || {};
+      var whensExpFns = {};
+      var startSymbol = $interpolate.startSymbol();
+      var endSymbol = $interpolate.endSymbol();
+      var braceReplacement = startSymbol + numberExp + '-' + offset + endSymbol;
+      var watchRemover = angular.noop;
+      var lastCount;
 
       forEach(attr, function(expression, attributeName) {
         var tmpMatch = IS_WHEN.exec(attributeName);

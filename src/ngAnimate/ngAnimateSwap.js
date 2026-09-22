@@ -94,8 +94,9 @@ var ngAnimateSwapDirective = ['$animate', function($animate) {
     terminal: true,
     priority: 550, // We use 550 here to ensure that the directive is caught before others,
                    // but after `ngIf` (at priority 600).
-    link: function(scope, $element, attrs, ctrl, $transclude) {
-      var previousElement, previousScope;
+    link(scope, $element, attrs, ctrl, $transclude) {
+      var previousElement;
+      var previousScope;
       scope.$watchCollection(attrs.ngAnimateSwap || attrs['for'], function(value) {
         if (previousElement) {
           $animate.leave(previousElement);

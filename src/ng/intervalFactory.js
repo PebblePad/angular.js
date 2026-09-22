@@ -6,12 +6,12 @@ function $$IntervalFactoryProvider() {
        function($browser,   $q,   $$q,   $rootScope) {
     return function intervalFactory(setIntervalFn, clearIntervalFn) {
       return function intervalFn(fn, delay, count, invokeApply) {
-        var hasParams = arguments.length > 4,
-            args = hasParams ? sliceArgs(arguments, 4) : [],
-            iteration = 0,
-            skipApply = isDefined(invokeApply) && !invokeApply,
-            deferred = (skipApply ? $$q : $q).defer(),
-            promise = deferred.promise;
+        var hasParams = arguments.length > 4;
+        var args = hasParams ? sliceArgs(arguments, 4) : [];
+        var iteration = 0;
+        var skipApply = isDefined(invokeApply) && !invokeApply;
+        var deferred = (skipApply ? $$q : $q).defer();
+        var promise = deferred.promise;
 
         count = isDefined(count) ? count : 0;
 
@@ -19,7 +19,7 @@ function $$IntervalFactoryProvider() {
           if (!hasParams) {
             fn(iteration);
           } else {
-            fn.apply(null, args);
+            fn(...args);
           }
         }
 

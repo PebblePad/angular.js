@@ -317,7 +317,7 @@ function qFactory(nextTick, exceptionHandler, errorOnUnhandledRejections) {
   }
 
   extend(Promise.prototype, {
-    then: function(onFulfilled, onRejected, progressBack) {
+    then(onFulfilled, onRejected, progressBack) {
       if (isUndefined(onFulfilled) && isUndefined(onRejected) && isUndefined(progressBack)) {
         return this;
       }
@@ -344,7 +344,9 @@ function qFactory(nextTick, exceptionHandler, errorOnUnhandledRejections) {
   });
 
   function processQueue(state) {
-    var fn, promise, pending;
+    var fn;
+    var promise;
+    var pending;
 
     pending = state.pending;
     state.processScheduled = false;
@@ -468,7 +470,8 @@ function qFactory(nextTick, exceptionHandler, errorOnUnhandledRejections) {
 
     if ((promise.$$state.status <= 0) && callbacks && callbacks.length) {
       nextTick(function() {
-        var callback, result;
+        var callback;
+        var result;
         for (var i = 0, ii = callbacks.length; i < ii; i++) {
           result = callbacks[i][0];
           callback = callbacks[i][3];
@@ -597,9 +600,9 @@ function qFactory(nextTick, exceptionHandler, errorOnUnhandledRejections) {
    */
 
   function all(promises) {
-    var result = new Promise(),
-        counter = 0,
-        results = isArray(promises) ? [] : {};
+    var result = new Promise();
+    var counter = 0;
+    var results = isArray(promises) ? [] : {};
 
     forEach(promises, function(promise, key) {
       counter++;

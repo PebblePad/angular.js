@@ -39,7 +39,8 @@ var $CoreAnimateCssProvider = function() {
         options.from = null;
       }
 
-      var closed, runner = new $$AnimateRunner();
+      var closed;
+      var runner = new $$AnimateRunner();
       return {
         start: run,
         end: run

@@ -12,9 +12,10 @@ var nullFormCtrl = {
   $setPristine: noop,
   $setSubmitted: noop,
   $$setSubmitted: noop
-},
-PENDING_CLASS = 'ng-pending',
-SUBMITTED_CLASS = 'ng-submitted';
+};
+
+var PENDING_CLASS = 'ng-pending';
+var SUBMITTED_CLASS = 'ng-submitted';
 
 function nullFormRenameControl(control, name) {
   control.$name = name;
@@ -103,7 +104,7 @@ FormController.prototype = {
    * event defined in `ng-model-options`. This method is typically needed by the reset button of
    * a form that uses `ng-model-options` to pend updates.
    */
-  $rollbackViewValue: function() {
+  $rollbackViewValue() {
     forEach(this.$$controls, function(control) {
       control.$rollbackViewValue();
     });
@@ -120,7 +121,7 @@ FormController.prototype = {
    * event defined in `ng-model-options`. This method is rarely needed as `NgModelController`
    * usually handles calling this in response to input events.
    */
-  $commitViewValue: function() {
+  $commitViewValue() {
     forEach(this.$$controls, function(control) {
       control.$commitViewValue();
     });
@@ -147,7 +148,7 @@ FormController.prototype = {
    * For example, if an input control is added that is already `$dirty` and has `$error` properties,
    * calling `$setDirty()` and `$validate()` afterwards will propagate the state to the parent form.
    */
-  $addControl: function(control) {
+  $addControl(control) {
     // Breaking change - before, inputs whose name was "hasOwnProperty" were quietly ignored
     // and not added to the scope.  Now we throw an error.
     assertNotHasOwnProperty(control.$name, 'input');
@@ -180,12 +181,12 @@ FormController.prototype = {
    * in the shallow copy. That means you should get a fresh copy from `$getControls()` every time
    * you need access to the controls.
    */
-  $getControls: function() {
+  $getControls() {
     return shallowCopy(this.$$controls);
   },
 
   // Private API: rename a form control
-  $$renameControl: function(control, newName) {
+  $$renameControl(control, newName) {
     var oldName = control.$name;
 
     if (this[oldName] === control) {
@@ -211,7 +212,7 @@ FormController.prototype = {
    * different from case to case. For example, removing the only `$dirty` control from a form may or
    * may not mean that the form is still `$dirty`.
    */
-  $removeControl: function(control) {
+  $removeControl(control) {
     if (control.$name && this[control.$name] === control) {
       delete this[control.$name];
     }
@@ -242,7 +243,7 @@ FormController.prototype = {
    * This method can be called to add the 'ng-dirty' class and set the form to a dirty
    * state (ng-dirty class). This method will also propagate to parent forms.
    */
-  $setDirty: function() {
+  $setDirty() {
     this.$$animate.removeClass(this.$$element, PRISTINE_CLASS);
     this.$$animate.addClass(this.$$element, DIRTY_CLASS);
     this.$dirty = true;
@@ -266,7 +267,7 @@ FormController.prototype = {
    * Setting a form back to a pristine state is often useful when we want to 'reuse' a form after
    * saving or resetting it.
    */
-  $setPristine: function() {
+  $setPristine() {
     this.$$animate.setClass(this.$$element, PRISTINE_CLASS, DIRTY_CLASS + ' ' + SUBMITTED_CLASS);
     this.$dirty = false;
     this.$pristine = true;
@@ -289,7 +290,7 @@ FormController.prototype = {
    * Setting a form controls back to their untouched state is often useful when setting the form
    * back to its pristine state.
    */
-  $setUntouched: function() {
+  $setUntouched() {
     forEach(this.$$controls, function(control) {
       control.$setUntouched();
     });
@@ -303,7 +304,7 @@ FormController.prototype = {
    * Sets the form to its `$submitted` state. This will also set `$submitted` on all child and
    * parent forms of the form.
    */
-  $setSubmitted: function() {
+  $setSubmitted() {
     var rootForm = this;
     while (rootForm.$$parentForm && (rootForm.$$parentForm !== nullFormCtrl)) {
       rootForm = rootForm.$$parentForm;
@@ -311,7 +312,7 @@ FormController.prototype = {
     rootForm.$$setSubmitted();
   },
 
-  $$setSubmitted: function() {
+  $$setSubmitted() {
     this.$$animate.addClass(this.$$element, SUBMITTED_CLASS);
     this.$submitted = true;
     forEach(this.$$controls, function(control) {
@@ -348,7 +349,7 @@ FormController.prototype = {
  */
 addSetValidityMethod({
   clazz: FormController,
-  set: function(object, property, controller) {
+  set(object, property, controller) {
     var list = object[property];
     if (!list) {
       object[property] = [controller];
@@ -359,7 +360,7 @@ addSetValidityMethod({
       }
     }
   },
-  unset: function(object, property, controller) {
+  unset(object, property, controller) {
     var list = object[property];
     if (!list) {
       return;
@@ -395,147 +396,147 @@ addSetValidityMethod({
  *
  */
 
- /**
- * @ngdoc directive
- * @name form
- * @restrict E
- *
- * @description
- * Directive that instantiates
- * {@link form.FormController FormController}.
- *
- * If the `name` attribute is specified, the form controller is published onto the current scope under
- * this name.
- *
- * ## Alias: {@link ng.directive:ngForm `ngForm`}
- *
- * In AngularJS, forms can be nested. This means that the outer form is valid when all of the child
- * forms are valid as well. However, browsers do not allow nesting of `<form>` elements, so
- * AngularJS provides the {@link ng.directive:ngForm `ngForm`} directive, which behaves identically to
- * `form` but can be nested. Nested forms can be useful, for example, if the validity of a sub-group
- * of controls needs to be determined.
- *
- * ## CSS classes
- *  - `ng-valid` is set if the form is valid.
- *  - `ng-invalid` is set if the form is invalid.
- *  - `ng-pending` is set if the form is pending.
- *  - `ng-pristine` is set if the form is pristine.
- *  - `ng-dirty` is set if the form is dirty.
- *  - `ng-submitted` is set if the form was submitted.
- *
- * Keep in mind that ngAnimate can detect each of these classes when added and removed.
- *
- *
- * ## Submitting a form and preventing the default action
- *
- * Since the role of forms in client-side AngularJS applications is different than in classical
- * roundtrip apps, it is desirable for the browser not to translate the form submission into a full
- * page reload that sends the data to the server. Instead some javascript logic should be triggered
- * to handle the form submission in an application-specific way.
- *
- * For this reason, AngularJS prevents the default action (form submission to the server) unless the
- * `<form>` element has an `action` attribute specified.
- *
- * You can use one of the following two ways to specify what javascript method should be called when
- * a form is submitted:
- *
- * - {@link ng.directive:ngSubmit ngSubmit} directive on the form element
- * - {@link ng.directive:ngClick ngClick} directive on the first
-  *  button or input field of type submit (input[type=submit])
- *
- * To prevent double execution of the handler, use only one of the {@link ng.directive:ngSubmit ngSubmit}
- * or {@link ng.directive:ngClick ngClick} directives.
- * This is because of the following form submission rules in the HTML specification:
- *
- * - If a form has only one input field then hitting enter in this field triggers form submit
- * (`ngSubmit`)
- * - if a form has 2+ input fields and no buttons or input[type=submit] then hitting enter
- * doesn't trigger submit
- * - if a form has one or more input fields and one or more buttons or input[type=submit] then
- * hitting enter in any of the input fields will trigger the click handler on the *first* button or
- * input[type=submit] (`ngClick`) *and* a submit handler on the enclosing form (`ngSubmit`)
- *
- * Any pending `ngModelOptions` changes will take place immediately when an enclosing form is
- * submitted. Note that `ngClick` events will occur before the model is updated. Use `ngSubmit`
- * to have access to the updated model.
- *
- * @animations
- * Animations in ngForm are triggered when any of the associated CSS classes are added and removed.
- * These classes are: `.ng-pristine`, `.ng-dirty`, `.ng-invalid` and `.ng-valid` as well as any
- * other validations that are performed within the form. Animations in ngForm are similar to how
- * they work in ngClass and animations can be hooked into using CSS transitions, keyframes as well
- * as JS animations.
- *
- * The following example shows a simple way to utilize CSS transitions to style a form element
- * that has been rendered as invalid after it has been validated:
- *
- * <pre>
- * //be sure to include ngAnimate as a module to hook into more
- * //advanced animations
- * .my-form {
- *   transition:0.5s linear all;
- *   background: white;
- * }
- * .my-form.ng-invalid {
- *   background: red;
- *   color:white;
- * }
- * </pre>
- *
- * @example
-    <example name="ng-form" deps="angular-animate.js" animations="true" fixBase="true" module="formExample">
-      <file name="index.html">
-       <script>
-         angular.module('formExample', [])
-           .controller('FormController', ['$scope', function($scope) {
-             $scope.userType = 'guest';
-           }]);
-       </script>
-       <style>
-        .my-form {
-          transition:all linear 0.5s;
-          background: transparent;
-        }
-        .my-form.ng-invalid {
-          background: red;
-        }
-       </style>
-       <form name="myForm" ng-controller="FormController" class="my-form">
-         userType: <input name="input" ng-model="userType" required>
-         <span class="error" ng-show="myForm.input.$error.required">Required!</span><br>
-         <code>userType = {{userType}}</code><br>
-         <code>myForm.input.$valid = {{myForm.input.$valid}}</code><br>
-         <code>myForm.input.$error = {{myForm.input.$error}}</code><br>
-         <code>myForm.$valid = {{myForm.$valid}}</code><br>
-         <code>myForm.$error.required = {{!!myForm.$error.required}}</code><br>
-        </form>
-      </file>
-      <file name="protractor.js" type="protractor">
-        it('should initialize to model', function() {
-          var userType = element(by.binding('userType'));
-          var valid = element(by.binding('myForm.input.$valid'));
+/**
+* @ngdoc directive
+* @name form
+* @restrict E
+*
+* @description
+* Directive that instantiates
+* {@link form.FormController FormController}.
+*
+* If the `name` attribute is specified, the form controller is published onto the current scope under
+* this name.
+*
+* ## Alias: {@link ng.directive:ngForm `ngForm`}
+*
+* In AngularJS, forms can be nested. This means that the outer form is valid when all of the child
+* forms are valid as well. However, browsers do not allow nesting of `<form>` elements, so
+* AngularJS provides the {@link ng.directive:ngForm `ngForm`} directive, which behaves identically to
+* `form` but can be nested. Nested forms can be useful, for example, if the validity of a sub-group
+* of controls needs to be determined.
+*
+* ## CSS classes
+*  - `ng-valid` is set if the form is valid.
+*  - `ng-invalid` is set if the form is invalid.
+*  - `ng-pending` is set if the form is pending.
+*  - `ng-pristine` is set if the form is pristine.
+*  - `ng-dirty` is set if the form is dirty.
+*  - `ng-submitted` is set if the form was submitted.
+*
+* Keep in mind that ngAnimate can detect each of these classes when added and removed.
+*
+*
+* ## Submitting a form and preventing the default action
+*
+* Since the role of forms in client-side AngularJS applications is different than in classical
+* roundtrip apps, it is desirable for the browser not to translate the form submission into a full
+* page reload that sends the data to the server. Instead some javascript logic should be triggered
+* to handle the form submission in an application-specific way.
+*
+* For this reason, AngularJS prevents the default action (form submission to the server) unless the
+* `<form>` element has an `action` attribute specified.
+*
+* You can use one of the following two ways to specify what javascript method should be called when
+* a form is submitted:
+*
+* - {@link ng.directive:ngSubmit ngSubmit} directive on the form element
+* - {@link ng.directive:ngClick ngClick} directive on the first
+ *  button or input field of type submit (input[type=submit])
+*
+* To prevent double execution of the handler, use only one of the {@link ng.directive:ngSubmit ngSubmit}
+* or {@link ng.directive:ngClick ngClick} directives.
+* This is because of the following form submission rules in the HTML specification:
+*
+* - If a form has only one input field then hitting enter in this field triggers form submit
+* (`ngSubmit`)
+* - if a form has 2+ input fields and no buttons or input[type=submit] then hitting enter
+* doesn't trigger submit
+* - if a form has one or more input fields and one or more buttons or input[type=submit] then
+* hitting enter in any of the input fields will trigger the click handler on the *first* button or
+* input[type=submit] (`ngClick`) *and* a submit handler on the enclosing form (`ngSubmit`)
+*
+* Any pending `ngModelOptions` changes will take place immediately when an enclosing form is
+* submitted. Note that `ngClick` events will occur before the model is updated. Use `ngSubmit`
+* to have access to the updated model.
+*
+* @animations
+* Animations in ngForm are triggered when any of the associated CSS classes are added and removed.
+* These classes are: `.ng-pristine`, `.ng-dirty`, `.ng-invalid` and `.ng-valid` as well as any
+* other validations that are performed within the form. Animations in ngForm are similar to how
+* they work in ngClass and animations can be hooked into using CSS transitions, keyframes as well
+* as JS animations.
+*
+* The following example shows a simple way to utilize CSS transitions to style a form element
+* that has been rendered as invalid after it has been validated:
+*
+* <pre>
+* //be sure to include ngAnimate as a module to hook into more
+* //advanced animations
+* .my-form {
+*   transition:0.5s linear all;
+*   background: white;
+* }
+* .my-form.ng-invalid {
+*   background: red;
+*   color:white;
+* }
+* </pre>
+*
+* @example
+   <example name="ng-form" deps="angular-animate.js" animations="true" fixBase="true" module="formExample">
+     <file name="index.html">
+      <script>
+        angular.module('formExample', [])
+          .controller('FormController', ['$scope', function($scope) {
+            $scope.userType = 'guest';
+          }]);
+      </script>
+      <style>
+       .my-form {
+         transition:all linear 0.5s;
+         background: transparent;
+       }
+       .my-form.ng-invalid {
+         background: red;
+       }
+      </style>
+      <form name="myForm" ng-controller="FormController" class="my-form">
+        userType: <input name="input" ng-model="userType" required>
+        <span class="error" ng-show="myForm.input.$error.required">Required!</span><br>
+        <code>userType = {{userType}}</code><br>
+        <code>myForm.input.$valid = {{myForm.input.$valid}}</code><br>
+        <code>myForm.input.$error = {{myForm.input.$error}}</code><br>
+        <code>myForm.$valid = {{myForm.$valid}}</code><br>
+        <code>myForm.$error.required = {{!!myForm.$error.required}}</code><br>
+       </form>
+     </file>
+     <file name="protractor.js" type="protractor">
+       it('should initialize to model', function() {
+         var userType = element(by.binding('userType'));
+         var valid = element(by.binding('myForm.input.$valid'));
 
-          expect(userType.getText()).toContain('guest');
-          expect(valid.getText()).toContain('true');
-        });
+         expect(userType.getText()).toContain('guest');
+         expect(valid.getText()).toContain('true');
+       });
 
-        it('should be invalid if empty', function() {
-          var userType = element(by.binding('userType'));
-          var valid = element(by.binding('myForm.input.$valid'));
-          var userInput = element(by.model('userType'));
+       it('should be invalid if empty', function() {
+         var userType = element(by.binding('userType'));
+         var valid = element(by.binding('myForm.input.$valid'));
+         var userInput = element(by.model('userType'));
 
-          userInput.clear();
-          userInput.sendKeys('');
+         userInput.clear();
+         userInput.sendKeys('');
 
-          expect(userType.getText()).toEqual('userType =');
-          expect(valid.getText()).toContain('false');
-        });
-      </file>
-    </example>
- *
- * @param {string=} name Name of the form. If specified, the form controller will be published into
- *                       related scope, under this name.
- */
+         expect(userType.getText()).toEqual('userType =');
+         expect(valid.getText()).toContain('false');
+       });
+     </file>
+   </example>
+*
+* @param {string=} name Name of the form. If specified, the form controller will be published into
+*                       related scope, under this name.
+*/
 var formDirectiveFactory = function(isNgForm) {
   return ['$timeout', '$parse', function($timeout, $parse) {
     var formDirective = {
@@ -629,9 +630,9 @@ function setupValidity(instance) {
   instance.$$classCache[INVALID_CLASS] = !(instance.$$classCache[VALID_CLASS] = instance.$$element.hasClass(VALID_CLASS));
 }
 function addSetValidityMethod(context) {
-  var clazz = context.clazz,
-      set = context.set,
-      unset = context.unset;
+  var clazz = context.clazz;
+  var set = context.set;
+  var unset = context.unset;
 
   clazz.prototype.$setValidity = function(validationErrorKey, state, controller) {
     if (isUndefined(state)) {

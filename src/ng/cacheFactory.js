@@ -92,13 +92,13 @@ function $CacheFactoryProvider() {
         throw minErr('$cacheFactory')('iid', 'CacheId \'{0}\' is already taken!', cacheId);
       }
 
-      var size = 0,
-          stats = extend({}, options, {id: cacheId}),
-          data = createMap(),
-          capacity = (options && options.capacity) || Number.MAX_VALUE,
-          lruHash = createMap(),
-          freshEnd = null,
-          staleEnd = null;
+      var size = 0;
+      var stats = extend({}, options, {id: cacheId});
+      var data = createMap();
+      var capacity = (options && options.capacity) || Number.MAX_VALUE;
+      var lruHash = createMap();
+      var freshEnd = null;
+      var staleEnd = null;
 
       /**
        * @ngdoc type
@@ -139,7 +139,7 @@ function $CacheFactoryProvider() {
        *  }));
        * ```
        */
-      return (caches[cacheId] = {
+      return caches[cacheId] = {
 
         /**
          * @ngdoc method
@@ -159,7 +159,7 @@ function $CacheFactoryProvider() {
          *    will not be stored.
          * @returns {*} the value stored.
          */
-        put: function(key, value) {
+        put(key, value) {
           if (isUndefined(value)) return;
           if (capacity < Number.MAX_VALUE) {
             var lruEntry = lruHash[key] || (lruHash[key] = {key: key});
@@ -188,7 +188,7 @@ function $CacheFactoryProvider() {
          * @param {string} key the key of the data to be retrieved
          * @returns {*} the value stored.
          */
-        get: function(key) {
+        get(key) {
           if (capacity < Number.MAX_VALUE) {
             var lruEntry = lruHash[key];
 
@@ -211,7 +211,7 @@ function $CacheFactoryProvider() {
          *
          * @param {string} key the key of the entry to be removed
          */
-        remove: function(key) {
+        remove(key) {
           if (capacity < Number.MAX_VALUE) {
             var lruEntry = lruHash[key];
 
@@ -239,7 +239,7 @@ function $CacheFactoryProvider() {
          * @description
          * Clears the cache object of any entries.
          */
-        removeAll: function() {
+        removeAll() {
           data = createMap();
           size = 0;
           lruHash = createMap();
@@ -256,7 +256,7 @@ function $CacheFactoryProvider() {
          * Destroys the {@link $cacheFactory.Cache Cache} object entirely,
          * removing it from the {@link $cacheFactory $cacheFactory} set.
          */
-        destroy: function() {
+        destroy() {
           data = null;
           stats = null;
           lruHash = null;
@@ -280,10 +280,10 @@ function $CacheFactoryProvider() {
          *       cache.</li>
          *   </ul>
          */
-        info: function() {
+        info() {
           return extend({}, stats, {size: size});
         }
-      });
+      };
 
 
       /**

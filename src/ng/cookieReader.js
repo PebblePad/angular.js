@@ -31,7 +31,11 @@ function $$CookieReader($document) {
   }
 
   return function() {
-    var cookieArray, cookie, i, index, name;
+    var cookieArray;
+    var cookie;
+    var i;
+    var index;
+    var name;
     var currentCookieString = safeGetCookie(rawDocument);
 
     if (currentCookieString !== lastCookieString) {

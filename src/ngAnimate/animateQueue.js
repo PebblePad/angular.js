@@ -231,7 +231,7 @@ var $$AnimateQueueProvider = ['$animateProvider', /** @this */ function($animate
     }
 
     var $animate = {
-      on: function(event, container, callback) {
+      on(event, container, callback) {
         var node = extractElementNode(container);
         callbackRegistry[event] = callbackRegistry[event] || [];
         callbackRegistry[event].push({
@@ -252,7 +252,7 @@ var $$AnimateQueueProvider = ['$animateProvider', /** @this */ function($animate
         });
       },
 
-      off: function(event, container, callback) {
+      off(event, container, callback) {
         if (arguments.length === 1 && !isString(arguments[0])) {
           container = arguments[0];
           for (var eventType in callbackRegistry) {
@@ -270,13 +270,13 @@ var $$AnimateQueueProvider = ['$animateProvider', /** @this */ function($animate
             : filterFromRegistry(entries, container, callback);
       },
 
-      pin: function(element, parentElement) {
+      pin(element, parentElement) {
         assertArg(isElement(element), 'element', 'not an element');
         assertArg(isElement(parentElement), 'parentElement', 'not an element');
         element.data(NG_ANIMATE_PIN_DATA, parentElement);
       },
 
-      push: function(element, event, options, domOperation) {
+      push(element, event, options, domOperation) {
         options = options || {};
         options.domOperation = domOperation;
         return queueAnimation(element, event, options);
@@ -287,7 +287,7 @@ var $$AnimateQueueProvider = ['$animateProvider', /** @this */ function($animate
       //  (bool) - global setter
       //  (element) - element getter
       //  (element, bool) - element setter<F37>
-      enabled: function(element, bool) {
+      enabled(element, bool) {
         var argCount = arguments.length;
 
         if (argCount === 0) {
@@ -377,7 +377,7 @@ var $$AnimateQueueProvider = ['$animateProvider', /** @this */ function($animate
         return runner;
       }
 
-      var isStructural = ['enter', 'move', 'leave'].indexOf(event) >= 0;
+      var isStructural = ['enter', 'move', 'leave'].includes(event);
 
       var documentHidden = $$isDocumentHidden();
 

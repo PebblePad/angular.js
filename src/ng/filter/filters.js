@@ -160,8 +160,12 @@ function numberFilter($locale) {
  *
  */
 function parse(numStr) {
-  var exponent = 0, digits, numberOfIntegerDigits;
-  var i, j, zeros;
+  var exponent = 0;
+  var digits;
+  var numberOfIntegerDigits;
+  var i;
+  var j;
+  var zeros;
 
   // Decimal point?
   if ((numberOfIntegerDigits = numStr.indexOf(DECIMAL_SEP)) > -1) {
@@ -290,14 +294,13 @@ function roundNumber(parsedNumber, fractionSize, minFrac, maxFrac) {
  * @return {string}              The number formatted as a string
  */
 function formatNumber(number, pattern, groupSep, decimalSep, fractionSize) {
-
   if (!(isString(number) || isNumber(number)) || isNaN(number)) return '';
 
   var isInfinity = !isFinite(number);
   var isZero = false;
-  var numStr = Math.abs(number) + '',
-      formattedText = '',
-      parsedNumber;
+  var numStr = Math.abs(number) + '';
+  var formattedText = '';
+  var parsedNumber;
 
   if (isInfinity) {
     formattedText = '\u221e';
@@ -422,13 +425,12 @@ function getThursdayThisWeek(datetime) {
 
 function weekGetter(size) {
    return function(date) {
-      var firstThurs = getFirstThursdayOfYear(date.getFullYear()),
-         thisThurs = getThursdayThisWeek(date);
+     var firstThurs = getFirstThursdayOfYear(date.getFullYear());
+     var thisThurs = getThursdayThisWeek(date);
+     var diff = +thisThurs - +firstThurs; // 6.048e8 ms per week
+     var result = 1 + Math.round(diff / 6.048e8);
 
-      var diff = +thisThurs - +firstThurs,
-         result = 1 + Math.round(diff / 6.048e8); // 6.048e8 ms per week
-
-      return padNumber(result, size);
+     return padNumber(result, size);
    };
 }
 
@@ -478,8 +480,8 @@ var DATE_FORMATS = {
      GGGG: longEraGetter
 };
 
-var DATE_FORMATS_SPLIT = /((?:[^yMLdHhmsaZEwG']+)|(?:'(?:[^']|'')*')|(?:E+|y+|M+|L+|d+|H+|h+|m+|s+|a|Z|G+|w+))([\s\S]*)/,
-    NUMBER_STRING = /^-?\d+$/;
+var DATE_FORMATS_SPLIT = /((?:[^yMLdHhmsaZEwG']+)|(?:'(?:[^']|'')*')|(?:E+|y+|M+|L+|d+|H+|h+|m+|s+|a|Z|G+|w+))([\s\S]*)/;
+var NUMBER_STRING = /^-?\d+$/;
 
 /**
  * @ngdoc filter
@@ -586,11 +588,11 @@ function dateFilter($locale) {
   function jsonStringToDate(string) {
     var match;
     if ((match = string.match(R_ISO8601_STR))) {
-      var date = new Date(0),
-          tzHour = 0,
-          tzMin  = 0,
-          dateSetter = match[8] ? date.setUTCFullYear : date.setFullYear,
-          timeSetter = match[8] ? date.setUTCHours : date.setHours;
+      var date = new Date(0);
+      var tzHour = 0;
+      var tzMin  = 0;
+      var dateSetter = match[8] ? date.setUTCFullYear : date.setFullYear;
+      var timeSetter = match[8] ? date.setUTCHours : date.setHours;
 
       if (match[9]) {
         tzHour = toInt(match[9] + match[10]);
@@ -609,9 +611,10 @@ function dateFilter($locale) {
 
 
   return function(date, format, timezone) {
-    var text = '',
-        parts = [],
-        fn, match;
+    var text = '';
+    var parts = [];
+    var fn;
+    var match;
 
     format = format || 'mediumDate';
     format = $locale.DATETIME_FORMATS[format] || format;

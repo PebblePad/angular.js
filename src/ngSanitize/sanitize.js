@@ -322,9 +322,10 @@ function $SanitizeProvider() {
   };
 
   // Regular Expressions for parsing tags and attributes
-  var SURROGATE_PAIR_REGEXP = /[\uD800-\uDBFF][\uDC00-\uDFFF]/g,
-    // Match everything outside of normal chars and " (quote character)
-    NON_ALPHANUMERIC_REGEXP = /([^#-~ |!])/g;
+  var SURROGATE_PAIR_REGEXP = /[\uD800-\uDBFF][\uDC00-\uDFFF]/g;
+
+  var // Match everything outside of normal chars and " (quote character)
+  NON_ALPHANUMERIC_REGEXP = /([^#-~ |!])/g;
 
 
   // Good source of info about elements and attributes
@@ -337,11 +338,13 @@ function $SanitizeProvider() {
 
   // Elements that you can, intentionally, leave open (and which close themselves)
   // http://dev.w3.org/html5/spec/Overview.html#optional-tags
-  var optionalEndTagBlockElements = stringToMap('colgroup,dd,dt,li,p,tbody,td,tfoot,th,thead,tr'),
-      optionalEndTagInlineElements = stringToMap('rp,rt'),
-      optionalEndTagElements = extend({},
-                                              optionalEndTagInlineElements,
-                                              optionalEndTagBlockElements);
+  var optionalEndTagBlockElements = stringToMap('colgroup,dd,dt,li,p,tbody,td,tfoot,th,thead,tr');
+
+  var optionalEndTagInlineElements = stringToMap('rp,rt');
+
+  var optionalEndTagElements = extend({},
+                                          optionalEndTagInlineElements,
+                                          optionalEndTagBlockElements);
 
   // Safe Block Elements - HTML5
   var blockElements = extend({}, optionalEndTagBlockElements, stringToMap('address,article,' +
@@ -407,7 +410,8 @@ function $SanitizeProvider() {
   }
 
   function arrayToMap(items, lowercaseKeys) {
-    var obj = {}, i;
+    var obj = {};
+    var i;
     for (i = 0; i < items.length; i++) {
       obj[lowercaseKeys ? lowercase(items[i]) : items[i]] = true;
     }
@@ -588,7 +592,7 @@ function $SanitizeProvider() {
     var ignoreCurrentElement = false;
     var out = bind(buf, buf.push);
     return {
-      start: function(tag, attrs) {
+      start(tag, attrs) {
         tag = lowercase(tag);
         if (!ignoreCurrentElement && blockedElements[tag]) {
           ignoreCurrentElement = tag;
@@ -611,7 +615,7 @@ function $SanitizeProvider() {
           out('>');
         }
       },
-      end: function(tag) {
+      end(tag) {
         tag = lowercase(tag);
         if (!ignoreCurrentElement && validElements[tag] === true && voidElements[tag] !== true) {
           out('</');
@@ -623,7 +627,7 @@ function $SanitizeProvider() {
           ignoreCurrentElement = false;
         }
       },
-      chars: function(chars) {
+      chars(chars) {
         if (!ignoreCurrentElement) {
           out(encodeEntities(chars));
         }

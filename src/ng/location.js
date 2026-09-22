@@ -1,8 +1,10 @@
 'use strict';
+
 /* global stripHash: true */
 
-var PATH_MATCH = /^([^?#]*)(\?([^#]*))?(#(.*))?$/,
-    DEFAULT_PORTS = {'http': 80, 'https': 443, 'ftp': 21};
+var PATH_MATCH = /^([^?#]*)(\?([^#]*))?(#(.*))?$/;
+
+var DEFAULT_PORTS = {'http': 80, 'https': 443, 'ftp': 21};
 var $locationMinErr = minErr('$location');
 
 
@@ -13,8 +15,8 @@ var $locationMinErr = minErr('$location');
  * @returns {string}
  */
 function encodePath(path) {
-  var segments = path.split('/'),
-      i = segments.length;
+  var segments = path.split('/');
+  var i = segments.length;
 
   while (i--) {
     // decode forward slashes to prevent them from being double encoded
@@ -25,8 +27,8 @@ function encodePath(path) {
 }
 
 function decodePath(path, html5Mode) {
-  var segments = path.split('/'),
-      i = segments.length;
+  var segments = path.split('/');
+  var i = segments.length;
 
   while (i--) {
     segments[i] = decodeURIComponent(segments[i]);
@@ -40,9 +42,9 @@ function decodePath(path, html5Mode) {
 }
 
 function normalizePath(pathValue, searchValue, hashValue) {
-  var search = toKeyValue(searchValue),
-    hash = hashValue ? '#' + encodeUriSegment(hashValue) : '',
-    path = encodePath(pathValue);
+  var search = toKeyValue(searchValue);
+  var hash = hashValue ? '#' + encodeUriSegment(hashValue) : '';
+  var path = encodePath(pathValue);
 
   return path + (search ? '?' + search : '') + hash;
 }
@@ -157,7 +159,8 @@ function LocationHtml5Url(appBase, appBaseNoFile, basePrefix) {
       this.hash(relHref.slice(1));
       return true;
     }
-    var appUrl, prevAppUrl;
+    var appUrl;
+    var prevAppUrl;
     var rewrittenUrl;
 
 
@@ -354,7 +357,7 @@ var locationPrototype = {
    * Compose url and update `url` and `absUrl` property
    * @private
    */
-  $$compose: function() {
+  $$compose() {
     this.$$url = normalizePath(this.$$path, this.$$search, this.$$hash);
     this.$$absUrl = this.$$normalizeUrl(this.$$url);
     this.$$urlUpdatedByLocation = true;
@@ -402,7 +405,7 @@ var locationPrototype = {
    * @param {string=} url New URL without base prefix (e.g. `/path?a=b#hash`)
    * @return {string} url
    */
-  url: function(url) {
+  url(url) {
     if (isUndefined(url)) {
       return this.$$url;
     }
@@ -557,7 +560,7 @@ var locationPrototype = {
    * @return {Object} If called with no arguments returns the parsed `search` object. If called with
    * one or more arguments returns `$location` object itself.
    */
-  search: function(search, paramValue) {
+  search(search, paramValue) {
     switch (arguments.length) {
       case 0:
         return this.$$search;
@@ -623,7 +626,7 @@ var locationPrototype = {
    * If called, all changes to $location during the current `$digest` will replace the current history
    * record, instead of adding a new one.
    */
-  replace: function() {
+  replace() {
     this.$$replace = true;
     return this;
   }
@@ -727,12 +730,13 @@ function locationGetterSetter(property, preprocess) {
  * Use the `$locationProvider` to configure how the application deep linking paths are stored.
  */
 function $LocationProvider() {
-  var hashPrefix = '!',
-      html5Mode = {
-        enabled: false,
-        requireBase: true,
-        rewriteLinks: true
-      };
+  var hashPrefix = '!';
+
+  var html5Mode = {
+    enabled: false,
+    requireBase: true,
+    rewriteLinks: true
+  };
 
   /**
    * @ngdoc method
@@ -839,165 +843,132 @@ function $LocationProvider() {
 
   this.$get = ['$rootScope', '$browser', '$sniffer', '$rootElement', '$window',
       function($rootScope, $browser, $sniffer, $rootElement, $window) {
-    var $location,
-        LocationMode,
-        baseHref = $browser.baseHref(), // if base[href] is undefined, it defaults to ''
-        initialUrl = $browser.url(),
-        appBase;
+        var $location;
+        var LocationMode;
 
-    if (html5Mode.enabled) {
-      if (!baseHref && html5Mode.requireBase) {
-        throw $locationMinErr('nobase',
-          '$location in HTML5 mode requires a <base> tag to be present!');
-      }
-      appBase = serverBase(initialUrl) + (baseHref || '/');
-      LocationMode = $sniffer.history ? LocationHtml5Url : LocationHashbangInHtml5Url;
-    } else {
-      appBase = stripHash(initialUrl);
-      LocationMode = LocationHashbangUrl;
-    }
-    var appBaseNoFile = stripFile(appBase);
+        var // if base[href] is undefined, it defaults to ''
+        baseHref = $browser.baseHref();
 
-    $location = new LocationMode(appBase, appBaseNoFile, '#' + hashPrefix);
-    $location.$$parseLinkUrl(initialUrl, initialUrl);
+        var initialUrl = $browser.url();
+        var appBase;
 
-    $location.$$state = $browser.state();
+        if (html5Mode.enabled) {
+          if (!baseHref && html5Mode.requireBase) {
+            throw $locationMinErr('nobase',
+              '$location in HTML5 mode requires a <base> tag to be present!');
+          }
+          appBase = serverBase(initialUrl) + (baseHref || '/');
+          LocationMode = $sniffer.history ? LocationHtml5Url : LocationHashbangInHtml5Url;
+        } else {
+          appBase = stripHash(initialUrl);
+          LocationMode = LocationHashbangUrl;
+        }
+        var appBaseNoFile = stripFile(appBase);
 
-    var IGNORE_URI_REGEXP = /^\s*(javascript|mailto):/i;
+        $location = new LocationMode(appBase, appBaseNoFile, '#' + hashPrefix);
+        $location.$$parseLinkUrl(initialUrl, initialUrl);
 
-    // Determine if two URLs are equal despite potentially having different encoding/normalizing
-    //  such as $location.absUrl() vs $browser.url()
-    // See https://github.com/angular/angular.js/issues/16592
-    function urlsEqual(a, b) {
-      return a === b || urlResolve(a).href === urlResolve(b).href;
-    }
-
-    function setBrowserUrlWithFallback(url, replace, state) {
-      var oldUrl = $location.url();
-      var oldState = $location.$$state;
-      try {
-        $browser.url(url, replace, state);
-
-        // Make sure $location.state() returns referentially identical (not just deeply equal)
-        // state object; this makes possible quick checking if the state changed in the digest
-        // loop. Checking deep equality would be too expensive.
         $location.$$state = $browser.state();
-      } catch (e) {
-        // Restore old values if pushState fails
-        $location.url(oldUrl);
-        $location.$$state = oldState;
 
-        throw e;
-      }
-    }
+        var IGNORE_URI_REGEXP = /^\s*(javascript|mailto):/i;
 
-    $rootElement.on('click', function(event) {
-      var rewriteLinks = html5Mode.rewriteLinks;
-      // TODO(vojta): rewrite link when opening in new tab/window (in legacy browser)
-      // currently we open nice url link and redirect then
+        // Determine if two URLs are equal despite potentially having different encoding/normalizing
+        //  such as $location.absUrl() vs $browser.url()
+        // See https://github.com/angular/angular.js/issues/16592
+        function urlsEqual(a, b) {
+          return a === b || urlResolve(a).href === urlResolve(b).href;
+        }
 
-      if (!rewriteLinks || event.ctrlKey || event.metaKey || event.shiftKey || event.which === 2 || event.button === 2) return;
+        function setBrowserUrlWithFallback(url, replace, state) {
+          var oldUrl = $location.url();
+          var oldState = $location.$$state;
+          try {
+            $browser.url(url, replace, state);
 
-      var elm = jqLite(event.target);
+            // Make sure $location.state() returns referentially identical (not just deeply equal)
+            // state object; this makes possible quick checking if the state changed in the digest
+            // loop. Checking deep equality would be too expensive.
+            $location.$$state = $browser.state();
+          } catch (e) {
+            // Restore old values if pushState fails
+            $location.url(oldUrl);
+            $location.$$state = oldState;
 
-      // traverse the DOM up to find first A tag
-      while (nodeName_(elm[0]) !== 'a') {
-        // ignore rewriting if no A tag (reached root element, or no parent - removed from document)
-        if (elm[0] === $rootElement[0] || !(elm = elm.parent())[0]) return;
-      }
-
-      if (isString(rewriteLinks) && isUndefined(elm.attr(rewriteLinks))) return;
-
-      var absHref = elm.prop('href');
-      // get the actual href attribute - see
-      // http://msdn.microsoft.com/en-us/library/ie/dd347148(v=vs.85).aspx
-      var relHref = elm.attr('href') || elm.attr('xlink:href');
-
-      if (isObject(absHref) && absHref.toString() === '[object SVGAnimatedString]') {
-        // SVGAnimatedString.animVal should be identical to SVGAnimatedString.baseVal, unless during
-        // an animation.
-        absHref = urlResolve(absHref.animVal).href;
-      }
-
-      // Ignore when url is started with javascript: or mailto:
-      if (IGNORE_URI_REGEXP.test(absHref)) return;
-
-      if (absHref && !elm.attr('target') && !event.isDefaultPrevented()) {
-        if ($location.$$parseLinkUrl(absHref, relHref)) {
-          // We do a preventDefault for all urls that are part of the AngularJS application,
-          // in html5mode and also without, so that we are able to abort navigation without
-          // getting double entries in the location history.
-          event.preventDefault();
-          // update location manually
-          if ($location.absUrl() !== $browser.url()) {
-            $rootScope.$apply();
+            throw e;
           }
         }
-      }
-    });
+
+        $rootElement.on('click', function(event) {
+          var rewriteLinks = html5Mode.rewriteLinks;
+          // TODO(vojta): rewrite link when opening in new tab/window (in legacy browser)
+          // currently we open nice url link and redirect then
+
+          if (!rewriteLinks || event.ctrlKey || event.metaKey || event.shiftKey || event.which === 2 || event.button === 2) return;
+
+          var elm = jqLite(event.target);
+
+          // traverse the DOM up to find first A tag
+          while (nodeName_(elm[0]) !== 'a') {
+            // ignore rewriting if no A tag (reached root element, or no parent - removed from document)
+            if (elm[0] === $rootElement[0] || !(elm = elm.parent())[0]) return;
+          }
+
+          if (isString(rewriteLinks) && isUndefined(elm.attr(rewriteLinks))) return;
+
+          var absHref = elm.prop('href');
+          // get the actual href attribute - see
+          // http://msdn.microsoft.com/en-us/library/ie/dd347148(v=vs.85).aspx
+          var relHref = elm.attr('href') || elm.attr('xlink:href');
+
+          if (isObject(absHref) && absHref.toString() === '[object SVGAnimatedString]') {
+            // SVGAnimatedString.animVal should be identical to SVGAnimatedString.baseVal, unless during
+            // an animation.
+            absHref = urlResolve(absHref.animVal).href;
+          }
+
+          // Ignore when url is started with javascript: or mailto:
+          if (IGNORE_URI_REGEXP.test(absHref)) return;
+
+          if (absHref && !elm.attr('target') && !event.isDefaultPrevented()) {
+            if ($location.$$parseLinkUrl(absHref, relHref)) {
+              // We do a preventDefault for all urls that are part of the AngularJS application,
+              // in html5mode and also without, so that we are able to abort navigation without
+              // getting double entries in the location history.
+              event.preventDefault();
+              // update location manually
+              if ($location.absUrl() !== $browser.url()) {
+                $rootScope.$apply();
+              }
+            }
+          }
+        });
 
 
-    // rewrite hashbang url <> html5 url
-    if ($location.absUrl() !== initialUrl) {
-      $browser.url($location.absUrl(), true);
-    }
-
-    var initializing = true;
-
-    // update $location when $browser url changes
-    $browser.onUrlChange(function(newUrl, newState) {
-
-      if (!startsWith(newUrl, appBaseNoFile)) {
-        // If we are navigating outside of the app then force a reload
-        $window.location.href = newUrl;
-        return;
-      }
-
-      $rootScope.$evalAsync(function() {
-        var oldUrl = $location.absUrl();
-        var oldState = $location.$$state;
-        var defaultPrevented;
-        $location.$$parse(newUrl);
-        $location.$$state = newState;
-
-        defaultPrevented = $rootScope.$broadcast('$locationChangeStart', newUrl, oldUrl,
-            newState, oldState).defaultPrevented;
-
-        // if the location was changed by a `$locationChangeStart` handler then stop
-        // processing this location change
-        if ($location.absUrl() !== newUrl) return;
-
-        if (defaultPrevented) {
-          $location.$$parse(oldUrl);
-          $location.$$state = oldState;
-          setBrowserUrlWithFallback(oldUrl, false, oldState);
-        } else {
-          initializing = false;
-          afterLocationChange(oldUrl, oldState);
+        // rewrite hashbang url <> html5 url
+        if ($location.absUrl() !== initialUrl) {
+          $browser.url($location.absUrl(), true);
         }
-      });
-      if (!$rootScope.$$phase) $rootScope.$digest();
-    });
 
-    // update browser
-    $rootScope.$watch(function $locationWatch() {
-      if (initializing || $location.$$urlUpdatedByLocation) {
-        $location.$$urlUpdatedByLocation = false;
+        var initializing = true;
 
-        var oldUrl = $browser.url();
-        var newUrl = $location.absUrl();
-        var oldState = $browser.state();
-        var currentReplace = $location.$$replace;
-        var urlOrStateChanged = !urlsEqual(oldUrl, newUrl) ||
-          ($location.$$html5 && $sniffer.history && oldState !== $location.$$state);
+        // update $location when $browser url changes
+        $browser.onUrlChange(function(newUrl, newState) {
 
-        if (initializing || urlOrStateChanged) {
-          initializing = false;
+          if (!startsWith(newUrl, appBaseNoFile)) {
+            // If we are navigating outside of the app then force a reload
+            $window.location.href = newUrl;
+            return;
+          }
 
           $rootScope.$evalAsync(function() {
-            var newUrl = $location.absUrl();
-            var defaultPrevented = $rootScope.$broadcast('$locationChangeStart', newUrl, oldUrl,
-                $location.$$state, oldState).defaultPrevented;
+            var oldUrl = $location.absUrl();
+            var oldState = $location.$$state;
+            var defaultPrevented;
+            $location.$$parse(newUrl);
+            $location.$$state = newState;
+
+            defaultPrevented = $rootScope.$broadcast('$locationChangeStart', newUrl, oldUrl,
+                newState, oldState).defaultPrevented;
 
             // if the location was changed by a `$locationChangeStart` handler then stop
             // processing this location change
@@ -1006,28 +977,64 @@ function $LocationProvider() {
             if (defaultPrevented) {
               $location.$$parse(oldUrl);
               $location.$$state = oldState;
+              setBrowserUrlWithFallback(oldUrl, false, oldState);
             } else {
-              if (urlOrStateChanged) {
-                setBrowserUrlWithFallback(newUrl, currentReplace,
-                                          oldState === $location.$$state ? null : $location.$$state);
-              }
+              initializing = false;
               afterLocationChange(oldUrl, oldState);
             }
           });
+          if (!$rootScope.$$phase) $rootScope.$digest();
+        });
+
+        // update browser
+        $rootScope.$watch(function $locationWatch() {
+          if (initializing || $location.$$urlUpdatedByLocation) {
+            $location.$$urlUpdatedByLocation = false;
+
+            var oldUrl = $browser.url();
+            var newUrl = $location.absUrl();
+            var oldState = $browser.state();
+            var currentReplace = $location.$$replace;
+            var urlOrStateChanged = !urlsEqual(oldUrl, newUrl) ||
+              ($location.$$html5 && $sniffer.history && oldState !== $location.$$state);
+
+            if (initializing || urlOrStateChanged) {
+              initializing = false;
+
+              $rootScope.$evalAsync(function() {
+                var newUrl = $location.absUrl();
+                var defaultPrevented = $rootScope.$broadcast('$locationChangeStart', newUrl, oldUrl,
+                    $location.$$state, oldState).defaultPrevented;
+
+                // if the location was changed by a `$locationChangeStart` handler then stop
+                // processing this location change
+                if ($location.absUrl() !== newUrl) return;
+
+                if (defaultPrevented) {
+                  $location.$$parse(oldUrl);
+                  $location.$$state = oldState;
+                } else {
+                  if (urlOrStateChanged) {
+                    setBrowserUrlWithFallback(newUrl, currentReplace,
+                                              oldState === $location.$$state ? null : $location.$$state);
+                  }
+                  afterLocationChange(oldUrl, oldState);
+                }
+              });
+            }
+          }
+
+          $location.$$replace = false;
+
+          // we don't need to return anything because $evalAsync will make the digest loop dirty when
+          // there is a change
+        });
+
+        return $location;
+
+        function afterLocationChange(oldUrl, oldState) {
+          $rootScope.$broadcast('$locationChangeSuccess', $location.absUrl(), oldUrl,
+            $location.$$state, oldState);
         }
-      }
-
-      $location.$$replace = false;
-
-      // we don't need to return anything because $evalAsync will make the digest loop dirty when
-      // there is a change
-    });
-
-    return $location;
-
-    function afterLocationChange(oldUrl, oldState) {
-      $rootScope.$broadcast('$locationChangeSuccess', $location.absUrl(), oldUrl,
-        $location.$$state, oldState);
-    }
-}];
+      }];
 }

@@ -102,7 +102,7 @@ angular.module('ngCookies', ['ng']).
          * @param {string} key Id to use for lookup.
          * @returns {string} Raw cookie value.
          */
-        get: function(key) {
+        get(key) {
           return $$cookieReader()[key];
         },
 
@@ -116,7 +116,7 @@ angular.module('ngCookies', ['ng']).
          * @param {string} key Id to use for lookup.
          * @returns {Object} Deserialized cookie value.
          */
-        getObject: function(key) {
+        getObject(key) {
           var value = this.get(key);
           return value ? angular.fromJson(value) : value;
         },
@@ -130,7 +130,7 @@ angular.module('ngCookies', ['ng']).
          *
          * @returns {Object} All cookies
          */
-        getAll: function() {
+        getAll() {
           return $$cookieReader();
         },
 
@@ -146,7 +146,7 @@ angular.module('ngCookies', ['ng']).
          * @param {Object=} options Options object.
          *    See {@link ngCookies.$cookiesProvider#defaults $cookiesProvider.defaults}
          */
-        put: function(key, value, options) {
+        put(key, value, options) {
           $$cookieWriter(key, value, calcOptions(options));
         },
 
@@ -162,7 +162,7 @@ angular.module('ngCookies', ['ng']).
          * @param {Object=} options Options object.
          *    See {@link ngCookies.$cookiesProvider#defaults $cookiesProvider.defaults}
          */
-        putObject: function(key, value, options) {
+        putObject(key, value, options) {
           this.put(key, angular.toJson(value), options);
         },
 
@@ -177,7 +177,7 @@ angular.module('ngCookies', ['ng']).
          * @param {Object=} options Options object.
          *    See {@link ngCookies.$cookiesProvider#defaults $cookiesProvider.defaults}
          */
-        remove: function(key, options) {
+        remove(key, options) {
           $$cookieWriter(key, undefined, calcOptions(options));
         }
       };

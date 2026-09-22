@@ -1,7 +1,8 @@
 'use strict';
 
 var $$rAFSchedulerFactory = ['$$rAF', function($$rAF) {
-  var queue, cancelFn;
+  var queue;
+  var cancelFn;
 
   function scheduler(tasks) {
     // we make a copy since RAFScheduler mutates the state
