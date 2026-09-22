@@ -248,27 +248,16 @@ function jqLiteBuildFragment(html, context) {
       html.replace(XHTML_TAG_REGEXP, '<$1></$2>') :
       html;
 
-    if (msie < 10) {
-      wrap = wrapMapIE9[tag] || wrapMapIE9._default;
-      tmp.innerHTML = wrap[1] + finalHtml + wrap[2];
+    wrap = wrapMap[tag] || [];
 
-      // Descend through wrappers to the right content
-      i = wrap[0];
-      while (i--) {
-        tmp = tmp.firstChild;
-      }
-    } else {
-      wrap = wrapMap[tag] || [];
-
-      // Create wrappers & descend into them
-      i = wrap.length;
-      while (--i > -1) {
-        tmp.appendChild(window.document.createElement(wrap[i]));
-        tmp = tmp.firstChild;
-      }
-
-      tmp.innerHTML = finalHtml;
+    // Create wrappers & descend into them
+    i = wrap.length;
+    while (--i > -1) {
+      tmp.appendChild(window.document.createElement(wrap[i]));
+      tmp = tmp.firstChild;
     }
+
+    tmp.innerHTML = finalHtml;
 
     nodes = concat(nodes, tmp.childNodes);
 

@@ -3,7 +3,6 @@
 /* We need to tell ESLint what variables are being exported */
 /* exported
   angular,
-  msie,
   jqLite,
   jQuery,
   slice,
@@ -146,10 +145,6 @@ var lowercase = function(string) {return isString(string) ? string.toLowerCase()
  */
 var uppercase = function(string) {return isString(string) ? string.toUpperCase() : string;};
 
-
-var // holds major version number for IE, or NaN if UA is not IE.
-msie;
-
 var // delay binding since jQuery could be loaded after us.
 jqLite;
 
@@ -168,14 +163,6 @@ angular           = window.angular || (window.angular = {});
 
 var angularModule;
 var uid               = 0;
-
-// Support: IE 9-11 only
-/**
- * documentMode is an IE-only property
- * http://msdn.microsoft.com/en-us/library/ie/cc196988(v=vs.85).aspx
- */
-msie = window.document.documentMode;
-
 
 /**
  * @private

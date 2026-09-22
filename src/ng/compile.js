@@ -2540,12 +2540,6 @@ function $CompileProvider($provide, $$sanitizeUriProvider) {
         for (var i = 0; i < nodeList.length; i++) {
           attrs = new Attributes();
 
-          // Support: IE 11 only
-          // Workaround for #11781 and #14924
-          if (msie === 11) {
-            mergeConsecutiveTextNodes(nodeList, i, notLiveList);
-          }
-
           // We must always refer to `nodeList[i]` hereafter,
           // since the nodes can be replaced underneath us.
           directives = collectDirectives(nodeList[i], [], attrs, i === 0 ? maxPriority : undefined,

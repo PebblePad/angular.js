@@ -67,15 +67,6 @@ function urlResolve(url) {
   if (!isString(url)) return url;
 
   var href = url;
-
-  // Support: IE 9-11 only
-  if (msie) {
-    // Normalize before parse.  Refer Implementation Notes on why this is
-    // done in two steps on IE.
-    urlParsingNode.setAttribute('href', href);
-    href = urlParsingNode.href;
-  }
-
   urlParsingNode.setAttribute('href', href);
 
   var hostname = urlParsingNode.hostname;
