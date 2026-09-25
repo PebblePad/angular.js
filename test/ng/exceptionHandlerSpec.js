@@ -1,23 +1,22 @@
 'use strict';
-
-describe('$exceptionHandler', function() {
+ describe('$exceptionHandler', () => {
   /* global $ExceptionHandlerProvider:false */
-  it('should log errors with single argument', function() {
-    module(function($provide) {
-      $provide.provider('$exceptionHandler', $ExceptionHandlerProvider);
+  test('should log errors with single argument', () => {
+    angular.mock.module(function($provide) {
+      $provide.provider('$exceptionHandler', ngInternals.$ExceptionHandlerProvider);
     });
-    inject(function($log, $exceptionHandler) {
+    angular.mock.inject(function($log, $exceptionHandler) {
       $exceptionHandler('myError');
       expect($log.error.logs.shift()).toEqual(['myError']);
     });
   });
 
 
-  it('should log errors with multiple arguments', function() {
-    module(function($provide) {
-      $provide.provider('$exceptionHandler', $ExceptionHandlerProvider);
+  test('should log errors with multiple arguments', () => {
+    angular.mock.module(function($provide) {
+      $provide.provider('$exceptionHandler', ngInternals.$ExceptionHandlerProvider);
     });
-    inject(function($log, $exceptionHandler) {
+    angular.mock.inject(function($log, $exceptionHandler) {
       $exceptionHandler('myError', 'comment');
       expect($log.error.logs.shift()).toEqual(['myError', 'comment']);
     });

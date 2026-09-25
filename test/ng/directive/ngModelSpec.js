@@ -1,27 +1,34 @@
 'use strict';
 
 /* globals generateInputCompilerHelper: false */
+ describe('ngModel', () => {
+  var element;
+  afterEach(() => {
+    dealoc(element);
+  })
 
-describe('ngModel', function() {
-
-  describe('NgModelController', function() {
+  describe('NgModelController', () => {
     /* global NgModelController: false */
-    var ctrl, scope, element, parentFormCtrl;
+    var ctrl;
 
-    beforeEach(inject(function($rootScope, $controller) {
+    var scope;
+    var element;
+    var parentFormCtrl;
+
+    beforeEach(angular.mock.inject(function($rootScope, $controller) {
       var attrs = {name: 'testAlias', ngModel: 'value'};
 
       parentFormCtrl = {
-        $$setPending: jasmine.createSpy('$$setPending'),
-        $setValidity: jasmine.createSpy('$setValidity'),
-        $setDirty: jasmine.createSpy('$setDirty'),
-        $$clearControlValidity: noop
+        $$setPending: jest.fn().mockName('$$setPending'),
+        $setValidity: jest.fn().mockName('$setValidity'),
+        $setDirty: jest.fn().mockName('$setDirty'),
+        $$clearControlValidity: angular.noop
       };
 
-      element = jqLite('<form><input></form>');
+      element = angular.element('<form><input></form>');
 
       scope = $rootScope;
-      ctrl = $controller(NgModelController, {
+      ctrl = $controller(ngInternals.NgModelController, {
         $scope: scope,
         $element: element.find('input'),
         $attrs: attrs
@@ -32,12 +39,12 @@ describe('ngModel', function() {
     }));
 
 
-    afterEach(function() {
+     afterEach(() => {
       dealoc(element);
     });
 
 
-    it('should init the properties', function() {
+    test('should init the properties', () => {
       expect(ctrl.$untouched).toBe(true);
       expect(ctrl.$touched).toBe(false);
       expect(ctrl.$dirty).toBe(false);
@@ -55,7 +62,7 @@ describe('ngModel', function() {
     });
 
 
-    describe('setValidity', function() {
+    describe('setValidity', () => {
 
       function expectOneError() {
         expect(ctrl.$error).toEqual({someError: true});
@@ -82,14 +89,14 @@ describe('ngModel', function() {
       }
 
 
-      it('should propagate validity to the parent form', function() {
+      test('should propagate validity to the parent form', () => {
         expect(parentFormCtrl.$setValidity).not.toHaveBeenCalled();
         ctrl.$setValidity('ERROR', false);
         expect(parentFormCtrl.$setValidity).toHaveBeenCalledOnceWith('ERROR', false, ctrl);
       });
 
 
-      it('should transition from states correctly', function() {
+      test('should transition from states correctly', () => {
         expectCleared();
 
         ctrl.$setValidity('someError', false);
@@ -106,7 +113,7 @@ describe('ngModel', function() {
       });
 
 
-      it('should set valid/invalid with multiple errors', function() {
+      test('should set valid/invalid with multiple errors', () => {
         ctrl.$setValidity('first', false);
         expect(ctrl.$valid).toBe(false);
         expect(ctrl.$invalid).toBe(true);
@@ -133,9 +140,9 @@ describe('ngModel', function() {
       });
     });
 
-    describe('setPristine', function() {
+    describe('setPristine', () => {
 
-      it('should set control to its pristine state', function() {
+      test('should set control to its pristine state', () => {
         ctrl.$setViewValue('edit');
         expect(ctrl.$dirty).toBe(true);
         expect(ctrl.$pristine).toBe(false);
@@ -146,9 +153,9 @@ describe('ngModel', function() {
       });
     });
 
-    describe('setDirty', function() {
+    describe('setDirty', () => {
 
-      it('should set control to its dirty state', function() {
+      test('should set control to its dirty state', () => {
         expect(ctrl.$pristine).toBe(true);
         expect(ctrl.$dirty).toBe(false);
 
@@ -158,15 +165,15 @@ describe('ngModel', function() {
       });
 
 
-      it('should set parent form to its dirty state', function() {
+      test('should set parent form to its dirty state', () => {
         ctrl.$setDirty();
         expect(parentFormCtrl.$setDirty).toHaveBeenCalled();
       });
     });
 
-    describe('setUntouched', function() {
+    describe('setUntouched', () => {
 
-      it('should set control to its untouched state', function() {
+      test('should set control to its untouched state', () => {
         ctrl.$setTouched();
 
         ctrl.$setUntouched();
@@ -175,9 +182,9 @@ describe('ngModel', function() {
       });
     });
 
-    describe('setTouched', function() {
+    describe('setTouched', () => {
 
-      it('should set control to its touched state', function() {
+      test('should set control to its touched state', () => {
         ctrl.$setUntouched();
 
         ctrl.$setTouched();
@@ -186,15 +193,15 @@ describe('ngModel', function() {
       });
     });
 
-    describe('view -> model', function() {
+    describe('view -> model', () => {
 
-      it('should set the value to $viewValue', function() {
+      test('should set the value to $viewValue', () => {
         ctrl.$setViewValue('some-val');
         expect(ctrl.$viewValue).toBe('some-val');
       });
 
 
-      it('should pipeline all registered parsers and set result to $modelValue', function() {
+      test('should pipeline all registered parsers and set result to $modelValue', () => {
         var log = [];
 
         ctrl.$parsers.push(function(value) {
@@ -213,22 +220,22 @@ describe('ngModel', function() {
       });
 
 
-      it('should fire viewChangeListeners when the value changes in the view (even if invalid)',
+      test('should fire viewChangeListeners when the value changes in the view (even if invalid)',
           function() {
-        var spy = jasmine.createSpy('viewChangeListener');
+        var spy = jest.fn().mockName('viewChangeListener');
         ctrl.$viewChangeListeners.push(spy);
         ctrl.$setViewValue('val');
-        expect(spy).toHaveBeenCalledOnce();
-        spy.calls.reset();
+        expect(spy).toHaveBeenCalledTimes(1);
+        spy.mockClear();
 
         // invalid
         ctrl.$parsers.push(function() {return undefined;});
         ctrl.$setViewValue('val2');
-        expect(spy).toHaveBeenCalledOnce();
+        expect(spy).toHaveBeenCalledTimes(1);
       });
 
 
-      it('should reset the model when the view is invalid', function() {
+      test('should reset the model when the view is invalid', () => {
         ctrl.$setViewValue('aaaa');
         expect(ctrl.$modelValue).toBe('aaaa');
 
@@ -240,7 +247,7 @@ describe('ngModel', function() {
       });
 
 
-      it('should not reset the model when the view is invalid due to an external validator', function() {
+      test('should not reset the model when the view is invalid due to an external validator', () => {
         ctrl.$setViewValue('aaaa');
         expect(ctrl.$modelValue).toBe('aaaa');
 
@@ -250,14 +257,14 @@ describe('ngModel', function() {
       });
 
 
-      it('should not reset the view when the view is invalid', function() {
+      test('should not reset the view when the view is invalid', () => {
         // this test fails when the view changes the model and
         // then the model listener in ngModel picks up the change and
         // tries to update the view again.
 
         // add a validator that will make any input invalid
         ctrl.$parsers.push(function() {return undefined;});
-        spyOn(ctrl, '$render');
+        jest.spyOn(ctrl, '$render').mockImplementation(() => {});
 
         // first digest
         ctrl.$setViewValue('bbbb');
@@ -269,7 +276,7 @@ describe('ngModel', function() {
         // further digests
         scope.$apply('value = "aaa"');
         expect(ctrl.$viewValue).toBe('aaa');
-        ctrl.$render.calls.reset();
+        ctrl.$render.mockClear();
 
         ctrl.$setViewValue('cccc');
         expect(ctrl.$modelValue).toBeUndefined();
@@ -279,13 +286,13 @@ describe('ngModel', function() {
       });
 
 
-      it('should call parentForm.$setDirty only when pristine', function() {
+      test('should call parentForm.$setDirty only when pristine', () => {
         ctrl.$setViewValue('');
         expect(ctrl.$pristine).toBe(false);
         expect(ctrl.$dirty).toBe(true);
-        expect(parentFormCtrl.$setDirty).toHaveBeenCalledOnce();
+        expect(parentFormCtrl.$setDirty).toHaveBeenCalledTimes(1);
 
-        parentFormCtrl.$setDirty.calls.reset();
+        parentFormCtrl.$setDirty.mockClear();
         ctrl.$setViewValue('');
         expect(ctrl.$pristine).toBe(false);
         expect(ctrl.$dirty).toBe(true);
@@ -293,8 +300,11 @@ describe('ngModel', function() {
       });
 
 
-      it('should remove all other errors when any parser returns undefined', function() {
-        var a, b, val = function(val, x) {
+      test('should remove all other errors when any parser returns undefined', () => {
+        var a;
+        var b;
+
+        var val = function(val, x) {
           return x ? val : x;
         };
 
@@ -302,11 +312,11 @@ describe('ngModel', function() {
         ctrl.$parsers.push(function(v) { return val(v, b); });
 
         ctrl.$validators.high = function(value) {
-          return !isDefined(value) || value > 5;
+          return !angular.isDefined(value) || value > 5;
         };
 
         ctrl.$validators.even = function(value) {
-          return !isDefined(value) || value % 2 === 0;
+          return !angular.isDefined(value) || value % 2 === 0;
         };
 
         a = b = true;
@@ -341,7 +351,7 @@ describe('ngModel', function() {
       });
 
 
-      it('should not remove external validators when a parser failed', function() {
+      test('should not remove external validators when a parser failed', () => {
         ctrl.$parsers.push(function(v) { return undefined; });
         ctrl.$setValidity('externalError', false);
         ctrl.$setViewValue('someValue');
@@ -349,8 +359,8 @@ describe('ngModel', function() {
       });
 
 
-      it('should remove all non-parse-related CSS classes from the form when a parser fails',
-        inject(function($compile, $rootScope) {
+      test('should remove all non-parse-related CSS classes from the form when a parser fails',
+        angular.mock.inject(function($compile, $rootScope) {
 
         var element = $compile('<form name="myForm">' +
                                  '<input name="myControl" ng-model="value" >' +
@@ -386,7 +396,7 @@ describe('ngModel', function() {
       }));
 
 
-      it('should set the ng-invalid-parse and ng-valid-parse CSS class when parsers fail and pass', function() {
+      test('should set the ng-invalid-parse and ng-valid-parse CSS class when parsers fail and pass', () => {
         var pass = true;
         ctrl.$parsers.push(function(v) {
           return pass ? v : undefined;
@@ -406,7 +416,7 @@ describe('ngModel', function() {
       });
 
 
-      it('should update the model after all async validators resolve', inject(function($q) {
+      test('should update the model after all async validators resolve', angular.mock.inject(function($q) {
         var defer;
         ctrl.$asyncValidators.promiseValidator = function(value) {
           defer = $q.defer();
@@ -439,7 +449,7 @@ describe('ngModel', function() {
       }));
 
 
-      it('should not throw an error if the scope has been destroyed', function() {
+      test('should not throw an error if the scope has been destroyed', () => {
         scope.$destroy();
         ctrl.$setViewValue('some-val');
         expect(ctrl.$viewValue).toBe('some-val');
@@ -447,15 +457,15 @@ describe('ngModel', function() {
     });
 
 
-    describe('model -> view', function() {
+    describe('model -> view', () => {
 
-      it('should set the value to $modelValue', function() {
+      test('should set the value to $modelValue', () => {
         scope.$apply('value = 10');
         expect(ctrl.$modelValue).toBe(10);
       });
 
 
-      it('should pipeline all registered formatters in reversed order and set result to $viewValue',
+      test('should pipeline all registered formatters in reversed order and set result to $viewValue',
           function() {
         var log = [];
 
@@ -475,12 +485,12 @@ describe('ngModel', function() {
       });
 
 
-      it('should $render only if value changed', function() {
-        spyOn(ctrl, '$render');
+      test('should $render only if value changed', () => {
+        jest.spyOn(ctrl, '$render').mockImplementation(() => {});
 
         scope.$apply('value = 3');
-        expect(ctrl.$render).toHaveBeenCalledOnce();
-        ctrl.$render.calls.reset();
+        expect(ctrl.$render).toHaveBeenCalledTimes(1);
+        ctrl.$render.mockClear();
 
         ctrl.$formatters.push(function() {return 3;});
         scope.$apply('value = 5');
@@ -488,43 +498,43 @@ describe('ngModel', function() {
       });
 
 
-      it('should clear the view even if invalid', function() {
-        spyOn(ctrl, '$render');
+      test('should clear the view even if invalid', () => {
+        jest.spyOn(ctrl, '$render').mockImplementation(() => {});
 
         ctrl.$formatters.push(function() {return undefined;});
         scope.$apply('value = 5');
-        expect(ctrl.$render).toHaveBeenCalledOnce();
+        expect(ctrl.$render).toHaveBeenCalledTimes(1);
       });
 
 
-      it('should render immediately even if there are async validators', inject(function($q) {
-        spyOn(ctrl, '$render');
+      test('should render immediately even if there are async validators', angular.mock.inject(function($q) {
+        jest.spyOn(ctrl, '$render').mockImplementation(() => {});
         ctrl.$asyncValidators.someValidator = function() {
           return $q.defer().promise;
         };
 
         scope.$apply('value = 5');
         expect(ctrl.$viewValue).toBe(5);
-        expect(ctrl.$render).toHaveBeenCalledOnce();
+        expect(ctrl.$render).toHaveBeenCalledTimes(1);
       }));
 
 
-      it('should not rerender nor validate in case view value is not changed', function() {
+      test('should not rerender nor validate in case view value is not changed', () => {
         ctrl.$formatters.push(function(value) {
           return 'nochange';
         });
 
-        spyOn(ctrl, '$render');
-        ctrl.$validators.spyValidator = jasmine.createSpy('spyValidator');
+        jest.spyOn(ctrl, '$render').mockImplementation(() => {});
+        ctrl.$validators.spyValidator = jest.fn().mockName('spyValidator');
         scope.$apply('value = "first"');
         scope.$apply('value = "second"');
-        expect(ctrl.$validators.spyValidator).toHaveBeenCalledOnce();
-        expect(ctrl.$render).toHaveBeenCalledOnce();
+        expect(ctrl.$validators.spyValidator).toHaveBeenCalledTimes(1);
+        expect(ctrl.$render).toHaveBeenCalledTimes(1);
       });
 
 
-      it('should always format the viewValue as a string for a blank input type when the value is present',
-        inject(function($compile, $rootScope, $sniffer) {
+      test('should always format the viewValue as a string for a blank input type when the value is present',
+        angular.mock.inject(function($compile, $rootScope, $sniffer) {
 
         var form = $compile('<form name="form"><input name="field" ng-model="val" /></form>')($rootScope);
 
@@ -540,8 +550,8 @@ describe('ngModel', function() {
       }));
 
 
-      it('should always format the viewValue as a string for a `text` input type when the value is present',
-        inject(function($compile, $rootScope, $sniffer) {
+      test('should always format the viewValue as a string for a `text` input type when the value is present',
+        angular.mock.inject(function($compile, $rootScope, $sniffer) {
 
         var form = $compile('<form name="form"><input type="text" name="field" ng-model="val" /></form>')($rootScope);
         $rootScope.val = 123;
@@ -556,8 +566,8 @@ describe('ngModel', function() {
       }));
 
 
-      it('should always format the viewValue as a string for an `email` input type when the value is present',
-        inject(function($compile, $rootScope, $sniffer) {
+      test('should always format the viewValue as a string for an `email` input type when the value is present',
+        angular.mock.inject(function($compile, $rootScope, $sniffer) {
 
         var form = $compile('<form name="form"><input type="email" name="field" ng-model="val" /></form>')($rootScope);
         $rootScope.val = 123;
@@ -572,8 +582,8 @@ describe('ngModel', function() {
       }));
 
 
-      it('should always format the viewValue as a string for a `url` input type when the value is present',
-        inject(function($compile, $rootScope, $sniffer) {
+      test('should always format the viewValue as a string for a `url` input type when the value is present',
+        angular.mock.inject(function($compile, $rootScope, $sniffer) {
 
         var form = $compile('<form name="form"><input type="url" name="field" ng-model="val" /></form>')($rootScope);
         $rootScope.val = 123;
@@ -588,8 +598,8 @@ describe('ngModel', function() {
       }));
 
 
-      it('should set NaN as the $modelValue when an asyncValidator is present',
-        inject(function($q) {
+      test('should set NaN as the $modelValue when an asyncValidator is present',
+        angular.mock.inject(function($q) {
 
         ctrl.$asyncValidators.test = function() {
           return $q(function(resolve, reject) {
@@ -610,14 +620,14 @@ describe('ngModel', function() {
 
       }));
 
-      describe('$processModelValue', function() {
+      describe('$processModelValue', () => {
         // Emulate setting the model on the scope
         function setModelValue(ctrl, value) {
           ctrl.$modelValue = ctrl.$$rawModelValue = value;
           ctrl.$$parserValid = undefined;
         }
 
-        it('should run the model -> view pipeline', function() {
+        test('should run the model -> view pipeline', () => {
           var log = [];
           var input = ctrl.$$element;
 
@@ -631,7 +641,7 @@ describe('ngModel', function() {
             return value + '';
           });
 
-          spyOn(ctrl, '$render');
+          jest.spyOn(ctrl, '$render').mockImplementation(() => {});
 
           setModelValue(ctrl, 3);
 
@@ -642,21 +652,21 @@ describe('ngModel', function() {
           expect(ctrl.$modelValue).toBe(3);
           expect(log).toEqual([3, 5]);
           expect(ctrl.$viewValue).toBe('5');
-          expect(ctrl.$render).toHaveBeenCalledOnce();
+          expect(ctrl.$render).toHaveBeenCalledTimes(1);
         });
 
-        it('should add the validation and empty-state classes',
-          inject(function($compile, $rootScope, $animate) {
-            var input = $compile('<input name="myControl" maxlength="1" ng-model="value" >')($rootScope);
+        test('should add the validation and empty-state classes',
+          angular.mock.inject(function($compile, $rootScope, $animate) {
+            element = $compile('<input name="myControl" maxlength="1" ng-model="value" >')($rootScope);
             $rootScope.$digest();
 
-            spyOn($animate, 'addClass');
-            spyOn($animate, 'removeClass');
+            jest.spyOn($animate, 'addClass').mockImplementation(() => {});
+            jest.spyOn($animate, 'removeClass').mockImplementation(() => {});
 
-            var ctrl = input.controller('ngModel');
+            var ctrl = element.controller('ngModel');
 
-            expect(input).toHaveClass('ng-empty');
-            expect(input).toHaveClass('ng-valid');
+            expect(element).toHaveClass('ng-empty');
+            expect(element).toHaveClass('ng-valid');
 
             setModelValue(ctrl, 3);
             ctrl.$processModelValue();
@@ -664,28 +674,28 @@ describe('ngModel', function() {
             // $animate adds / removes classes in the $$postDigest, which
             // we cannot trigger with $digest, because that would set the model from the scope,
             // so we simply check if the functions have been called
-            expect($animate.removeClass.calls.mostRecent().args[0][0]).toBe(input[0]);
-            expect($animate.removeClass.calls.mostRecent().args[1]).toBe('ng-empty');
+            expect($animate.removeClass.mock.lastCall[0][0]).toBe(element[0]);
+            expect($animate.removeClass.mock.lastCall[1]).toBe('ng-empty');
 
-            expect($animate.addClass.calls.mostRecent().args[0][0]).toBe(input[0]);
-            expect($animate.addClass.calls.mostRecent().args[1]).toBe('ng-not-empty');
+            expect($animate.addClass.mock.lastCall[0][0]).toBe(element[0]);
+            expect($animate.addClass.mock.lastCall[1]).toBe('ng-not-empty');
 
-            $animate.removeClass.calls.reset();
-            $animate.addClass.calls.reset();
+            $animate.removeClass.mockClear();
+            $animate.addClass.mockClear();
 
             setModelValue(ctrl, 35);
             ctrl.$processModelValue();
 
-            expect($animate.addClass.calls.argsFor(1)[0][0]).toBe(input[0]);
-            expect($animate.addClass.calls.argsFor(1)[1]).toBe('ng-invalid');
+            expect($animate.addClass.mock.calls[1][0][0]).toBe(element[0]);
+            expect($animate.addClass.mock.calls[1][1]).toBe('ng-invalid');
 
-            expect($animate.addClass.calls.argsFor(2)[0][0]).toBe(input[0]);
-            expect($animate.addClass.calls.argsFor(2)[1]).toBe('ng-invalid-maxlength');
+            expect($animate.addClass.mock.calls[2][0][0]).toBe(element[0]);
+            expect($animate.addClass.mock.calls[2][1]).toBe('ng-invalid-maxlength');
           })
         );
 
         // this is analogue to $setViewValue
-        it('should run the model -> view pipeline even if the value has not changed', function() {
+        test('should run the model -> view pipeline even if the value has not changed', () => {
           var log = [];
 
           ctrl.$formatters.unshift(function(value) {
@@ -698,7 +708,7 @@ describe('ngModel', function() {
             return value + '';
           });
 
-          spyOn(ctrl, '$render');
+          jest.spyOn(ctrl, '$render').mockImplementation(() => {});
 
           setModelValue(ctrl, 3);
           ctrl.$processModelValue();
@@ -706,24 +716,24 @@ describe('ngModel', function() {
           expect(ctrl.$modelValue).toBe(3);
           expect(ctrl.$viewValue).toBe('5');
           expect(log).toEqual([3, 5]);
-          expect(ctrl.$render).toHaveBeenCalledOnce();
+          expect(ctrl.$render).toHaveBeenCalledTimes(1);
 
           ctrl.$processModelValue();
           expect(ctrl.$modelValue).toBe(3);
           expect(ctrl.$viewValue).toBe('5');
           expect(log).toEqual([3, 5, 3, 5]);
           // $render() is not called if the viewValue didn't change
-          expect(ctrl.$render).toHaveBeenCalledOnce();
+          expect(ctrl.$render).toHaveBeenCalledTimes(1);
         });
       });
     });
 
 
-    describe('validation', function() {
+    describe('validation', () => {
 
-      describe('$validate', function() {
+      describe('$validate', () => {
 
-        it('should perform validations when $validate() is called', function() {
+        test('should perform validations when $validate() is called', () => {
           scope.$apply('value = ""');
 
           var validatorResult = false;
@@ -742,7 +752,7 @@ describe('ngModel', function() {
         });
 
 
-        it('should pass the last parsed modelValue to the validators', function() {
+        test('should pass the last parsed modelValue to the validators', () => {
           ctrl.$parsers.push(function(modelValue) {
             return modelValue + 'def';
           });
@@ -753,7 +763,7 @@ describe('ngModel', function() {
             return true;
           };
 
-          spyOn(ctrl.$validators, 'test');
+          jest.spyOn(ctrl.$validators, 'test').mockImplementation(() => {});
 
           ctrl.$validate();
 
@@ -761,7 +771,7 @@ describe('ngModel', function() {
         });
 
 
-        it('should set the model to undefined when it becomes invalid', function() {
+        test('should set the model to undefined when it becomes invalid', () => {
           var valid = true;
           ctrl.$validators.test = function(modelValue, viewValue) {
             return valid;
@@ -777,7 +787,7 @@ describe('ngModel', function() {
         });
 
 
-        it('should update the model when it becomes valid', function() {
+        test('should update the model when it becomes valid', () => {
           var valid = true;
           ctrl.$validators.test = function(modelValue, viewValue) {
             return valid;
@@ -796,7 +806,7 @@ describe('ngModel', function() {
         });
 
 
-        it('should not update the model when it is valid, but there is a parse error', function() {
+        test('should not update the model when it is valid, but there is a parse error', () => {
           ctrl.$parsers.push(function(modelValue) {
             return undefined;
           });
@@ -815,7 +825,7 @@ describe('ngModel', function() {
         });
 
 
-        it('should not set an invalid model to undefined when validity is the same', function() {
+        test('should not set an invalid model to undefined when validity is the same', () => {
           ctrl.$validators.test = function() {
             return false;
           };
@@ -830,7 +840,7 @@ describe('ngModel', function() {
         });
 
 
-        it('should not change a model that has a formatter', function() {
+        test('should not change a model that has a formatter', () => {
           ctrl.$validators.test = function() {
             return true;
           };
@@ -847,7 +857,7 @@ describe('ngModel', function() {
         });
 
 
-        it('should not change a model that has a parser', function() {
+        test('should not change a model that has a parser', () => {
           ctrl.$validators.test = function() {
             return true;
           };
@@ -863,9 +873,9 @@ describe('ngModel', function() {
         });
       });
 
-      describe('view -> model update', function() {
+      describe('view -> model update', () => {
 
-        it('should always perform validations using the parsed model value', function() {
+        test('should always perform validations using the parsed model value', () => {
           var captures;
           ctrl.$validators.raw = function() {
             captures = Array.prototype.slice.call(arguments);
@@ -882,7 +892,7 @@ describe('ngModel', function() {
         });
 
 
-        it('should always perform validations using the formatted view value', function() {
+        test('should always perform validations using the formatted view value', () => {
           var captures;
           ctrl.$validators.raw = function() {
             captures = Array.prototype.slice.call(arguments);
@@ -899,7 +909,7 @@ describe('ngModel', function() {
         });
 
 
-        it('should only perform validations if the view value is different', function() {
+        test('should only perform validations if the view value is different', () => {
           var count = 0;
           ctrl.$validators.countMe = function() {
             count++;
@@ -917,7 +927,7 @@ describe('ngModel', function() {
       });
 
 
-      it('should perform validations twice each time the model value changes within a digest', function() {
+      test('should perform validations twice each time the model value changes within a digest', () => {
         var count = 0;
         ctrl.$validators.number = function(value) {
           count++;
@@ -938,25 +948,25 @@ describe('ngModel', function() {
       });
 
 
-      it('should only validate to true if all validations are true', function() {
+      test('should only validate to true if all validations are true', () => {
         ctrl.$modelValue = undefined;
-        ctrl.$validators.a = valueFn(true);
-        ctrl.$validators.b = valueFn(true);
-        ctrl.$validators.c = valueFn(false);
+        ctrl.$validators.a = ngInternals.valueFn(true);
+        ctrl.$validators.b = ngInternals.valueFn(true);
+        ctrl.$validators.c = ngInternals.valueFn(false);
 
         ctrl.$validate();
         expect(ctrl.$valid).toBe(false);
 
-        ctrl.$validators.c = valueFn(true);
+        ctrl.$validators.c = ngInternals.valueFn(true);
 
         ctrl.$validate();
         expect(ctrl.$valid).toBe(true);
       });
 
-      it('should treat all responses as boolean for synchronous validators', function() {
+      test('should treat all responses as boolean for synchronous validators', () => {
         var expectValid = function(value, expected) {
           ctrl.$modelValue = undefined;
-          ctrl.$validators.a = valueFn(value);
+          ctrl.$validators.a = ngInternals.valueFn(value);
 
           ctrl.$validate();
           expect(ctrl.$valid).toBe(expected);
@@ -980,11 +990,11 @@ describe('ngModel', function() {
       });
 
 
-      it('should register invalid validations on the $error object', function() {
+      test('should register invalid validations on the $error object', () => {
         ctrl.$modelValue = undefined;
-        ctrl.$validators.unique = valueFn(false);
-        ctrl.$validators.tooLong = valueFn(false);
-        ctrl.$validators.notNumeric = valueFn(true);
+        ctrl.$validators.unique = ngInternals.valueFn(false);
+        ctrl.$validators.tooLong = ngInternals.valueFn(false);
+        ctrl.$validators.notNumeric = ngInternals.valueFn(true);
 
         ctrl.$validate();
 
@@ -994,7 +1004,7 @@ describe('ngModel', function() {
       });
 
 
-      it('should render a validator asynchronously when a promise is returned', inject(function($q) {
+      test('should render a validator asynchronously when a promise is returned', angular.mock.inject(function($q) {
         var defer;
         ctrl.$asyncValidators.promiseValidator = function(value) {
           defer = $q.defer();
@@ -1025,7 +1035,7 @@ describe('ngModel', function() {
       }));
 
 
-      it('should throw an error when a promise is not returned for an asynchronous validator', inject(function($q) {
+      test('should throw an error when a promise is not returned for an asynchronous validator', angular.mock.inject(function($q) {
         ctrl.$asyncValidators.async = function(value) {
           return true;
         };
@@ -1037,8 +1047,8 @@ describe('ngModel', function() {
       }));
 
 
-      it('should only run the async validators once all the sync validators have passed',
-        inject(function($q) {
+      test('should only run the async validators once all the sync validators have passed',
+        angular.mock.inject(function($q) {
 
         var stages = {};
 
@@ -1090,8 +1100,10 @@ describe('ngModel', function() {
       }));
 
 
-      it('should ignore expired async validation promises once delivered', inject(function($q) {
-        var defer, oldDefer, newDefer;
+      test('should ignore expired async validation promises once delivered', angular.mock.inject(function($q) {
+        var defer;
+        var oldDefer;
+        var newDefer;
         ctrl.$asyncValidators.async = function(value) {
           defer = $q.defer();
           return defer.promise;
@@ -1113,7 +1125,7 @@ describe('ngModel', function() {
       }));
 
 
-      it('should clear and ignore all pending promises when the model value changes', inject(function($q) {
+      test('should clear and ignore all pending promises when the model value changes', angular.mock.inject(function($q) {
         ctrl.$validators.sync = function(value) {
           return true;
         };
@@ -1130,24 +1142,24 @@ describe('ngModel', function() {
         expect(ctrl.$valid).toBeUndefined();
         expect(ctrl.$invalid).toBeUndefined();
         expect(defers.length).toBe(1);
-        expect(isObject(ctrl.$pending)).toBe(true);
+        expect(angular.isObject(ctrl.$pending)).toBe(true);
 
         scope.$apply('value = "456"');
         expect(ctrl.$pending).toEqual({async: true});
         expect(ctrl.$valid).toBeUndefined();
         expect(ctrl.$invalid).toBeUndefined();
         expect(defers.length).toBe(2);
-        expect(isObject(ctrl.$pending)).toBe(true);
+        expect(angular.isObject(ctrl.$pending)).toBe(true);
 
         defers[1].resolve();
         scope.$digest();
         expect(ctrl.$valid).toBe(true);
         expect(ctrl.$invalid).toBe(false);
-        expect(isObject(ctrl.$pending)).toBe(false);
+        expect(angular.isObject(ctrl.$pending)).toBe(false);
       }));
 
 
-      it('should clear and ignore all pending promises when a parser fails', inject(function($q) {
+      test('should clear and ignore all pending promises when a parser fails', angular.mock.inject(function($q) {
         var failParser = false;
         ctrl.$parsers.push(function(value) {
           return failParser ? undefined : value;
@@ -1168,18 +1180,18 @@ describe('ngModel', function() {
         ctrl.$setViewValue('1..2..3');
         expect(ctrl.$valid).toBe(false);
         expect(ctrl.$invalid).toBe(true);
-        expect(isObject(ctrl.$pending)).toBe(false);
+        expect(angular.isObject(ctrl.$pending)).toBe(false);
 
         defer.resolve();
         scope.$digest();
 
         expect(ctrl.$valid).toBe(false);
         expect(ctrl.$invalid).toBe(true);
-        expect(isObject(ctrl.$pending)).toBe(false);
+        expect(angular.isObject(ctrl.$pending)).toBe(false);
       }));
 
 
-      it('should clear all errors from async validators if a parser fails', inject(function($q) {
+      test('should clear all errors from async validators if a parser fails', angular.mock.inject(function($q) {
         var failParser = false;
         ctrl.$parsers.push(function(value) {
           return failParser ? undefined : value;
@@ -1199,7 +1211,7 @@ describe('ngModel', function() {
       }));
 
 
-      it('should clear all errors from async validators if a sync validator fails', inject(function($q) {
+      test('should clear all errors from async validators if a sync validator fails', angular.mock.inject(function($q) {
         var failValidator = false;
         ctrl.$validators.sync = function(value) {
           return !failValidator;
@@ -1219,8 +1231,8 @@ describe('ngModel', function() {
       }));
 
 
-      it('should be possible to extend Object prototype and still be able to do form validation',
-        inject(function($compile, $rootScope) {
+      test('should be possible to extend Object prototype and still be able to do form validation',
+        angular.mock.inject(function($compile, $rootScope) {
         // eslint-disable-next-line no-extend-native
         Object.prototype.someThing = function() {};
         var element = $compile('<form name="myForm">' +
@@ -1245,8 +1257,8 @@ describe('ngModel', function() {
         dealoc(element);
       }));
 
-      it('should re-evaluate the form validity state once the asynchronous promise has been delivered',
-        inject(function($compile, $rootScope, $q) {
+      test('should re-evaluate the form validity state once the asynchronous promise has been delivered',
+        angular.mock.inject(function($compile, $rootScope, $q) {
 
         var element = $compile('<form name="myForm">' +
                                  '<input type="text" name="username" ng-model="username" minlength="10" required />' +
@@ -1309,7 +1321,7 @@ describe('ngModel', function() {
       }));
 
 
-      it('should always use the most recent $viewValue for validation', function() {
+      test('should always use the most recent $viewValue for validation', () => {
         ctrl.$parsers.push(function(value) {
           if (value && value.substr(-1) === 'b') {
             value = 'a';
@@ -1324,7 +1336,7 @@ describe('ngModel', function() {
           return true;
         };
 
-        spyOn(ctrl.$validators, 'mock').and.callThrough();
+        jest.spyOn(ctrl.$validators, 'mock');
 
         ctrl.$setViewValue('ab');
 
@@ -1333,7 +1345,7 @@ describe('ngModel', function() {
       });
 
 
-      it('should validate even if the modelValue did not change', function() {
+      test('should validate even if the modelValue did not change', () => {
         ctrl.$parsers.push(function(value) {
           if (value && value.substr(-1) === 'b') {
             value = 'a';
@@ -1346,7 +1358,7 @@ describe('ngModel', function() {
           return true;
         };
 
-        spyOn(ctrl.$validators, 'mock').and.callThrough();
+        jest.spyOn(ctrl.$validators, 'mock');
 
         ctrl.$setViewValue('a');
 
@@ -1359,7 +1371,7 @@ describe('ngModel', function() {
         expect(ctrl.$validators.mock).toHaveBeenCalledTimes(2);
       });
 
-      it('should validate correctly when $parser name equals $validator key', function() {
+      test('should validate correctly when $parser name equals $validator key', () => {
 
         ctrl.$validators.parserOrValidator = function(value) {
           switch (value) {
@@ -1450,14 +1462,14 @@ describe('ngModel', function() {
 
     });
 
-    describe('override ModelOptions', function() {
-      it('should replace the previous model options', function() {
+    describe('override ModelOptions', () => {
+      test('should replace the previous model options', () => {
         var $options = ctrl.$options;
         ctrl.$overrideModelOptions({});
         expect(ctrl.$options).not.toBe($options);
       });
 
-      it('should set the given options', function() {
+      test('should set the given options', () => {
         var $options = ctrl.$options;
         ctrl.$overrideModelOptions({ debounce: 1000, updateOn: 'blur' });
         expect(ctrl.$options.getOption('debounce')).toEqual(1000);
@@ -1465,7 +1477,7 @@ describe('ngModel', function() {
         expect(ctrl.$options.getOption('updateOnDefault')).toBe(false);
       });
 
-      it('should inherit from a parent model options if specified', inject(function($compile, $rootScope) {
+      test('should inherit from a parent model options if specified', angular.mock.inject(function($compile, $rootScope) {
         var element = $compile(
           '<form name="form" ng-model-options="{debounce: 1000, updateOn: \'blur\'}">' +
           '  <input ng-model="value" name="input">' +
@@ -1478,7 +1490,7 @@ describe('ngModel', function() {
         dealoc(element);
       }));
 
-      it('should not inherit from a parent model options if not specified', inject(function($compile, $rootScope) {
+      test('should not inherit from a parent model options if not specified', angular.mock.inject(function($compile, $rootScope) {
         var element = $compile(
           '<form name="form" ng-model-options="{debounce: 1000, updateOn: \'blur\'}">' +
           '  <input ng-model="value" name="input">' +
@@ -1494,13 +1506,13 @@ describe('ngModel', function() {
   });
 
 
-  describe('CSS classes', function() {
+  describe('CSS classes', () => {
     var EMAIL_REGEXP = /^[a-z0-9!#$%&'*+/=?^_`{|}~.-]+@[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*$/i;
 
-    it('should set ng-empty or ng-not-empty when the view value changes',
-          inject(function($compile, $rootScope, $sniffer) {
+    test('should set ng-empty or ng-not-empty when the view value changes',
+          angular.mock.inject(function($compile, $rootScope, $sniffer) {
 
-      var element = $compile('<input ng-model="value" />')($rootScope);
+      element = $compile('<input ng-model="value" />')($rootScope);
 
       $rootScope.$digest();
       expect(element).toBeEmpty();
@@ -1519,8 +1531,8 @@ describe('ngModel', function() {
     }));
 
 
-    it('should set css classes (ng-valid, ng-invalid, ng-pristine, ng-dirty, ng-untouched, ng-touched)',
-        inject(function($compile, $rootScope, $sniffer) {
+    test('should set css classes (ng-valid, ng-invalid, ng-pristine, ng-dirty, ng-untouched, ng-touched)',
+        angular.mock.inject(function($compile, $rootScope, $sniffer) {
       var element = $compile('<input type="email" ng-model="value" />')($rootScope);
 
       $rootScope.$digest();
@@ -1557,7 +1569,7 @@ describe('ngModel', function() {
     }));
 
 
-    it('should set invalid classes on init', inject(function($compile, $rootScope) {
+    test('should set invalid classes on init', angular.mock.inject(function($compile, $rootScope) {
       var element = $compile('<input type="email" ng-model="value" required />')($rootScope);
       $rootScope.$digest();
 
@@ -1570,14 +1582,15 @@ describe('ngModel', function() {
   });
 
 
-  describe('custom formatter and parser that are added by a directive in post linking', function() {
-    var inputElm, scope;
+  describe('custom formatter and parser that are added by a directive in post linking', () => {
+    var inputElm;
+    var scope;
 
-    beforeEach(module(function($compileProvider) {
+    beforeEach(angular.mock.module(function($compileProvider) {
       $compileProvider.directive('customFormat', function() {
         return {
           require: 'ngModel',
-          link: function(scope, element, attrs, ngModelCtrl) {
+          link(scope, element, attrs, ngModelCtrl) {
             ngModelCtrl.$formatters.push(function(value) {
               return value.part;
             });
@@ -1590,20 +1603,20 @@ describe('ngModel', function() {
     }));
 
 
-    afterEach(function() {
+     afterEach(() => {
       dealoc(inputElm);
     });
 
 
     function createInput(type) {
-      inject(function($compile, $rootScope) {
+      angular.mock.inject(function($compile, $rootScope) {
         scope = $rootScope;
         inputElm = $compile('<input type="' + type + '" ng-model="val" custom-format/>')($rootScope);
       });
     }
 
 
-    it('should use them after the builtin ones for text inputs', function() {
+    test('should use them after the builtin ones for text inputs', () => {
       createInput('text');
       scope.$apply('val = {part: "a"}');
       expect(inputElm.val()).toBe('a');
@@ -1614,7 +1627,7 @@ describe('ngModel', function() {
     });
 
 
-    it('should use them after the builtin ones for number inputs', function() {
+    test('should use them after the builtin ones for number inputs', () => {
       createInput('number');
       scope.$apply('val = {part: 1}');
       expect(inputElm.val()).toBe('1');
@@ -1625,7 +1638,7 @@ describe('ngModel', function() {
     });
 
 
-    it('should use them after the builtin ones for date inputs', function() {
+    test('should use them after the builtin ones for date inputs', () => {
       createInput('date');
       scope.$apply(function() {
         scope.val = {part: new Date(2000, 10, 8)};
@@ -1639,9 +1652,9 @@ describe('ngModel', function() {
   });
 
 
-  describe('$touched', function() {
+  describe('$touched', () => {
 
-    it('should set the control touched state on "blur" event', inject(function($compile, $rootScope) {
+    test('should set the control touched state on "blur" event', angular.mock.inject(function($compile, $rootScope) {
       var element = $compile('<form name="myForm">' +
                                '<input name="myControl" ng-model="value" >' +
                              '</form>')($rootScope);
@@ -1659,8 +1672,8 @@ describe('ngModel', function() {
     }));
 
 
-    it('should not cause a digest on "blur" event if control is already touched',
-        inject(function($compile, $rootScope) {
+    test('should not cause a digest on "blur" event if control is already touched',
+        angular.mock.inject(function($compile, $rootScope) {
 
       var element = $compile('<form name="myForm">' +
                                '<input name="myControl" ng-model="value" >' +
@@ -1669,7 +1682,7 @@ describe('ngModel', function() {
       var control = $rootScope.myForm.myControl;
 
       control.$setTouched();
-      spyOn($rootScope, '$apply');
+      jest.spyOn($rootScope, '$apply').mockImplementation(() => {});
       browserTrigger(inputElm, 'blur');
 
       expect($rootScope.$apply).not.toHaveBeenCalled();
@@ -1678,8 +1691,8 @@ describe('ngModel', function() {
     }));
 
 
-    it('should digest asynchronously on "blur" event if a apply is already in progress',
-        inject(function($compile, $rootScope) {
+    test('should digest asynchronously on "blur" event if a apply is already in progress',
+        angular.mock.inject(function($compile, $rootScope) {
 
       var element = $compile('<form name="myForm">' +
                                '<input name="myControl" ng-model="value" >' +
@@ -1705,10 +1718,10 @@ describe('ngModel', function() {
   });
 
 
-  describe('nested in a form', function() {
+  describe('nested in a form', () => {
 
-    it('should register/deregister a nested ngModel with parent form when entering or leaving DOM',
-        inject(function($compile, $rootScope) {
+    test('should register/deregister a nested ngModel with parent form when entering or leaving DOM',
+        angular.mock.inject(function($compile, $rootScope) {
 
       var element = $compile('<form name="myForm">' +
                                '<input ng-if="inputPresent" name="myControl" ng-model="value" required >' +
@@ -1742,15 +1755,15 @@ describe('ngModel', function() {
     }));
 
 
-    it('should register/deregister a nested ngModel with parent form when entering or leaving DOM with animations',
+    test('should register/deregister a nested ngModel with parent form when entering or leaving DOM with animations',
         function() {
 
       // ngAnimate performs the dom manipulation after digest, and since the form validity can be affected by a form
       // control going away we must ensure that the deregistration happens during the digest while we are still doing
       // dirty checking.
-      module('ngAnimate');
+      angular.mock.module('ngAnimate');
 
-      inject(function($compile, $rootScope) {
+      angular.mock.inject(function($compile, $rootScope) {
         var element = $compile('<form name="myForm">' +
                                  '<input ng-if="inputPresent" name="myControl" ng-model="value" required >' +
                                '</form>')($rootScope);
@@ -1785,8 +1798,8 @@ describe('ngModel', function() {
     });
 
 
-    it('should keep previously defined watches consistent when changes in validity are made',
-     inject(function($compile, $rootScope) {
+    test('should keep previously defined watches consistent when changes in validity are made',
+     angular.mock.inject(function($compile, $rootScope) {
 
       var isFormValid;
       $rootScope.$watch('myForm.$valid', function(value) { isFormValid = value; });
@@ -1809,8 +1822,7 @@ describe('ngModel', function() {
   });
 
 
-  describe('animations', function() {
-
+  describe('animations', () => {
     function findElementAnimations(element, queue) {
       var node = element[0];
       var animations = [];
@@ -1830,32 +1842,34 @@ describe('ngModel', function() {
       if (classNameB) expect(animation.args[2]).toBe(classNameB);
     }
 
-    var doc, input, scope, model;
+    var input;
+    var scope;
+    var model;
 
 
-    beforeEach(module('ngAnimateMock'));
+    beforeEach(angular.mock.module('ngAnimateMock'));
 
 
-    beforeEach(inject(function($rootScope, $compile, $rootElement, $animate) {
+    beforeEach(angular.mock.inject(function($rootScope, $compile, $rootElement, $animate) {
       scope = $rootScope.$new();
-      doc = jqLite('<form name="myForm">' +
+      element = angular.element('<form name="myForm">' +
                    '  <input type="text" ng-model="input" name="myInput" />' +
                    '</form>');
-      $rootElement.append(doc);
-      $compile(doc)(scope);
+      $rootElement.append(element);
+      $compile(element)(scope);
       $animate.queue = [];
 
-      input = doc.find('input');
+      input = element.find('input');
       model = scope.myForm.myInput;
     }));
 
 
-    afterEach(function() {
+     afterEach(() => {
       dealoc(input);
     });
 
 
-    it('should trigger an animation when invalid', inject(function($animate) {
+    test('should trigger an animation when invalid', angular.mock.inject(function($animate) {
       model.$setValidity('required', false);
 
       var animations = findElementAnimations(input, $animate.queue);
@@ -1865,7 +1879,7 @@ describe('ngModel', function() {
     }));
 
 
-    it('should trigger an animation when valid', inject(function($animate) {
+    test('should trigger an animation when valid', angular.mock.inject(function($animate) {
       model.$setValidity('required', false);
 
       $animate.queue = [];
@@ -1880,7 +1894,7 @@ describe('ngModel', function() {
     }));
 
 
-    it('should trigger an animation when dirty', inject(function($animate) {
+    test('should trigger an animation when dirty', angular.mock.inject(function($animate) {
       model.$setViewValue('some dirty value');
 
       var animations = findElementAnimations(input, $animate.queue);
@@ -1891,7 +1905,7 @@ describe('ngModel', function() {
     }));
 
 
-    it('should trigger an animation when pristine', inject(function($animate) {
+    test('should trigger an animation when pristine', angular.mock.inject(function($animate) {
       model.$setPristine();
 
       var animations = findElementAnimations(input, $animate.queue);
@@ -1900,7 +1914,7 @@ describe('ngModel', function() {
     }));
 
 
-    it('should trigger an animation when untouched', inject(function($animate) {
+    test('should trigger an animation when untouched', angular.mock.inject(function($animate) {
       model.$setUntouched();
 
       var animations = findElementAnimations(input, $animate.queue);
@@ -1909,7 +1923,7 @@ describe('ngModel', function() {
     }));
 
 
-    it('should trigger an animation when touched', inject(function($animate) {
+    test('should trigger an animation when touched', angular.mock.inject(function($animate) {
       model.$setTouched();
 
       var animations = findElementAnimations(input, $animate.queue);
@@ -1918,7 +1932,7 @@ describe('ngModel', function() {
     }));
 
 
-    it('should trigger custom errors as addClass/removeClass when invalid/valid', inject(function($animate) {
+    test('should trigger custom errors as addClass/removeClass when invalid/valid', angular.mock.inject(function($animate) {
       model.$setValidity('custom-error', false);
 
       var animations = findElementAnimations(input, $animate.queue);

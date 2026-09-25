@@ -30,18 +30,23 @@
 
   http://jsperf.com/throw-vs-return
 */
-
-describe('q', function() {
-  var q, q_no_error, defer, deferred, promise, log, exceptionHandlerCalls;
+ describe('q', () => {
+  var q;
+  var q_no_error;
+  var defer;
+  var deferred;
+  var promise;
+  var log;
+  var exceptionHandlerCalls;
 
   // The following private functions are used to help with logging for testing invocation of the
   // promise callbacks.
   function _argToString(arg) {
-    return (typeof arg === 'object' && !(isError(arg))) ? toJson(arg) : '' + arg;
+    return (typeof arg === 'object' && !(ngInternals.isError(arg))) ? angular.toJson(arg) : '' + arg;
   }
 
   function _argumentsToString(args) {
-    return sliceArgs(args).map(_argToString).join(',');
+    return Array.from(args).map(_argToString).join(',');
   }
 
   // Help log invocation of success(), finally(), progress() and error()
@@ -51,7 +56,7 @@ describe('q', function() {
       log.push(logPrefix + '->throw(' +  _argToString(returnVal) + ')');
       throw returnVal;
     } else {
-      if (isUndefined(returnVal)) {
+      if (angular.isUndefined(returnVal)) {
         log.push(logPrefix);
       } else {
         log.push(logPrefix + '->' +  _argToString(returnVal));
@@ -157,17 +162,17 @@ describe('q', function() {
 
 
   var mockNextTick = {
-    nextTick: function(task) {
+    nextTick(task) {
       mockNextTick.queue.push(task);
     },
     queue: [],
     logExceptions: true,
-    flush: function() {
+    flush() {
       if (!mockNextTick.queue.length) throw new Error('Nothing to be flushed!');
       while (mockNextTick.queue.length) {
         var queue = mockNextTick.queue;
         mockNextTick.queue = [];
-        forEach(queue, function(task) {
+        angular.forEach(queue, function(task) {
           try {
             task();
           } catch (e) {
@@ -189,9 +194,9 @@ describe('q', function() {
     }
   }
 
-  beforeEach(function() {
-    q = qFactory(mockNextTick.nextTick, exceptionHandler, true);
-    q_no_error = qFactory(mockNextTick.nextTick, exceptionHandler, false);
+   beforeEach(() => {
+    q = ngInternals.qFactory(mockNextTick.nextTick, exceptionHandler, true);
+    q_no_error = ngInternals.qFactory(mockNextTick.nextTick, exceptionHandler, false);
     defer = q.defer;
     deferred =  defer();
     promise = deferred.promise;
@@ -201,13 +206,16 @@ describe('q', function() {
   });
 
 
-  afterEach(function() {
+   afterEach(() => {
     expect(mockNextTick.queue.length).toBe(0);
   });
 
 
-  describe('$Q', function() {
-    var resolve, reject, resolve2, reject2;
+  describe('$Q', () => {
+    var resolve;
+    var reject;
+    var resolve2;
+    var reject2;
     var createPromise = function() {
       return q(function(resolveFn, rejectFn) {
         if (resolve === null) {
@@ -220,28 +228,28 @@ describe('q', function() {
       });
     };
 
-    afterEach(function() {
+     afterEach(() => {
       resolve = reject = resolve2 = reject2 = null;
     });
 
-    it('should return a Promise', function() {
-      var promise = q(noop);
+    test('should return a Promise', () => {
+      var promise = q(angular.noop);
       expect(typeof promise.then).toBe('function');
       expect(typeof promise.catch).toBe('function');
       expect(typeof promise.finally).toBe('function');
     });
 
-    it('should support the instanceof operator', function() {
+    test('should support the instanceof operator', () => {
       // eslint-disable-next-line new-cap
-      var promise = new q(noop);
+      var promise = new q(angular.noop);
       expect(promise instanceof q).toBe(true);
-      promise = q(noop);
+      promise = q(angular.noop);
       expect(promise instanceof q).toBe(true);
     });
 
 
-    describe('resolve', function() {
-      it('should fulfill the promise and execute all success callbacks in the registration order',
+    describe('resolve', () => {
+      test('should fulfill the promise and execute all success callbacks in the registration order',
           function() {
         var promise = createPromise();
         promise.then(success(1), error());
@@ -254,7 +262,7 @@ describe('q', function() {
       });
 
 
-      it('should do nothing if a promise was previously resolved', function() {
+      test('should do nothing if a promise was previously resolved', () => {
         var promise = createPromise();
         promise.then(success(), error());
         expect(logStr()).toBe('');
@@ -271,7 +279,7 @@ describe('q', function() {
       });
 
 
-      it('should do nothing if a promise was previously rejected', function() {
+      test('should do nothing if a promise was previously rejected', () => {
         var promise = createPromise();
         promise.then(success(), error());
         expect(logStr()).toBe('');
@@ -288,7 +296,7 @@ describe('q', function() {
       });
 
 
-      it('should allow deferred resolution with a new promise', function() {
+      test('should allow deferred resolution with a new promise', () => {
         var promise = createPromise();
 
         promise.then(success(), error());
@@ -302,7 +310,7 @@ describe('q', function() {
       });
 
 
-      it('should call the callback in the next turn', function() {
+      test('should call the callback in the next turn', () => {
         var promise = createPromise();
         promise.then(success());
         expect(logStr()).toBe('');
@@ -315,7 +323,7 @@ describe('q', function() {
       });
 
 
-      it('should not break if a callbacks registers another callback', function() {
+      test('should not break if a callbacks registers another callback', () => {
         var promise = createPromise();
         promise.then(function() {
           log.push('outer');
@@ -332,7 +340,7 @@ describe('q', function() {
       });
 
 
-      it('should not break if a callbacks tries to resolve the deferred again', function() {
+      test('should not break if a callbacks tries to resolve the deferred again', () => {
         var promise = createPromise();
         promise.then(function(val) {
           log.push('then1(' + val + ')->resolve(bar)');
@@ -350,8 +358,8 @@ describe('q', function() {
     });
 
 
-    describe('reject', function() {
-      it('should reject the promise and execute all error callbacks in the registration order',
+    describe('reject', () => {
+      test('should reject the promise and execute all error callbacks in the registration order',
           function() {
         var promise = createPromise();
         promise.then(success(), error(1));
@@ -364,7 +372,7 @@ describe('q', function() {
       });
 
 
-      it('should do nothing if a promise was previously resolved', function() {
+      test('should do nothing if a promise was previously resolved', () => {
         var promise = createPromise();
         promise.then(success(1), error(1));
         expect(logStr()).toBe('');
@@ -386,7 +394,7 @@ describe('q', function() {
       });
 
 
-      it('should do nothing if a promise was previously rejected', function() {
+      test('should do nothing if a promise was previously rejected', () => {
         var promise = createPromise();
         promise.then(success(1), error(1));
         expect(logStr()).toBe('');
@@ -408,7 +416,7 @@ describe('q', function() {
       });
 
 
-      it('should not defer rejection with a new promise', function() {
+      test('should not defer rejection with a new promise', () => {
         var promise = createPromise();
         promise.then(success(), error());
 
@@ -418,7 +426,7 @@ describe('q', function() {
       });
 
 
-      it('should call the error callback in the next turn', function() {
+      test('should call the error callback in the next turn', () => {
         var promise = createPromise();
         promise.then(success(), error());
         expect(logStr()).toBe('');
@@ -431,7 +439,7 @@ describe('q', function() {
       });
 
 
-      it('should support non-bound execution', function() {
+      test('should support non-bound execution', () => {
         var promise = createPromise();
         promise.then(success(), error());
         reject('detached');
@@ -441,9 +449,9 @@ describe('q', function() {
     });
 
 
-    describe('promise', function() {
-      describe('then', function() {
-        it('should allow registration of a success callback without an errback or progressBack ' +
+    describe('promise', () => {
+      describe('then', () => {
+        test('should allow registration of a success callback without an errback or progressBack ' +
           'and resolve', function() {
           var promise = createPromise();
           promise.then(success());
@@ -453,7 +461,7 @@ describe('q', function() {
         });
 
 
-        it('should allow registration of a success callback without an errback and reject',
+        test('should allow registration of a success callback without an errback and reject',
             function() {
           var promise = createPromise();
           promise.then(success());
@@ -463,7 +471,7 @@ describe('q', function() {
         });
 
 
-        it('should allow registration of an errback without a success or progress callback and ' +
+        test('should allow registration of an errback without a success or progress callback and ' +
           ' reject', function() {
           var promise = createPromise();
           promise.then(null, error());
@@ -473,7 +481,7 @@ describe('q', function() {
         });
 
 
-        it('should allow registration of an errback without a success callback and resolve',
+        test('should allow registration of an errback without a success callback and resolve',
             function() {
           var promise = createPromise();
           promise.then(null, error());
@@ -483,7 +491,7 @@ describe('q', function() {
         });
 
 
-        it('should allow registration of a progressBack without a success callback and resolve',
+        test('should allow registration of a progressBack without a success callback and resolve',
             function() {
           var promise = createPromise();
           promise.then(null, null, progress());
@@ -493,7 +501,7 @@ describe('q', function() {
         });
 
 
-        it('should allow registration of a progressBack without a error callback and reject',
+        test('should allow registration of a progressBack without a error callback and reject',
             function() {
           var promise = createPromise();
           promise.then(null, null, progress());
@@ -503,7 +511,7 @@ describe('q', function() {
         });
 
 
-        it('should resolve all callbacks with the original value', function() {
+        test('should resolve all callbacks with the original value', () => {
           var promise = createPromise();
           promise.then(success('A', 'aVal'), error(), progress());
           promise.then(success('B', 'bErr', true), error(), progress());
@@ -522,7 +530,7 @@ describe('q', function() {
         });
 
 
-        it('should reject all callbacks with the original reason', function() {
+        test('should reject all callbacks with the original reason', () => {
           var promise = createPromise();
           promise.then(success(), error('A', 'aVal'), progress());
           promise.then(success(), error('B', 'bEr', true), progress());
@@ -536,7 +544,7 @@ describe('q', function() {
         });
 
 
-        it('should propagate resolution and rejection between dependent promises', function() {
+        test('should propagate resolution and rejection between dependent promises', () => {
           var promise = createPromise();
           promise.then(success(1, 'x'),       error('1')).
                   then(success(2, 'y', true), error('2')).
@@ -555,7 +563,7 @@ describe('q', function() {
         });
 
 
-        it('should reject a derived promise if an exception is thrown while resolving its parent',
+        test('should reject a derived promise if an exception is thrown while resolving its parent',
             function() {
           var promise = createPromise();
           promise.then(success(1, 'oops', true), error(1)).
@@ -566,7 +574,7 @@ describe('q', function() {
         });
 
 
-        it('should reject a derived promise if an exception is thrown while rejecting its parent',
+        test('should reject a derived promise if an exception is thrown while rejecting its parent',
             function() {
           var promise = createPromise();
           promise.then(null,       error(1, 'oops', true)).
@@ -577,7 +585,7 @@ describe('q', function() {
         });
 
 
-        it('should call success callback in the next turn even if promise is already resolved',
+        test('should call success callback in the next turn even if promise is already resolved',
             function() {
           var promise = createPromise();
           resolve('done!');
@@ -590,7 +598,7 @@ describe('q', function() {
         });
 
 
-        it('should call error callback in the next turn even if promise is already rejected',
+        test('should call error callback in the next turn even if promise is already rejected',
             function() {
           var promise = createPromise();
           reject('oops!');
@@ -602,7 +610,7 @@ describe('q', function() {
           expect(log).toEqual(['error(oops!)->reject(oops!)']);
         });
 
-        it('should forward success resolution when success callbacks are not functions', function() {
+        test('should forward success resolution when success callbacks are not functions', () => {
           var promise = createPromise();
           resolve('yay!');
 
@@ -619,7 +627,7 @@ describe('q', function() {
           expect(log).toEqual(['success(yay!)->yay!']);
         });
 
-        it('should forward error resolution when error callbacks are not functions', function() {
+        test('should forward error resolution when error callbacks are not functions', () => {
           var promise = createPromise();
           reject('oops!');
 
@@ -638,8 +646,8 @@ describe('q', function() {
       });
 
 
-      describe('finally', function() {
-        it('should not take an argument',
+      describe('finally', () => {
+        test('should not take an argument',
             function() {
           var promise = createPromise();
           promise['finally'](fin(1));
@@ -648,8 +656,8 @@ describe('q', function() {
           expect(logStr()).toBe('finally1()');
         });
 
-        describe('when the promise is fulfilled', function() {
-          it('should call the callback',
+        describe('when the promise is fulfilled', () => {
+          test('should call the callback',
               function() {
             var promise = createPromise();
             promise.then(success(1))['finally'](fin(1));
@@ -658,7 +666,7 @@ describe('q', function() {
             expect(logStr()).toBe('success1(foo)->foo; finally1()');
           });
 
-          it('should fulfill with the original value',
+          test('should fulfill with the original value',
               function() {
             var promise = createPromise();
             promise['finally'](fin('B', 'b'), error('B')).
@@ -670,7 +678,7 @@ describe('q', function() {
           });
 
 
-          it('should fulfill with the original value (larger test)',
+          test('should fulfill with the original value (larger test)',
               function() {
             var promise = createPromise();
             promise.then(success('A', 'a'), error('A'));
@@ -691,9 +699,9 @@ describe('q', function() {
                                  'successCCCC(cc)->ccc']);
           });
 
-          describe('when the callback returns a promise', function() {
-            describe('that is fulfilled', function() {
-              it('should fulfill with the original reason after that promise resolves',
+          describe('when the callback returns a promise', () => {
+            describe('that is fulfilled', () => {
+              test('should fulfill with the original reason after that promise resolves',
                 function() {
                 var promise = createPromise();
                 var promise2 = createPromise();
@@ -709,8 +717,8 @@ describe('q', function() {
               });
             });
 
-            describe('that is rejected', function() {
-              it('should reject with this new rejection reason',
+            describe('that is rejected', () => {
+              test('should reject with this new rejection reason',
                   function() {
                 var promise = createPromise();
                 var promise2 = createPromise();
@@ -725,8 +733,8 @@ describe('q', function() {
 
           });
 
-          describe('when the callback throws an exception', function() {
-            it('should reject with this new exception', function() {
+          describe('when the callback throws an exception', () => {
+            test('should reject with this new exception', () => {
               var promise = createPromise();
               promise['finally'](fin(1, 'exception', true))
                      .then(success(1), error(2));
@@ -739,8 +747,8 @@ describe('q', function() {
         });
 
 
-        describe('when the promise is rejected', function() {
-          it('should call the callback', function() {
+        describe('when the promise is rejected', () => {
+          test('should call the callback', () => {
             var promise = createPromise();
             promise['finally'](fin(1))
                    .then(success(2), error(1));
@@ -749,7 +757,7 @@ describe('q', function() {
             expect(logStr()).toBe('finally1(); error1(foo)->reject(foo)');
           });
 
-          it('should reject with the original reason', function() {
+          test('should reject with the original reason', () => {
             var promise = createPromise();
             promise['finally'](fin(1), 'hello')
                    .then(success(2), error(2));
@@ -758,9 +766,9 @@ describe('q', function() {
             expect(logStr()).toBe('finally1(); error2(original)->reject(original)');
           });
 
-          describe('when the callback returns a promise', function() {
-            describe('that is fulfilled', function() {
-              it('should reject with the original reason after that promise resolves', function() {
+          describe('when the callback returns a promise', () => {
+            describe('that is fulfilled', () => {
+              test('should reject with the original reason after that promise resolves', () => {
                 var promise = createPromise();
                 var promise2 = createPromise();
                 resolve2('bar');
@@ -772,8 +780,8 @@ describe('q', function() {
               });
             });
 
-            describe('that is rejected', function() {
-              it('should reject with the new reason', function() {
+            describe('that is rejected', () => {
+              test('should reject with the new reason', () => {
                 var promise = createPromise();
                 var promise2 = createPromise();
                 reject2('bar');
@@ -786,8 +794,8 @@ describe('q', function() {
             });
           });
 
-          describe('when the callback throws an exception', function() {
-            it('should reject with this new exception', function() {
+          describe('when the callback throws an exception', () => {
+            test('should reject with this new exception', () => {
               var promise = createPromise();
               promise['finally'](fin(1, 'exception', true))
                      .then(success(1), error(2));
@@ -799,8 +807,8 @@ describe('q', function() {
         });
       });
 
-      describe('catch', function() {
-        it('should be a shorthand for defining promise error handlers', function() {
+      describe('catch', () => {
+        test('should be a shorthand for defining promise error handlers', () => {
           var promise = createPromise();
           promise['catch'](error(1)).then(null, error(2));
           reject('foo');
@@ -812,16 +820,16 @@ describe('q', function() {
   });
 
 
-  describe('defer', function() {
-    it('should create a new deferred', function() {
+  describe('defer', () => {
+    test('should create a new deferred', () => {
       expect(deferred.promise).toBeDefined();
       expect(deferred.resolve).toBeDefined();
       expect(deferred.reject).toBeDefined();
     });
 
 
-    describe('resolve', function() {
-      it('should fulfill the promise and execute all success callbacks in the registration order',
+    describe('resolve', () => {
+      test('should fulfill the promise and execute all success callbacks in the registration order',
           function() {
         promise.then(success(1), error());
         promise.then(success(2), error());
@@ -833,21 +841,21 @@ describe('q', function() {
       });
 
 
-      it('should complain if promise fulfilled with itself', function() {
-        var resolveSpy = jasmine.createSpy('resolve');
-        var rejectSpy = jasmine.createSpy('reject');
+      test('should complain if promise fulfilled with itself', () => {
+        var resolveSpy = jest.fn().mockName('resolve');
+        var rejectSpy = jest.fn().mockName('reject');
         promise.then(resolveSpy, rejectSpy);
         deferred.resolve(deferred.promise);
         mockNextTick.flush();
 
         expect(resolveSpy).not.toHaveBeenCalled();
         expect(rejectSpy).toHaveBeenCalled();
-        expect(rejectSpy.calls.argsFor(0)[0]).toEqualMinErr('$q', 'qcycle',
+        expect(rejectSpy.mock.calls[0][0]).toEqualMinErr('$q', 'qcycle',
             'Expected promise to be resolved with value other than itself');
       });
 
 
-      it('should do nothing if a promise was previously resolved', function() {
+      test('should do nothing if a promise was previously resolved', () => {
         promise.then(success(), error());
         expect(logStr()).toBe('');
 
@@ -863,7 +871,7 @@ describe('q', function() {
       });
 
 
-      it('should do nothing if a promise was previously rejected', function() {
+      test('should do nothing if a promise was previously rejected', () => {
         promise.then(success(), error());
         expect(logStr()).toBe('');
 
@@ -879,7 +887,7 @@ describe('q', function() {
       });
 
 
-      it('should allow deferred resolution with a new promise', function() {
+      test('should allow deferred resolution with a new promise', () => {
         var deferred2 = defer();
         promise.then(success(), error());
 
@@ -892,7 +900,7 @@ describe('q', function() {
       });
 
 
-      it('should call the callback in the next turn', function() {
+      test('should call the callback in the next turn', () => {
         promise.then(success());
         expect(logStr()).toBe('');
 
@@ -904,7 +912,7 @@ describe('q', function() {
       });
 
 
-      it('should support non-bound execution', function() {
+      test('should support non-bound execution', () => {
         var resolver = deferred.resolve;
         promise.then(success(), error());
         resolver('detached');
@@ -913,7 +921,7 @@ describe('q', function() {
       });
 
 
-      it('should not break if a callbacks registers another callback', function() {
+      test('should not break if a callbacks registers another callback', () => {
         promise.then(function() {
           log.push('outer');
           promise.then(function() {
@@ -929,7 +937,7 @@ describe('q', function() {
       });
 
 
-      it('should not break if a callbacks tries to resolve the deferred again', function() {
+      test('should not break if a callbacks tries to resolve the deferred again', () => {
         promise.then(function(val) {
           log.push('then1(' + val + ')->resolve(bar)');
           deferred.resolve('bar'); // nop
@@ -946,8 +954,8 @@ describe('q', function() {
     });
 
 
-    describe('reject', function() {
-      it('should reject the promise and execute all error callbacks in the registration order',
+    describe('reject', () => {
+      test('should reject the promise and execute all error callbacks in the registration order',
           function() {
         promise.then(success(), error(1));
         promise.then(success(), error(2));
@@ -959,7 +967,7 @@ describe('q', function() {
       });
 
 
-      it('should do nothing if a promise was previously resolved', function() {
+      test('should do nothing if a promise was previously resolved', () => {
         promise.then(success(1), error(1));
         expect(logStr()).toBe('');
 
@@ -980,7 +988,7 @@ describe('q', function() {
       });
 
 
-      it('should do nothing if a promise was previously rejected', function() {
+      test('should do nothing if a promise was previously rejected', () => {
         promise.then(success(1), error(1));
         expect(logStr()).toBe('');
 
@@ -1001,7 +1009,7 @@ describe('q', function() {
       });
 
 
-      it('should not defer rejection with a new promise', function() {
+      test('should not defer rejection with a new promise', () => {
         var deferred2 = defer();
         promise.then(success(), error());
 
@@ -1011,7 +1019,7 @@ describe('q', function() {
       });
 
 
-      it('should call the error callback in the next turn', function() {
+      test('should call the error callback in the next turn', () => {
         promise.then(success(), error());
         expect(logStr()).toBe('');
 
@@ -1023,7 +1031,7 @@ describe('q', function() {
       });
 
 
-      it('should support non-bound execution', function() {
+      test('should support non-bound execution', () => {
         var rejector = deferred.reject;
         promise.then(success(), error());
         rejector('detached');
@@ -1033,8 +1041,8 @@ describe('q', function() {
     });
 
 
-    describe('notify', function() {
-      it('should execute all progress callbacks in the registration order',
+    describe('notify', () => {
+      test('should execute all progress callbacks in the registration order',
           function() {
         promise.then(success(1), error(1), progress(1));
         promise.then(success(2), error(2), progress(2));
@@ -1046,7 +1054,7 @@ describe('q', function() {
       });
 
 
-      it('should do nothing if a promise was previously resolved', function() {
+      test('should do nothing if a promise was previously resolved', () => {
         promise.then(success(1), error(1), progress(1));
         expect(logStr()).toBe('');
 
@@ -1061,7 +1069,7 @@ describe('q', function() {
       });
 
 
-      it('should do nothing if a promise was previously rejected', function() {
+      test('should do nothing if a promise was previously rejected', () => {
         promise.then(success(1), error(1), progress(1));
         expect(logStr()).toBe('');
 
@@ -1083,7 +1091,7 @@ describe('q', function() {
       });
 
 
-      it('should not apply any special treatment to promises passed to notify', function() {
+      test('should not apply any special treatment to promises passed to notify', () => {
         var deferred2 = defer();
         promise.then(success(), error(), progress());
 
@@ -1093,7 +1101,7 @@ describe('q', function() {
       });
 
 
-      it('should call the progress callbacks in the next turn', function() {
+      test('should call the progress callbacks in the next turn', () => {
         promise.then(success(), error(), progress(1));
         promise.then(success(), error(), progress(2));
         expect(logStr()).toBe('');
@@ -1106,7 +1114,7 @@ describe('q', function() {
       });
 
 
-      it('should ignore notifications sent out in the same turn before listener registration',
+      test('should ignore notifications sent out in the same turn before listener registration',
           function() {
         deferred.notify('foo');
         promise.then(success(), error(), progress(1));
@@ -1115,7 +1123,7 @@ describe('q', function() {
       });
 
 
-      it('should support non-bound execution', function() {
+      test('should support non-bound execution', () => {
         var notify = deferred.notify;
         promise.then(success(), error(), progress());
         notify('detached');
@@ -1124,7 +1132,7 @@ describe('q', function() {
       });
 
 
-      it('should not save and re-emit progress notifications between ticks', function() {
+      test('should not save and re-emit progress notifications between ticks', () => {
         promise.then(success(1), error(1), progress(1));
         deferred.notify('foo');
         deferred.notify('bar');
@@ -1141,22 +1149,22 @@ describe('q', function() {
     });
 
 
-    describe('promise', function() {
-      it('should have a then method', function() {
+    describe('promise', () => {
+      test('should have a then method', () => {
         expect(typeof promise.then).toBe('function');
       });
 
-      it('should have a catch method', function() {
+      test('should have a catch method', () => {
         expect(typeof promise['catch']).toBe('function');
       });
 
-      it('should have a finally method', function() {
+      test('should have a finally method', () => {
         expect(typeof promise['finally']).toBe('function');
       });
 
 
-      describe('then', function() {
-        it('should allow registration of a success callback without an errback or progressBack ' +
+      describe('then', () => {
+        test('should allow registration of a success callback without an errback or progressBack ' +
           'and resolve', function() {
           promise.then(success());
           syncResolve(deferred, 'foo');
@@ -1164,7 +1172,7 @@ describe('q', function() {
         });
 
 
-        it('should allow registration of a success callback without an errback and reject',
+        test('should allow registration of a success callback without an errback and reject',
             function() {
           promise.then(success());
           syncReject(deferred, 'foo');
@@ -1172,7 +1180,7 @@ describe('q', function() {
         });
 
 
-        it('should allow registration of a success callback without a progressBack and notify',
+        test('should allow registration of a success callback without a progressBack and notify',
             function() {
           promise.then(success());
           syncNotify(deferred, 'doing');
@@ -1180,7 +1188,7 @@ describe('q', function() {
         });
 
 
-        it('should allow registration of an errback without a success or progress callback and ' +
+        test('should allow registration of an errback without a success or progress callback and ' +
           ' reject', function() {
           promise.then(null, error());
           syncReject(deferred, 'oops!');
@@ -1188,7 +1196,7 @@ describe('q', function() {
         });
 
 
-        it('should allow registration of an errback without a success callback and resolve',
+        test('should allow registration of an errback without a success callback and resolve',
             function() {
           promise.then(null, error());
           syncResolve(deferred, 'done');
@@ -1196,7 +1204,7 @@ describe('q', function() {
         });
 
 
-        it('should allow registration of an errback without a progress callback and notify',
+        test('should allow registration of an errback without a progress callback and notify',
             function() {
           promise.then(null, error());
           syncNotify(deferred, 'doing');
@@ -1204,7 +1212,7 @@ describe('q', function() {
         });
 
 
-        it('should allow registration of a progressBack without a success or error callback and ' +
+        test('should allow registration of a progressBack without a success or error callback and ' +
           'notify', function() {
           promise.then(null, null, progress());
           syncNotify(deferred, 'doing');
@@ -1212,7 +1220,7 @@ describe('q', function() {
         });
 
 
-        it('should allow registration of a progressBack without a success callback and resolve',
+        test('should allow registration of a progressBack without a success callback and resolve',
             function() {
           promise.then(null, null, progress());
           syncResolve(deferred, 'done');
@@ -1220,7 +1228,7 @@ describe('q', function() {
         });
 
 
-        it('should allow registration of a progressBack without a error callback and reject',
+        test('should allow registration of a progressBack without a error callback and reject',
             function() {
           promise.then(null, null, progress());
           syncReject(deferred, 'oops!');
@@ -1228,7 +1236,7 @@ describe('q', function() {
         });
 
 
-        it('should resolve all callbacks with the original value', function() {
+        test('should resolve all callbacks with the original value', () => {
           promise.then(success('A', 'aVal'), error(), progress());
           promise.then(success('B', 'bErr', true), error(), progress());
           promise.then(success('C', q.reject('cReason')), error(), progress());
@@ -1245,7 +1253,7 @@ describe('q', function() {
         });
 
 
-        it('should reject all callbacks with the original reason', function() {
+        test('should reject all callbacks with the original reason', () => {
           promise.then(success(), error('A', 'aVal'), progress());
           promise.then(success(), error('B', 'bEr', true), progress());
           promise.then(success(), error('C', q.reject('cReason')), progress());
@@ -1257,7 +1265,7 @@ describe('q', function() {
         });
 
 
-        it('should notify all callbacks with the original value', function() {
+        test('should notify all callbacks with the original value', () => {
           promise.then(success(), error(), progress('A', 'aVal'));
           promise.then(success(), error(), progress('B', 'bErr', true));
           promise.then(success(), error(), progress('C', q.reject('cReason')));
@@ -1274,7 +1282,7 @@ describe('q', function() {
         });
 
 
-        it('should propagate resolution and rejection between dependent promises', function() {
+        test('should propagate resolution and rejection between dependent promises', () => {
           promise.then(success(1, 'x'),       error('1')).
                   then(success(2, 'y', true), error('2')).
                   then(success(3),            error(3, 'z', true)).
@@ -1291,7 +1299,7 @@ describe('q', function() {
         });
 
 
-        it('should propagate notification between dependent promises', function() {
+        test('should propagate notification between dependent promises', () => {
           promise.then(success(), error(), progress(1, 'a')).
                   then(success(), error(), progress(2, 'b')).
                   then(success(), error(), progress(3, 'c')).
@@ -1308,7 +1316,7 @@ describe('q', function() {
         });
 
 
-        it('should reject a derived promise if an exception is thrown while resolving its parent',
+        test('should reject a derived promise if an exception is thrown while resolving its parent',
             function() {
           promise.then(success(1, 'oops', true), error(1)).
                   then(success(2),               error(2));
@@ -1317,7 +1325,7 @@ describe('q', function() {
         });
 
 
-        it('should reject a derived promise if an exception is thrown while rejecting its parent',
+        test('should reject a derived promise if an exception is thrown while rejecting its parent',
             function() {
           promise.then(null,       error(1, 'oops', true)).
                   then(success(2), error(2));
@@ -1326,7 +1334,7 @@ describe('q', function() {
         });
 
 
-        it('should stop notification propagation in case of error', function() {
+        test('should stop notification propagation in case of error', () => {
           promise.then(success(), error(), progress(1)).
                   then(success(), error(), progress(2, 'ops!', true)).
                   then(success(), error(), progress(3));
@@ -1338,7 +1346,7 @@ describe('q', function() {
         });
 
 
-        it('should call success callback in the next turn even if promise is already resolved',
+        test('should call success callback in the next turn even if promise is already resolved',
             function() {
           deferred.resolve('done!');
 
@@ -1350,7 +1358,7 @@ describe('q', function() {
         });
 
 
-        it('should call error callback in the next turn even if promise is already rejected',
+        test('should call error callback in the next turn even if promise is already rejected',
             function() {
           deferred.reject('oops!');
 
@@ -1361,7 +1369,7 @@ describe('q', function() {
           expect(log).toEqual(['error(oops!)->reject(oops!)']);
         });
 
-        it('should forward success resolution when success callbacks are not functions', function() {
+        test('should forward success resolution when success callbacks are not functions', () => {
           deferred.resolve('yay!');
 
           promise.then(1).
@@ -1377,7 +1385,7 @@ describe('q', function() {
           expect(log).toEqual(['success(yay!)->yay!']);
         });
 
-        it('should forward error resolution when error callbacks are not functions', function() {
+        test('should forward error resolution when error callbacks are not functions', () => {
           deferred.reject('oops!');
 
           promise.then(null, 1).
@@ -1395,25 +1403,25 @@ describe('q', function() {
       });
 
 
-      describe('finally', function() {
+      describe('finally', () => {
 
-        it('should not take an argument',
+        test('should not take an argument',
             function() {
           promise['finally'](fin(1));
           syncResolve(deferred, 'foo');
           expect(logStr()).toBe('finally1()');
         });
 
-        describe('when the promise is fulfilled', function() {
+        describe('when the promise is fulfilled', () => {
 
-          it('should call the callback',
+          test('should call the callback',
               function() {
             promise.then(success(1))['finally'](fin(1));
             syncResolve(deferred, 'foo');
             expect(logStr()).toBe('success1(foo)->foo; finally1()');
           });
 
-          it('should fulfill with the original value',
+          test('should fulfill with the original value',
               function() {
             promise['finally'](fin('B', 'b'), error('B')).
                     then(success('BB', 'bb'), error('BB'));
@@ -1423,7 +1431,7 @@ describe('q', function() {
           });
 
 
-          it('should fulfill with the original value (larger test)',
+          test('should fulfill with the original value (larger test)',
               function() {
             promise.then(success('A', 'a'), error('A'));
             promise['finally'](fin('B', 'b'), error('B')).
@@ -1442,10 +1450,10 @@ describe('q', function() {
                                  'successCCCC(cc)->ccc']);
           });
 
-          describe('when the callback returns a promise', function() {
+          describe('when the callback returns a promise', () => {
 
-            describe('that is fulfilled', function() {
-              it('should fulfill with the original reason after that promise resolves',
+            describe('that is fulfilled', () => {
+              test('should fulfill with the original reason after that promise resolves',
                 function() {
 
                 var returnedDef = defer();
@@ -1460,8 +1468,8 @@ describe('q', function() {
               });
             });
 
-            describe('that is rejected', function() {
-              it('should reject with this new rejection reason',
+            describe('that is rejected', () => {
+              test('should reject with this new rejection reason',
                 function() {
                 var returnedDef = defer();
                 returnedDef.reject('bar');
@@ -1474,8 +1482,8 @@ describe('q', function() {
 
           });
 
-          describe('when the callback throws an exception', function() {
-            it('should reject with this new exception', function() {
+          describe('when the callback throws an exception', () => {
+            test('should reject with this new exception', () => {
               promise['finally'](fin(1, 'exception', true))
                      .then(success(1), error(2));
               syncResolve(deferred, 'foo');
@@ -1486,27 +1494,27 @@ describe('q', function() {
         });
 
 
-        describe('when the promise is rejected', function() {
+        describe('when the promise is rejected', () => {
 
-          it('should call the callback', function() {
+          test('should call the callback', () => {
             promise['finally'](fin(1))
                    .then(success(2), error(1));
             syncReject(deferred, 'foo');
             expect(logStr()).toBe('finally1(); error1(foo)->reject(foo)');
           });
 
-          it('should reject with the original reason', function() {
+          test('should reject with the original reason', () => {
             promise['finally'](fin(1), 'hello')
                    .then(success(2), error(2));
             syncReject(deferred, 'original');
             expect(logStr()).toBe('finally1(); error2(original)->reject(original)');
           });
 
-          describe('when the callback returns a promise', function() {
+          describe('when the callback returns a promise', () => {
 
-            describe('that is fulfilled', function() {
+            describe('that is fulfilled', () => {
 
-              it('should reject with the original reason after that promise resolves', function() {
+              test('should reject with the original reason after that promise resolves', () => {
                 var returnedDef = defer();
                 returnedDef.resolve('bar');
                 promise['finally'](fin(1, returnedDef.promise))
@@ -1517,9 +1525,9 @@ describe('q', function() {
 
             });
 
-            describe('that is rejected', function() {
+            describe('that is rejected', () => {
 
-              it('should reject with the new reason', function() {
+              test('should reject with the new reason', () => {
                 var returnedDef = defer();
                 returnedDef.reject('bar');
                 promise['finally'](fin(1, returnedDef.promise))
@@ -1532,9 +1540,9 @@ describe('q', function() {
 
           });
 
-          describe('when the callback throws an exception', function() {
+          describe('when the callback throws an exception', () => {
 
-            it('should reject with this new exception', function() {
+            test('should reject with this new exception', () => {
               promise['finally'](fin(1, 'exception', true))
                      .then(success(1), error(2));
               syncResolve(deferred, 'foo');
@@ -1546,8 +1554,8 @@ describe('q', function() {
         });
       });
 
-      describe('catch', function() {
-        it('should be a shorthand for defining promise error handlers', function() {
+      describe('catch', () => {
+        test('should be a shorthand for defining promise error handlers', () => {
           promise['catch'](error(1)).then(null, error(2));
           syncReject(deferred, 'foo');
           expect(logStr()).toBe('error1(foo)->reject(foo); error2(foo)->reject(foo)');
@@ -1557,8 +1565,8 @@ describe('q', function() {
   });
 
 
-  describe('reject', function() {
-    it('should package a string into a rejected promise', function() {
+  describe('reject', () => {
+    test('should package a string into a rejected promise', () => {
       var rejectedPromise = q.reject('not gonna happen');
       promise.then(success(), error());
       syncResolve(deferred, rejectedPromise);
@@ -1566,7 +1574,7 @@ describe('q', function() {
     });
 
 
-    it('should package an exception into a rejected promise', function() {
+    test('should package an exception into a rejected promise', () => {
       var rejectedPromise = q.reject(new Error('not gonna happen'));
       promise.then(success(), error());
       syncResolve(deferred, rejectedPromise);
@@ -1574,7 +1582,7 @@ describe('q', function() {
     });
 
 
-    it('should return a promise that forwards callbacks if the callbacks are missing', function() {
+    test('should return a promise that forwards callbacks if the callbacks are missing', () => {
       var rejectedPromise = q.reject('rejected');
       promise.then(success(), error());
       syncResolve(deferred, rejectedPromise.then());
@@ -1582,7 +1590,7 @@ describe('q', function() {
     });
 
 
-    it('should catch exceptions thrown in errback and forward them to derived promises', function() {
+    test('should catch exceptions thrown in errback and forward them to derived promises', () => {
       var rejectedPromise = q.reject('rejected');
       rejectedPromise.then(null, error('Broken', 'catch me!', true)).
                       then(null, error('Affected'));
@@ -1591,19 +1599,19 @@ describe('q', function() {
     });
 
 
-    it('should have functions `finally` and `catch`', function() {
+    test('should have functions `finally` and `catch`', () => {
       var rejectedPromise = q.reject('rejected');
       expect(rejectedPromise['finally']).not.toBeUndefined();
       expect(rejectedPromise['catch']).not.toBeUndefined();
-      rejectedPromise.catch(noop);
+      rejectedPromise.catch(angular.noop);
       mockNextTick.flush();
     });
   });
 
 
-  describe('when', function() {
-    describe('resolution', function() {
-      it('should call the success callback in the next turn when the value is a non-promise',
+  describe('when', () => {
+    describe('resolution', () => {
+      test('should call the success callback in the next turn when the value is a non-promise',
           function() {
         q.when('hello', success(), error());
         expect(logStr()).toBe('');
@@ -1612,7 +1620,7 @@ describe('q', function() {
       });
 
 
-      it('should call the success callback in the next turn when the value is a resolved promise',
+      test('should call the success callback in the next turn when the value is a resolved promise',
           function() {
         deferred.resolve('hello');
         q.when(deferred.promise, success(), error());
@@ -1622,7 +1630,7 @@ describe('q', function() {
       });
 
 
-      it('should call the errback in the next turn when the value is a rejected promise', function() {
+      test('should call the errback in the next turn when the value is a rejected promise', () => {
         deferred.reject('nope');
         q.when(deferred.promise, success(), error());
         expect(logStr()).toBe('');
@@ -1631,7 +1639,7 @@ describe('q', function() {
       });
 
 
-      it('should call the success callback after the original promise is resolved',
+      test('should call the success callback after the original promise is resolved',
           function() {
         q.when(deferred.promise, success(), error());
         expect(logStr()).toBe('');
@@ -1641,7 +1649,7 @@ describe('q', function() {
       });
 
 
-      it('should call the errback after the original promise is rejected',
+      test('should call the errback after the original promise is rejected',
           function() {
         q.when(deferred.promise, success(), error());
         expect(logStr()).toBe('');
@@ -1652,8 +1660,8 @@ describe('q', function() {
     });
 
 
-    describe('notification', function() {
-      it('should call the progressBack when the value is a promise and gets notified',
+    describe('notification', () => {
+      test('should call the progressBack when the value is a promise and gets notified',
           function() {
         q.when(deferred.promise, success(), error(), progress());
         expect(logStr()).toBe('');
@@ -1663,16 +1671,16 @@ describe('q', function() {
     });
 
 
-    describe('resolve', function() {
-      it('should be an alias of the "when" function', function() {
+    describe('resolve', () => {
+      test('should be an alias of the "when" function', () => {
         expect(q.resolve).toBeDefined();
         expect(q.resolve).toEqual(q.when);
       });
     });
 
 
-    describe('optional callbacks', function() {
-      it('should not require success callback and propagate resolution', function() {
+    describe('optional callbacks', () => {
+      test('should not require success callback and propagate resolution', () => {
         q.when('hi', null, error()).then(success(2), error());
         expect(logStr()).toBe('');
         mockNextTick.flush();
@@ -1680,7 +1688,7 @@ describe('q', function() {
       });
 
 
-      it('should not require success callback and propagate rejection', function() {
+      test('should not require success callback and propagate rejection', () => {
         q.when(q.reject('sorry'), null, error(1)).then(success(), error(2));
         expect(logStr()).toBe('');
         mockNextTick.flush();
@@ -1688,7 +1696,7 @@ describe('q', function() {
       });
 
 
-      it('should not require errback and propagate resolution', function() {
+      test('should not require errback and propagate resolution', () => {
         q.when('hi', success(1, 'hello')).then(success(2), error());
         expect(logStr()).toBe('');
         mockNextTick.flush();
@@ -1696,7 +1704,7 @@ describe('q', function() {
       });
 
 
-      it('should not require errback and propagate rejection', function() {
+      test('should not require errback and propagate rejection', () => {
         q.when(q.reject('sorry'), success()).then(success(2), error(2));
         expect(logStr()).toBe('');
         mockNextTick.flush();
@@ -1704,7 +1712,7 @@ describe('q', function() {
       });
 
 
-      it('should not require progressBack and propagate notification', function() {
+      test('should not require progressBack and propagate notification', () => {
         q.when(deferred.promise).
           then(success(), error(), progress());
         expect(logStr()).toBe('');
@@ -1714,8 +1722,8 @@ describe('q', function() {
     });
 
 
-    describe('returned promise', function() {
-      it('should return a promise that can be resolved with a value returned from the success ' +
+    describe('returned promise', () => {
+      test('should return a promise that can be resolved with a value returned from the success ' +
           'callback', function() {
         q.when('hello', success(1, 'hi'), error()).then(success(2), error());
         mockNextTick.flush();
@@ -1723,7 +1731,7 @@ describe('q', function() {
       });
 
 
-      it('should return a promise that can be rejected with a rejected promise returned from the ' +
+      test('should return a promise that can be rejected with a rejected promise returned from the ' +
           'success callback', function() {
         q.when('hello', success(1, q.reject('sorry')), error()).then(success(), error(2));
         mockNextTick.flush();
@@ -1731,7 +1739,7 @@ describe('q', function() {
       });
 
 
-      it('should return a promise that can be resolved with a value returned from the errback',
+      test('should return a promise that can be resolved with a value returned from the errback',
           function() {
         q.when(q.reject('sorry'), success(), error(1, 'hi')).then(success(2), error());
         mockNextTick.flush();
@@ -1739,7 +1747,7 @@ describe('q', function() {
       });
 
 
-      it('should return a promise that can be rejected with a rejected promise returned from the ' +
+      test('should return a promise that can be rejected with a rejected promise returned from the ' +
           'errback', function() {
         q.when(q.reject('sorry'), success(), error(1, q.reject('sigh'))).then(success(), error(2));
         mockNextTick.flush();
@@ -1747,7 +1755,7 @@ describe('q', function() {
       });
 
 
-      it('should return a promise that can be resolved with a promise returned from the success ' +
+      test('should return a promise that can be resolved with a promise returned from the success ' +
           'callback', function() {
         var deferred2 = defer();
         q.when('hi', success(1, deferred2.promise), error()).then(success(2), error());
@@ -1758,7 +1766,7 @@ describe('q', function() {
       });
 
 
-      it('should return a promise that can be resolved with promise returned from the errback ' +
+      test('should return a promise that can be resolved with promise returned from the errback ' +
           'callback', function() {
         var deferred2 = defer();
         q.when(q.reject('sorry'), success(), error(1, deferred2.promise)).then(success(2), error());
@@ -1770,11 +1778,11 @@ describe('q', function() {
     });
 
 
-    describe('security', function() {
-      it('should call success callback only once even if the original promise gets fulfilled ' +
+    describe('security', () => {
+      test('should call success callback only once even if the original promise gets fulfilled ' +
           'multiple times', function() {
         var evilPromise = {
-          then: function(success, error, progress) {
+          then(success, error, progress) {
             evilPromise.success = success;
             evilPromise.error = error;
             evilPromise.progress = progress;
@@ -1796,10 +1804,10 @@ describe('q', function() {
       });
 
 
-      it('should call errback only once even if the original promise gets fulfilled multiple ' +
+      test('should call errback only once even if the original promise gets fulfilled multiple ' +
           'times', function() {
         var evilPromise = {
-          then: function(success, error, progress) {
+          then(success, error, progress) {
             evilPromise.success = success;
             evilPromise.error = error;
             evilPromise.progress = progress;
@@ -1818,10 +1826,10 @@ describe('q', function() {
       });
 
 
-      it('should not call progressBack after promise gets fulfilled, even if original promise ' +
+      test('should not call progressBack after promise gets fulfilled, even if original promise ' +
           'gets notified multiple times', function() {
         var evilPromise = {
-          then: function(success, error, progress) {
+          then(success, error, progress) {
             evilPromise.success = success;
             evilPromise.error = error;
             evilPromise.progress = progress;
@@ -1842,8 +1850,8 @@ describe('q', function() {
   });
 
 
-  describe('all (array)', function() {
-    it('should resolve all or nothing', function() {
+  describe('all (array)', () => {
+    test('should resolve all or nothing', () => {
       var result;
       q.all([]).then(function(r) { result = r; });
       mockNextTick.flush();
@@ -1851,9 +1859,9 @@ describe('q', function() {
     });
 
 
-    it('should take an array of promises and return a promise for an array of results', function() {
-      var deferred1 = defer(),
-          deferred2 = defer();
+    test('should take an array of promises and return a promise for an array of results', () => {
+      var deferred1 = defer();
+      var deferred2 = defer();
 
       q.all([promise, deferred1.promise, deferred2.promise]).then(success(), error());
       expect(logStr()).toBe('');
@@ -1866,38 +1874,38 @@ describe('q', function() {
     });
 
 
-    it('should reject the derived promise if at least one of the promises in the array is rejected',
+    test('should reject the derived promise if at least one of the promises in the array is rejected',
         function() {
-      var deferred1 = defer(),
-          deferred2 = defer();
+          var deferred1 = defer();
+          var deferred2 = defer();
 
-      q.all([promise, deferred1.promise, deferred2.promise]).then(success(), error());
-      expect(logStr()).toBe('');
-      syncResolve(deferred2, 'cau');
-      expect(logStr()).toBe('');
-      syncReject(deferred1, 'oops');
-      expect(logStr()).toBe('error(oops)->reject(oops)');
-    });
+          q.all([promise, deferred1.promise, deferred2.promise]).then(success(), error());
+          expect(logStr()).toBe('');
+          syncResolve(deferred2, 'cau');
+          expect(logStr()).toBe('');
+          syncReject(deferred1, 'oops');
+          expect(logStr()).toBe('error(oops)->reject(oops)');
+        });
 
 
-    it('should not forward notifications from individual promises to the combined promise',
+    test('should not forward notifications from individual promises to the combined promise',
         function() {
-      var deferred1 = defer(),
-          deferred2 = defer();
+          var deferred1 = defer();
+          var deferred2 = defer();
 
-      q.all([promise, deferred1.promise, deferred2.promise]).then(success(), error(), progress());
-      expect(logStr()).toBe('');
-      deferred.notify('x');
-      deferred2.notify('y');
-      expect(logStr()).toBe('');
-      mockNextTick.flush();
-      expect(logStr()).toBe('');
-    });
+          q.all([promise, deferred1.promise, deferred2.promise]).then(success(), error(), progress());
+          expect(logStr()).toBe('');
+          deferred.notify('x');
+          deferred2.notify('y');
+          expect(logStr()).toBe('');
+          mockNextTick.flush();
+          expect(logStr()).toBe('');
+        });
 
 
-    it('should ignore multiple resolutions of an (evil) array promise', function() {
+    test('should ignore multiple resolutions of an (evil) array promise', () => {
       var evilPromise = {
-        then: function(success, error) {
+        then(success, error) {
           evilPromise.success = success;
           evilPromise.error = error;
         }
@@ -1916,8 +1924,8 @@ describe('q', function() {
     });
   });
 
-  describe('all (hash)', function() {
-    it('should resolve all or nothing', function() {
+  describe('all (hash)', () => {
+    test('should resolve all or nothing', () => {
       var result;
       q.all({}).then(function(r) { result = r; });
       mockNextTick.flush();
@@ -1925,9 +1933,9 @@ describe('q', function() {
     });
 
 
-    it('should take a hash of promises and return a promise for a hash of results', function() {
-      var deferred1 = defer(),
-          deferred2 = defer();
+    test('should take a hash of promises and return a promise for a hash of results', () => {
+      var deferred1 = defer();
+      var deferred2 = defer();
 
       q.all({en: promise, fr: deferred1.promise, es: deferred2.promise}).then(success(), error());
       expect(logStr()).toBe('');
@@ -1940,23 +1948,23 @@ describe('q', function() {
     });
 
 
-    it('should reject the derived promise if at least one of the promises in the hash is rejected',
+    test('should reject the derived promise if at least one of the promises in the hash is rejected',
         function() {
-      var deferred1 = defer(),
-          deferred2 = defer();
+          var deferred1 = defer();
+          var deferred2 = defer();
 
-      q.all({en: promise, fr: deferred1.promise, es: deferred2.promise}).then(success(), error());
-      expect(logStr()).toBe('');
-      syncResolve(deferred2, 'hola');
-      expect(logStr()).toBe('');
-      syncReject(deferred1, 'oops');
-      expect(logStr()).toBe('error(oops)->reject(oops)');
-    });
+          q.all({en: promise, fr: deferred1.promise, es: deferred2.promise}).then(success(), error());
+          expect(logStr()).toBe('');
+          syncResolve(deferred2, 'hola');
+          expect(logStr()).toBe('');
+          syncReject(deferred1, 'oops');
+          expect(logStr()).toBe('error(oops)->reject(oops)');
+        });
 
 
-    it('should ignore multiple resolutions of an (evil) hash promise', function() {
+    test('should ignore multiple resolutions of an (evil) hash promise', () => {
       var evilPromise = {
-        then: function(success, error) {
+        then(success, error) {
           evilPromise.success = success;
           evilPromise.error = error;
         }
@@ -1974,7 +1982,7 @@ describe('q', function() {
       expect(logStr()).toBe('success({"evil":"first","good":"done"})->{"evil":"first","good":"done"}');
     });
 
-    it('should handle correctly situation when given the same promise several times', function() {
+    test('should handle correctly situation when given the same promise several times', () => {
       q.all({first: promise, second: promise, third: promise}).then(success(), error());
       expect(logStr()).toBe('');
 
@@ -1983,16 +1991,16 @@ describe('q', function() {
     });
   });
 
-  describe('race (array)', function() {
-    it('should do nothing if given an empty array', function() {
+  describe('race (array)', () => {
+    test('should do nothing if given an empty array', () => {
       q.race([]).then(success(), error());
       expect(mockNextTick.queue.length).toBe(0);
       expect(logStr()).toBe('');
     });
 
-    it('should resolve as soon as the first promise is settled by resolution', function() {
-      var deferred1 = defer(),
-          deferred2 = defer();
+    test('should resolve as soon as the first promise is settled by resolution', () => {
+      var deferred1 = defer();
+      var deferred2 = defer();
 
       q.race([promise, deferred1.promise, deferred2.promise]).then(success(), error());
       expect(logStr()).toBe('');
@@ -2004,9 +2012,9 @@ describe('q', function() {
       expect(logStr()).toBe('success(hi)->hi');
     });
 
-    it('should reject as soon as the first promise is settled by rejection', function() {
-      var deferred1 = defer(),
-          deferred2 = defer();
+    test('should reject as soon as the first promise is settled by rejection', () => {
+      var deferred1 = defer();
+      var deferred2 = defer();
 
       q.race([promise, deferred1.promise, deferred2.promise]).then(success(), error());
       expect(logStr()).toBe('');
@@ -2019,16 +2027,16 @@ describe('q', function() {
     });
   });
 
-  describe('race (hash)', function() {
-    it('should do nothing if given an empty object', function() {
+  describe('race (hash)', () => {
+    test('should do nothing if given an empty object', () => {
       q.race({}).then(success(), error());
       expect(mockNextTick.queue.length).toBe(0);
       expect(logStr()).toBe('');
     });
 
-    it('should resolve as soon as the first promise is settled by resolution', function() {
-      var deferred1 = defer(),
-          deferred2 = defer();
+    test('should resolve as soon as the first promise is settled by resolution', () => {
+      var deferred1 = defer();
+      var deferred2 = defer();
 
       q.race({a: promise, b: deferred1.promise, c: deferred2.promise}).then(success(), error());
       expect(logStr()).toBe('');
@@ -2040,9 +2048,9 @@ describe('q', function() {
       expect(logStr()).toBe('success(hi)->hi');
     });
 
-    it('should reject as soon as the first promise is settled by rejection', function() {
-      var deferred1 = defer(),
-          deferred2 = defer();
+    test('should reject as soon as the first promise is settled by rejection', () => {
+      var deferred1 = defer();
+      var deferred2 = defer();
 
       q.race({a: promise, b: deferred1.promise, c: deferred2.promise}).then(success(), error());
       expect(logStr()).toBe('');
@@ -2055,17 +2063,17 @@ describe('q', function() {
     });
   });
 
-  describe('exception logging', function() {
+  describe('exception logging', () => {
     var mockExceptionLogger = {
       log: [],
-      logger: function(e) {
+      logger(e) {
         mockExceptionLogger.log.push(e);
       }
     };
 
 
-    beforeEach(function() {
-      q = qFactory(mockNextTick.nextTick, mockExceptionLogger.logger);
+     beforeEach(() => {
+      q = ngInternals.qFactory(mockNextTick.nextTick, mockExceptionLogger.logger);
       defer = q.defer;
       deferred =  defer();
       promise = deferred.promise;
@@ -2074,46 +2082,46 @@ describe('q', function() {
     });
 
 
-    describe('in then', function() {
-      it('should NOT log exceptions thrown in a success callback but reject the derived promise',
+    describe('in then', () => {
+      test('should NOT log exceptions thrown in a success callback but reject the derived promise',
           function() {
         var success1 = success(1, 'oops', true);
-        promise.then(success1).then(success(2), error(2)).catch(noop);
+        promise.then(success1).then(success(2), error(2)).catch(angular.noop);
         syncResolve(deferred, 'done');
         expect(logStr()).toBe('success1(done)->throw(oops); error2(oops)->reject(oops)');
         expect(mockExceptionLogger.log).toEqual([]);
       });
 
 
-      it('should NOT log exceptions when a success callback returns rejected promise', function() {
-        promise.then(success(1, q.reject('rejected'))).then(success(2), error(2)).catch(noop);
+      test('should NOT log exceptions when a success callback returns rejected promise', () => {
+        promise.then(success(1, q.reject('rejected'))).then(success(2), error(2)).catch(angular.noop);
         syncResolve(deferred, 'done');
         expect(logStr()).toBe('success1(done)->{}; error2(rejected)->reject(rejected)');
         expect(mockExceptionLogger.log).toEqual([]);
       });
 
 
-      it('should NOT log exceptions thrown in an errback but reject the derived promise',
+      test('should NOT log exceptions thrown in an errback but reject the derived promise',
           function() {
         var error1 = error(1, 'oops', true);
-        promise.then(null, error1).then(success(2), error(2)).catch(noop);
+        promise.then(null, error1).then(success(2), error(2)).catch(angular.noop);
         syncReject(deferred, 'nope');
         expect(logStr()).toBe('error1(nope)->throw(oops); error2(oops)->reject(oops)');
         expect(mockExceptionLogger.log).toEqual([]);
       });
 
 
-      it('should NOT log exceptions when an errback returns a rejected promise', function() {
-        promise.then(null, error(1, q.reject('rejected'))).then(success(2), error(2)).catch(noop);
+      test('should NOT log exceptions when an errback returns a rejected promise', () => {
+        promise.then(null, error(1, q.reject('rejected'))).then(success(2), error(2)).catch(angular.noop);
         syncReject(deferred, 'nope');
         expect(logStr()).toBe('error1(nope)->{}; error2(rejected)->reject(rejected)');
         expect(mockExceptionLogger.log).toEqual([]);
       });
 
 
-      it('should log exceptions thrown in a progressBack and stop propagation, but should NOT reject ' +
+      test('should log exceptions thrown in a progressBack and stop propagation, but should NOT reject ' +
         'the promise', function() {
-          promise.then(success(), error(), progress(1, 'failed', true)).then(null, error(1), progress(2)).catch(noop);
+          promise.then(success(), error(), progress(1, 'failed', true)).then(null, error(1), progress(2)).catch(angular.noop);
           syncNotify(deferred, '10%');
           expect(logStr()).toBe('progress1(10%)->throw(failed)');
           expect(mockExceptionLogger.log).toEqual(['failed']);
@@ -2125,37 +2133,37 @@ describe('q', function() {
     });
 
 
-    describe('in when', function() {
-      it('should NOT log exceptions thrown in a success callback but reject the derived promise',
+    describe('in when', () => {
+      test('should NOT log exceptions thrown in a success callback but reject the derived promise',
           function() {
         var success1 = success(1, 'oops', true);
-        q.when('hi', success1, error()).then(success(), error(2)).catch(noop);
+        q.when('hi', success1, error()).then(success(), error(2)).catch(angular.noop);
         mockNextTick.flush();
         expect(logStr()).toBe('success1(hi)->throw(oops); error2(oops)->reject(oops)');
         expect(mockExceptionLogger.log).toEqual([]);
       });
 
 
-      it('should NOT log exceptions when a success callback returns rejected promise', function() {
-        q.when('hi', success(1, q.reject('rejected'))).then(success(2), error(2)).catch(noop);
+      test('should NOT log exceptions when a success callback returns rejected promise', () => {
+        q.when('hi', success(1, q.reject('rejected'))).then(success(2), error(2)).catch(angular.noop);
         mockNextTick.flush();
         expect(logStr()).toBe('success1(hi)->{}; error2(rejected)->reject(rejected)');
         expect(mockExceptionLogger.log).toEqual([]);
       });
 
 
-      it('should NOT log exceptions thrown in a errback but reject the derived promise', function() {
+      test('should NOT log exceptions thrown in a errback but reject the derived promise', () => {
         var error1 = error(1, 'oops', true);
-        q.when(q.reject('sorry'), success(), error1).then(success(), error(2)).catch(noop);
+        q.when(q.reject('sorry'), success(), error1).then(success(), error(2)).catch(angular.noop);
         mockNextTick.flush();
         expect(logStr()).toBe('error1(sorry)->throw(oops); error2(oops)->reject(oops)');
         expect(mockExceptionLogger.log).toEqual([]);
       });
 
 
-      it('should NOT log exceptions when an errback returns a rejected promise', function() {
+      test('should NOT log exceptions when an errback returns a rejected promise', () => {
         q.when(q.reject('sorry'), success(), error(1, q.reject('rejected'))).
-          then(success(2), error(2)).catch(noop);
+          then(success(2), error(2)).catch(angular.noop);
         mockNextTick.flush();
         expect(logStr()).toBe('error1(sorry)->{}; error2(rejected)->reject(rejected)');
         expect(mockExceptionLogger.log).toEqual([]);
@@ -2164,18 +2172,18 @@ describe('q', function() {
   });
 
 
-  describe('when exceptionHandler is called', function() {
+  describe('when exceptionHandler is called', () => {
     function CustomError() { }
     CustomError.prototype = Object.create(Error.prototype);
 
     var errorEg = new Error('Fail');
-    var errorStr = toDebugString(errorEg);
+    var errorStr = ngInternals.toDebugString(errorEg);
 
     var customError = new CustomError('Custom');
-    var customErrorStr = toDebugString(customError);
+    var customErrorStr = ngInternals.toDebugString(customError);
 
     var nonErrorObj = { isATest: 'this is' };
-    var nonErrorObjStr = toDebugString(nonErrorObj);
+    var nonErrorObjStr = ngInternals.toDebugString(nonErrorObj);
 
     var fixtures = [
       {
@@ -2209,14 +2217,14 @@ describe('q', function() {
         }
       }
     ];
-    forEach(fixtures, function(fixture) {
+    angular.forEach(fixtures, function(fixture) {
       var type = fixture.type;
       var value = fixture.value;
       var expected = fixture.expected;
 
-      describe('with ' + type, function() {
+      describe('with ' + type, () => {
 
-        it('should log an unhandled rejected promise', function() {
+        test('should log an unhandled rejected promise', () => {
           var defer = q.defer();
           defer.reject(value);
           mockNextTick.flush();
@@ -2224,34 +2232,34 @@ describe('q', function() {
         });
 
 
-        it('should not log an unhandled rejected promise if disabled', function() {
+        test('should not log an unhandled rejected promise if disabled', () => {
           var defer = q_no_error.defer();
           defer.reject(value);
           expect(exceptionHandlerCalls).toEqual([]);
         });
 
 
-        it('should log a handled rejected promise on a promise without rejection callbacks', function() {
+        test('should log a handled rejected promise on a promise without rejection callbacks', () => {
           var defer = q.defer();
-          defer.promise.then(noop);
+          defer.promise.then(angular.noop);
           defer.reject(value);
           mockNextTick.flush();
           expect(exceptionHandlerCalls).toEqual([expected]);
         });
 
 
-        it('should not log a handled rejected promise', function() {
+        test('should not log a handled rejected promise', () => {
           var defer = q.defer();
-          defer.promise.catch(noop);
+          defer.promise.catch(angular.noop);
           defer.reject(value);
           mockNextTick.flush();
           expect(exceptionHandlerCalls).toEqual([]);
         });
 
 
-        it('should not log a handled rejected promise that is handled in a future tick', function() {
+        test('should not log a handled rejected promise that is handled in a future tick', () => {
           var defer = q.defer();
-          defer.promise.catch(noop);
+          defer.promise.catch(angular.noop);
           defer.resolve(q.reject(value));
           mockNextTick.flush();
           expect(exceptionHandlerCalls).toEqual([]);

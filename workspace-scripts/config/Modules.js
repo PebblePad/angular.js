@@ -1,6 +1,6 @@
 export const modules = [
   {
-    name: "@pebblepad/angular",
+    name: "angular",
     description: "HTML enhanced for web apps",
     copy: [],
     jsFiles: [
@@ -104,7 +104,7 @@ export const modules = [
     ]
   },
   {
-    name: "@pebblepad/angular-animate",
+    name: "angular-animate",
     description: "AngularJS module for animations",
     copy: [],
     jsFiles: [
@@ -117,7 +117,7 @@ export const modules = [
         },
         suffix: {
           dist: "src/module.suffix",
-          test: "src/module.suffix",
+          test: "src/animate.test.suffix",
         },
         segments: [
           "src/ngAnimate/shared.js",
@@ -135,10 +135,10 @@ export const modules = [
         ],
       }
     ],
-    peerDependencies: ["@pebblepad/angular"]
+    peerDependencies: ["angular"]
   },
   {
-    name: "@pebblepad/angular-cookies",
+    name: "angular-cookies",
     description: "AngularJS module for cookies",
     copy: [],
     jsFiles: [
@@ -159,10 +159,10 @@ export const modules = [
         ],
       }
     ],
-    peerDependencies: ["@pebblepad/angular"]
+    peerDependencies: ["angular"]
   },
   {
-    name: "@pebblepad/angular-message-format",
+    name: "angular-message-format",
     description: "AngularJS module for plural and gender MessageFormat extensions $interpolate/interpolations",
     copy: [],
     jsFiles: [
@@ -186,10 +186,10 @@ export const modules = [
         ],
       }
     ],
-    peerDependencies: ["@pebblepad/angular"]
+    peerDependencies: ["angular"]
   },
   {
-    name: "@pebblepad/angular-messages",
+    name: "angular-messages",
     description: "AngularJS module that provides enhanced support for displaying messages within templates",
     copy: [],
     jsFiles: [
@@ -209,10 +209,10 @@ export const modules = [
         ],
       }
     ],
-    peerDependencies: ["@pebblepad/angular"]
+    peerDependencies: ["angular"]
   },
   {
-    name: "@pebblepad/angular-parse-ext",
+    name: "angular-parse-ext",
     description: "AngularJS ngParseExt module",
     copy: [],
     jsFiles: [
@@ -239,10 +239,10 @@ export const modules = [
         ],
       }
     ],
-    peerDependencies: ["@pebblepad/angular"]
+    peerDependencies: ["angular"]
   },
   {
-    name: "@pebblepad/angular-resource",
+    name: "angular-resource",
     description: "AngularJS module for interacting with RESTful server-side data sources",
     copy: [],
     jsFiles: [
@@ -262,10 +262,10 @@ export const modules = [
         ],
       }
     ],
-    peerDependencies: ["@pebblepad/angular"]
+    peerDependencies: ["angular"]
   },
   {
-    name: "@pebblepad/angular-route",
+    name: "angular-route",
     description: "AngularJS router module",
     copy: [],
     jsFiles: [
@@ -289,10 +289,10 @@ export const modules = [
         ],
       }
     ],
-    peerDependencies: ["@pebblepad/angular"]
+    peerDependencies: ["angular"]
   },
   {
-    name: "@pebblepad/angular-sanitize",
+    name: "angular-sanitize",
     description: "AngularJS module for sanitizing HTML",
     copy: [],
     jsFiles: [
@@ -313,10 +313,10 @@ export const modules = [
         ],
       }
     ],
-    peerDependencies: ["@pebblepad/angular"]
+    peerDependencies: ["angular"]
   },
   {
-    name: "@pebblepad/angular-mocks",
+    name: "angular-mocks",
     description: "AngularJS mocks for testing",
     copy: [],
     jsFiles: [
@@ -338,10 +338,10 @@ export const modules = [
         ],
       }
     ],
-    peerDependencies: ["@pebblepad/angular"]
+    peerDependencies: ["angular"]
   },
   {
-    name: "@pebblepad/angular-touch",
+    name: "angular-touch",
     description: "AngularJS module for touch events and helpers for touch-enabled devices",
     copy: [],
     jsFiles: [
@@ -363,10 +363,10 @@ export const modules = [
         ],
       }
     ],
-    peerDependencies: ["@pebblepad/angular"]
+    peerDependencies: ["angular"]
   },
   {
-    name: "@pebblepad/angular-aria",
+    name: "angular-aria",
     description: "AngularJS module for making accessibility easy",
     copy: [],
     jsFiles: [
@@ -386,10 +386,10 @@ export const modules = [
         ],
       }
     ],
-    peerDependencies: ["@pebblepad/angular"]
+    peerDependencies: ["angular"]
   },
   {
-    name: "@pebblepad/angular-i18n",
+    name: "angular-i18n",
     description: "AngularJS module for internationalization",
     copy: [
       {
@@ -400,7 +400,7 @@ export const modules = [
     jsFiles: []
   },
   {
-    name: "@pebblepad/angular-loader",
+    name: "angular-loader",
     description: "AngularJS module for asynchronously loading modules",
     copy: [],
     jsFiles: [

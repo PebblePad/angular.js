@@ -1,14 +1,13 @@
 'use strict';
-
-describe('ngHref', function() {
+ describe('ngHref', () => {
   var element;
 
-  afterEach(function() {
+   afterEach(() => {
     dealoc(element);
   });
 
 
-  it('should interpolate the expression and bind to href', inject(function($compile, $rootScope) {
+  test('should interpolate the expression and bind to href', angular.mock.inject(function($compile, $rootScope) {
     element = $compile('<a ng-href="some/{{id}}"></div>')($rootScope);
     $rootScope.$digest();
     expect(element.attr('href')).toEqual('some/');
@@ -20,7 +19,7 @@ describe('ngHref', function() {
   }));
 
 
-  it('should bind href and merge with other attrs', inject(function($rootScope, $compile) {
+  test('should bind href and merge with other attrs', angular.mock.inject(function($rootScope, $compile) {
     element = $compile('<a ng-href="{{url}}" rel="{{rel}}"></a>')($rootScope);
     $rootScope.url = 'http://server';
     $rootScope.rel = 'REL';
@@ -30,20 +29,20 @@ describe('ngHref', function() {
   }));
 
 
-  it('should bind href even if no interpolation', inject(function($rootScope, $compile) {
+  test('should bind href even if no interpolation', angular.mock.inject(function($rootScope, $compile) {
     element = $compile('<a ng-href="http://server"></a>')($rootScope);
     $rootScope.$digest();
     expect(element.attr('href')).toEqual('http://server');
   }));
 
-  it('should not set the href if ng-href is empty', inject(function($rootScope, $compile) {
+  test('should not set the href if ng-href is empty', angular.mock.inject(function($rootScope, $compile) {
     $rootScope.url = null;
     element = $compile('<a ng-href="{{url}}">')($rootScope);
     $rootScope.$digest();
     expect(element.attr('href')).toEqual(undefined);
   }));
 
-  it('should remove the href if ng-href changes to empty', inject(function($rootScope, $compile) {
+  test('should remove the href if ng-href changes to empty', angular.mock.inject(function($rootScope, $compile) {
     $rootScope.url = 'http://www.google.com/';
     element = $compile('<a ng-href="{{url}}">')($rootScope);
     $rootScope.$digest();
@@ -53,7 +52,7 @@ describe('ngHref', function() {
     expect(element.attr('href')).toEqual(undefined);
   }));
 
-  it('should sanitize interpolated url', inject(function($rootScope, $compile) {
+  test('should sanitize interpolated url', angular.mock.inject(function($rootScope, $compile) {
     /* eslint no-script-url: "off" */
     $rootScope.imageUrl = 'javascript:alert(1);';
     element = $compile('<a ng-href="{{imageUrl}}">')($rootScope);
@@ -61,18 +60,18 @@ describe('ngHref', function() {
     expect(element.attr('href')).toBe('unsafe:javascript:alert(1);');
   }));
 
-  it('should sanitize non-interpolated url', inject(function($rootScope, $compile) {
+  test('should sanitize non-interpolated url', angular.mock.inject(function($rootScope, $compile) {
     element = $compile('<a ng-href="javascript:alert(1);">')($rootScope);
     $rootScope.$digest();
     expect(element.attr('href')).toBe('unsafe:javascript:alert(1);');
   }));
 
 
-  // Support: IE 9-11 only, Edge 12-17
-  if (msie || /\bEdge\/1[2-7]\.[\d.]+\b/.test(window.navigator.userAgent)) {
-    // IE/Edge fail when setting a href to a URL containing a % that isn't a valid escape sequence
+  // Support: Edge 12-17
+  if (/\bEdge\/1[2-7]\.[\d.]+\b/.test(window.navigator.userAgent)) {
+    // Edge fails when setting a href to a URL containing a % that isn't a valid escape sequence
     // See https://github.com/angular/angular.js/issues/13388
-    it('should throw error if ng-href contains a non-escaped percent symbol', inject(function($rootScope, $compile) {
+    test('should throw error if ng-href contains a non-escaped percent symbol', angular.mock.inject(function($rootScope, $compile) {
       expect(function() {
         element = $compile('<a ng-href="http://www.google.com/{{\'a%link\'}}">')($rootScope);
       }).toThrow();
@@ -80,14 +79,14 @@ describe('ngHref', function() {
   }
 
 
-  it('should bind numbers', inject(function($rootScope, $compile) {
+  test('should bind numbers', angular.mock.inject(function($rootScope, $compile) {
     element = $compile('<a ng-href="{{1234}}"></a>')($rootScope);
     $rootScope.$digest();
     expect(element.attr('href')).toEqual('1234');
   }));
 
 
-  it('should bind and sanitize the result of a (custom) toString() function', inject(function($rootScope, $compile) {
+  test('should bind and sanitize the result of a (custom) toString() function', angular.mock.inject(function($rootScope, $compile) {
     $rootScope.value = {};
     element = $compile('<a ng-href="{{value}}"></a>')($rootScope);
     $rootScope.$digest();
@@ -115,9 +114,9 @@ describe('ngHref', function() {
   }));
 
 
-  if (isDefined(window.SVGElement)) {
-    describe('SVGAElement', function() {
-      it('should interpolate the expression and bind to xlink:href', inject(function($compile, $rootScope) {
+  if (angular.isDefined(window.SVGElement)) {
+    describe('SVGAElement', () => {
+      test('should interpolate the expression and bind to xlink:href', angular.mock.inject(function($compile, $rootScope) {
         element = $compile('<svg><a ng-href="some/{{id}}"></a></svg>')($rootScope);
         var child = element.children('a');
         $rootScope.$digest();
@@ -130,7 +129,7 @@ describe('ngHref', function() {
       }));
 
 
-      it('should bind xlink:href even if no interpolation', inject(function($rootScope, $compile) {
+      test('should bind xlink:href even if no interpolation', angular.mock.inject(function($rootScope, $compile) {
         element = $compile('<svg><a ng-href="http://server"></a></svg>')($rootScope);
         var child = element.children('a');
         $rootScope.$digest();

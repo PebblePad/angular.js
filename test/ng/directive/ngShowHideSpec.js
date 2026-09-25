@@ -1,11 +1,12 @@
 'use strict';
-
-describe('ngShow / ngHide', function() {
-  var $scope, $compile, element;
+ describe('ngShow / ngHide', () => {
+  var $scope;
+  var $compile;
+  var element;
 
   function expectVisibility(exprs, ngShowOrNgHide, shownOrHidden) {
     element = $compile('<div></div>')($scope);
-    forEach(exprs, function(expr) {
+    angular.forEach(exprs, function(expr) {
       var childElem = $compile('<div ' + ngShowOrNgHide + '="' + expr + '"></div>')($scope);
       element.append(childElem);
       $scope.$digest();
@@ -13,16 +14,16 @@ describe('ngShow / ngHide', function() {
     });
   }
 
-  beforeEach(inject(function($rootScope, _$compile_) {
+  beforeEach(angular.mock.inject(function($rootScope, _$compile_) {
     $scope = $rootScope.$new();
     $compile = _$compile_;
   }));
 
-  afterEach(function() {
+   afterEach(() => {
     dealoc(element);
   });
 
-  describe('ngShow', function() {
+  describe('ngShow', () => {
     function expectShown() {
       expectVisibility(arguments, 'ng-show', 'shown');
     }
@@ -31,8 +32,8 @@ describe('ngShow / ngHide', function() {
       expectVisibility(arguments, 'ng-show', 'hidden');
     }
 
-    it('should show and hide an element', function() {
-      element = jqLite('<div ng-show="exp"></div>');
+    test('should show and hide an element', () => {
+      element = angular.element('<div ng-show="exp"></div>');
       element = $compile(element)($scope);
       $scope.$digest();
       expect(element).toBeHidden();
@@ -42,16 +43,16 @@ describe('ngShow / ngHide', function() {
     });
 
     // https://github.com/angular/angular.js/issues/5414
-    it('should show if the expression is a function with a no arguments', function() {
-      element = jqLite('<div ng-show="exp"></div>');
+    test('should show if the expression is a function with a no arguments', () => {
+      element = angular.element('<div ng-show="exp"></div>');
       element = $compile(element)($scope);
       $scope.exp = function() {};
       $scope.$digest();
       expect(element).toBeShown();
     });
 
-    it('should make hidden element visible', function() {
-      element = jqLite('<div class="ng-hide" ng-show="exp"></div>');
+    test('should make hidden element visible', () => {
+      element = angular.element('<div class="ng-hide" ng-show="exp"></div>');
       element = $compile(element)($scope);
       expect(element).toBeHidden();
       $scope.exp = true;
@@ -59,20 +60,20 @@ describe('ngShow / ngHide', function() {
       expect(element).toBeShown();
     });
 
-    it('should hide the element if condition is falsy', function() {
+    test('should hide the element if condition is falsy', () => {
       expectHidden('false', 'undefined', 'null', 'NaN', '\'\'', '0');
     });
 
-    it('should show the element if condition is a non-empty string', function() {
+    test('should show the element if condition is a non-empty string', () => {
       expectShown('\'f\'', '\'0\'', '\'false\'', '\'no\'', '\'n\'', '\'[]\'');
     });
 
-    it('should show the element if condition is an object', function() {
+    test('should show the element if condition is an object', () => {
       expectShown('[]', '{}');
     });
   });
 
-  describe('ngHide', function() {
+  describe('ngHide', () => {
     function expectShown() {
       expectVisibility(arguments, 'ng-hide', 'shown');
     }
@@ -81,8 +82,8 @@ describe('ngShow / ngHide', function() {
       expectVisibility(arguments, 'ng-hide', 'hidden');
     }
 
-    it('should hide an element', function() {
-      element = jqLite('<div ng-hide="exp"></div>');
+    test('should hide an element', () => {
+      element = angular.element('<div ng-hide="exp"></div>');
       element = $compile(element)($scope);
       expect(element).toBeShown();
       $scope.exp = true;
@@ -90,22 +91,23 @@ describe('ngShow / ngHide', function() {
       expect(element).toBeHidden();
     });
 
-    it('should show the element if condition is falsy', function() {
+    test('should show the element if condition is falsy', () => {
       expectShown('false', 'undefined', 'null', 'NaN', '\'\'', '0');
     });
 
-    it('should hide the element if condition is a non-empty string', function() {
+    test('should hide the element if condition is a non-empty string', () => {
       expectHidden('\'f\'', '\'0\'', '\'false\'', '\'no\'', '\'n\'', '\'[]\'');
     });
 
-    it('should hide the element if condition is an object', function() {
+    test('should hide the element if condition is an object', () => {
       expectHidden('[]', '{}');
     });
   });
 });
-
-describe('ngShow / ngHide animations', function() {
-  var body, element, $rootElement;
+ describe('ngShow / ngHide animations', () => {
+  var body;
+  var element;
+  var $rootElement;
 
   function html(content) {
     body.append($rootElement);
@@ -114,27 +116,27 @@ describe('ngShow / ngHide animations', function() {
     return element;
   }
 
-  beforeEach(function() {
+   beforeEach(() => {
     // we need to run animation on attached elements;
-    body = jqLite(window.document.body);
+    body = angular.element(window.document.body);
   });
 
-  afterEach(function() {
+   afterEach(() => {
     dealoc(body);
     dealoc(element);
     body.removeAttr('ng-animation-running');
   });
 
-  beforeEach(module('ngAnimateMock'));
+  beforeEach(angular.mock.module('ngAnimateMock'));
 
-  beforeEach(module(function($animateProvider, $provide) {
+  beforeEach(angular.mock.module(function($animateProvider, $provide) {
     return function(_$rootElement_) {
       $rootElement = _$rootElement_;
     };
   }));
 
-  describe('ngShow', function() {
-    it('should fire off the $animate.show and $animate.hide animation', inject(function($compile, $rootScope, $animate) {
+  describe('ngShow', () => {
+    test('should fire off the $animate.show and $animate.hide animation', angular.mock.inject(function($compile, $rootScope, $animate) {
       var item;
       var $scope = $rootScope.$new();
       $scope.on = true;
@@ -157,8 +159,8 @@ describe('ngShow / ngHide animations', function() {
       expect(item.element).toBeHidden();
     }));
 
-    it('should apply the temporary `.ng-hide-animate` class to the element',
-      inject(function($compile, $rootScope, $animate) {
+    test('should apply the temporary `.ng-hide-animate` class to the element',
+      angular.mock.inject(function($compile, $rootScope, $animate) {
 
       var item;
       var $scope = $rootScope.$new();
@@ -180,8 +182,8 @@ describe('ngShow / ngHide animations', function() {
     }));
   });
 
-  describe('ngHide', function() {
-    it('should fire off the $animate.show and $animate.hide animation', inject(function($compile, $rootScope, $animate) {
+  describe('ngHide', () => {
+    test('should fire off the $animate.show and $animate.hide animation', angular.mock.inject(function($compile, $rootScope, $animate) {
       var item;
       var $scope = $rootScope.$new();
       $scope.off = true;
@@ -204,8 +206,8 @@ describe('ngShow / ngHide animations', function() {
       expect(item.element).toBeShown();
     }));
 
-    it('should apply the temporary `.ng-hide-animate` class to the element',
-      inject(function($compile, $rootScope, $animate) {
+    test('should apply the temporary `.ng-hide-animate` class to the element',
+      angular.mock.inject(function($compile, $rootScope, $animate) {
 
       var item;
       var $scope = $rootScope.$new();

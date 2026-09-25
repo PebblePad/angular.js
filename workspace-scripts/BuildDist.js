@@ -8,6 +8,9 @@ const buildForTestEnv = process.argv.slice(2).some((a) => a === "--test");
 const fileWrapperKey = buildForTestEnv ? "test" : "dist";
 const outputDirectory = buildForTestEnv ? "./test/.build" : "./dist";
 
+console.log(`Building for "${buildForTestEnv ? "test" : "dist"}"`);
+console.log("-".repeat("24"));
+
 const inlineLicense = `
 /**
  * @license AngularJS v${version}
@@ -71,7 +74,12 @@ async function buildModuleFiles(moduleDetails, directoryPath) {
     }
 
     const fileContents = await Promise.all(fileReads);
-    const srcContent = inlineLicense + fileContents.join("").replaceAll("NG_VERSION_FULL", version);
+    const [major, minor, patch] = version.split(".");
+    const srcContent = inlineLicense + fileContents.join("")
+        .replaceAll("NG_VERSION_FULL", version)
+        .replaceAll("'NG_VERSION_MAJOR'", major)
+        .replaceAll("'NG_VERSION_MINOR'", minor)
+        .replaceAll("'NG_VERSION_DOT'", patch);
 
     const minified = await minify(srcContent, {
       format: {

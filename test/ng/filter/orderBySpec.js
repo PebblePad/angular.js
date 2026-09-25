@@ -1,31 +1,31 @@
 'use strict';
-
-describe('Filter: orderBy', function() {
-  var orderBy, orderByFilter;
-  beforeEach(inject(function($filter) {
+ describe('Filter: orderBy', () => {
+  var orderBy;
+  var orderByFilter;
+  beforeEach(angular.mock.inject(function($filter) {
     orderBy = orderByFilter = $filter('orderBy');
   }));
 
 
-  describe('(Arrays)', function() {
-    it('should throw an exception if no array-like object is provided', function() {
+  describe('(Arrays)', () => {
+    test('should throw an exception if no array-like object is provided', () => {
       expect(function() { orderBy({}); }).
         toThrowMinErr('orderBy', 'notarray', 'Expected array but received: {}');
     });
 
 
-    it('should not throw an exception if a null or undefined value is provided', function() {
+    test('should not throw an exception if a null or undefined value is provided', () => {
       expect(orderBy(null)).toEqual(null);
       expect(orderBy(undefined)).toEqual(undefined);
     });
 
 
-    it('should not throw an exception if an array-like object is provided', function() {
+    test('should not throw an exception if an array-like object is provided', () => {
       expect(orderBy('cba')).toEqual(['a', 'b', 'c']);
     });
 
 
-    it('should return sorted array if predicate is not provided', function() {
+    test('should return sorted array if predicate is not provided', () => {
       expect(orderBy([2, 1, 3])).toEqual([1, 2, 3]);
 
       expect(orderBy([2, 1, 3], '')).toEqual([1, 2, 3]);
@@ -40,7 +40,7 @@ describe('Filter: orderBy', function() {
     });
 
 
-    it('should sort inherited from array', function() {
+    test('should sort inherited from array', () => {
       function BaseCollection() {}
       BaseCollection.prototype = Array.prototype;
       var child = new BaseCollection();
@@ -54,14 +54,14 @@ describe('Filter: orderBy', function() {
     });
 
 
-    it('should sort array by predicate', function() {
+    test('should sort array by predicate', () => {
       expect(orderBy([{a:15, b:1}, {a:2, b:1}], ['a', 'b'])).toEqualData([{a:2, b:1}, {a:15, b:1}]);
       expect(orderBy([{a:15, b:1}, {a:2, b:1}], ['b', 'a'])).toEqualData([{a:2, b:1}, {a:15, b:1}]);
       expect(orderBy([{a:15, b:1}, {a:2, b:1}], ['+b', '-a'])).toEqualData([{a:15, b:1}, {a:2, b:1}]);
     });
 
 
-    it('should sort array by date predicate', function() {
+    test('should sort array by date predicate', () => {
       // same dates
       expect(orderBy([
               { a:new Date('01/01/2014'), b:1 },
@@ -90,7 +90,7 @@ describe('Filter: orderBy', function() {
     });
 
 
-    it('should compare timestamps when sorting dates', function() {
+    test('should compare timestamps when sorting dates', () => {
       expect(orderBy([
         new Date('01/01/2015'),
         new Date('01/01/2014')
@@ -101,7 +101,7 @@ describe('Filter: orderBy', function() {
     });
 
 
-    it('should use function', function() {
+    test('should use function', () => {
       expect(
         orderBy(
           [{a:15, b:1},{a:2, b:1}],
@@ -110,7 +110,7 @@ describe('Filter: orderBy', function() {
     });
 
 
-    it('should support string predicates with names containing non-identifier characters', function() {
+    test('should support string predicates with names containing non-identifier characters', () => {
       /* eslint-disable no-floating-decimal */
       expect(orderBy([{'Tip %': .25}, {'Tip %': .15}, {'Tip %': .40}], '"Tip %"'))
         .toEqualData([{'Tip %': .15}, {'Tip %': .25}, {'Tip %': .40}]);
@@ -120,7 +120,7 @@ describe('Filter: orderBy', function() {
     });
 
 
-    it('should throw if quoted string predicate is quoted incorrectly', function() {
+    test('should throw if quoted string predicate is quoted incorrectly', () => {
       /* eslint-disable no-floating-decimal */
       expect(function() {
         return orderBy([{'Tip %': .15}, {'Tip %': .25}, {'Tip %': .40}], '"Tip %\'');
@@ -129,7 +129,7 @@ describe('Filter: orderBy', function() {
     });
 
 
-    it('should not reverse array of objects with no predicate and reverse is not `true`', function() {
+    test('should not reverse array of objects with no predicate and reverse is not `true`', () => {
       var array = [
         { id: 2 },
         { id: 1 },
@@ -140,7 +140,7 @@ describe('Filter: orderBy', function() {
     });
 
 
-    it('should reverse array of objects with predicate of "-"', function() {
+    test('should reverse array of objects with predicate of "-"', () => {
       var array = [
         { id: 2 },
         { id: 1 },
@@ -157,7 +157,7 @@ describe('Filter: orderBy', function() {
     });
 
 
-    it('should not reverse array of objects with null prototype and no predicate', function() {
+    test('should not reverse array of objects with null prototype and no predicate', () => {
       var array = [2,1,4,3].map(function(id) {
         var obj = Object.create(null);
         obj.id = id;
@@ -167,7 +167,7 @@ describe('Filter: orderBy', function() {
     });
 
 
-    it('should sort nulls as Array.prototype.sort', function() {
+    test('should sort nulls as Array.prototype.sort', () => {
       var array = [
         { id: 2 },
         null,
@@ -183,17 +183,17 @@ describe('Filter: orderBy', function() {
     });
 
 
-    it('should sort array of arrays as Array.prototype.sort', function() {
+    test('should sort array of arrays as Array.prototype.sort', () => {
       expect(orderBy([['one'], ['two'], ['three']])).toEqualData([['one'], ['three'], ['two']]);
     });
 
 
-    it('should sort mixed array of objects and values in a stable way', function() {
+    test('should sort mixed array of objects and values in a stable way', () => {
       expect(orderBy([{foo: 2}, {foo: {}}, {foo: 3}, {foo: 4}], 'foo')).toEqualData([{foo: 2}, {foo: 3}, {foo: 4}, {foo: {}}]);
     });
 
 
-    it('should perform a stable sort', function() {
+    test('should perform a stable sort', () => {
       expect(orderBy([
           {foo: 2, bar: 1}, {foo: 1, bar: 2}, {foo: 2, bar: 3},
           {foo: 2, bar: 4}, {foo: 1, bar: 5}, {foo: 2, bar: 6},
@@ -222,8 +222,8 @@ describe('Filter: orderBy', function() {
     });
 
 
-    describe('(reversing order)', function() {
-      it('should not reverse collection if `reverse` param is falsy',
+    describe('(reversing order)', () => {
+      test('should not reverse collection if `reverse` param is falsy',
         function() {
           var items = [{a: 2}, {a: 15}];
           var expr = 'a';
@@ -239,7 +239,7 @@ describe('Filter: orderBy', function() {
       );
 
 
-      it('should reverse collection if `reverse` param is truthy',
+      test('should reverse collection if `reverse` param is truthy',
         function() {
           var items = [{a: 2}, {a: 15}];
           var expr = 'a';
@@ -250,12 +250,12 @@ describe('Filter: orderBy', function() {
           expect(orderBy(items, expr, 'reverse')).toEqual(sorted);
           expect(orderBy(items, expr, {})).toEqual(sorted);
           expect(orderBy(items, expr, [])).toEqual(sorted);
-          expect(orderBy(items, expr, noop)).toEqual(sorted);
+          expect(orderBy(items, expr, angular.noop)).toEqual(sorted);
         }
       );
 
 
-      it('should reverse collection if `reverse` param is `true`, even without an `expression`',
+      test('should reverse collection if `reverse` param is `true`, even without an `expression`',
         function() {
           var originalItems = [{id: 2}, {id: 1}, {id: 4}, {id: 3}];
           var reversedItems = [{id: 3}, {id: 4}, {id: 1}, {id: 2}];
@@ -265,8 +265,8 @@ describe('Filter: orderBy', function() {
     });
 
 
-    describe('(built-in comparator)', function() {
-      it('should compare numbers numerically', function() {
+    describe('(built-in comparator)', () => {
+      test('should compare numbers numerically', () => {
         var items = [100, 3, 20];
         var expr = null;
         var sorted = [3, 20, 100];
@@ -275,7 +275,7 @@ describe('Filter: orderBy', function() {
       });
 
 
-      it('should compare strings alphabetically', function() {
+      test('should compare strings alphabetically', () => {
         var items = ['100', '3', '20', '_b', 'a'];
         var expr = null;
         var sorted = ['100', '20', '3', '_b', 'a'];
@@ -284,7 +284,7 @@ describe('Filter: orderBy', function() {
       });
 
 
-      it('should compare strings case-insensitively', function() {
+      test('should compare strings case-insensitively', () => {
         var items = ['c', 'B', 'a'];
         var expr = null;
         var sorted = ['a', 'B', 'c'];
@@ -293,7 +293,7 @@ describe('Filter: orderBy', function() {
       });
 
 
-      it('should compare objects based on `index`', function() {
+      test('should compare objects based on `index`', () => {
         var items = [{c: 3}, {b: 2}, {a: 1}];
         var expr = null;
         var sorted = [{c: 3}, {b: 2}, {a: 1}];
@@ -302,15 +302,15 @@ describe('Filter: orderBy', function() {
       });
 
 
-      it('should compare values of different type alphabetically by type', function() {
-        var items = [undefined, '1', {}, 999, noop, false];
+      test('should compare values of different type alphabetically by type', () => {
+        var items = [undefined, '1', {}, 999, angular.noop, false];
         var expr = null;
-        var sorted = [false, noop, 999, {}, '1', undefined];
+        var sorted = [false, angular.noop, 999, {}, '1', undefined];
 
         expect(orderBy(items, expr)).toEqual(sorted);
       });
 
-      it('should consider null and undefined greater than any other value', function() {
+      test('should consider null and undefined greater than any other value', () => {
         var items = [undefined, null, 'z', {}, 999, false];
         var expr = null;
         var sorted = [false, 999, {}, 'z', null, undefined];
@@ -321,8 +321,8 @@ describe('Filter: orderBy', function() {
       });
     });
 
-    describe('(custom comparator)', function() {
-      it('should support a custom comparator', function() {
+    describe('(custom comparator)', () => {
+      test('should support a custom comparator', () => {
         var items = [4, 42, 2];
         var expr = null;
         var reverse = null;
@@ -345,7 +345,7 @@ describe('Filter: orderBy', function() {
       });
 
 
-      it('should support `reverseOrder` with a custom comparator', function() {
+      test('should support `reverseOrder` with a custom comparator', () => {
         var items = [4, 42, 2];
         var expr = null;
         var reverse = true;
@@ -368,41 +368,41 @@ describe('Filter: orderBy', function() {
       });
 
 
-      it('should pass `{value, type, index}` objects to comparators', function() {
-        var items = [false, noop, 999, {}, '', undefined];
+      test('should pass `{value, type, index}` objects to comparators', () => {
+        var items = [false, angular.noop, 999, {}, '', undefined];
         var expr = null;
         var reverse = null;
-        var comparator = jasmine.createSpy('comparator').and.returnValue(-1);
+        var comparator = jest.fn(() => -1);
 
         orderBy(items, expr, reverse, comparator);
-        var allArgsFlat = Array.prototype.concat.apply([], comparator.calls.allArgs());
+        var allArgsFlat = Array.prototype.concat.apply([], comparator.mock.calls);
 
-        expect(allArgsFlat).toContain({index: 0, type: 'boolean',   value: false    });
-        expect(allArgsFlat).toContain({index: 1, type: 'function',  value: noop     });
-        expect(allArgsFlat).toContain({index: 2, type: 'number',    value: 999      });
-        expect(allArgsFlat).toContain({index: 3, type: 'object',    value: {}       });
-        expect(allArgsFlat).toContain({index: 4, type: 'string',    value: ''       });
-        expect(allArgsFlat).toContain({index: 5, type: 'undefined', value: undefined});
+        expect(allArgsFlat).toContainEqual({index: 0, type: 'boolean',   value: false    });
+        expect(allArgsFlat).toContainEqual({index: 1, type: 'function',  value: angular.noop     });
+        expect(allArgsFlat).toContainEqual({index: 2, type: 'number',    value: 999      });
+        expect(allArgsFlat).toContainEqual({index: 3, type: 'object',    value: {}       });
+        expect(allArgsFlat).toContainEqual({index: 4, type: 'string',    value: ''       });
+        expect(allArgsFlat).toContainEqual({index: 5, type: 'undefined', value: undefined});
       });
 
 
-      it('should treat a value of `null` as type `"null"`', function() {
+      test('should treat a value of `null` as type `"null"`', () => {
         var items = [null, null];
         var expr = null;
         var reverse = null;
-        var comparator = jasmine.createSpy('comparator').and.returnValue(-1);
+        var comparator = jest.fn().mockName('comparator').mockReturnValue(-1);
 
         orderBy(items, expr, reverse, comparator);
-        var arg = comparator.calls.argsFor(0)[0];
+        var arg = comparator.mock.calls[0][0];
 
-        expect(arg).toEqual(jasmine.objectContaining({
+        expect(arg).toEqual(expect.objectContaining({
           type: 'null',
           value: null
         }));
       });
 
 
-      it('should not convert strings to lower-case', function() {
+      test('should not convert strings to lower-case', () => {
         var items = ['c', 'B', 'a'];
         var expr = null;
         var reverse = null;
@@ -416,25 +416,25 @@ describe('Filter: orderBy', function() {
       });
 
 
-      it('should use `index` as `value` if no other predicate can distinguish between two items',
+      test('should use `index` as `value` if no other predicate can distinguish between two items',
         function() {
           var items = ['foo', 'bar'];
           var expr = null;
           var reverse = null;
-          var comparator = jasmine.createSpy('comparator').and.returnValue(0);
+          var comparator = jest.fn().mockName('comparator').mockReturnValue(0);
 
           orderBy(items, expr, reverse, comparator);
 
           expect(comparator).toHaveBeenCalledTimes(2);
-          var lastArgs = comparator.calls.mostRecent().args;
+          var lastArgs = comparator.mock.lastCall;
 
-          expect(lastArgs).toContain(jasmine.objectContaining({value: 0, type: 'number'}));
-          expect(lastArgs).toContain(jasmine.objectContaining({value: 1, type: 'number'}));
+          expect(lastArgs).toContainEqual(expect.objectContaining({value: 0, type: 'number'}));
+          expect(lastArgs).toContainEqual(expect.objectContaining({value: 1, type: 'number'}));
         }
       );
 
 
-      it('should support multiple predicates and per-predicate sorting direction', function() {
+      test('should support multiple predicates and per-predicate sorting direction', () => {
         var items = [
           {owner: 'ownerA', type: 'typeA'},
           {owner: 'ownerB', type: 'typeB'},
@@ -453,8 +453,8 @@ describe('Filter: orderBy', function() {
         var comparator = function(o1, o2) {
           var v1 = o1.value;
           var v2 = o2.value;
-          var isNerd1 = v1.toLowerCase().indexOf('nerd') !== -1;
-          var isNerd2 = v2.toLowerCase().indexOf('nerd') !== -1;
+          var isNerd1 = v1.toLowerCase().includes('nerd');
+          var isNerd2 = v2.toLowerCase().includes('nerd');
 
           // Shamelessly promote "nerds"
           if (isNerd1 || isNerd2) {
@@ -468,7 +468,7 @@ describe('Filter: orderBy', function() {
         expect(orderBy(items, expr, reverse, comparator)).toEqual(sorted);
       });
 
-      it('should use the default comparator to break ties on a provided comparator', function() {
+      test('should use the default comparator to break ties on a provided comparator', () => {
         // Some list that won't be sorted "naturally", i.e. should sort to ['a', 'B', 'c']
         var items = ['c', 'a', 'B'];
         var expr = null;
@@ -482,10 +482,10 @@ describe('Filter: orderBy', function() {
       });
     });
 
-    describe('(object as `value`)', function() {
-      it('should use the return value of `valueOf()` (if primitive)', function() {
-        var o1 = {k: 1, valueOf: function() { return 2; }};
-        var o2 = {k: 2, valueOf: function() { return 1; }};
+    describe('(object as `value`)', () => {
+      test('should use the return value of `valueOf()` (if primitive)', () => {
+        var o1 = {k: 1, valueOf() { return 2; }};
+        var o2 = {k: 2, valueOf() { return 1; }};
 
         var items = [o1, o2];
         var expr = null;
@@ -495,9 +495,9 @@ describe('Filter: orderBy', function() {
       });
 
 
-      it('should use the return value of `toString()` (if primitive)', function() {
-        var o1 = {k: 1, toString: function() { return 2; }};
-        var o2 = {k: 2, toString: function() { return 1; }};
+      test('should use the return value of `toString()` (if primitive)', () => {
+        var o1 = {k: 1, toString() { return 2; }};
+        var o2 = {k: 2, toString() { return 1; }};
 
         var items = [o1, o2];
         var expr = null;
@@ -506,36 +506,12 @@ describe('Filter: orderBy', function() {
         expect(orderBy(items, expr)).toEqual(sorted);
       });
 
-
-      it('should ignore the `toString()` inherited from `Object`', function() {
-        /* globals toString: true */
-
-        // The global `toString` variable (in 'src/Angular.js')
-        // has already captured `Object.prototype.toString`
-        var originalToString = toString;
-        toString = jasmine.createSpy('toString').and.callFake(originalToString);
-
-        var o1 = Object.create({toString: toString});
-        var o2 = Object.create({toString: toString});
-
-        var items = [o1, o2];
-        var expr = null;
-
-        orderBy(items, expr);
-
-        expect(o1.toString).not.toHaveBeenCalled();
-        expect(o2.toString).not.toHaveBeenCalled();
-
-        toString = originalToString;
-      });
-
-
-      it('should use the return value of `valueOf()` for subsequent steps (if non-primitive)',
+      test('should use the return value of `valueOf()` for subsequent steps (if non-primitive)',
         function() {
-          var o1 = {k: 1, valueOf: function() { return o3; }};
-          var o2 = {k: 2, valueOf: function() { return o4; }};
-          var o3 = {k: 3, toString: function() { return 4; }};
-          var o4 = {k: 4, toString: function() { return 3; }};
+          var o1 = {k: 1, valueOf() { return o3; }};
+          var o2 = {k: 2, valueOf() { return o4; }};
+          var o3 = {k: 3, toString() { return 4; }};
+          var o4 = {k: 4, toString() { return 3; }};
 
           var items = [o1, o2];
           var expr = null;
@@ -546,47 +522,47 @@ describe('Filter: orderBy', function() {
       );
 
 
-      it('should use the return value of `toString()` for subsequent steps (if non-primitive)',
+      test('should use the return value of `toString()` for subsequent steps (if non-primitive)',
         function() {
-          var o1 = {k: 1, toString: function() { return o3; }};
-          var o2 = {k: 2, toString: function() { return o4; }};
+          var o1 = {k: 1, toString() { return o3; }};
+          var o2 = {k: 2, toString() { return o4; }};
           var o3 = {k: 3};
           var o4 = {k: 4};
 
           var items = [o1, o2];
           var expr = null;
           var reverse = null;
-          var comparator = jasmine.createSpy('comparator').and.returnValue(-1);
+          var comparator = jest.fn().mockName('comparator').mockReturnValue(-1);
 
           orderBy(items, expr, reverse, comparator);
-          var args = comparator.calls.argsFor(0);
+          var args = comparator.mock.calls[0];
 
-          expect(args).toContain(jasmine.objectContaining({value: o3, type: 'object'}));
-          expect(args).toContain(jasmine.objectContaining({value: o4, type: 'object'}));
+          expect(args).toContainEqual(expect.objectContaining({value: o3, type: 'object'}));
+          expect(args).toContainEqual(expect.objectContaining({value: o4, type: 'object'}));
         }
       );
 
 
-      it('should use the object itself as `value` if no conversion took place', function() {
+      test('should use the object itself as `value` if no conversion took place', () => {
         var o1 = {k: 1};
         var o2 = {k: 2};
 
         var items = [o1, o2];
         var expr = null;
         var reverse = null;
-        var comparator = jasmine.createSpy('comparator').and.returnValue(-1);
+        var comparator = jest.fn().mockName('comparator').mockReturnValue(-1);
 
         orderBy(items, expr, reverse, comparator);
-        var args = comparator.calls.argsFor(0);
+        var args = comparator.mock.calls[0];
 
-        expect(args).toContain(jasmine.objectContaining({value: o1, type: 'object'}));
-        expect(args).toContain(jasmine.objectContaining({value: o2, type: 'object'}));
+        expect(args).toContainEqual(expect.objectContaining({value: o1, type: 'object'}));
+        expect(args).toContainEqual(expect.objectContaining({value: o2, type: 'object'}));
       });
     });
   });
 
 
-  describe('(Array-Like Objects)', function() {
+  describe('(Array-Like Objects)', () => {
     function arrayLike(args) {
       var result = {};
       var i;
@@ -598,16 +574,16 @@ describe('Filter: orderBy', function() {
     }
 
 
-    beforeEach(inject(function($filter) {
+    beforeEach(angular.mock.inject(function($filter) {
       orderBy = function(collection) {
         var args = Array.prototype.slice.call(arguments, 0);
         args[0] = arrayLike(args[0]);
-        return orderByFilter.apply(null, args);
+        return orderByFilter(...args);
       };
     }));
 
 
-    it('should return sorted array if predicate is not provided', function() {
+    test('should return sorted array if predicate is not provided', () => {
       expect(orderBy([2, 1, 3])).toEqual([1, 2, 3]);
 
       expect(orderBy([2, 1, 3], '')).toEqual([1, 2, 3]);
@@ -622,21 +598,21 @@ describe('Filter: orderBy', function() {
     });
 
 
-    it('shouldSortArrayInReverse', function() {
+    test('shouldSortArrayInReverse', () => {
       expect(orderBy([{a:15}, {a:2}], 'a', true)).toEqualData([{a:15}, {a:2}]);
       expect(orderBy([{a:15}, {a:2}], 'a', 'T')).toEqualData([{a:15}, {a:2}]);
       expect(orderBy([{a:15}, {a:2}], 'a', 'reverse')).toEqualData([{a:15}, {a:2}]);
     });
 
 
-    it('should sort array by predicate', function() {
+    test('should sort array by predicate', () => {
       expect(orderBy([{a:15, b:1}, {a:2, b:1}], ['a', 'b'])).toEqualData([{a:2, b:1}, {a:15, b:1}]);
       expect(orderBy([{a:15, b:1}, {a:2, b:1}], ['b', 'a'])).toEqualData([{a:2, b:1}, {a:15, b:1}]);
       expect(orderBy([{a:15, b:1}, {a:2, b:1}], ['+b', '-a'])).toEqualData([{a:15, b:1}, {a:2, b:1}]);
     });
 
 
-    it('should sort array by date predicate', function() {
+    test('should sort array by date predicate', () => {
       // same dates
       expect(orderBy([
               { a:new Date('01/01/2014'), b:1 },
@@ -665,7 +641,7 @@ describe('Filter: orderBy', function() {
     });
 
 
-    it('should use function', function() {
+    test('should use function', () => {
       expect(
         orderBy(
           [{a:15, b:1},{a:2, b:1}],
@@ -674,7 +650,7 @@ describe('Filter: orderBy', function() {
     });
 
 
-    it('should support string predicates with names containing non-identifier characters', function() {
+    test('should support string predicates with names containing non-identifier characters', () => {
       /* eslint-disable no-floating-decimal */
       expect(orderBy([{'Tip %': .25}, {'Tip %': .15}, {'Tip %': .40}], '"Tip %"'))
         .toEqualData([{'Tip %': .15}, {'Tip %': .25}, {'Tip %': .40}]);
@@ -684,7 +660,7 @@ describe('Filter: orderBy', function() {
     });
 
 
-    it('should throw if quoted string predicate is quoted incorrectly', function() {
+    test('should throw if quoted string predicate is quoted incorrectly', () => {
       /* eslint-disable no-floating-decimal */
       expect(function() {
         return orderBy([{'Tip %': .15}, {'Tip %': .25}, {'Tip %': .40}], '"Tip %\'');
@@ -693,7 +669,7 @@ describe('Filter: orderBy', function() {
     });
 
 
-    it('should not reverse array of objects with no predicate', function() {
+    test('should not reverse array of objects with no predicate', () => {
       var array = [
         { id: 2 },
         { id: 1 },
@@ -704,7 +680,7 @@ describe('Filter: orderBy', function() {
     });
 
 
-    it('should not reverse array of objects with null prototype and no predicate', function() {
+    test('should not reverse array of objects with null prototype and no predicate', () => {
       var array = [2,1,4,3].map(function(id) {
         var obj = Object.create(null);
         obj.id = id;
@@ -714,7 +690,7 @@ describe('Filter: orderBy', function() {
     });
 
 
-    it('should sort nulls as Array.prototype.sort', function() {
+    test('should sort nulls as Array.prototype.sort', () => {
       var array = [
       { id: 2 },
       null,

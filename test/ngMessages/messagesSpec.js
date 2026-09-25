@@ -1,8 +1,7 @@
 'use strict';
-
-describe('ngMessages', function() {
+ describe('ngMessages', () => {
   beforeEach(inject.strictDi());
-  beforeEach(module('ngMessages'));
+  beforeEach(angular.mock.module('ngMessages'));
 
   function messageChildren(element) {
     return (element.length ? element[0] : element).querySelectorAll('[ng-message], [ng-message-exp]');
@@ -13,15 +12,15 @@ describe('ngMessages', function() {
   }
 
   function trim(value) {
-    return isString(value) ? value.trim() : value;
+    return angullar.isString(value) ? value.trim() : value;
   }
 
   var element;
-  afterEach(function() {
+   afterEach(() => {
     dealoc(element);
   });
 
-  it('should render based off of a hashmap collection', inject(function($rootScope, $compile) {
+  test('should render based off of a hashmap collection', angular.mock.inject(function($rootScope, $compile) {
     element = $compile('<div ng-messages="col">' +
                        '  <div ng-message="val">Message is set</div>' +
                        '</div>')($rootScope);
@@ -36,7 +35,7 @@ describe('ngMessages', function() {
     expect(element.text()).toContain('Message is set');
   }));
 
-  it('should render the same message if multiple message keys match', inject(function($rootScope, $compile) {
+  test('should render the same message if multiple message keys match', angular.mock.inject(function($rootScope, $compile) {
     element = $compile('<div ng-messages="col">' +
                        '  <div ng-message="one, two, three">Message is set</div>' +
                        '</div>')($rootScope);
@@ -69,8 +68,8 @@ describe('ngMessages', function() {
     expect(element.text()).not.toContain('Message is set');
   }));
 
-  it('should use the when attribute when an element directive is used',
-    inject(function($rootScope, $compile) {
+  test('should use the when attribute when an element directive is used',
+    angular.mock.inject(function($rootScope, $compile) {
 
     element = $compile('<ng-messages for="col">' +
                        '  <ng-message when="val">Message is set</div>' +
@@ -86,7 +85,7 @@ describe('ngMessages', function() {
     expect(element.text()).toContain('Message is set');
   }));
 
-  it('should render the same message if multiple message keys match based on the when attribute', inject(function($rootScope, $compile) {
+  test('should render the same message if multiple message keys match based on the when attribute', angular.mock.inject(function($rootScope, $compile) {
     element = $compile('<ng-messages for="col">' +
                        '  <ng-message when=" one two three ">Message is set</div>' +
                        '</ng-messages>')($rootScope);
@@ -119,8 +118,8 @@ describe('ngMessages', function() {
     expect(element.text()).not.toContain('Message is set');
   }));
 
-  it('should allow a dynamic expression to be set when ng-message-exp is used',
-    inject(function($rootScope, $compile) {
+  test('should allow a dynamic expression to be set when ng-message-exp is used',
+    angular.mock.inject(function($rootScope, $compile) {
 
     element = $compile('<div ng-messages="col">' +
                        '  <div ng-message-exp="variable">Message is crazy</div>' +
@@ -155,8 +154,8 @@ describe('ngMessages', function() {
     expect(element.text()).not.toContain('Message is crazy');
   }));
 
-  it('should allow a dynamic expression to be set when the when-exp attribute is used',
-    inject(function($rootScope, $compile) {
+  test('should allow a dynamic expression to be set when the when-exp attribute is used',
+    angular.mock.inject(function($rootScope, $compile) {
 
     element = $compile('<ng-messages for="col">' +
                        '  <ng-message when-exp="variable">Message is crazy</ng-message>' +
@@ -191,16 +190,15 @@ describe('ngMessages', function() {
     expect(element.text()).not.toContain('Message is crazy');
   }));
 
-  they('should render empty when $prop is used as a collection value',
-    { 'null': null,
+  test.each(Object.entries({ 'null': null,
       'false': false,
       '0': 0,
       '[]': [],
       '[{}]': [{}],
       '': '',
-      '{ val2 : true }': { val2: true } },
-  function(prop) {
-    inject(function($rootScope, $compile) {
+      '{ val2 : true }': { val2: true } }).map(([prop, value]) => ({ prop, value })))(
+      'should render empty when $prop is used as a collection value', function({ value: prop }) {
+    angular.mock.inject(function($rootScope, $compile) {
       element = $compile('<div ng-messages="col">' +
                          '  <div ng-message="val">Message is set</div>' +
                          '</div>')($rootScope);
@@ -213,14 +211,13 @@ describe('ngMessages', function() {
     });
   });
 
-  they('should insert and remove matching inner elements when $prop is used as a value',
-    { 'true': true,
+  test.each(Object.entries({ 'true': true,
       '1': 1,
       '{}': {},
       '[]': [],
-      '[null]': [null] },
-  function(prop) {
-    inject(function($rootScope, $compile) {
+      '[null]': [null] }).map(([prop, value]) => ({ prop, value })))(
+      'should insert and remove matching inner elements when $prop is used as a value', function({ value: prop }) {
+    angular.mock.inject(function($rootScope, $compile) {
 
       element = $compile('<div ng-messages="col">' +
                          '  <div ng-message="blue">This message is blue</div>' +
@@ -232,7 +229,7 @@ describe('ngMessages', function() {
       });
 
       expect(messageChildren(element).length).toBe(0);
-      expect(trim(element.text())).toEqual('');
+      expect(ngInternals.trim(element.text())).toEqual('');
 
       $rootScope.$apply(function() {
         $rootScope.col = {
@@ -242,7 +239,7 @@ describe('ngMessages', function() {
       });
 
       expect(messageChildren(element).length).toBe(1);
-      expect(trim(element.text())).toEqual('This message is blue');
+      expect(ngInternals.trim(element.text())).toEqual('This message is blue');
 
       $rootScope.$apply(function() {
         $rootScope.col = {
@@ -251,13 +248,13 @@ describe('ngMessages', function() {
       });
 
       expect(messageChildren(element).length).toBe(1);
-      expect(trim(element.text())).toEqual('This message is red');
+      expect(ngInternals.trim(element.text())).toEqual('This message is red');
 
       $rootScope.$apply(function() {
         $rootScope.col = null;
       });
       expect(messageChildren(element).length).toBe(0);
-      expect(trim(element.text())).toEqual('');
+      expect(ngInternals.trim(element.text())).toEqual('');
 
 
       $rootScope.$apply(function() {
@@ -268,12 +265,12 @@ describe('ngMessages', function() {
       });
 
       expect(messageChildren(element).length).toBe(0);
-      expect(trim(element.text())).toEqual('');
+      expect(ngInternals.trim(element.text())).toEqual('');
     });
   });
 
-  it('should display the elements in the order defined in the DOM',
-    inject(function($rootScope, $compile) {
+  test('should display the elements in the order defined in the DOM',
+    angular.mock.inject(function($rootScope, $compile) {
 
     element = $compile('<div ng-messages="col">' +
                        '  <div ng-message="one">Message#one</div>' +
@@ -300,8 +297,8 @@ describe('ngMessages', function() {
     expect(s(element.text())).toEqual('');
   }));
 
-  it('should add ng-active/ng-inactive CSS classes to the element when errors are/aren\'t displayed',
-    inject(function($rootScope, $compile) {
+  test('should add ng-active/ng-inactive CSS classes to the element when errors are/aren\'t displayed',
+    angular.mock.inject(function($rootScope, $compile) {
 
     element = $compile('<div ng-messages="col">' +
                        '  <div ng-message="ready">This message is ready</div>' +
@@ -322,8 +319,8 @@ describe('ngMessages', function() {
     expect(element.hasClass('ng-inactive')).toBe(false);
   }));
 
-  it('should automatically re-render the messages when other directives dynamically change them',
-    inject(function($rootScope, $compile) {
+  test('should automatically re-render the messages when other directives dynamically change them',
+    angular.mock.inject(function($rootScope, $compile) {
 
     element = $compile('<div ng-messages="col">' +
                        '  <div ng-message="primary">Enter something</div>' +
@@ -342,21 +339,21 @@ describe('ngMessages', function() {
     });
 
     expect(messageChildren(element).length).toBe(0);
-    expect(trim(element.text())).toEqual('');
+    expect(ngInternals.trim(element.text())).toEqual('');
 
     $rootScope.$apply(function() {
       $rootScope.col = { hair: true };
     });
 
     expect(messageChildren(element).length).toBe(1);
-    expect(trim(element.text())).toEqual('Your hair is too long');
+    expect(ngInternals.trim(element.text())).toEqual('Your hair is too long');
 
     $rootScope.$apply(function() {
       $rootScope.col = { age: true, hair: true};
     });
 
     expect(messageChildren(element).length).toBe(1);
-    expect(trim(element.text())).toEqual('Your age is incorrect');
+    expect(ngInternals.trim(element.text())).toEqual('Your age is incorrect');
 
     $rootScope.$apply(function() {
       // remove the age!
@@ -364,7 +361,7 @@ describe('ngMessages', function() {
     });
 
     expect(messageChildren(element).length).toBe(1);
-    expect(trim(element.text())).toEqual('Your hair is too long');
+    expect(ngInternals.trim(element.text())).toEqual('Your hair is too long');
 
     $rootScope.$apply(function() {
       // remove the hair!
@@ -373,12 +370,12 @@ describe('ngMessages', function() {
     });
 
     expect(messageChildren(element).length).toBe(1);
-    expect(trim(element.text())).toEqual('Enter something');
+    expect(ngInternals.trim(element.text())).toEqual('Enter something');
   }));
 
 
-  it('should be compatible with ngBind',
-    inject(function($rootScope, $compile) {
+  test('should be compatible with ngBind',
+    angular.mock.inject(function($rootScope, $compile) {
 
     element = $compile('<div ng-messages="col">' +
                        '        <div ng-message="required" ng-bind="errorMessages.required"></div>' +
@@ -397,7 +394,7 @@ describe('ngMessages', function() {
     });
 
     expect(messageChildren(element).length).toBe(1);
-    expect(trim(element.text())).toEqual('Fill in the text field.');
+    expect(ngInternals.trim(element.text())).toEqual('Fill in the text field.');
 
     $rootScope.$apply(function() {
       $rootScope.col.required = false;
@@ -405,24 +402,24 @@ describe('ngMessages', function() {
     });
 
     expect(messageChildren(element).length).toBe(1);
-    expect(trim(element.text())).toEqual('Extra error message.');
+    expect(ngInternals.trim(element.text())).toEqual('Extra error message.');
 
     $rootScope.$apply(function() {
       $rootScope.errorMessages.extra = 'New error message.';
     });
 
     expect(messageChildren(element).length).toBe(1);
-    expect(trim(element.text())).toEqual('New error message.');
+    expect(ngInternals.trim(element.text())).toEqual('New error message.');
   }));
 
 
   // issue #12856
-  it('should only detach the message object that is associated with the message node being removed',
-    inject(function($rootScope, $compile, $animate) {
+  test('should only detach the message object that is associated with the message node being removed',
+    angular.mock.inject(function($rootScope, $compile, $animate) {
 
     // We are going to spy on the `leave` method to give us control over
     // when the element is actually removed
-    spyOn($animate, 'leave');
+    jest.spyOn($animate, 'leave').mockImplementation(() => {});
 
     // Create a basic ng-messages set up
     element = $compile('<div ng-messages="col">' +
@@ -440,17 +437,17 @@ describe('ngMessages', function() {
     $rootScope.$digest();
 
     // Since we have spied on the `leave` method, the message node is still in the DOM
-    expect($animate.leave).toHaveBeenCalledOnce();
-    var nodeToRemove = $animate.leave.calls.mostRecent().args[0][0];
+    expect($animate.leave).toHaveBeenCalledTimes(1);
+    var nodeToRemove = $animate.leave.mock.lastCall[0][0];
     expect(nodeToRemove).toBe(oldMessageNode);
-    $animate.leave.calls.reset();
+    $animate.leave.mockClear();
 
     // Add the message back in
     $rootScope.col = { primary: true };
     $rootScope.$digest();
 
     // Simulate the animation completing on the node
-    jqLite(nodeToRemove).remove();
+    angular.element(nodeToRemove).remove();
 
     // We should not get another call to `leave`
     expect($animate.leave).not.toHaveBeenCalled();
@@ -461,10 +458,10 @@ describe('ngMessages', function() {
     expect(newMessageNode).not.toBe(oldMessageNode);
   }));
 
-  it('should render animations when the active/inactive classes are added/removed', function() {
-    module('ngAnimate');
-    module('ngAnimateMock');
-    inject(function($rootScope, $compile, $animate) {
+  test('should render animations when the active/inactive classes are added/removed', () => {
+    angular.mock.module('ngAnimate');
+    angular.mock.module('ngAnimateMock');
+    angular.mock.inject(function($rootScope, $compile, $animate) {
       element = $compile('<div ng-messages="col">' +
                          '  <div ng-message="ready">This message is ready</div>' +
                          '</div>')($rootScope);
@@ -489,12 +486,12 @@ describe('ngMessages', function() {
     });
   });
 
-  describe('ngMessage nested nested inside elements', function() {
+  describe('ngMessage nested nested inside elements', () => {
 
-    it('should not crash or leak memory when the messages are transcluded, the first message is ' +
+    test('should not crash or leak memory when the messages are transcluded, the first message is ' +
       'visible, and ngMessages is removed by ngIf', function() {
 
-      module(function($compileProvider) {
+      angular.mock.module(function($compileProvider) {
         $compileProvider.directive('messageWrap', function() {
           return {
             transclude: true,
@@ -506,7 +503,7 @@ describe('ngMessages', function() {
         });
       });
 
-      inject(function($rootScope, $compile) {
+      angular.mock.inject(function($rootScope, $compile) {
 
         element = $compile('<div><div ng-if="show"><div message-wrap col="col">' +
                            '        <div ng-message="a">A</div>' +
@@ -522,7 +519,7 @@ describe('ngMessages', function() {
         });
 
         expect(messageChildren(element).length).toBe(1);
-        expect(trim(element.text())).toEqual('A');
+        expect(ngInternals.trim(element.text())).toEqual('A');
 
         $rootScope.$apply('show = false');
 
@@ -531,8 +528,8 @@ describe('ngMessages', function() {
     });
 
 
-    it('should not crash when the first of two nested messages is removed', function() {
-      inject(function($rootScope, $compile) {
+    test('should not crash when the first of two nested messages is removed', () => {
+      angular.mock.inject(function($rootScope, $compile) {
 
         element = $compile(
           '<div ng-messages="col">' +
@@ -551,25 +548,25 @@ describe('ngMessages', function() {
         });
 
         expect(messageChildren(element).length).toBe(1);
-        expect(trim(element.text())).toEqual('A');
+        expect(ngInternals.trim(element.text())).toEqual('A');
 
         var ctrl = element.controller('ngMessages');
-        var deregisterSpy = spyOn(ctrl, 'deregister').and.callThrough();
+        var deregisterSpy = jest.spyOn(ctrl, 'deregister');
 
         var nodeA = element[0].querySelector('[ng-message="a"]');
-        jqLite(nodeA).remove();
+        angular.element(nodeA).remove();
         $rootScope.$digest(); // The next digest triggers the error
 
         // Make sure removing the element triggers the deregistration in ngMessages
-        expect(trim(deregisterSpy.calls.mostRecent().args[0].nodeValue)).toBe('ngMessage: a');
+        expect(ngInternals.trim(deregisterSpy.mock.lastCall[0].nodeValue)).toBe('ngMessage: a');
         expect(messageChildren(element).length).toBe(0);
       });
     });
 
 
-    it('should not crash, but show deeply nested messages correctly after a message ' +
+    test('should not crash, but show deeply nested messages correctly after a message ' +
       'has been removed', function() {
-      inject(function($rootScope, $compile) {
+      angular.mock.inject(function($rootScope, $compile) {
 
         element = $compile(
           '<div ng-messages="col" ng-messages-multiple>' +
@@ -592,26 +589,26 @@ describe('ngMessages', function() {
         });
 
         expect(messageChildren(element).length).toBe(2);
-        expect(trim(element.text())).toEqual('AB');
+        expect(ngInternals.trim(element.text())).toEqual('AB');
 
         var ctrl = element.controller('ngMessages');
-        var deregisterSpy = spyOn(ctrl, 'deregister').and.callThrough();
+        var deregisterSpy = jest.spyOn(ctrl, 'deregister');
 
         var nodeB = element[0].querySelector('[ng-message="b"]');
-        jqLite(nodeB).remove();
+        angular.element(nodeB).remove();
         $rootScope.$digest(); // The next digest triggers the error
 
         // Make sure removing the element triggers the deregistration in ngMessages
-        expect(trim(deregisterSpy.calls.mostRecent().args[0].nodeValue)).toBe('ngMessage: b');
+        expect(ngInternals.trim(deregisterSpy.mock.lastCall[0].nodeValue)).toBe('ngMessage: b');
         expect(messageChildren(element).length).toBe(1);
-        expect(trim(element.text())).toEqual('A');
+        expect(ngInternals.trim(element.text())).toEqual('A');
       });
     });
   });
 
 
-  it('should clean-up the ngMessage scope when a message is removed',
-    inject(function($compile, $rootScope) {
+  test('should clean-up the ngMessage scope when a message is removed',
+    angular.mock.inject(function($compile, $rootScope) {
 
       var html =
           '<div ng-messages="items">' +
@@ -636,8 +633,8 @@ describe('ngMessages', function() {
     })
   );
 
-  it('should unregister the ngMessage even if it was never attached',
-    inject(function($compile, $rootScope) {
+  test('should unregister the ngMessage even if it was never attached',
+    angular.mock.inject(function($compile, $rootScope) {
       var html =
         '<div ng-messages="items">' +
           '<div ng-if="show"><div ng-message="x">ERROR</div></div>' +
@@ -661,8 +658,8 @@ describe('ngMessages', function() {
   );
 
 
-  describe('default message', function() {
-    it('should render a default message when no message matches', inject(function($rootScope, $compile) {
+  describe('default message', () => {
+    test('should render a default message when no message matches', angular.mock.inject(function($rootScope, $compile) {
       element = $compile('<div ng-messages="col">' +
                          '  <div ng-message="val">Message is set</div>' +
                          '  <div ng-message-default>Default message is set</div>' +
@@ -698,8 +695,8 @@ describe('ngMessages', function() {
       expect(element).toHaveClass('ng-active');
     }));
 
-    it('should not render a default message with ng-messages-multiple if another error matches',
-      inject(function($rootScope, $compile) {
+    test('should not render a default message with ng-messages-multiple if another error matches',
+      angular.mock.inject(function($rootScope, $compile) {
         element = $compile('<div ng-messages="col" ng-messages-multiple>' +
                            '  <div ng-message="val">Message is set</div>' +
                            '  <div ng-message="other">Other message is set</div>' +
@@ -728,7 +725,7 @@ describe('ngMessages', function() {
       })
     );
 
-    it('should handle a default message with ngIf', inject(function($rootScope, $compile) {
+    test('should handle a default message with ngIf', angular.mock.inject(function($rootScope, $compile) {
       element = $compile('<div ng-messages="col">' +
                          '  <div ng-message="val">Message is set</div>' +
                          '  <div ng-if="default" ng-message-default>Default message is set</div>' +
@@ -755,16 +752,15 @@ describe('ngMessages', function() {
     }));
   });
 
-  describe('when including templates', function() {
-    they('should work with a dynamic collection model which is managed by ngRepeat',
-      {'<div ng-messages-include="...">': '<div ng-messages="item">' +
+  describe('when including templates', () => {
+    test.each(Object.entries({'<div ng-messages-include="...">': '<div ng-messages="item">' +
                                             '<div ng-messages-include="abc.html"></div>' +
                                           '</div>',
        '<ng-messages-include src="...">': '<ng-messages for="item">' +
                                             '<ng-messages-include src="abc.html"></ng-messages-include>' +
-                                          '</ng-messages>'},
-    function(html) {
-      inject(function($compile, $rootScope, $templateCache) {
+                                          '</ng-messages>'}).map(([prop, value]) => ({ prop, value })))(
+        'should work with a dynamic collection model which is managed by ngRepeat', function({ value: html }) {
+      angular.mock.inject(function($compile, $rootScope, $templateCache) {
         $templateCache.put('abc.html', '<div ng-message="a">A</div>' +
                                        '<div ng-message="b">B</div>' +
                                        '<div ng-message="c">C</div>');
@@ -815,15 +811,14 @@ describe('ngMessages', function() {
       });
     });
 
-    they('should remove the $prop element and place a comment anchor node where it used to be',
-      {'<div ng-messages-include="...">': '<div ng-messages="data">' +
+    test.each(Object.entries({'<div ng-messages-include="...">': '<div ng-messages="data">' +
                                             '<div ng-messages-include="abc.html"></div>' +
                                           '</div>',
        '<ng-messages-include src="...">': '<ng-messages for="data">' +
                                             '<ng-messages-include src="abc.html"></ng-messages-include>' +
-                                          '</ng-messages>'},
-    function(html) {
-      inject(function($compile, $rootScope, $templateCache) {
+                                          '</ng-messages>'}).map(([prop, value]) => ({ prop, value })))(
+        'should remove the $prop element and place a comment anchor node where it used to be', function({ value: html }) {
+      angular.mock.inject(function($compile, $rootScope, $templateCache) {
         $templateCache.put('abc.html', '<div></div>');
 
         element = $compile(html)($rootScope);
@@ -838,15 +833,14 @@ describe('ngMessages', function() {
       });
     });
 
-    they('should load a remote template using $prop',
-      {'<div ng-messages-include="...">': '<div ng-messages="data">' +
+    test.each(Object.entries({'<div ng-messages-include="...">': '<div ng-messages="data">' +
                                             '<div ng-messages-include="abc.html"></div>' +
                                           '</div>',
        '<ng-messages-include src="...">': '<ng-messages for="data">' +
                                             '<ng-messages-include src="abc.html"></ng-messages-include>' +
-                                          '</ng-messages>'},
-    function(html) {
-      inject(function($compile, $rootScope, $templateCache) {
+                                          '</ng-messages>'}).map(([prop, value]) => ({ prop, value })))(
+        'should load a remote template using $prop', function({ value: html }) {
+      angular.mock.inject(function($compile, $rootScope, $templateCache) {
         $templateCache.put('abc.html', '<div ng-message="a">A</div>' +
                                        '<div ng-message="b">B</div>' +
                                        '<div ng-message="c">C</div>');
@@ -861,7 +855,7 @@ describe('ngMessages', function() {
         });
 
         expect(messageChildren(element).length).toBe(1);
-        expect(trim(element.text())).toEqual('A');
+        expect(ngInternals.trim(element.text())).toEqual('A');
 
         $rootScope.$apply(function() {
           $rootScope.data = {
@@ -870,12 +864,12 @@ describe('ngMessages', function() {
         });
 
         expect(messageChildren(element).length).toBe(1);
-        expect(trim(element.text())).toEqual('C');
+        expect(ngInternals.trim(element.text())).toEqual('C');
       });
     });
 
-    it('should cache the template after download',
-      inject(function($rootScope, $compile, $templateCache, $httpBackend) {
+    test('should cache the template after download',
+      angular.mock.inject(function($rootScope, $compile, $templateCache, $httpBackend) {
 
       $httpBackend.expect('GET', 'tpl').respond(201, '<div>abc</div>');
 
@@ -889,8 +883,8 @@ describe('ngMessages', function() {
       expect($templateCache.get('tpl')).toBeDefined();
     }));
 
-    it('should re-render the messages after download without an extra digest',
-      inject(function($rootScope, $compile, $httpBackend) {
+    test('should re-render the messages after download without an extra digest',
+      angular.mock.inject(function($rootScope, $compile, $httpBackend) {
 
       $httpBackend.expect('GET', 'my-messages').respond(201,
         '<div ng-message="required">You did not enter a value</div>');
@@ -908,17 +902,17 @@ describe('ngMessages', function() {
       $rootScope.$digest();
 
       expect(messageChildren(element).length).toBe(1);
-      expect(trim(element.text())).toEqual('Your value is that of failure');
+      expect(ngInternals.trim(element.text())).toEqual('Your value is that of failure');
 
       $httpBackend.flush();
       $rootScope.$digest();
 
       expect(messageChildren(element).length).toBe(1);
-      expect(trim(element.text())).toEqual('You did not enter a value');
+      expect(ngInternals.trim(element.text())).toEqual('You did not enter a value');
     }));
 
-    it('should allow for overriding the remote template messages within the element depending on where the remote template is placed',
-      inject(function($compile, $rootScope, $templateCache) {
+    test('should allow for overriding the remote template messages within the element depending on where the remote template is placed',
+      angular.mock.inject(function($compile, $rootScope, $templateCache) {
 
       $templateCache.put('abc.html', '<div ng-message="a">A</div>' +
                                      '<div ng-message="b">B</div>' +
@@ -939,7 +933,7 @@ describe('ngMessages', function() {
       });
 
       expect(messageChildren(element).length).toBe(1);
-      expect(trim(element.text())).toEqual('AAA');
+      expect(ngInternals.trim(element.text())).toEqual('AAA');
 
       $rootScope.$apply(function() {
         $rootScope.data = {
@@ -949,7 +943,7 @@ describe('ngMessages', function() {
       });
 
       expect(messageChildren(element).length).toBe(1);
-      expect(trim(element.text())).toEqual('B');
+      expect(ngInternals.trim(element.text())).toEqual('B');
 
       $rootScope.$apply(function() {
         $rootScope.data = {
@@ -958,11 +952,11 @@ describe('ngMessages', function() {
       });
 
       expect(messageChildren(element).length).toBe(1);
-      expect(trim(element.text())).toEqual('C');
+      expect(ngInternals.trim(element.text())).toEqual('C');
     }));
 
-    it('should properly detect a previous message, even if it was registered later',
-      inject(function($compile, $rootScope, $templateCache) {
+    test('should properly detect a previous message, even if it was registered later',
+      angular.mock.inject(function($compile, $rootScope, $templateCache) {
         $templateCache.put('include.html', '<div ng-message="a">A</div>');
         var html =
             '<div ng-messages="items">' +
@@ -977,13 +971,13 @@ describe('ngMessages', function() {
         expect(element.text()).toBe('B');
 
         var ctrl = element.controller('ngMessages');
-        var deregisterSpy = spyOn(ctrl, 'deregister').and.callThrough();
+        var deregisterSpy = jest.spyOn(ctrl, 'deregister');
 
         var nodeB = element[0].querySelector('[ng-message="b"]');
-        jqLite(nodeB).remove();
+        angular.element(nodeB).remove();
 
         // Make sure removing the element triggers the deregistration in ngMessages
-        expect(trim(deregisterSpy.calls.mostRecent().args[0].nodeValue)).toBe('ngMessage: b');
+        expect(ngInternals.trim(deregisterSpy.mock.lastCall[0].nodeValue)).toBe('ngMessage: b');
 
         $rootScope.$apply('items.a = true');
 
@@ -991,8 +985,8 @@ describe('ngMessages', function() {
       })
     );
 
-    it('should not throw if scope has been destroyed when template request is ready',
-      inject(function($rootScope, $httpBackend, $compile) {
+    test('should not throw if scope has been destroyed when template request is ready',
+      angular.mock.inject(function($rootScope, $httpBackend, $compile) {
         $httpBackend.expectGET('messages.html').respond('<div ng-message="a">A</div>');
         $rootScope.show = true;
         var html =
@@ -1011,8 +1005,8 @@ describe('ngMessages', function() {
         }).not.toThrow();
     }));
 
-    it('should not throw if the template is empty',
-      inject(function($compile, $rootScope, $templateCache) {
+    test('should not throw if the template is empty',
+      angular.mock.inject(function($compile, $rootScope, $templateCache) {
         var html =
             '<div ng-messages="items">' +
               '<div ng-messages-include="messages1.html"></div>' +
@@ -1031,12 +1025,11 @@ describe('ngMessages', function() {
     );
   });
 
-  describe('when multiple', function() {
-    they('should show all truthy messages when the $prop attr is present',
-      { 'multiple': 'multiple',
-        'ng-messages-multiple': 'ng-messages-multiple' },
-    function(prop) {
-      inject(function($rootScope, $compile) {
+  describe('when multiple', () => {
+    test.each(Object.entries({ 'multiple': 'multiple',
+        'ng-messages-multiple': 'ng-messages-multiple' }).map(([prop, value]) => ({ prop, value })))(
+        'should show all truthy messages when the $prop attr is present', function({ value: prop }) {
+      angular.mock.inject(function($rootScope, $compile) {
         element = $compile('<div ng-messages="data" ' + prop + '>' +
                            '  <div ng-message="one">1</div>' +
                            '  <div ng-message="two">2</div>' +
@@ -1056,8 +1049,8 @@ describe('ngMessages', function() {
       });
     });
 
-    it('should render all truthy messages from a remote template',
-      inject(function($rootScope, $compile, $templateCache) {
+    test('should render all truthy messages from a remote template',
+      angular.mock.inject(function($rootScope, $compile, $templateCache) {
 
       $templateCache.put('xyz.html', '<div ng-message="x">X</div>' +
                                      '<div ng-message="y">Y</div>' +
@@ -1086,8 +1079,8 @@ describe('ngMessages', function() {
       expect(s(element.text())).toEqual('XYZ');
     }));
 
-    it('should render and override all truthy messages from a remote template',
-      inject(function($rootScope, $compile, $templateCache) {
+    test('should render and override all truthy messages from a remote template',
+      angular.mock.inject(function($rootScope, $compile, $templateCache) {
 
       $templateCache.put('xyz.html', '<div ng-message="x">X</div>' +
                                      '<div ng-message="y">Y</div>' +

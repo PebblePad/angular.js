@@ -1,0 +1,8 @@
+    window.ngInternals.applyAnimationClassesFactory = applyAnimationClassesFactory;
+    window.ngInternals.prepareAnimationOptions = prepareAnimationOptions;
+    window.ngInternals.mergeAnimationDetails = mergeAnimationDetails;
+    window.ngInternals.applyAnimationFromStyles = applyAnimationFromStyles;
+    window.ngInternals.applyAnimationToStyles = applyAnimationToStyles;
+    window.ngInternals.applyAnimationStyles = applyAnimationStyles;
+    window.ngInternals.helpers = helpers;
+})(window, window.angular);

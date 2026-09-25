@@ -1,17 +1,17 @@
 'use strict';
-
-describe('ngAnimateSwap', function() {
-
-  beforeEach(module('ngAnimate'));
-  beforeEach(module('ngAnimateMock'));
+ describe('ngAnimateSwap', () => {
+  beforeEach(angular.mock.module('ngAnimate'));
+  beforeEach(angular.mock.module('ngAnimateMock'));
 
   var element;
-  afterEach(function() {
+   afterEach(() => {
     dealoc(element);
   });
 
-  var $rootScope, $compile, $animate;
-  beforeEach(inject(function(_$rootScope_, _$animate_, _$compile_) {
+  var $rootScope;
+  var $compile;
+  var $animate;
+  beforeEach(angular.mock.inject(function(_$rootScope_, _$animate_, _$compile_) {
     $rootScope = _$rootScope_;
     $animate = _$animate_;
     $compile = _$compile_;
@@ -20,7 +20,7 @@ describe('ngAnimateSwap', function() {
   }));
 
 
-  it('should render a new container when the expression changes', function() {
+  test('should render a new container when the expression changes', () => {
     element = $compile('<div><div ng-animate-swap="exp">{{ exp }}</div></div>')($rootScope);
     $rootScope.$digest();
 
@@ -42,7 +42,7 @@ describe('ngAnimateSwap', function() {
     expect(second.parentNode).toBeFalsy();
   });
 
-  it('should render a new container only when the expression property changes', function() {
+  test('should render a new container only when the expression property changes', () => {
     element = $compile('<div><div ng-animate-swap="exp.prop">{{ exp.value }}</div></div>')($rootScope);
     $rootScope.exp = {
       prop: 'hello',
@@ -68,7 +68,7 @@ describe('ngAnimateSwap', function() {
     expect(three).not.toBe(two);
   });
 
-  it('should watch the expression as a collection', function() {
+  test('should watch the expression as a collection', () => {
     element = $compile('<div><div ng-animate-swap="exp">{{ exp.a }} {{ exp.b }} {{ exp.c }}</div></div>')($rootScope);
     $rootScope.exp = {
       a: 1,
@@ -101,7 +101,8 @@ describe('ngAnimateSwap', function() {
     expect(four).not.toEqual(three);
   });
 
-  they('should consider $prop as a falsy value', [false, undefined, null], function(value) {
+  test.each([false, undefined, null].map((prop) => ({ prop })))(
+      'should consider $prop as a falsy value', function({ prop: value }) {
     element = $compile('<div><div ng-animate-swap="value">{{ value }}</div></div>')($rootScope);
     $rootScope.value = true;
     $rootScope.$digest();
@@ -116,7 +117,7 @@ describe('ngAnimateSwap', function() {
     expect(two).toBeFalsy();
   });
 
-  it('should consider "0" as a truthy value', function() {
+  test('should consider "0" as a truthy value', () => {
     element = $compile('<div><div ng-animate-swap="value">{{ value }}</div></div>')($rootScope);
     $rootScope.$digest();
 
@@ -130,7 +131,7 @@ describe('ngAnimateSwap', function() {
     expect(two).toBeTruthy();
   });
 
-  it('should create a new (non-isolate) scope for each inserted clone', function() {
+  test('should create a new (non-isolate) scope for each inserted clone', () => {
     var parentScope = $rootScope.$new();
     parentScope.foo = 'bar';
 
@@ -147,7 +148,7 @@ describe('ngAnimateSwap', function() {
     expect(scopeOne).not.toBe(scopeTwo);
   });
 
-  it('should destroy the previous scope when removing the element', function() {
+  test('should destroy the previous scope when removing the element', () => {
     element = $compile('<div><div ng-animate-swap="value">{{ value }}</div></div>')($rootScope);
 
     $rootScope.$apply('value = 1');
@@ -166,7 +167,7 @@ describe('ngAnimateSwap', function() {
     expect(scopeTwo.$$destroyed).toBe(true);
   });
 
-  it('should destroy the previous scope when swapping elements', function() {
+  test('should destroy the previous scope when swapping elements', () => {
     element = $compile('<div><div ng-animate-swap="value">{{ value }}</div></div>')($rootScope);
 
     $rootScope.$apply('value = 1');
@@ -177,7 +178,7 @@ describe('ngAnimateSwap', function() {
     expect(scopeOne.$$destroyed).toBe(true);
   });
 
-  it('should work with `ngIf` on the same element', function() {
+  test('should work with `ngIf` on the same element', () => {
     var tmpl = '<div><div ng-animate-swap="exp" ng-if="true">{{ exp }}</div></div>';
     element = $compile(tmpl)($rootScope);
     $rootScope.$digest();
@@ -201,8 +202,8 @@ describe('ngAnimateSwap', function() {
   });
 
 
-  describe('animations', function() {
-    it('should trigger a leave animation followed by an enter animation upon swap',function() {
+  describe('animations', () => {
+    test('should trigger a leave animation followed by an enter animation upon swap',function() {
       element = $compile('<div><div ng-animate-swap="exp">{{ exp }}</div></div>')($rootScope);
       $rootScope.exp = 1;
       $rootScope.$digest();

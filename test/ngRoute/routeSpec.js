@@ -1,17 +1,16 @@
 'use strict';
-
-describe('$routeProvider', function() {
+ describe('$routeProvider', () => {
   var $routeProvider;
 
-  beforeEach(module('ngRoute'));
-  beforeEach(module(function(_$routeProvider_) {
+  beforeEach(angular.mock.module('ngRoute'));
+  beforeEach(angular.mock.module(function(_$routeProvider_) {
     $routeProvider = _$routeProvider_;
     $routeProvider.when('/foo', {template: 'Hello, world!'});
   }));
 
 
-  it('should support enabling/disabling automatic instantiation upon initial load',
-    inject(function() {
+  test('should support enabling/disabling automatic instantiation upon initial load',
+    angular.mock.inject(function() {
       expect($routeProvider.eagerInstantiationEnabled(true)).toBe($routeProvider);
       expect($routeProvider.eagerInstantiationEnabled()).toBe(true);
 
@@ -24,42 +23,41 @@ describe('$routeProvider', function() {
   );
 
 
-  it('should automatically instantiate `$route` upon initial load', function() {
-    inject(function($location, $rootScope) {
+  test('should automatically instantiate `$route` upon initial load', () => {
+    angular.mock.inject(function($location, $rootScope) {
       $location.path('/foo');
       $rootScope.$digest();
     });
 
-    inject(function($route) {
+    angular.mock.inject(function($route) {
       expect($route.current).toBeDefined();
     });
   });
 
 
-  it('should not automatically instantiate `$route` if disabled', function() {
-    module(function($routeProvider) {
+  test('should not automatically instantiate `$route` if disabled', () => {
+    angular.mock.module(function($routeProvider) {
       $routeProvider.eagerInstantiationEnabled(false);
     });
 
-    inject(function($location, $rootScope) {
+    angular.mock.inject(function($location, $rootScope) {
       $location.path('/foo');
       $rootScope.$digest();
     });
 
-    inject(function($route) {
+    angular.mock.inject(function($route) {
       expect($route.current).toBeUndefined();
     });
   });
 });
 
+ describe('$route', () => {
+  var $httpBackend;
+  var element;
 
-describe('$route', function() {
-  var $httpBackend,
-      element;
+  beforeEach(angular.mock.module('ngRoute'));
 
-  beforeEach(module('ngRoute'));
-
-  beforeEach(module(function() {
+  beforeEach(angular.mock.module(function() {
     return function(_$httpBackend_) {
       $httpBackend = _$httpBackend_;
       $httpBackend.when('GET', 'Chapter.html').respond('chapter');
@@ -72,13 +70,13 @@ describe('$route', function() {
     };
   }));
 
-  afterEach(function() {
+   afterEach(() => {
     dealoc(element);
   });
 
 
-  it('should allow cancellation via $locationChangeStart via $routeChangeStart', function() {
-    module(function($routeProvider) {
+  test('should allow cancellation via $locationChangeStart via $routeChangeStart', () => {
+    angular.mock.module(function($routeProvider) {
       $routeProvider.when('/Edit', {
         id: 'edit', template: 'Some edit functionality'
       });
@@ -86,8 +84,8 @@ describe('$route', function() {
         id: 'home'
       });
     });
-    module(provideLog);
-    inject(function($route, $location, $rootScope, $compile, log) {
+    angular.mock.module(provideLog);
+    angular.mock.inject(function($route, $location, $rootScope, $compile, log) {
       $rootScope.$on('$routeChangeStart', function(event, next, current) {
         if (next.id === 'home' && current.scope.unsavedChanges) {
           event.preventDefault();
@@ -124,8 +122,8 @@ describe('$route', function() {
     });
   });
 
-  it('should allow redirects while handling $routeChangeStart', function() {
-    module(function($routeProvider) {
+  test('should allow redirects while handling $routeChangeStart', () => {
+    angular.mock.module(function($routeProvider) {
       $routeProvider.when('/some', {
         id: 'some', template: 'Some functionality'
       });
@@ -133,14 +131,14 @@ describe('$route', function() {
         id: 'redirect'
       });
     });
-    module(provideLog);
-    inject(function($route, $location, $rootScope, $compile, log) {
+    angular.mock.module(provideLog);
+    angular.mock.inject(function($route, $location, $rootScope, $compile, log) {
       $rootScope.$on('$routeChangeStart', function(event, next, current) {
         if (next.id === 'some') {
           $location.path('/redirect');
         }
       });
-      $compile('<div><div ng-view></div></div>')($rootScope);
+      compileForTest('<div><div ng-view></div></div>');
       $rootScope.$on('$routeChangeStart', log.fn('routeChangeStart'));
       $rootScope.$on('$routeChangeError', log.fn('routeChangeError'));
       $rootScope.$on('$routeChangeSuccess', log.fn('routeChangeSuccess'));
@@ -154,17 +152,17 @@ describe('$route', function() {
     });
   });
 
-  it('should route and fire change event', function() {
-    var log = '',
-        lastRoute,
-        nextRoute;
+  test('should route and fire change event', () => {
+    var log = '';
+    var lastRoute;
+    var nextRoute;
 
-    module(function($routeProvider) {
+    angular.mock.module(function($routeProvider) {
       $routeProvider.when('/Book/:book/Chapter/:chapter',
           {controller: angular.noop, templateUrl: 'Chapter.html'});
       $routeProvider.when('/Blank', {});
     });
-    inject(function($route, $location, $rootScope) {
+    angular.mock.inject(function($route, $location, $rootScope) {
       $rootScope.$on('$routeChangeStart', function(event, next, current) {
         log += 'before();';
         expect(current).toBe($route.current);
@@ -198,19 +196,19 @@ describe('$route', function() {
     });
   });
 
-  it('should route and fire change event when catch-all params are used', function() {
-    var log = '',
-        lastRoute,
-        nextRoute;
+  test('should route and fire change event when catch-all params are used', () => {
+    var log = '';
+    var lastRoute;
+    var nextRoute;
 
-    module(function($routeProvider) {
+    angular.mock.module(function($routeProvider) {
       $routeProvider.when('/Book1/:book/Chapter/:chapter/:highlight*/edit',
           {controller: angular.noop, templateUrl: 'Chapter.html'});
       $routeProvider.when('/Book2/:book/:highlight*/Chapter/:chapter',
           {controller: angular.noop, templateUrl: 'Chapter.html'});
       $routeProvider.when('/Blank', {});
     });
-    inject(function($route, $location, $rootScope) {
+    angular.mock.inject(function($route, $location, $rootScope) {
       $rootScope.$on('$routeChangeStart', function(event, next, current) {
         log += 'before();';
         expect(current).toBe($route.current);
@@ -257,19 +255,19 @@ describe('$route', function() {
   });
 
 
-  it('should route and fire change event correctly whenever the case insensitive flag is utilized', function() {
-    var log = '',
-        lastRoute,
-        nextRoute;
+  test('should route and fire change event correctly whenever the case insensitive flag is utilized', () => {
+    var log = '';
+    var lastRoute;
+    var nextRoute;
 
-    module(function($routeProvider) {
+    angular.mock.module(function($routeProvider) {
       $routeProvider.when('/Book1/:book/Chapter/:chapter/:highlight*/edit',
           {controller: angular.noop, templateUrl: 'Chapter.html', caseInsensitiveMatch: true});
       $routeProvider.when('/Book2/:book/:highlight*/Chapter/:chapter',
           {controller: angular.noop, templateUrl: 'Chapter.html'});
       $routeProvider.when('/Blank', {});
     });
-    inject(function($route, $location, $rootScope) {
+    angular.mock.inject(function($route, $location, $rootScope) {
       $rootScope.$on('$routeChangeStart', function(event, next, current) {
         log += 'before();';
         expect(current).toBe($route.current);
@@ -321,37 +319,37 @@ describe('$route', function() {
     });
   });
 
-  it('should allow configuring caseInsensitiveMatch on the route provider level', function() {
-    module(function($routeProvider) {
+  test('should allow configuring caseInsensitiveMatch on the route provider level', () => {
+    angular.mock.module(function($routeProvider) {
       $routeProvider.caseInsensitiveMatch = true;
       $routeProvider.when('/Blank', {template: 'blank'});
       $routeProvider.otherwise({template: 'other'});
     });
-    inject(function($route, $location, $rootScope) {
+    angular.mock.inject(function($route, $location, $rootScope) {
       $location.path('/bLaNk');
       $rootScope.$digest();
       expect($route.current.template).toBe('blank');
     });
   });
 
-  it('should allow overriding provider\'s caseInsensitiveMatch setting on the route level', function() {
-    module(function($routeProvider) {
+  test('should allow overriding provider\'s caseInsensitiveMatch setting on the route level', () => {
+    angular.mock.module(function($routeProvider) {
       $routeProvider.caseInsensitiveMatch = true;
       $routeProvider.when('/Blank', {template: 'blank', caseInsensitiveMatch: false});
       $routeProvider.otherwise({template: 'other'});
     });
-    inject(function($route, $location, $rootScope) {
+    angular.mock.inject(function($route, $location, $rootScope) {
       $location.path('/bLaNk');
       $rootScope.$digest();
       expect($route.current.template).toBe('other');
     });
   });
 
-  it('should not change route when location is canceled', function() {
-    module(function($routeProvider) {
+  test('should not change route when location is canceled', () => {
+    angular.mock.module(function($routeProvider) {
       $routeProvider.when('/somePath', {template: 'some path'});
     });
-    inject(function($route, $location, $rootScope, $log) {
+    angular.mock.inject(function($route, $location, $rootScope, $log) {
       $rootScope.$on('$locationChangeStart', function(event) {
         $log.info('$locationChangeStart');
         event.preventDefault();
@@ -369,50 +367,50 @@ describe('$route', function() {
   });
 
 
-  describe('should match a route that contains special chars in the path', function() {
-    beforeEach(module(function($routeProvider) {
+  describe('should match a route that contains special chars in the path', () => {
+    beforeEach(angular.mock.module(function($routeProvider) {
       $routeProvider.when('/$test.23/foo*(bar)/:baz', {templateUrl: 'test.html'});
     }));
 
-    it('matches the full path', inject(function($route, $location, $rootScope) {
+    test('matches the full path', angular.mock.inject(function($route, $location, $rootScope) {
       $location.path('/test');
       $rootScope.$digest();
       expect($route.current).toBeUndefined();
     }));
 
-    it('matches literal .', inject(function($route, $location, $rootScope) {
+    test('matches literal .', angular.mock.inject(function($route, $location, $rootScope) {
       $location.path('/$testX23/foo*(bar)/222');
       $rootScope.$digest();
       expect($route.current).toBeUndefined();
     }));
 
-    it('matches literal *', inject(function($route, $location, $rootScope) {
+    test('matches literal *', angular.mock.inject(function($route, $location, $rootScope) {
       $location.path('/$test.23/foooo(bar)/222');
       $rootScope.$digest();
       expect($route.current).toBeUndefined();
     }));
 
-    it('treats backslashes normally', inject(function($route, $location, $rootScope) {
+    test('treats backslashes normally', angular.mock.inject(function($route, $location, $rootScope) {
       $location.path('/$test.23/foo*\\(bar)/222');
       $rootScope.$digest();
       expect($route.current).toBeUndefined();
     }));
 
-    it('matches a URL with special chars', inject(function($route, $location, $rootScope) {
+    test('matches a URL with special chars', angular.mock.inject(function($route, $location, $rootScope) {
       $location.path('/$test.23/foo*(bar)/~!@#$%^&*()_+=-`');
       $rootScope.$digest();
       expect($route.current).toBeDefined();
     }));
 
-    it('should use route params inherited from prototype chain', function() {
+    test('should use route params inherited from prototype chain', () => {
       function BaseRoute() {}
       BaseRoute.prototype.templateUrl = 'foo.html';
 
-      module(function($routeProvider) {
+      angular.mock.module(function($routeProvider) {
         $routeProvider.when('/foo', new BaseRoute());
       });
 
-      inject(function($route, $location, $rootScope) {
+      angular.mock.inject(function($route, $location, $rootScope) {
         $location.path('/foo');
         $rootScope.$digest();
         expect($route.current.templateUrl).toBe('foo.html');
@@ -421,24 +419,24 @@ describe('$route', function() {
   });
 
 
-  describe('should match a route that contains optional params in the path', function() {
-    beforeEach(module(function($routeProvider) {
+  describe('should match a route that contains optional params in the path', () => {
+    beforeEach(angular.mock.module(function($routeProvider) {
       $routeProvider.when('/test/:opt?/:baz/edit', {templateUrl: 'test.html'});
     }));
 
-    it('matches a URL with optional params', inject(function($route, $location, $rootScope) {
+    test('matches a URL with optional params', angular.mock.inject(function($route, $location, $rootScope) {
       $location.path('/test/optValue/bazValue/edit');
       $rootScope.$digest();
       expect($route.current).toBeDefined();
     }));
 
-    it('matches a URL without optional param', inject(function($route, $location, $rootScope) {
+    test('matches a URL without optional param', angular.mock.inject(function($route, $location, $rootScope) {
       $location.path('/test//bazValue/edit');
       $rootScope.$digest();
       expect($route.current).toBeDefined();
     }));
 
-    it('not match a URL with a required param', inject(function($route, $location, $rootScope) {
+    test('not match a URL with a required param', angular.mock.inject(function($route, $location, $rootScope) {
       $location.path('///edit');
       $rootScope.$digest();
       expect($route.current).not.toBeDefined();
@@ -446,18 +444,18 @@ describe('$route', function() {
   });
 
 
-  it('should change route even when only search param changes', function() {
-    module(function($routeProvider) {
+  test('should change route even when only search param changes', () => {
+    angular.mock.module(function($routeProvider) {
       $routeProvider.when('/test', {templateUrl: 'test.html'});
     });
 
-    inject(function($route, $location, $rootScope) {
-      var callback = jasmine.createSpy('onRouteChange');
+    angular.mock.inject(function($route, $location, $rootScope) {
+      var callback = jest.fn().mockName('onRouteChange');
 
       $rootScope.$on('$routeChangeStart', callback);
       $location.path('/test');
       $rootScope.$digest();
-      callback.calls.reset();
+      callback.mockClear();
 
       $location.search({any: true});
       $rootScope.$digest();
@@ -467,13 +465,13 @@ describe('$route', function() {
   });
 
 
-  it('should allow routes to be defined with just templates without controllers', function() {
-    module(function($routeProvider) {
+  test('should allow routes to be defined with just templates without controllers', () => {
+    angular.mock.module(function($routeProvider) {
       $routeProvider.when('/foo', {templateUrl: 'foo.html'});
     });
 
-    inject(function($route, $location, $rootScope) {
-      var onChangeSpy = jasmine.createSpy('onChange');
+    angular.mock.inject(function($route, $location, $rootScope) {
+      var onChangeSpy = jest.fn().mockName('onChange');
 
       $rootScope.$on('$routeChangeStart', onChangeSpy);
       expect($route.current).toBeUndefined();
@@ -489,14 +487,14 @@ describe('$route', function() {
   });
 
 
-  it('should chain whens and otherwise', function() {
-    module(function($routeProvider) {
+  test('should chain whens and otherwise', () => {
+    angular.mock.module(function($routeProvider) {
       $routeProvider.when('/foo', {templateUrl: 'foo.html'}).
           otherwise({templateUrl: 'bar.html'}).
           when('/baz', {templateUrl: 'baz.html'});
     });
 
-    inject(function($route, $location, $rootScope) {
+    angular.mock.inject(function($route, $location, $rootScope) {
       $rootScope.$digest();
       expect($route.current.templateUrl).toBe('bar.html');
 
@@ -507,8 +505,8 @@ describe('$route', function() {
   });
 
 
-  it('should skip routes with incomplete params', function() {
-    module(function($routeProvider) {
+  test('should skip routes with incomplete params', () => {
+    angular.mock.module(function($routeProvider) {
       $routeProvider
         .otherwise({template: 'other'})
         .when('/pages/:page/:comment*', {template: 'comment'})
@@ -519,7 +517,7 @@ describe('$route', function() {
         .when('/foo/:bar*/:baz', {template: 'baz'});
     });
 
-    inject(function($route, $location, $rootScope) {
+    angular.mock.inject(function($route, $location, $rootScope) {
       $location.url('/pages/');
       $rootScope.$digest();
       expect($route.current.template).toBe('index');
@@ -551,18 +549,18 @@ describe('$route', function() {
   });
 
 
-  describe('otherwise', function() {
+  describe('otherwise', () => {
 
-    it('should handle unknown routes with "otherwise" route definition', function() {
+    test('should handle unknown routes with "otherwise" route definition', () => {
       function NotFoundCtrl() {}
 
-      module(function($routeProvider) {
+      angular.mock.module(function($routeProvider) {
         $routeProvider.when('/foo', {templateUrl: 'foo.html'});
         $routeProvider.otherwise({templateUrl: '404.html', controller: NotFoundCtrl});
       });
 
-      inject(function($route, $location, $rootScope) {
-        var onChangeSpy = jasmine.createSpy('onChange');
+      angular.mock.inject(function($route, $location, $rootScope) {
+        var onChangeSpy = jest.fn().mockName('onChange');
 
         $rootScope.$on('$routeChangeStart', onChangeSpy);
         expect($route.current).toBeUndefined();
@@ -575,7 +573,7 @@ describe('$route', function() {
         expect($route.current.controller).toBe(NotFoundCtrl);
         expect(onChangeSpy).toHaveBeenCalled();
 
-        onChangeSpy.calls.reset();
+        onChangeSpy.mockClear();
         $location.path('/foo');
         $rootScope.$digest();
 
@@ -586,18 +584,20 @@ describe('$route', function() {
     });
 
 
-    it('should update $route.current and $route.next when default route is matched', function() {
-      module(function($routeProvider) {
+    test('should update $route.current and $route.next when default route is matched', () => {
+      angular.mock.module(function($routeProvider) {
         $routeProvider.when('/foo', {templateUrl: 'foo.html'});
         $routeProvider.otherwise({templateUrl: '404.html'});
       });
 
-      inject(function($route, $location, $rootScope) {
-        var currentRoute, nextRoute,
-            onChangeSpy = jasmine.createSpy('onChange').and.callFake(function(e, next) {
-          currentRoute = $route.current;
-          nextRoute = next;
-        });
+      angular.mock.inject(function($route, $location, $rootScope) {
+        var currentRoute;
+        var nextRoute;
+
+        var onChangeSpy = jest.fn().mockName('onChange').mockImplementation(function(e, next) {
+      currentRoute = $route.current;
+      nextRoute = next;
+    });
 
 
         // init
@@ -614,7 +614,7 @@ describe('$route', function() {
         expect(nextRoute.templateUrl).toBe('404.html');
         expect($route.current.templateUrl).toBe('404.html');
         expect(onChangeSpy).toHaveBeenCalled();
-        onChangeSpy.calls.reset();
+        onChangeSpy.mockClear();
 
         // match regular route
         $location.path('/foo');
@@ -624,7 +624,7 @@ describe('$route', function() {
         expect(nextRoute.templateUrl).toBe('foo.html');
         expect($route.current.templateUrl).toEqual('foo.html');
         expect(onChangeSpy).toHaveBeenCalled();
-        onChangeSpy.calls.reset();
+        onChangeSpy.mockClear();
 
         // match otherwise route again
         $location.path('/anotherUnknownRoute');
@@ -638,14 +638,14 @@ describe('$route', function() {
     });
 
 
-    it('should interpret a string as a redirect route', function() {
-      module(function($routeProvider) {
+    test('should interpret a string as a redirect route', () => {
+      angular.mock.module(function($routeProvider) {
         $routeProvider.when('/foo', {templateUrl: 'foo.html'});
         $routeProvider.when('/baz', {templateUrl: 'baz.html'});
         $routeProvider.otherwise('/foo');
       });
 
-      inject(function($route, $location, $rootScope) {
+      angular.mock.inject(function($route, $location, $rootScope) {
         $location.path('/unknownRoute');
         $rootScope.$digest();
 
@@ -656,15 +656,15 @@ describe('$route', function() {
   });
 
 
-  describe('events', function() {
-    it('should not fire $routeChangeStart/Success during bootstrap (if no route)', function() {
-      var routeChangeSpy = jasmine.createSpy('route change');
+  describe('events', () => {
+    test('should not fire $routeChangeStart/Success during bootstrap (if no route)', () => {
+      var routeChangeSpy = jest.fn().mockName('route change');
 
-      module(function($routeProvider) {
+      angular.mock.module(function($routeProvider) {
         $routeProvider.when('/one', {}); // no otherwise defined
       });
 
-      inject(function($rootScope, $route, $location) {
+      angular.mock.inject(function($rootScope, $route, $location) {
         $rootScope.$on('$routeChangeStart', routeChangeSpy);
         $rootScope.$on('$routeChangeSuccess', routeChangeSpy);
 
@@ -681,11 +681,11 @@ describe('$route', function() {
       });
     });
 
-    it('should fire $routeChangeStart and resolve promises', function() {
-      var deferA,
-          deferB;
+    test('should fire $routeChangeStart and resolve promises', () => {
+      var deferA;
+      var deferB;
 
-      module(function($provide, $routeProvider) {
+      angular.mock.module(function($provide, $routeProvider) {
         $provide.factory('b', function($q) {
           deferB = $q.defer();
           return deferB.promise;
@@ -699,7 +699,7 @@ describe('$route', function() {
         } });
       });
 
-      inject(function($location, $route, $rootScope, $httpBackend) {
+      angular.mock.inject(function($location, $route, $rootScope, $httpBackend) {
         var log = '';
 
         $httpBackend.expectGET('foo.html').respond('FOO');
@@ -719,19 +719,19 @@ describe('$route', function() {
     });
 
 
-    it('should fire $routeChangeError event on resolution error', function() {
+    test('should fire $routeChangeError event on resolution error', () => {
       var deferA;
 
-      module(function($provide, $routeProvider) {
+      angular.mock.module(function($provide, $routeProvider) {
         $routeProvider.when('/path', { template: 'foo', resolve: {
-          a: function($q) {
+          a($q) {
             deferA = $q.defer();
             return deferA.promise;
           }
         } });
       });
 
-      inject(function($location, $route, $rootScope) {
+      angular.mock.inject(function($location, $route, $rootScope) {
         var log = '';
 
         $rootScope.$on('$routeChangeStart', function() { log += 'before();'; });
@@ -748,14 +748,14 @@ describe('$route', function() {
     });
 
 
-    it('should fetch templates', function() {
-      module(function($routeProvider) {
+    test('should fetch templates', () => {
+      angular.mock.module(function($routeProvider) {
         $routeProvider.
           when('/r1', { templateUrl: 'r1.html' }).
           when('/r2', { templateUrl: 'r2.html' });
       });
 
-      inject(function($route, $httpBackend, $location, $rootScope) {
+      angular.mock.inject(function($route, $httpBackend, $location, $rootScope) {
         var log = '';
         $rootScope.$on('$routeChangeStart', function(e, next) { log += '$before(' + next.templateUrl + ');'; });
         $rootScope.$on('$routeChangeSuccess', function(e, next) { log += '$after(' + next.templateUrl + ');'; });
@@ -777,14 +777,14 @@ describe('$route', function() {
       });
     });
 
-    it('should NOT load cross domain templates by default', function() {
-      module(function($routeProvider) {
+    test('should NOT load cross domain templates by default', () => {
+      angular.mock.module(function($routeProvider) {
         $routeProvider.when('/foo', { templateUrl: 'http://example.com/foo.html' });
       });
 
-      inject(function($route, $location, $rootScope) {
-        var onError = jasmine.createSpy('onError');
-        var onSuccess = jasmine.createSpy('onSuccess');
+      angular.mock.inject(function($route, $location, $rootScope) {
+        var onError = jest.fn().mockName('onError');
+        var onSuccess = jest.fn().mockName('onSuccess');
 
         $rootScope.$on('$routeChangeError', onError);
         $rootScope.$on('$routeChangeSuccess', onSuccess);
@@ -794,19 +794,19 @@ describe('$route', function() {
 
         expect(onSuccess).not.toHaveBeenCalled();
         expect(onError).toHaveBeenCalled();
-        expect(onError.calls.mostRecent().args[3]).toEqualMinErr('$sce', 'insecurl',
+        expect(onError.mock.lastCall[3]).toEqualMinErr('$sce', 'insecurl',
             'Blocked loading resource from url not allowed by $sceDelegate policy.  ' +
             'URL: http://example.com/foo.html');
       });
     });
 
-    it('should load cross domain templates that are trusted', function() {
-      module(function($routeProvider, $sceDelegateProvider) {
+    test('should load cross domain templates that are trusted', () => {
+      angular.mock.module(function($routeProvider, $sceDelegateProvider) {
         $routeProvider.when('/foo', { templateUrl: 'http://example.com/foo.html' });
         $sceDelegateProvider.trustedResourceUrlList([/^http:\/\/example\.com\/foo\.html$/]);
       });
 
-      inject(function($route, $location, $rootScope) {
+      angular.mock.inject(function($route, $location, $rootScope) {
         $httpBackend.whenGET('http://example.com/foo.html').respond('FOO BODY');
         $location.path('/foo');
         $rootScope.$digest();
@@ -815,14 +815,14 @@ describe('$route', function() {
       });
     });
 
-    it('should not update $routeParams until $routeChangeSuccess', function() {
-      module(function($routeProvider) {
+    test('should not update $routeParams until $routeChangeSuccess', () => {
+      angular.mock.module(function($routeProvider) {
         $routeProvider.
           when('/r1/:id', { templateUrl: 'r1.html' }).
           when('/r2/:id', { templateUrl: 'r2.html' });
       });
 
-      inject(function($route, $httpBackend, $location, $rootScope, $routeParams) {
+      angular.mock.inject(function($route, $httpBackend, $location, $rootScope, $routeParams) {
         var log = '';
         $rootScope.$on('$routeChangeStart', function(e, next) { log += '$before' + angular.toJson($routeParams) + ';'; });
         $rootScope.$on('$routeChangeSuccess', function(e, next) { log += '$after' + angular.toJson($routeParams) + ';'; });
@@ -847,14 +847,14 @@ describe('$route', function() {
     });
 
 
-    it('should drop in progress route change when new route change occurs', function() {
-      module(function($routeProvider) {
+    test('should drop in progress route change when new route change occurs', () => {
+      angular.mock.module(function($routeProvider) {
         $routeProvider.
           when('/r1', { templateUrl: 'r1.html' }).
           when('/r2', { templateUrl: 'r2.html' });
       });
 
-      inject(function($route, $httpBackend, $location, $rootScope) {
+      angular.mock.inject(function($route, $httpBackend, $location, $rootScope) {
         var log = '';
         $rootScope.$on('$routeChangeStart', function(e, next) { log += '$before(' + next.templateUrl + ');'; });
         $rootScope.$on('$routeChangeSuccess', function(e, next) { log += '$after(' + next.templateUrl + ');'; });
@@ -877,8 +877,8 @@ describe('$route', function() {
     });
 
 
-    it('should throw an error when a template is not found', function() {
-      module(function($routeProvider, $exceptionHandlerProvider) {
+    test('should throw an error when a template is not found', () => {
+      angular.mock.module(function($routeProvider, $exceptionHandlerProvider) {
         $exceptionHandlerProvider.mode('log');
         $routeProvider.
           when('/r1', { templateUrl: 'r1.html' }).
@@ -886,7 +886,7 @@ describe('$route', function() {
           when('/r3', { templateUrl: 'r3.html' });
       });
 
-      inject(function($route, $httpBackend, $location, $rootScope, $exceptionHandler) {
+      angular.mock.inject(function($route, $httpBackend, $location, $rootScope, $exceptionHandler) {
         $httpBackend.expectGET('r1.html').respond(404, 'R1');
         $location.path('/r1');
         $rootScope.$digest();
@@ -912,38 +912,38 @@ describe('$route', function() {
     });
 
 
-    it('should catch local factory errors', function() {
+    test('should catch local factory errors', () => {
       var myError = new Error('MyError');
-      module(function($routeProvider) {
+      angular.mock.module(function($routeProvider) {
         $routeProvider.when('/locals', {
           resolve: {
-            a: function($q) {
+            a($q) {
               throw myError;
             }
           }
         });
       });
 
-      inject(function($location, $route, $rootScope) {
-        spyOn($rootScope, '$broadcast').and.callThrough();
+      angular.mock.inject(function($location, $route, $rootScope) {
+        jest.spyOn($rootScope, '$broadcast');
 
         $location.path('/locals');
         $rootScope.$digest();
 
         expect($rootScope.$broadcast).toHaveBeenCalledWith(
-            '$routeChangeError', jasmine.any(Object), undefined, myError);
+            '$routeChangeError', expect.any(Object), undefined, myError);
       });
     });
   });
 
 
-  it('should match route with and without trailing slash', function() {
-    module(function($routeProvider) {
+  test('should match route with and without trailing slash', () => {
+    angular.mock.module(function($routeProvider) {
       $routeProvider.when('/foo', {templateUrl: 'foo.html'});
       $routeProvider.when('/bar/', {templateUrl: 'bar.html'});
     });
 
-    inject(function($route, $location, $rootScope) {
+    angular.mock.inject(function($route, $location, $rootScope) {
       $location.path('/foo');
       $rootScope.$digest();
       expect($location.path()).toBe('/foo');
@@ -967,9 +967,9 @@ describe('$route', function() {
   });
 
 
-  it('should not get affected by modifying the route definition object after route registration',
+  test('should not get affected by modifying the route definition object after route registration',
     function() {
-      module(function($routeProvider) {
+      angular.mock.module(function($routeProvider) {
         var rdo = {};
 
         rdo.templateUrl = 'foo.html';
@@ -979,7 +979,7 @@ describe('$route', function() {
         $routeProvider.when('/bar', rdo);
       });
 
-      inject(function($location, $rootScope, $route) {
+      angular.mock.inject(function($location, $rootScope, $route) {
         $location.path('/bar');
         $rootScope.$digest();
         expect($location.path()).toBe('/bar');
@@ -994,15 +994,15 @@ describe('$route', function() {
   );
 
 
-  it('should use the property values of the passed in route definition object directly',
+  test('should use the property values of the passed in route definition object directly',
     function() {
       var $routeProvider;
 
-      module(function(_$routeProvider_) {
+      angular.mock.module(function(_$routeProvider_) {
         $routeProvider = _$routeProvider_;
       });
 
-      inject(function($location, $rootScope, $route, $sce) {
+      angular.mock.inject(function($location, $rootScope, $route, $sce) {
         var sceWrappedUrl = $sce.trustAsResourceUrl('foo.html');
         $routeProvider.when('/foo', {templateUrl: sceWrappedUrl});
 
@@ -1015,7 +1015,7 @@ describe('$route', function() {
   );
 
 
-  it('should support custom `$sce` implementations', function() {
+  test('should support custom `$sce` implementations', () => {
     function MySafeResourceUrl(val) {
       var self = this;
       this._val = val;
@@ -1026,7 +1026,7 @@ describe('$route', function() {
 
     var $routeProvider;
 
-    module(function($provide, _$routeProvider_) {
+    angular.mock.module(function($provide, _$routeProvider_) {
       $routeProvider = _$routeProvider_;
 
       $provide.decorator('$sce', function($delegate) {
@@ -1038,7 +1038,7 @@ describe('$route', function() {
       });
     });
 
-    inject(function($location, $rootScope, $route, $sce) {
+    angular.mock.inject(function($location, $rootScope, $route, $sce) {
       $routeProvider.when('/foo', {templateUrl: $sce.trustAsResourceUrl('foo.html')});
 
       $location.path('/foo');
@@ -1049,10 +1049,10 @@ describe('$route', function() {
   });
 
 
-  describe('redirection', function() {
-    describe('via `redirectTo`', function() {
-      it('should support redirection via redirectTo property by updating $location', function() {
-        module(function($routeProvider) {
+  describe('redirection', () => {
+    describe('via `redirectTo`', () => {
+      test('should support redirection via redirectTo property by updating $location', () => {
+        angular.mock.module(function($routeProvider) {
           $routeProvider.when('/', {redirectTo: '/foo'});
           $routeProvider.when('/foo', {templateUrl: 'foo.html'});
           $routeProvider.when('/bar', {templateUrl: 'bar.html'});
@@ -1060,8 +1060,8 @@ describe('$route', function() {
           $routeProvider.otherwise({templateUrl: '404.html'});
         });
 
-        inject(function($route, $location, $rootScope) {
-          var onChangeSpy = jasmine.createSpy('onChange');
+        angular.mock.inject(function($route, $location, $rootScope) {
+          var onChangeSpy = jest.fn().mockName('onChange');
 
           $rootScope.$on('$routeChangeStart', onChangeSpy);
           expect($route.current).toBeUndefined();
@@ -1073,7 +1073,7 @@ describe('$route', function() {
           expect($route.current.templateUrl).toBe('foo.html');
           expect(onChangeSpy).toHaveBeenCalledTimes(2);
 
-          onChangeSpy.calls.reset();
+          onChangeSpy.mockClear();
           $location.path('/baz');
           $rootScope.$digest();
           expect($location.path()).toBe('/bar');
@@ -1083,15 +1083,15 @@ describe('$route', function() {
       });
 
 
-      it('should interpolate route vars in the redirected path from original path', function() {
-        module(function($routeProvider) {
+      test('should interpolate route vars in the redirected path from original path', () => {
+        angular.mock.module(function($routeProvider) {
           $routeProvider.when('/foo/:id/foo/:subid/:extraId', {redirectTo: '/bar/:id/:subid/23'});
           $routeProvider.when('/bar/:id/:subid/:subsubid', {templateUrl: 'bar.html'});
           $routeProvider.when('/baz/:id/:path*', {redirectTo: '/path/:path/:id'});
           $routeProvider.when('/path/:path*/:id', {templateUrl: 'foo.html'});
         });
 
-        inject(function($route, $location, $rootScope) {
+        angular.mock.inject(function($route, $location, $rootScope) {
           $location.path('/foo/id1/foo/subid3/gah');
           $rootScope.$digest();
 
@@ -1107,13 +1107,13 @@ describe('$route', function() {
       });
 
 
-      it('should interpolate route vars in the redirected path from original search', function() {
-        module(function($routeProvider) {
+      test('should interpolate route vars in the redirected path from original search', () => {
+        angular.mock.module(function($routeProvider) {
           $routeProvider.when('/bar/:id/:subid/:subsubid', {templateUrl: 'bar.html'});
           $routeProvider.when('/foo/:id/:extra', {redirectTo: '/bar/:id/:subid/99'});
         });
 
-        inject(function($route, $location, $rootScope) {
+        angular.mock.inject(function($route, $location, $rootScope) {
           $location.path('/foo/id3/eId').search('subid=sid1&appended=true');
           $rootScope.$digest();
 
@@ -1124,12 +1124,12 @@ describe('$route', function() {
       });
 
 
-      it('should properly process route params which are both eager and optional', function() {
-        module(function($routeProvider) {
+      test('should properly process route params which are both eager and optional', () => {
+        angular.mock.module(function($routeProvider) {
           $routeProvider.when('/foo/:param1*?/:param2', {templateUrl: 'foo.html'});
         });
 
-        inject(function($location, $rootScope, $route) {
+        angular.mock.inject(function($location, $rootScope, $route) {
           $location.path('/foo/bar1/bar2/bar3/baz');
           $rootScope.$digest();
 
@@ -1150,14 +1150,14 @@ describe('$route', function() {
       });
 
 
-      it('should properly interpolate optional and eager route vars ' +
+      test('should properly interpolate optional and eager route vars ' +
          'when redirecting from path with trailing slash', function() {
-        module(function($routeProvider) {
+        angular.mock.module(function($routeProvider) {
           $routeProvider.when('/foo/:id?/:subid?', {templateUrl: 'foo.html'});
           $routeProvider.when('/bar/:id*/:subid', {templateUrl: 'bar.html'});
         });
 
-        inject(function($location, $rootScope, $route) {
+        angular.mock.inject(function($location, $rootScope, $route) {
           $location.path('/foo/id1/subid2/');
           $rootScope.$digest();
 
@@ -1173,7 +1173,7 @@ describe('$route', function() {
       });
 
 
-      it('should allow custom redirectTo function to be used', function() {
+      test('should allow custom redirectTo function to be used', () => {
         function customRedirectFn(routePathParams, path, search) {
           expect(routePathParams).toEqual({id: 'id3'});
           expect(path).toEqual('/foo/id3');
@@ -1181,11 +1181,11 @@ describe('$route', function() {
           return '/custom';
         }
 
-        module(function($routeProvider) {
+        angular.mock.module(function($routeProvider) {
           $routeProvider.when('/foo/:id', {redirectTo: customRedirectFn});
         });
 
-        inject(function($route, $location, $rootScope) {
+        angular.mock.inject(function($route, $location, $rootScope) {
           $location.path('/foo/id3').search('subid=sid1&appended=true');
           $rootScope.$digest();
 
@@ -1194,52 +1194,52 @@ describe('$route', function() {
       });
 
 
-      it('should broadcast `$routeChangeError` when redirectTo throws', function() {
+      test('should broadcast `$routeChangeError` when redirectTo throws', () => {
         var error = new Error('Test');
 
-        module(function($routeProvider) {
-          $routeProvider.when('/foo', {redirectTo: function() { throw error; }});
+        angular.mock.module(function($routeProvider) {
+          $routeProvider.when('/foo', {redirectTo() { throw error; }});
         });
 
-        inject(function($exceptionHandler, $location, $rootScope, $route) {
-          spyOn($rootScope, '$broadcast').and.callThrough();
+        angular.mock.inject(function($exceptionHandler, $location, $rootScope, $route) {
+          jest.spyOn($rootScope, '$broadcast');
 
           $location.path('/foo');
           $rootScope.$digest();
 
-          var lastCallArgs = $rootScope.$broadcast.calls.mostRecent().args;
+          var lastCallArgs = $rootScope.$broadcast.mock.lastCall;
           expect(lastCallArgs[0]).toBe('$routeChangeError');
           expect(lastCallArgs[3]).toBe(error);
         });
       });
 
 
-      it('should replace the url when redirecting',  function() {
-        module(function($routeProvider) {
+      test('should replace the url when redirecting',  function() {
+        angular.mock.module(function($routeProvider) {
           $routeProvider.when('/bar/:id', {templateUrl: 'bar.html'});
           $routeProvider.when('/foo/:id/:extra', {redirectTo: '/bar/:id'});
         });
-        inject(function($browser, $route, $location, $rootScope) {
-          var $browserUrl = spyOnlyCallsWithArgs($browser, 'url').and.callThrough();
+        angular.mock.inject(function($browser, $route, $location, $rootScope) {
+          var $browserUrl = spyOnlyCallsWithArgs($browser, 'url');
 
           $location.path('/foo/id3/eId');
           $rootScope.$digest();
 
           expect($location.path()).toEqual('/bar/id3');
-          expect($browserUrl.calls.mostRecent().args)
+          expect($browserUrl.mock.lastCall)
               .toEqual(['http://server/#!/bar/id3?extra=eId', true, null]);
         });
       });
 
 
-      it('should not process route bits', function() {
-        var firstController = jasmine.createSpy('first controller spy');
-        var firstTemplate = jasmine.createSpy('first template spy').and.returnValue('redirected view');
-        var firstResolve = jasmine.createSpy('first resolve spy');
-        var secondController = jasmine.createSpy('second controller spy');
-        var secondTemplate = jasmine.createSpy('second template spy').and.returnValue('redirected view');
-        var secondResolve = jasmine.createSpy('second resolve spy');
-        module(function($routeProvider) {
+      test('should not process route bits', () => {
+        var firstController = jest.fn().mockName('first controller spy');
+        var firstTemplate = jest.fn().mockName('first template spy').mockReturnValue('redirected view');
+        var firstResolve = jest.fn().mockName('first resolve spy');
+        var secondController = jest.fn().mockName('second controller spy');
+        var secondTemplate = jest.fn().mockName('second template spy').mockReturnValue('redirected view');
+        var secondResolve = jest.fn().mockName('second resolve spy');
+        angular.mock.module(function($routeProvider) {
           $routeProvider.when('/redirect', {
             template: firstTemplate,
             redirectTo: '/redirected',
@@ -1252,7 +1252,7 @@ describe('$route', function() {
             controller: secondController
           });
         });
-        inject(function($route, $location, $rootScope, $compile) {
+        angular.mock.inject(function($route, $location, $rootScope, $compile) {
           var element = $compile('<div><ng-view></ng-view></div>')($rootScope);
           $location.path('/redirect');
           $rootScope.$digest();
@@ -1270,17 +1270,17 @@ describe('$route', function() {
       });
 
 
-      it('should not redirect transition if `redirectTo` returns `undefined`', function() {
-        var controller = jasmine.createSpy('first controller spy');
-        var templateFn = jasmine.createSpy('first template spy').and.returnValue('redirected view');
-        module(function($routeProvider) {
+      test('should not redirect transition if `redirectTo` returns `undefined`', () => {
+        var controller = jest.fn().mockName('first controller spy');
+        var templateFn = jest.fn().mockName('first template spy').mockReturnValue('redirected view');
+        angular.mock.module(function($routeProvider) {
           $routeProvider.when('/redirect/to/undefined', {
             template: templateFn,
-            redirectTo: function() {},
+            redirectTo() {},
             controller: controller
           });
         });
-        inject(function($route, $location, $rootScope, $compile) {
+        angular.mock.inject(function($route, $location, $rootScope, $compile) {
           var element = $compile('<div><ng-view></ng-view></div>')($rootScope);
           $location.path('/redirect/to/undefined');
           $rootScope.$digest();
@@ -1292,13 +1292,13 @@ describe('$route', function() {
       });
     });
 
-    describe('via `resolveRedirectTo`', function() {
+    describe('via `resolveRedirectTo`', () => {
       var $compile;
       var $location;
       var $rootScope;
       var $route;
 
-      beforeEach(module(function() {
+      beforeEach(angular.mock.module(function() {
         return function(_$compile_, _$location_, _$rootScope_, _$route_) {
           $compile = _$compile_;
           $location = _$location_;
@@ -1308,15 +1308,15 @@ describe('$route', function() {
       }));
 
 
-      it('should be ignored if `redirectTo` is also present', function() {
+      test('should be ignored if `redirectTo` is also present', () => {
         var newUrl;
         var getNewUrl = function() { return newUrl; };
 
-        var resolveRedirectToSpy = jasmine.createSpy('resolveRedirectTo').and.returnValue('/bar');
-        var redirectToSpy = jasmine.createSpy('redirectTo').and.callFake(getNewUrl);
-        var templateSpy = jasmine.createSpy('template').and.returnValue('Foo');
+        var resolveRedirectToSpy = jest.fn().mockName('resolveRedirectTo').mockReturnValue('/bar');
+        var redirectToSpy = jest.fn().mockName('redirectTo').mockImplementation(getNewUrl);
+        var templateSpy = jest.fn().mockName('template').mockReturnValue('Foo');
 
-        module(function($routeProvider) {
+        angular.mock.module(function($routeProvider) {
           $routeProvider.
             when('/foo', {
               resolveRedirectTo: resolveRedirectToSpy,
@@ -1327,7 +1327,7 @@ describe('$route', function() {
             when('/baz', {template: 'Baz'});
         });
 
-        inject(function() {
+        angular.mock.inject(function() {
           newUrl = '/baz';
           $location.path('/foo');
           $rootScope.$digest();
@@ -1338,7 +1338,7 @@ describe('$route', function() {
           expect(redirectToSpy).toHaveBeenCalled();
           expect(templateSpy).not.toHaveBeenCalled();
 
-          redirectToSpy.calls.reset();
+          redirectToSpy.mockClear();
 
           newUrl = undefined;
           $location.path('/foo');
@@ -1353,14 +1353,14 @@ describe('$route', function() {
       });
 
 
-      it('should redirect to the returned url', function() {
-        module(function($routeProvider) {
+      test('should redirect to the returned url', () => {
+        angular.mock.module(function($routeProvider) {
           $routeProvider.
-            when('/foo', {resolveRedirectTo: function() { return '/bar?baz=qux'; }}).
+            when('/foo', {resolveRedirectTo() { return '/bar?baz=qux'; }}).
             when('/bar', {template: 'Bar'});
         });
 
-        inject(function() {
+        angular.mock.inject(function() {
           $location.path('/foo');
           $rootScope.$digest();
 
@@ -1371,14 +1371,14 @@ describe('$route', function() {
       });
 
 
-      it('should support returning a promise', function() {
-        module(function($routeProvider) {
+      test('should support returning a promise', () => {
+        angular.mock.module(function($routeProvider) {
           $routeProvider.
-            when('/foo', {resolveRedirectTo: function($q) { return $q.resolve('/bar'); }}).
+            when('/foo', {resolveRedirectTo($q) { return $q.resolve('/bar'); }}).
             when('/bar', {template: 'Bar'});
         });
 
-        inject(function() {
+        angular.mock.inject(function() {
           $location.path('/foo');
           $rootScope.$digest();
 
@@ -1388,19 +1388,19 @@ describe('$route', function() {
       });
 
 
-      it('should support dependency injection', function() {
-        module(function($provide, $routeProvider) {
+      test('should support dependency injection', () => {
+        angular.mock.module(function($provide, $routeProvider) {
           $provide.value('nextRoute', '/bar');
 
           $routeProvider.
             when('/foo', {
-              resolveRedirectTo: function(nextRoute) {
+              resolveRedirectTo(nextRoute) {
                 return nextRoute;
               }
             });
         });
 
-        inject(function() {
+        angular.mock.inject(function() {
           $location.path('/foo');
           $rootScope.$digest();
 
@@ -1409,12 +1409,12 @@ describe('$route', function() {
       });
 
 
-      it('should have access to the current routeParams via `$route.current.params`', function() {
-        module(function($routeProvider) {
+      test('should have access to the current routeParams via `$route.current.params`', () => {
+        angular.mock.module(function($routeProvider) {
           $routeProvider.
             when('/foo/:bar/baz/:qux', {
-              resolveRedirectTo: function($route) {
-                expect($route.current.params).toEqual(jasmine.objectContaining({
+              resolveRedirectTo($route) {
+                expect($route.current.params).toEqual(expect.objectContaining({
                   bar: '1',
                   qux: '2'
                 }));
@@ -1424,7 +1424,7 @@ describe('$route', function() {
             });
         });
 
-        inject(function() {
+        angular.mock.inject(function() {
           $location.path('/foo/1/baz/2').search({bar: 'qux'});
           $rootScope.$digest();
 
@@ -1433,12 +1433,12 @@ describe('$route', function() {
       });
 
 
-      it('should not process route bits until the promise is resolved', function() {
+      test('should not process route bits until the promise is resolved', () => {
         var spies = createSpies();
         var called = false;
         var deferred;
 
-        module(function($routeProvider) {
+        angular.mock.module(function($routeProvider) {
           setupRoutes($routeProvider, spies, function($q) {
             called = true;
             deferred = $q.defer();
@@ -1446,7 +1446,7 @@ describe('$route', function() {
           });
         });
 
-        inject(function() {
+        angular.mock.inject(function() {
           var element = $compile('<div><ng-view></ng-view></div>')($rootScope);
 
           $location.path('/foo');
@@ -1476,18 +1476,18 @@ describe('$route', function() {
       });
 
 
-      it('should not redirect if `undefined` is returned', function() {
+      test('should not redirect if `undefined` is returned', () => {
         var spies = createSpies();
         var called = false;
 
-        module(function($routeProvider) {
+        angular.mock.module(function($routeProvider) {
           setupRoutes($routeProvider, spies, function() {
             called = true;
             return undefined;
           });
         });
 
-        inject(function() {
+        angular.mock.inject(function() {
           var element = $compile('<div><ng-view></ng-view></div>')($rootScope);
 
           $location.path('/foo');
@@ -1507,18 +1507,18 @@ describe('$route', function() {
       });
 
 
-      it('should not redirect if the returned promise resolves to `undefined`', function() {
+      test('should not redirect if the returned promise resolves to `undefined`', () => {
         var spies = createSpies();
         var called = false;
 
-        module(function($routeProvider) {
+        angular.mock.module(function($routeProvider) {
           setupRoutes($routeProvider, spies, function($q) {
             called = true;
             return $q.resolve(undefined);
           });
         });
 
-        inject(function() {
+        angular.mock.inject(function() {
           var element = $compile('<div><ng-view></ng-view></div>')($rootScope);
 
           $location.path('/foo');
@@ -1538,19 +1538,19 @@ describe('$route', function() {
       });
 
 
-      it('should not redirect if the returned promise gets rejected', function() {
+      test('should not redirect if the returned promise gets rejected', () => {
         var spies = createSpies();
         var called = false;
 
-        module(function($routeProvider) {
+        angular.mock.module(function($routeProvider) {
           setupRoutes($routeProvider, spies, function($q) {
             called = true;
             return $q.reject('');
           });
         });
 
-        inject(function() {
-          spyOn($rootScope, '$broadcast').and.callThrough();
+        angular.mock.inject(function() {
+          jest.spyOn($rootScope, '$broadcast');
 
           var element = $compile('<div><ng-view></ng-view></div>')($rootScope);
 
@@ -1566,7 +1566,7 @@ describe('$route', function() {
           expect(spies.barTemplateSpy).not.toHaveBeenCalled();
           expect(spies.barControllerSpy).not.toHaveBeenCalled();
 
-          var lastCallArgs = $rootScope.$broadcast.calls.mostRecent().args;
+          var lastCallArgs = $rootScope.$broadcast.mock.lastCall;
           expect(lastCallArgs[0]).toBe('$routeChangeError');
 
           dealoc(element);
@@ -1574,12 +1574,12 @@ describe('$route', function() {
       });
 
 
-      it('should ignore previous redirection if newer transition happened', function() {
+      test('should ignore previous redirection if newer transition happened', () => {
         var spies = createSpies();
         var called = false;
         var deferred;
 
-        module(function($routeProvider) {
+        angular.mock.module(function($routeProvider) {
           setupRoutes($routeProvider, spies, function($q) {
             called = true;
             deferred = $q.defer();
@@ -1587,8 +1587,8 @@ describe('$route', function() {
           });
         });
 
-        inject(function() {
-          spyOn($location, 'url').and.callThrough();
+        angular.mock.inject(function() {
+          jest.spyOn($location, 'url');
 
           var element = $compile('<div><ng-view></ng-view></div>')($rootScope);
 
@@ -1617,9 +1617,9 @@ describe('$route', function() {
           expect(spies.barResolveSpy).not.toHaveBeenCalled();
           expect(spies.barTemplateSpy).not.toHaveBeenCalled();
           expect(spies.barControllerSpy).not.toHaveBeenCalled();
-          expect(spies.bazResolveSpy).toHaveBeenCalledOnce();
-          expect(spies.bazTemplateSpy).toHaveBeenCalledOnce();
-          expect(spies.bazControllerSpy).toHaveBeenCalledOnce();
+          expect(spies.bazResolveSpy).toHaveBeenCalledTimes(1);
+          expect(spies.bazTemplateSpy).toHaveBeenCalledTimes(1);
+          expect(spies.bazControllerSpy).toHaveBeenCalledTimes(1);
 
           deferred.resolve();
           $rootScope.$digest();
@@ -1631,9 +1631,9 @@ describe('$route', function() {
           expect(spies.barResolveSpy).not.toHaveBeenCalled();
           expect(spies.barTemplateSpy).not.toHaveBeenCalled();
           expect(spies.barControllerSpy).not.toHaveBeenCalled();
-          expect(spies.bazResolveSpy).toHaveBeenCalledOnce();
-          expect(spies.bazTemplateSpy).toHaveBeenCalledOnce();
-          expect(spies.bazControllerSpy).toHaveBeenCalledOnce();
+          expect(spies.bazResolveSpy).toHaveBeenCalledTimes(1);
+          expect(spies.bazTemplateSpy).toHaveBeenCalledTimes(1);
+          expect(spies.bazControllerSpy).toHaveBeenCalledTimes(1);
 
           dealoc(element);
         });
@@ -1643,15 +1643,15 @@ describe('$route', function() {
       // Helpers
       function createSpies() {
         return {
-          fooResolveSpy: jasmine.createSpy('fooResolve'),
-          fooTemplateSpy: jasmine.createSpy('fooTemplate').and.returnValue('Foo'),
-          fooControllerSpy: jasmine.createSpy('fooController'),
-          barResolveSpy: jasmine.createSpy('barResolve'),
-          barTemplateSpy: jasmine.createSpy('barTemplate').and.returnValue('Bar'),
-          barControllerSpy: jasmine.createSpy('barController'),
-          bazResolveSpy: jasmine.createSpy('bazResolve'),
-          bazTemplateSpy: jasmine.createSpy('bazTemplate').and.returnValue('Baz'),
-          bazControllerSpy: jasmine.createSpy('bazController')
+          fooResolveSpy: jest.fn().mockName('fooResolve'),
+          fooTemplateSpy: jest.fn().mockName('fooTemplate').mockReturnValue('Foo'),
+          fooControllerSpy: jest.fn().mockName('fooController'),
+          barResolveSpy: jest.fn().mockName('barResolve'),
+          barTemplateSpy: jest.fn().mockName('barTemplate').mockReturnValue('Bar'),
+          barControllerSpy: jest.fn().mockName('barController'),
+          bazResolveSpy: jest.fn().mockName('bazResolve'),
+          bazTemplateSpy: jest.fn().mockName('bazTemplate').mockReturnValue('Baz'),
+          bazControllerSpy: jest.fn().mockName('bazController')
         };
       }
 
@@ -1678,62 +1678,62 @@ describe('$route', function() {
   });
 
 
-  describe('reloadOnUrl', function() {
-    it('should reload when `reloadOnUrl` is true and `.url()` changes', function() {
-      var routeChange = jasmine.createSpy('routeChange');
+  describe('reloadOnUrl', () => {
+    test('should reload when `reloadOnUrl` is true and `.url()` changes', () => {
+      var routeChange = jest.fn().mockName('routeChange');
 
-      module(function($routeProvider) {
+      angular.mock.module(function($routeProvider) {
         $routeProvider.when('/path/:param', {});
       });
 
-      inject(function($location, $rootScope, $routeParams) {
+      angular.mock.inject(function($location, $rootScope, $routeParams) {
         $rootScope.$on('$routeChangeStart', routeChange);
 
         // Initial load
         $location.path('/path/foo');
         $rootScope.$digest();
-        expect(routeChange).toHaveBeenCalledOnce();
+        expect(routeChange).toHaveBeenCalledTimes(1);
         expect($routeParams).toEqual({param: 'foo'});
 
-        routeChange.calls.reset();
+        routeChange.mockClear();
 
         // Reload on `path` change
         $location.path('/path/bar');
         $rootScope.$digest();
-        expect(routeChange).toHaveBeenCalledOnce();
+        expect(routeChange).toHaveBeenCalledTimes(1);
         expect($routeParams).toEqual({param: 'bar'});
 
-        routeChange.calls.reset();
+        routeChange.mockClear();
 
         // Reload on `search` change
         $location.search('foo', 'bar');
         $rootScope.$digest();
-        expect(routeChange).toHaveBeenCalledOnce();
+        expect(routeChange).toHaveBeenCalledTimes(1);
         expect($routeParams).toEqual({param: 'bar', foo: 'bar'});
 
-        routeChange.calls.reset();
+        routeChange.mockClear();
 
         // Reload on `hash` change
         $location.hash('baz');
         $rootScope.$digest();
-        expect(routeChange).toHaveBeenCalledOnce();
+        expect(routeChange).toHaveBeenCalledTimes(1);
         expect($routeParams).toEqual({param: 'bar', foo: 'bar'});
       });
     });
 
 
-    it('should reload when `reloadOnUrl` is false and URL maps to different route',
+    test('should reload when `reloadOnUrl` is false and URL maps to different route',
       function() {
-        var routeChange = jasmine.createSpy('routeChange');
-        var routeUpdate = jasmine.createSpy('routeUpdate');
+        var routeChange = jest.fn().mockName('routeChange');
+        var routeUpdate = jest.fn().mockName('routeUpdate');
 
-        module(function($routeProvider) {
+        angular.mock.module(function($routeProvider) {
           $routeProvider.
             when('/path/:param', {reloadOnUrl: false}).
             otherwise({});
         });
 
-        inject(function($location, $rootScope, $routeParams) {
+        angular.mock.inject(function($location, $rootScope, $routeParams) {
           $rootScope.$on('$routeChangeStart', routeChange);
           $rootScope.$on('$routeChangeSuccess', routeChange);
           $rootScope.$on('$routeUpdate', routeUpdate);
@@ -1747,7 +1747,7 @@ describe('$route', function() {
           expect(routeUpdate).not.toHaveBeenCalled();
           expect($routeParams).toEqual({param: 'foo'});
 
-          routeChange.calls.reset();
+          routeChange.mockClear();
 
           // Route change
           $location.path('/other/path/bar');
@@ -1760,16 +1760,16 @@ describe('$route', function() {
     );
 
 
-    it('should not reload when `reloadOnUrl` is false and URL maps to the same route',
+    test('should not reload when `reloadOnUrl` is false and URL maps to the same route',
       function() {
-        var routeChange = jasmine.createSpy('routeChange');
-        var routeUpdate = jasmine.createSpy('routeUpdate');
+        var routeChange = jest.fn().mockName('routeChange');
+        var routeUpdate = jest.fn().mockName('routeUpdate');
 
-        module(function($routeProvider) {
+        angular.mock.module(function($routeProvider) {
           $routeProvider.when('/path/:param', {reloadOnUrl: false});
         });
 
-        inject(function($location, $rootScope, $routeParams) {
+        angular.mock.inject(function($location, $rootScope, $routeParams) {
           $rootScope.$on('$routeChangeStart', routeChange);
           $rootScope.$on('$routeChangeSuccess', routeChange);
           $rootScope.$on('$routeUpdate', routeUpdate);
@@ -1783,27 +1783,27 @@ describe('$route', function() {
           expect(routeUpdate).not.toHaveBeenCalled();
           expect($routeParams).toEqual({param: 'foo'});
 
-          routeChange.calls.reset();
+          routeChange.mockClear();
 
           // Route update (no reload)
           $location.path('/path/bar').search('foo', 'bar').hash('baz');
           $rootScope.$digest();
           expect(routeChange).not.toHaveBeenCalled();
-          expect(routeUpdate).toHaveBeenCalledOnce();
+          expect(routeUpdate).toHaveBeenCalledTimes(1);
           expect($routeParams).toEqual({param: 'bar', foo: 'bar'});
         });
       }
     );
 
 
-    it('should update `$routeParams` even when not reloading a route', function() {
-      var routeChange = jasmine.createSpy('routeChange');
+    test('should update `$routeParams` even when not reloading a route', () => {
+      var routeChange = jest.fn().mockName('routeChange');
 
-      module(function($routeProvider) {
+      angular.mock.module(function($routeProvider) {
         $routeProvider.when('/path/:param', {reloadOnUrl: false});
       });
 
-      inject(function($location, $rootScope, $routeParams) {
+      angular.mock.inject(function($location, $rootScope, $routeParams) {
         $rootScope.$on('$routeChangeStart', routeChange);
         $rootScope.$on('$routeChangeSuccess', routeChange);
 
@@ -1815,7 +1815,7 @@ describe('$route', function() {
         expect(routeChange).toHaveBeenCalledTimes(2);
         expect($routeParams).toEqual({param: 'foo'});
 
-        routeChange.calls.reset();
+        routeChange.mockClear();
 
         // Route update (no reload)
         $location.path('/path/bar');
@@ -1826,7 +1826,7 @@ describe('$route', function() {
     });
 
 
-    describe('with `$route.reload()`', function() {
+    describe('with `$route.reload()`', () => {
       var $location;
       var $log;
       var $rootScope;
@@ -1834,7 +1834,7 @@ describe('$route', function() {
       var routeChangeStart;
       var routeChangeSuccess;
 
-      beforeEach(module(function($routeProvider) {
+      beforeEach(angular.mock.module(function($routeProvider) {
         $routeProvider.when('/path/:param', {
           template: '',
           reloadOnUrl: false,
@@ -1844,14 +1844,14 @@ describe('$route', function() {
         });
       }));
 
-      beforeEach(inject(function($compile, _$location_, _$log_, _$rootScope_, _$route_) {
+      beforeEach(angular.mock.inject(function($compile, _$location_, _$log_, _$rootScope_, _$route_) {
         $location = _$location_;
         $log = _$log_;
         $rootScope = _$rootScope_;
         $route = _$route_;
 
-        routeChangeStart = jasmine.createSpy('routeChangeStart');
-        routeChangeSuccess = jasmine.createSpy('routeChangeSuccess');
+        routeChangeStart = jest.fn().mockName('routeChangeStart');
+        routeChangeSuccess = jest.fn().mockName('routeChangeSuccess');
 
         $rootScope.$on('$routeChangeStart', routeChangeStart);
         $rootScope.$on('$routeChangeSuccess', routeChangeSuccess);
@@ -1860,63 +1860,63 @@ describe('$route', function() {
       }));
 
 
-      it('should reload the current route', function() {
+      test('should reload the current route', () => {
         $location.path('/path/foo');
         $rootScope.$digest();
         expect($location.path()).toBe('/path/foo');
-        expect(routeChangeStart).toHaveBeenCalledOnce();
-        expect(routeChangeSuccess).toHaveBeenCalledOnce();
+        expect(routeChangeStart).toHaveBeenCalledTimes(1);
+        expect(routeChangeSuccess).toHaveBeenCalledTimes(1);
         expect($log.debug.logs).toEqual([['initialized']]);
 
-        routeChangeStart.calls.reset();
-        routeChangeSuccess.calls.reset();
+        routeChangeStart.mockClear();
+        routeChangeSuccess.mockClear();
         $log.reset();
 
         $route.reload();
         $rootScope.$digest();
         expect($location.path()).toBe('/path/foo');
-        expect(routeChangeStart).toHaveBeenCalledOnce();
-        expect(routeChangeSuccess).toHaveBeenCalledOnce();
+        expect(routeChangeStart).toHaveBeenCalledTimes(1);
+        expect(routeChangeSuccess).toHaveBeenCalledTimes(1);
         expect($log.debug.logs).toEqual([['initialized']]);
 
         $log.reset();
       });
 
 
-      it('should support preventing a route reload', function() {
+      test('should support preventing a route reload', () => {
         $location.path('/path/foo');
         $rootScope.$digest();
         expect($location.path()).toBe('/path/foo');
-        expect(routeChangeStart).toHaveBeenCalledOnce();
-        expect(routeChangeSuccess).toHaveBeenCalledOnce();
+        expect(routeChangeStart).toHaveBeenCalledTimes(1);
+        expect(routeChangeSuccess).toHaveBeenCalledTimes(1);
         expect($log.debug.logs).toEqual([['initialized']]);
 
-        routeChangeStart.calls.reset();
-        routeChangeSuccess.calls.reset();
+        routeChangeStart.mockClear();
+        routeChangeSuccess.mockClear();
         $log.reset();
 
-        routeChangeStart.and.callFake(function(evt) { evt.preventDefault(); });
+        routeChangeStart.mockImplementation(function(evt) { evt.preventDefault(); });
 
         $route.reload();
         $rootScope.$digest();
         expect($location.path()).toBe('/path/foo');
-        expect(routeChangeStart).toHaveBeenCalledOnce();
+        expect(routeChangeStart).toHaveBeenCalledTimes(1);
         expect(routeChangeSuccess).not.toHaveBeenCalled();
         expect($log.debug.logs).toEqual([]);
       });
 
 
-      it('should reload the current route even if `reloadOnUrl` is disabled',
-        inject(function($routeParams) {
+      test('should reload the current route even if `reloadOnUrl` is disabled',
+        angular.mock.inject(function($routeParams) {
           $location.path('/path/foo');
           $rootScope.$digest();
-          expect(routeChangeStart).toHaveBeenCalledOnce();
-          expect(routeChangeSuccess).toHaveBeenCalledOnce();
+          expect(routeChangeStart).toHaveBeenCalledTimes(1);
+          expect(routeChangeSuccess).toHaveBeenCalledTimes(1);
           expect($log.debug.logs).toEqual([['initialized']]);
           expect($routeParams).toEqual({param: 'foo'});
 
-          routeChangeStart.calls.reset();
-          routeChangeSuccess.calls.reset();
+          routeChangeStart.mockClear();
+          routeChangeSuccess.mockClear();
           $log.reset();
 
           $location.path('/path/bar');
@@ -1928,8 +1928,8 @@ describe('$route', function() {
 
           $route.reload();
           $rootScope.$digest();
-          expect(routeChangeStart).toHaveBeenCalledOnce();
-          expect(routeChangeSuccess).toHaveBeenCalledOnce();
+          expect(routeChangeStart).toHaveBeenCalledTimes(1);
+          expect(routeChangeSuccess).toHaveBeenCalledTimes(1);
           expect($log.debug.logs).toEqual([['initialized']]);
           expect($routeParams).toEqual({param: 'bar'});
 
@@ -1939,26 +1939,26 @@ describe('$route', function() {
     });
   });
 
-  describe('reloadOnSearch', function() {
-    it('should not have any effect if `reloadOnUrl` is false', function() {
-      var reloaded = jasmine.createSpy('route reload');
+  describe('reloadOnSearch', () => {
+    test('should not have any effect if `reloadOnUrl` is false', () => {
+      var reloaded = jest.fn().mockName('route reload');
 
-      module(function($routeProvider) {
+      angular.mock.module(function($routeProvider) {
         $routeProvider.when('/foo', {
           reloadOnUrl: false,
           reloadOnSearch: true
         });
       });
 
-      inject(function($route, $location, $rootScope, $routeParams) {
+      angular.mock.inject(function($route, $location, $rootScope, $routeParams) {
         $rootScope.$on('$routeChangeStart', reloaded);
 
         $location.path('/foo');
         $rootScope.$digest();
-        expect(reloaded).toHaveBeenCalledOnce();
+        expect(reloaded).toHaveBeenCalledTimes(1);
         expect($routeParams).toEqual({});
 
-        reloaded.calls.reset();
+        reloaded.mockClear();
 
         // trigger reload (via .search())
         $location.search({foo: 'bar'});
@@ -1975,52 +1975,52 @@ describe('$route', function() {
     });
 
 
-    it('should reload when `reloadOnSearch` is true and `.search()`/`.hash()` changes',
+    test('should reload when `reloadOnSearch` is true and `.search()`/`.hash()` changes',
       function() {
-        var reloaded = jasmine.createSpy('route reload');
+        var reloaded = jest.fn().mockName('route reload');
 
-        module(function($routeProvider) {
+        angular.mock.module(function($routeProvider) {
           $routeProvider.when('/foo', {controller: angular.noop});
         });
 
-        inject(function($route, $location, $rootScope, $routeParams) {
+        angular.mock.inject(function($route, $location, $rootScope, $routeParams) {
           $rootScope.$on('$routeChangeStart', reloaded);
 
           $location.path('/foo');
           $rootScope.$digest();
-          expect(reloaded).toHaveBeenCalledOnce();
+          expect(reloaded).toHaveBeenCalledTimes(1);
           expect($routeParams).toEqual({});
 
-          reloaded.calls.reset();
+          reloaded.mockClear();
 
           // trigger reload (via .search())
           $location.search({foo: 'bar'});
           $rootScope.$digest();
-          expect(reloaded).toHaveBeenCalledOnce();
+          expect(reloaded).toHaveBeenCalledTimes(1);
           expect($routeParams).toEqual({foo: 'bar'});
 
-          reloaded.calls.reset();
+          reloaded.mockClear();
 
           // trigger reload (via .hash())
           $location.hash('baz');
           $rootScope.$digest();
-          expect(reloaded).toHaveBeenCalledOnce();
+          expect(reloaded).toHaveBeenCalledTimes(1);
           expect($routeParams).toEqual({foo: 'bar'});
         });
       }
     );
 
 
-    it('should not reload when `reloadOnSearch` is false and `.search()`/`.hash()` changes',
+    test('should not reload when `reloadOnSearch` is false and `.search()`/`.hash()` changes',
       function() {
-        var routeChange = jasmine.createSpy('route change'),
-            routeUpdate = jasmine.createSpy('route update');
+        var routeChange = jest.fn().mockName('route change');
+        var routeUpdate = jest.fn().mockName('route update');
 
-        module(function($routeProvider) {
+        angular.mock.module(function($routeProvider) {
           $routeProvider.when('/foo', {controller: angular.noop, reloadOnSearch: false});
         });
 
-        inject(function($route, $location, $rootScope) {
+        angular.mock.inject(function($route, $location, $rootScope) {
           $rootScope.$on('$routeChangeStart', routeChange);
           $rootScope.$on('$routeChangeSuccess', routeChange);
           $rootScope.$on('$routeUpdate', routeUpdate);
@@ -2032,15 +2032,15 @@ describe('$route', function() {
           expect(routeChange).toHaveBeenCalledTimes(2);
           expect(routeUpdate).not.toHaveBeenCalled();
 
-          routeChange.calls.reset();
+          routeChange.mockClear();
 
           // don't trigger reload (via .search())
           $location.search({foo: 'bar'});
           $rootScope.$digest();
           expect(routeChange).not.toHaveBeenCalled();
-          expect(routeUpdate).toHaveBeenCalledOnce();
+          expect(routeUpdate).toHaveBeenCalledTimes(1);
 
-          routeUpdate.calls.reset();
+          routeUpdate.mockClear();
 
           // don't trigger reload (via .hash())
           $location.hash('baz');
@@ -2052,15 +2052,15 @@ describe('$route', function() {
     );
 
 
-    it('should reload when `reloadOnSearch` is false and url differs only in route path param',
+    test('should reload when `reloadOnSearch` is false and url differs only in route path param',
       function() {
-        var routeChange = jasmine.createSpy('route change');
+        var routeChange = jest.fn().mockName('route change');
 
-        module(function($routeProvider) {
+        angular.mock.module(function($routeProvider) {
           $routeProvider.when('/foo/:fooId', {controller: angular.noop, reloadOnSearch: false});
         });
 
-        inject(function($route, $location, $rootScope) {
+        angular.mock.inject(function($route, $location, $rootScope) {
           $rootScope.$on('$routeChangeStart', routeChange);
           $rootScope.$on('$routeChangeSuccess', routeChange);
 
@@ -2069,12 +2069,12 @@ describe('$route', function() {
           $location.path('/foo/aaa');
           $rootScope.$digest();
           expect(routeChange).toHaveBeenCalledTimes(2);
-          routeChange.calls.reset();
+          routeChange.mockClear();
 
           $location.path('/foo/bbb');
           $rootScope.$digest();
           expect(routeChange).toHaveBeenCalledTimes(2);
-          routeChange.calls.reset();
+          routeChange.mockClear();
 
           $location.search({foo: 'bar'}).hash('baz');
           $rootScope.$digest();
@@ -2084,15 +2084,15 @@ describe('$route', function() {
     );
 
 
-    it('should update params when `reloadOnSearch` is false and `.search()` changes', function() {
-      var routeParamsWatcher = jasmine.createSpy('routeParamsWatcher');
+    test('should update params when `reloadOnSearch` is false and `.search()` changes', () => {
+      var routeParamsWatcher = jest.fn().mockName('routeParamsWatcher');
 
-      module(function($routeProvider) {
+      angular.mock.module(function($routeProvider) {
         $routeProvider.when('/foo', {controller: angular.noop});
         $routeProvider.when('/bar/:barId', {controller: angular.noop, reloadOnSearch: false});
       });
 
-      inject(function($route, $location, $rootScope, $routeParams) {
+      angular.mock.inject(function($route, $location, $rootScope, $routeParams) {
         $rootScope.$watch(function() {
           return $routeParams;
         }, function(value) {
@@ -2104,18 +2104,18 @@ describe('$route', function() {
         $location.path('/foo');
         $rootScope.$digest();
         expect(routeParamsWatcher).toHaveBeenCalledWith({});
-        routeParamsWatcher.calls.reset();
+        routeParamsWatcher.mockClear();
 
         // trigger reload
         $location.search({foo: 'bar'});
         $rootScope.$digest();
         expect(routeParamsWatcher).toHaveBeenCalledWith({foo: 'bar'});
-        routeParamsWatcher.calls.reset();
+        routeParamsWatcher.mockClear();
 
         $location.path('/bar/123').search({});
         $rootScope.$digest();
         expect(routeParamsWatcher).toHaveBeenCalledWith({barId: '123'});
-        routeParamsWatcher.calls.reset();
+        routeParamsWatcher.mockClear();
 
         // don't trigger reload
         $location.search({foo: 'bar'});
@@ -2125,8 +2125,8 @@ describe('$route', function() {
     });
 
 
-    it('should allow using a function as a template', function() {
-      var customTemplateWatcher = jasmine.createSpy('customTemplateWatcher');
+    test('should allow using a function as a template', () => {
+      var customTemplateWatcher = jest.fn().mockName('customTemplateWatcher');
 
       function customTemplateFn(routePathParams) {
         customTemplateWatcher(routePathParams);
@@ -2134,12 +2134,12 @@ describe('$route', function() {
         return '<h1>' + routePathParams.id + '</h1>';
       }
 
-      module(function($routeProvider) {
+      angular.mock.module(function($routeProvider) {
         $routeProvider.when('/bar/:id/:subid/:subsubid', {templateUrl: 'bar.html'});
         $routeProvider.when('/foo/:id', {template: customTemplateFn});
       });
 
-      inject(function($route, $location, $rootScope) {
+      angular.mock.inject(function($route, $location, $rootScope) {
         $location.path('/foo/id3');
         $rootScope.$digest();
 
@@ -2148,8 +2148,8 @@ describe('$route', function() {
     });
 
 
-    it('should allow using a function as a templateUrl', function() {
-      var customTemplateUrlWatcher = jasmine.createSpy('customTemplateUrlWatcher');
+    test('should allow using a function as a templateUrl', () => {
+      var customTemplateUrlWatcher = jest.fn().mockName('customTemplateUrlWatcher');
 
       function customTemplateUrlFn(routePathParams) {
         customTemplateUrlWatcher(routePathParams);
@@ -2157,12 +2157,12 @@ describe('$route', function() {
         return 'foo.html';
       }
 
-      module(function($routeProvider) {
+      angular.mock.module(function($routeProvider) {
         $routeProvider.when('/bar/:id/:subid/:subsubid', {templateUrl: 'bar.html'});
         $routeProvider.when('/foo/:id', {templateUrl: customTemplateUrlFn});
       });
 
-      inject(function($route, $location, $rootScope) {
+      angular.mock.inject(function($route, $location, $rootScope) {
         $location.path('/foo/id3');
         $rootScope.$digest();
 
@@ -2172,7 +2172,7 @@ describe('$route', function() {
     });
 
 
-    describe('with `$route.reload()`', function() {
+    describe('with `$route.reload()`', () => {
       var $location;
       var $log;
       var $rootScope;
@@ -2180,7 +2180,7 @@ describe('$route', function() {
       var routeChangeStartSpy;
       var routeChangeSuccessSpy;
 
-      beforeEach(module(function($routeProvider) {
+      beforeEach(angular.mock.module(function($routeProvider) {
         $routeProvider.when('/bar/:barId', {
           template: '',
           controller: controller,
@@ -2191,14 +2191,14 @@ describe('$route', function() {
           $log.debug('initialized');
         }
       }));
-      beforeEach(inject(function($compile, _$location_, _$log_, _$rootScope_, _$route_) {
+      beforeEach(angular.mock.inject(function($compile, _$location_, _$log_, _$rootScope_, _$route_) {
         $location = _$location_;
         $log = _$log_;
         $rootScope = _$rootScope_;
         $route = _$route_;
 
-        routeChangeStartSpy = jasmine.createSpy('routeChangeStart');
-        routeChangeSuccessSpy = jasmine.createSpy('routeChangeSuccess');
+        routeChangeStartSpy = jest.fn().mockName('routeChangeStart');
+        routeChangeSuccessSpy = jest.fn().mockName('routeChangeSuccess');
 
         $rootScope.$on('$routeChangeStart', routeChangeStartSpy);
         $rootScope.$on('$routeChangeSuccess', routeChangeSuccessSpy);
@@ -2207,60 +2207,60 @@ describe('$route', function() {
       }));
 
 
-      it('should reload the current route', function() {
+      test('should reload the current route', () => {
         $location.path('/bar/123');
         $rootScope.$digest();
         expect($location.path()).toBe('/bar/123');
-        expect(routeChangeStartSpy).toHaveBeenCalledOnce();
-        expect(routeChangeSuccessSpy).toHaveBeenCalledOnce();
+        expect(routeChangeStartSpy).toHaveBeenCalledTimes(1);
+        expect(routeChangeSuccessSpy).toHaveBeenCalledTimes(1);
         expect($log.debug.logs).toEqual([['initialized']]);
 
-        routeChangeStartSpy.calls.reset();
-        routeChangeSuccessSpy.calls.reset();
+        routeChangeStartSpy.mockClear();
+        routeChangeSuccessSpy.mockClear();
         $log.reset();
 
         $route.reload();
         $rootScope.$digest();
         expect($location.path()).toBe('/bar/123');
-        expect(routeChangeStartSpy).toHaveBeenCalledOnce();
-        expect(routeChangeSuccessSpy).toHaveBeenCalledOnce();
+        expect(routeChangeStartSpy).toHaveBeenCalledTimes(1);
+        expect(routeChangeSuccessSpy).toHaveBeenCalledTimes(1);
         expect($log.debug.logs).toEqual([['initialized']]);
 
         $log.reset();
       });
 
 
-      it('should support preventing a route reload', function() {
+      test('should support preventing a route reload', () => {
         $location.path('/bar/123');
         $rootScope.$digest();
         expect($location.path()).toBe('/bar/123');
-        expect(routeChangeStartSpy).toHaveBeenCalledOnce();
-        expect(routeChangeSuccessSpy).toHaveBeenCalledOnce();
+        expect(routeChangeStartSpy).toHaveBeenCalledTimes(1);
+        expect(routeChangeSuccessSpy).toHaveBeenCalledTimes(1);
         expect($log.debug.logs).toEqual([['initialized']]);
 
-        routeChangeStartSpy.calls.reset();
-        routeChangeSuccessSpy.calls.reset();
+        routeChangeStartSpy.mockClear();
+        routeChangeSuccessSpy.mockClear();
         $log.reset();
 
-        routeChangeStartSpy.and.callFake(function(evt) { evt.preventDefault(); });
+        routeChangeStartSpy.mockImplementation(function(evt) { evt.preventDefault(); });
 
         $route.reload();
         $rootScope.$digest();
         expect($location.path()).toBe('/bar/123');
-        expect(routeChangeStartSpy).toHaveBeenCalledOnce();
+        expect(routeChangeStartSpy).toHaveBeenCalledTimes(1);
         expect(routeChangeSuccessSpy).not.toHaveBeenCalled();
         expect($log.debug.logs).toEqual([]);
       });
 
 
-      it('should reload even if reloadOnSearch is false', inject(function($routeParams) {
+      test('should reload even if reloadOnSearch is false', angular.mock.inject(function($routeParams) {
         $location.path('/bar/123');
         $rootScope.$digest();
         expect($routeParams).toEqual({barId: '123'});
-        expect(routeChangeSuccessSpy).toHaveBeenCalledOnce();
+        expect(routeChangeSuccessSpy).toHaveBeenCalledTimes(1);
         expect($log.debug.logs).toEqual([['initialized']]);
 
-        routeChangeSuccessSpy.calls.reset();
+        routeChangeSuccessSpy.mockClear();
         $log.reset();
 
         $location.search('a=b');
@@ -2269,7 +2269,7 @@ describe('$route', function() {
         expect(routeChangeSuccessSpy).not.toHaveBeenCalled();
         expect($log.debug.logs).toEqual([]);
 
-        routeChangeSuccessSpy.calls.reset();
+        routeChangeSuccessSpy.mockClear();
         $log.reset();
 
         $location.hash('c');
@@ -2281,7 +2281,7 @@ describe('$route', function() {
         $route.reload();
         $rootScope.$digest();
         expect($routeParams).toEqual({barId: '123', a: 'b'});
-        expect(routeChangeSuccessSpy).toHaveBeenCalledOnce();
+        expect(routeChangeSuccessSpy).toHaveBeenCalledTimes(1);
         expect($log.debug.logs).toEqual([['initialized']]);
 
         $log.reset();
@@ -2289,140 +2289,140 @@ describe('$route', function() {
     });
   });
 
-  describe('update', function() {
-    it('should support single-parameter route updating', function() {
-      var routeChangeSpy = jasmine.createSpy('route change');
+  describe('update', () => {
+    test('should support single-parameter route updating', () => {
+      var routeChangeSpy = jest.fn().mockName('route change');
 
-      module(function($routeProvider) {
+      angular.mock.module(function($routeProvider) {
         $routeProvider.when('/bar/:barId', {controller: angular.noop});
       });
 
-      inject(function($route, $routeParams, $location, $rootScope) {
+      angular.mock.inject(function($route, $routeParams, $location, $rootScope) {
         $rootScope.$on('$routeChangeSuccess', routeChangeSpy);
 
         $location.path('/bar/1');
         $rootScope.$digest();
-        routeChangeSpy.calls.reset();
+        routeChangeSpy.mockClear();
 
         $route.updateParams({barId: '2'});
         $rootScope.$digest();
 
         expect($routeParams).toEqual({barId: '2'});
-        expect(routeChangeSpy).toHaveBeenCalledOnce();
+        expect(routeChangeSpy).toHaveBeenCalledTimes(1);
         expect($location.path()).toEqual('/bar/2');
       });
     });
 
-    it('should support total multi-parameter route updating', function() {
-      var routeChangeSpy = jasmine.createSpy('route change');
+    test('should support total multi-parameter route updating', () => {
+      var routeChangeSpy = jest.fn().mockName('route change');
 
-      module(function($routeProvider) {
+      angular.mock.module(function($routeProvider) {
         $routeProvider.when('/bar/:barId/:fooId/:spamId/:eggId', {controller: angular.noop});
       });
 
-      inject(function($route, $routeParams, $location, $rootScope) {
+      angular.mock.inject(function($route, $routeParams, $location, $rootScope) {
         $rootScope.$on('$routeChangeSuccess', routeChangeSpy);
 
         $location.path('/bar/1/2/3/4');
         $rootScope.$digest();
-        routeChangeSpy.calls.reset();
+        routeChangeSpy.mockClear();
 
         $route.updateParams({barId: '5', fooId: '6', spamId: '7', eggId: '8'});
         $rootScope.$digest();
 
         expect($routeParams).toEqual({barId: '5', fooId: '6', spamId: '7', eggId: '8'});
-        expect(routeChangeSpy).toHaveBeenCalledOnce();
+        expect(routeChangeSpy).toHaveBeenCalledTimes(1);
         expect($location.path()).toEqual('/bar/5/6/7/8');
       });
     });
 
-    it('should support partial multi-parameter route updating', function() {
-      var routeChangeSpy = jasmine.createSpy('route change');
+    test('should support partial multi-parameter route updating', () => {
+      var routeChangeSpy = jest.fn().mockName('route change');
 
-      module(function($routeProvider) {
+      angular.mock.module(function($routeProvider) {
         $routeProvider.when('/bar/:barId/:fooId/:spamId/:eggId', {controller: angular.noop});
       });
 
-      inject(function($route, $routeParams, $location, $rootScope) {
+      angular.mock.inject(function($route, $routeParams, $location, $rootScope) {
         $rootScope.$on('$routeChangeSuccess', routeChangeSpy);
 
         $location.path('/bar/1/2/3/4');
         $rootScope.$digest();
-        routeChangeSpy.calls.reset();
+        routeChangeSpy.mockClear();
 
         $route.updateParams({barId: '5', fooId: '6'});
         $rootScope.$digest();
 
         expect($routeParams).toEqual({barId: '5', fooId: '6', spamId: '3', eggId: '4'});
-        expect(routeChangeSpy).toHaveBeenCalledOnce();
+        expect(routeChangeSpy).toHaveBeenCalledTimes(1);
         expect($location.path()).toEqual('/bar/5/6/3/4');
       });
     });
 
 
-    it('should update query params when new properties are not in path', function() {
-      var routeChangeSpy = jasmine.createSpy('route change');
+    test('should update query params when new properties are not in path', () => {
+      var routeChangeSpy = jest.fn().mockName('route change');
 
-      module(function($routeProvider) {
+      angular.mock.module(function($routeProvider) {
         $routeProvider.when('/bar/:barId/:fooId/:spamId/', {controller: angular.noop});
       });
 
-      inject(function($route, $routeParams, $location, $rootScope) {
+      angular.mock.inject(function($route, $routeParams, $location, $rootScope) {
         $rootScope.$on('$routeChangeSuccess', routeChangeSpy);
 
         $location.path('/bar/1/2/3');
         $location.search({initial: 'true'});
         $rootScope.$digest();
-        routeChangeSpy.calls.reset();
+        routeChangeSpy.mockClear();
 
         $route.updateParams({barId: '5', fooId: '6', eggId: '4'});
         $rootScope.$digest();
 
         expect($routeParams).toEqual({barId: '5', fooId: '6', spamId: '3', eggId: '4', initial: 'true'});
-        expect(routeChangeSpy).toHaveBeenCalledOnce();
+        expect(routeChangeSpy).toHaveBeenCalledTimes(1);
         expect($location.path()).toEqual('/bar/5/6/3/');
         expect($location.search()).toEqual({eggId: '4', initial: 'true'});
       });
     });
 
-    it('should not update query params when an optional property was previously not in path', function() {
-      var routeChangeSpy = jasmine.createSpy('route change');
+    test('should not update query params when an optional property was previously not in path', () => {
+      var routeChangeSpy = jest.fn().mockName('route change');
 
-      module(function($routeProvider) {
+      angular.mock.module(function($routeProvider) {
         $routeProvider.when('/bar/:barId/:fooId/:spamId/:eggId?', {controller: angular.noop});
       });
 
-      inject(function($route, $routeParams, $location, $rootScope) {
+      angular.mock.inject(function($route, $routeParams, $location, $rootScope) {
         $rootScope.$on('$routeChangeSuccess', routeChangeSpy);
 
         $location.path('/bar/1/2/3');
         $location.search({initial: 'true'});
         $rootScope.$digest();
-        routeChangeSpy.calls.reset();
+        routeChangeSpy.mockClear();
 
         $route.updateParams({barId: '5', fooId: '6', eggId: '4'});
         $rootScope.$digest();
 
         expect($routeParams).toEqual({barId: '5', fooId: '6', spamId: '3', eggId: '4', initial: 'true'});
-        expect(routeChangeSpy).toHaveBeenCalledOnce();
+        expect(routeChangeSpy).toHaveBeenCalledTimes(1);
         expect($location.path()).toEqual('/bar/5/6/3/4');
         expect($location.search()).toEqual({initial: 'true'});
       });
     });
 
-    it('should complain if called without an existing route', inject(function($route) {
+    test('should complain if called without an existing route', angular.mock.inject(function($route) {
       expect(function() { $route.updateParams(); }).toThrowMinErr('ngRoute', 'norout');
     }));
   });
 
-  describe('testability', function() {
-    it('should wait for $resolve promises before calling callbacks', function() {
+  describe('testability', () => {
+    test('should wait for $resolve promises before calling callbacks', () => {
       var deferred;
 
-      module(function($routeProvider) {
+      angular.mock.module(function($routeProvider) {
         $routeProvider.when('/path', {
           resolve: {
-            a: function($q) {
+            a($q) {
               deferred = $q.defer();
               return deferred.promise;
             }
@@ -2430,11 +2430,11 @@ describe('$route', function() {
         });
       });
 
-      inject(function($browser, $location, $rootScope, $$testability) {
+      angular.mock.inject(function($browser, $location, $rootScope, $$testability) {
         $location.path('/path');
         $rootScope.$digest();
 
-        var callback = jasmine.createSpy('callback');
+        var callback = jest.fn().mockName('callback');
         $$testability.whenStable(callback);
         expect(callback).not.toHaveBeenCalled();
 
@@ -2444,13 +2444,13 @@ describe('$route', function() {
       });
     });
 
-    it('should call callback after $resolve promises are rejected', function() {
+    test('should call callback after $resolve promises are rejected', () => {
       var deferred;
 
-      module(function($routeProvider) {
+      angular.mock.module(function($routeProvider) {
         $routeProvider.when('/path', {
           resolve: {
-            a: function($q) {
+            a($q) {
               deferred = $q.defer();
               return deferred.promise;
             }
@@ -2458,11 +2458,11 @@ describe('$route', function() {
         });
       });
 
-      inject(function($browser, $location, $rootScope, $$testability) {
+      angular.mock.inject(function($browser, $location, $rootScope, $$testability) {
         $location.path('/path');
         $rootScope.$digest();
 
-        var callback = jasmine.createSpy('callback');
+        var callback = jest.fn().mockName('callback');
         $$testability.whenStable(callback);
         expect(callback).not.toHaveBeenCalled();
 
@@ -2472,23 +2472,23 @@ describe('$route', function() {
       });
     });
 
-    it('should wait for resolveRedirectTo promises before calling callbacks', function() {
+    test('should wait for resolveRedirectTo promises before calling callbacks', () => {
       var deferred;
 
-      module(function($routeProvider) {
+      angular.mock.module(function($routeProvider) {
         $routeProvider.when('/path', {
-          resolveRedirectTo: function($q) {
+          resolveRedirectTo($q) {
             deferred = $q.defer();
             return deferred.promise;
           }
         });
       });
 
-      inject(function($browser, $location, $rootScope, $$testability) {
+      angular.mock.inject(function($browser, $location, $rootScope, $$testability) {
         $location.path('/path');
         $rootScope.$digest();
 
-        var callback = jasmine.createSpy('callback');
+        var callback = jest.fn().mockName('callback');
         $$testability.whenStable(callback);
         expect(callback).not.toHaveBeenCalled();
 
@@ -2498,23 +2498,23 @@ describe('$route', function() {
       });
     });
 
-    it('should call callback after resolveRedirectTo promises are rejected', function() {
+    test('should call callback after resolveRedirectTo promises are rejected', () => {
       var deferred;
 
-      module(function($routeProvider) {
+      angular.mock.module(function($routeProvider) {
         $routeProvider.when('/path', {
-          resolveRedirectTo: function($q) {
+          resolveRedirectTo($q) {
             deferred = $q.defer();
             return deferred.promise;
           }
         });
       });
 
-      inject(function($browser, $location, $rootScope, $$testability) {
+      angular.mock.inject(function($browser, $location, $rootScope, $$testability) {
         $location.path('/path');
         $rootScope.$digest();
 
-        var callback = jasmine.createSpy('callback');
+        var callback = jest.fn().mockName('callback');
         $$testability.whenStable(callback);
         expect(callback).not.toHaveBeenCalled();
 
@@ -2524,16 +2524,16 @@ describe('$route', function() {
       });
     });
 
-    it('should wait for all route promises before calling callbacks', function() {
+    test('should wait for all route promises before calling callbacks', () => {
       var deferreds = {};
 
-      module(function($routeProvider) {
+      angular.mock.module(function($routeProvider) {
         addRouteWithAsyncRedirect('/foo', '/bar');
         addRouteWithAsyncRedirect('/bar', '/baz');
         addRouteWithAsyncRedirect('/baz', '/qux');
         $routeProvider.when('/qux', {
           resolve: {
-            a: function($q) {
+            a($q) {
               var deferred = deferreds['/qux'] = $q.defer();
               return deferred.promise;
             }
@@ -2543,7 +2543,7 @@ describe('$route', function() {
         // Helpers
         function addRouteWithAsyncRedirect(fromPath, toPath) {
           $routeProvider.when(fromPath, {
-            resolveRedirectTo: function($q) {
+            resolveRedirectTo($q) {
               var deferred = deferreds[fromPath] = $q.defer();
               return deferred.promise.then(function() { return toPath; });
             }
@@ -2551,11 +2551,11 @@ describe('$route', function() {
         }
       });
 
-      inject(function($browser, $location, $rootScope, $$testability) {
+      angular.mock.inject(function($browser, $location, $rootScope, $$testability) {
         $location.path('/foo');
         $rootScope.$digest();
 
-        var callback = jasmine.createSpy('callback');
+        var callback = jest.fn().mockName('callback');
         $$testability.whenStable(callback);
         expect(callback).not.toHaveBeenCalled();
 

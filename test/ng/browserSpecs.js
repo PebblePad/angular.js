@@ -5,6 +5,25 @@
 var historyEntriesLength;
 var sniffer = {};
 
+// Resolves once `predicate` returns truthy, rejecting if that never happens
+// within `timeout` ms.
+function waitUntil(predicate, timeout) {
+  timeout = timeout || 2000;
+
+  return new Promise(function(resolve, reject) {
+    var deadline = Date.now() + timeout;
+    var intervalId = window.setInterval(function() {
+      if (predicate()) {
+        window.clearInterval(intervalId);
+        resolve();
+      } else if (Date.now() > deadline) {
+        window.clearInterval(intervalId);
+        reject(new Error('Timed out after ' + timeout + 'ms waiting for condition'));
+      }
+    }, 5);
+  });
+}
+
 function MockWindow(options) {
   if (typeof options !== 'object') {
     options = {};
@@ -15,15 +34,15 @@ function MockWindow(options) {
   var committedHref = window.document.createElement('a');
   locationHref.href = committedHref.href = 'http://server/';
   var mockWindow = this;
-  var msie = options.msie;
-  var ieState;
 
   historyEntriesLength = 1;
 
   function replaceHash(href, hash) {
     // replace the hash with the new one (stripping off a leading hash if there is one)
     // See hash setter spec: https://url.spec.whatwg.org/#urlutils-and-urlutilsreadonly-members
-    return stripHash(href) + '#' + hash.replace(/^#/,'');
+    var index = href.indexOf('#');
+    const hashlessHref = index === -1 ? href : href.slice(0, index);
+    return hashlessHref + '#' + hash.replace(/^#/,'');
   }
 
 
@@ -32,7 +51,7 @@ function MockWindow(options) {
   };
 
   this.clearTimeout = function(id) {
-    timeouts[id] = noop;
+    timeouts[id] = angular.noop;
   };
 
   this.setTimeout.flush = function(count) {
@@ -45,10 +64,10 @@ function MockWindow(options) {
     events[name].push(listener);
   };
 
-  this.removeEventListener = noop;
+  this.removeEventListener = angular.noop;
 
   this.fire = function(name) {
-    forEach(events[name], function(fn) {
+    angular.forEach(events[name], function(fn) {
       // type/target to make jQuery happy
       fn({
         type: name,
@@ -76,48 +95,32 @@ function MockWindow(options) {
       locationHref.href = replaceHash(locationHref.href, value);
       if (!options.updateAsync) this.flushHref();
     },
-    replace: function(url) {
+    replace(url) {
       locationHref.href = url;
       mockWindow.history.state = null;
       if (!options.updateAsync) this.flushHref();
     },
-    flushHref: function() {
+    flushHref() {
       committedHref.href = locationHref.href;
     }
   };
 
   this.history = {
-    pushState: function() {
-      this.replaceState.apply(this, arguments);
+    pushState() {
+      this.replaceState(...arguments);
       historyEntriesLength++;
     },
-    replaceState: function(state, title, url) {
+    replaceState(state, title, url) {
       locationHref.href = url;
       if (!options.updateAsync) committedHref.href = locationHref.href;
-      mockWindow.history.state = copy(state);
+      mockWindow.history.state = angular.copy(state);
       if (!options.updateAsync) this.flushHref();
     },
-    flushHref: function() {
+    flushHref() {
       committedHref.href = locationHref.href;
     }
   };
-  // IE 10-11 deserialize history.state on each read making subsequent reads
-  // different object.
-  if (!msie) {
-    this.history.state = null;
-  } else {
-    ieState = null;
-    Object.defineProperty(this.history, 'state', {
-      get: function() {
-        return copy(ieState);
-      },
-      set: function(value) {
-        ieState = value;
-      },
-      configurable: true,
-      enumerable: true
-    });
-  }
+  this.history.state = null;
 }
 
 function MockDocument() {
@@ -129,7 +132,7 @@ function MockDocument() {
   this.find = function(name) {
     if (name === 'base') {
       return {
-        attr: function(name) {
+        attr(name) {
           if (name === 'href') {
             return self.basePath;
           } else {
@@ -142,94 +145,85 @@ function MockDocument() {
     }
   };
 }
-
-describe('browser', function() {
+ describe('browser', () => {
   /* global Browser: false, TaskTracker: false */
-  var browser, fakeWindow, fakeDocument, fakeLog, logs, taskTrackerFactory;
+  var browser;
 
-  beforeEach(function() {
+  var fakeWindow;
+  var fakeDocument;
+  var fakeLog;
+  var logs;
+  var taskTrackerFactory;
+
+   beforeEach(() => {
     sniffer = {history: true};
     fakeWindow = new MockWindow();
     fakeDocument = new MockDocument();
-    taskTrackerFactory = function(log) { return new TaskTracker(log); };
+    taskTrackerFactory = function(log) { return new ngInternals.TaskTracker(log); };
 
     logs = {log:[], warn:[], info:[], error:[]};
 
     fakeLog = {
-      log: function() { logs.log.push(slice.call(arguments)); },
-      warn: function() { logs.warn.push(slice.call(arguments)); },
-      info: function() { logs.info.push(slice.call(arguments)); },
-      error: function() { logs.error.push(slice.call(arguments)); }
+      log() { logs.log.push(slice.call(arguments)); },
+      warn() { logs.warn.push(slice.call(arguments)); },
+      info() { logs.info.push(slice.call(arguments)); },
+      error() { logs.error.push(slice.call(arguments)); }
     };
 
 
-    browser = new Browser(fakeWindow, fakeDocument, fakeLog, sniffer, taskTrackerFactory);
+    browser = new ngInternals.Browser(fakeWindow, fakeDocument, fakeLog, sniffer, taskTrackerFactory);
   });
 
-  describe('MockBrowser', function() {
-    describe('historyEntriesLength', function() {
-      it('should increment historyEntriesLength when setting location.href', function() {
+  describe('MockBrowser', () => {
+    describe('historyEntriesLength', () => {
+      test('should increment historyEntriesLength when setting location.href', () => {
         expect(historyEntriesLength).toBe(1);
         fakeWindow.location.href = '/foo';
         expect(historyEntriesLength).toBe(2);
       });
 
-      it('should not increment historyEntriesLength when using location.replace', function() {
+      test('should not increment historyEntriesLength when using location.replace', () => {
         expect(historyEntriesLength).toBe(1);
         fakeWindow.location.replace('/foo');
         expect(historyEntriesLength).toBe(1);
       });
 
-      it('should increment historyEntriesLength when using history.pushState', function() {
+      test('should increment historyEntriesLength when using history.pushState', () => {
         expect(historyEntriesLength).toBe(1);
         fakeWindow.history.pushState({a: 2}, 'foo', '/bar');
         expect(historyEntriesLength).toBe(2);
       });
 
-      it('should not increment historyEntriesLength when using history.replaceState', function() {
+      test('should not increment historyEntriesLength when using history.replaceState', () => {
         expect(historyEntriesLength).toBe(1);
         fakeWindow.history.replaceState({a: 2}, 'foo', '/bar');
         expect(historyEntriesLength).toBe(1);
       });
     });
 
-    describe('in IE', runTests({msie: true}));
-    describe('not in IE', runTests({msie: false}));
+    test('should return the same state object on every read', () => {
+      fakeWindow = new MockWindow();
+      fakeWindow.location.state = {prop: 'val'};
+      browser = new ngInternals.Browser(fakeWindow, fakeDocument, fakeLog, sniffer, taskTrackerFactory);
 
-    function runTests(options) {
-      return function() {
-        it('should return the same state object on every read', function() {
-          var msie = options.msie;
-
-          fakeWindow = new MockWindow({msie: msie});
-          fakeWindow.location.state = {prop: 'val'};
-          browser = new Browser(fakeWindow, fakeDocument, fakeLog, sniffer, taskTrackerFactory);
-
-          browser.url(fakeWindow.location.href, false, {prop: 'val'});
-          if (msie) {
-            expect(fakeWindow.history.state).not.toBe(fakeWindow.history.state);
-            expect(fakeWindow.history.state).toEqual(fakeWindow.history.state);
-          } else {
-            expect(fakeWindow.history.state).toBe(fakeWindow.history.state);
-          }
-        });
-      };
-    }
+      browser.url(fakeWindow.location.href, false, {prop: 'val'});
+      expect(fakeWindow.history.state).toBe(fakeWindow.history.state);
+    });
   });
 
 
-  describe('notifyWhenNoOutstandingRequests', function() {
-    it('should invoke callbacks immediately if there are no pending tasks', function() {
-      var callback = jasmine.createSpy('callback');
+  describe('notifyWhenNoOutstandingRequests', () => {
+    test('should invoke callbacks immediately if there are no pending tasks', () => {
+      var callback = jest.fn().mockName('callback');
       browser.notifyWhenNoOutstandingRequests(callback);
       expect(callback).toHaveBeenCalled();
     });
 
 
-    it('should invoke callbacks immediately if there are no pending tasks (for specific task-type)',
+    test('should invoke callbacks immediately if there are no pending tasks (for specific task-type)',
       function() {
-        var callbackAll = jasmine.createSpy('callbackAll');
-        var callbackFoo = jasmine.createSpy('callbackFoo');
+        var callbackAll = jest.fn().mockName('callbackAll');
+        var callbackFoo = jest.fn().mockName('callbackFoo');
 
         browser.$$incOutstandingRequestCount();
         browser.notifyWhenNoOutstandingRequests(callbackAll);
@@ -241,22 +235,22 @@ describe('browser', function() {
     );
 
 
-    it('should invoke callbacks as soon as there are no pending tasks', function() {
-      var callback = jasmine.createSpy('callback');
+    test('should invoke callbacks as soon as there are no pending tasks', () => {
+      var callback = jest.fn().mockName('callback');
 
       browser.$$incOutstandingRequestCount();
       browser.notifyWhenNoOutstandingRequests(callback);
       expect(callback).not.toHaveBeenCalled();
 
-      browser.$$completeOutstandingRequest(noop);
+      browser.$$completeOutstandingRequest(angular.noop);
       expect(callback).toHaveBeenCalled();
     });
 
 
-    it('should invoke callbacks as soon as there are no pending tasks (for specific task-type)',
+    test('should invoke callbacks as soon as there are no pending tasks (for specific task-type)',
       function() {
-        var callbackAll = jasmine.createSpy('callbackAll');
-        var callbackFoo = jasmine.createSpy('callbackFoo');
+        var callbackAll = jest.fn().mockName('callbackAll');
+        var callbackFoo = jest.fn().mockName('callbackFoo');
 
         browser.$$incOutstandingRequestCount();
         browser.$$incOutstandingRequestCount('foo');
@@ -266,50 +260,50 @@ describe('browser', function() {
         expect(callbackAll).not.toHaveBeenCalled();
         expect(callbackFoo).not.toHaveBeenCalled();
 
-        browser.$$completeOutstandingRequest(noop, 'foo');
+        browser.$$completeOutstandingRequest(angular.noop, 'foo');
 
         expect(callbackAll).not.toHaveBeenCalled();
-        expect(callbackFoo).toHaveBeenCalledOnce();
+        expect(callbackFoo).toHaveBeenCalledTimes(1);
 
-        browser.$$completeOutstandingRequest(noop);
+        browser.$$completeOutstandingRequest(angular.noop);
 
-        expect(callbackAll).toHaveBeenCalledOnce();
-        expect(callbackFoo).toHaveBeenCalledOnce();
+        expect(callbackAll).toHaveBeenCalledTimes(1);
+        expect(callbackFoo).toHaveBeenCalledTimes(1);
       }
     );
   });
 
 
-  describe('defer', function() {
-    it('should execute fn asynchronously via setTimeout', function() {
-      var callback = jasmine.createSpy('deferred');
+  describe('defer', () => {
+    test('should execute fn asynchronously via setTimeout', () => {
+      var callback = jest.fn().mockName('deferred');
 
       browser.defer(callback);
       expect(callback).not.toHaveBeenCalled();
 
       fakeWindow.setTimeout.flush();
-      expect(callback).toHaveBeenCalledOnce();
+      expect(callback).toHaveBeenCalledTimes(1);
     });
 
 
-    it('should update outstandingRequests counter', function() {
-      var noPendingTasksSpy = jasmine.createSpy('noPendingTasks');
+    test('should update outstandingRequests counter', () => {
+      var noPendingTasksSpy = jest.fn().mockName('noPendingTasks');
 
-      browser.defer(noop);
+      browser.defer(angular.noop);
       browser.notifyWhenNoOutstandingRequests(noPendingTasksSpy);
       expect(noPendingTasksSpy).not.toHaveBeenCalled();
 
       fakeWindow.setTimeout.flush();
-      expect(noPendingTasksSpy).toHaveBeenCalledOnce();
+      expect(noPendingTasksSpy).toHaveBeenCalledTimes(1);
     });
 
 
-    it('should update outstandingRequests counter (for specific task-type)', function() {
-      var noPendingFooTasksSpy = jasmine.createSpy('noPendingFooTasks');
-      var noPendingTasksSpy = jasmine.createSpy('noPendingTasks');
+    test('should update outstandingRequests counter (for specific task-type)', () => {
+      var noPendingFooTasksSpy = jest.fn().mockName('noPendingFooTasks');
+      var noPendingTasksSpy = jest.fn().mockName('noPendingTasks');
 
-      browser.defer(noop, 0, 'foo');
-      browser.defer(noop, 0, 'bar');
+      browser.defer(angular.noop, 0, 'foo');
+      browser.defer(angular.noop, 0, 'bar');
 
       browser.notifyWhenNoOutstandingRequests(noPendingFooTasksSpy, 'foo');
       browser.notifyWhenNoOutstandingRequests(noPendingTasksSpy);
@@ -317,18 +311,18 @@ describe('browser', function() {
       expect(noPendingTasksSpy).not.toHaveBeenCalled();
 
       fakeWindow.setTimeout.flush(1);
-      expect(noPendingFooTasksSpy).toHaveBeenCalledOnce();
+      expect(noPendingFooTasksSpy).toHaveBeenCalledTimes(1);
       expect(noPendingTasksSpy).not.toHaveBeenCalled();
 
       fakeWindow.setTimeout.flush(1);
-      expect(noPendingFooTasksSpy).toHaveBeenCalledOnce();
-      expect(noPendingTasksSpy).toHaveBeenCalledOnce();
+      expect(noPendingFooTasksSpy).toHaveBeenCalledTimes(1);
+      expect(noPendingTasksSpy).toHaveBeenCalledTimes(1);
     });
 
 
-    it('should return unique deferId', function() {
-      var deferId1 = browser.defer(noop),
-          deferId2 = browser.defer(noop);
+    test('should return unique deferId', () => {
+      var deferId1 = browser.defer(angular.noop);
+      var deferId2 = browser.defer(angular.noop);
 
       expect(deferId1).toBeDefined();
       expect(deferId2).toBeDefined();
@@ -336,12 +330,12 @@ describe('browser', function() {
     });
 
 
-    describe('cancel', function() {
-      it('should allow tasks to be canceled with returned deferId', function() {
-        var log = [],
-            deferId1 = browser.defer(function() { log.push('cancel me'); }),
-            deferId2 = browser.defer(function() { log.push('ok'); }),
-            deferId3 = browser.defer(function() { log.push('cancel me, now!'); });
+    describe('cancel', () => {
+      test('should allow tasks to be canceled with returned deferId', () => {
+        var log = [];
+        var deferId1 = browser.defer(function() { log.push('cancel me'); });
+        var deferId2 = browser.defer(function() { log.push('ok'); });
+        var deferId3 = browser.defer(function() { log.push('cancel me, now!'); });
 
         expect(log).toEqual([]);
         expect(browser.defer.cancel(deferId1)).toBe(true);
@@ -352,24 +346,24 @@ describe('browser', function() {
       });
 
 
-      it('should update outstandingRequests counter', function() {
-        var noPendingTasksSpy = jasmine.createSpy('noPendingTasks');
-        var deferId = browser.defer(noop);
+      test('should update outstandingRequests counter', () => {
+        var noPendingTasksSpy = jest.fn().mockName('noPendingTasks');
+        var deferId = browser.defer(angular.noop);
 
         browser.notifyWhenNoOutstandingRequests(noPendingTasksSpy);
         expect(noPendingTasksSpy).not.toHaveBeenCalled();
 
         browser.defer.cancel(deferId);
-        expect(noPendingTasksSpy).toHaveBeenCalledOnce();
+        expect(noPendingTasksSpy).toHaveBeenCalledTimes(1);
       });
 
 
-      it('should update outstandingRequests counter (for specific task-type)', function() {
-        var noPendingFooTasksSpy = jasmine.createSpy('noPendingFooTasks');
-        var noPendingTasksSpy = jasmine.createSpy('noPendingTasks');
+      test('should update outstandingRequests counter (for specific task-type)', () => {
+        var noPendingFooTasksSpy = jest.fn().mockName('noPendingFooTasks');
+        var noPendingTasksSpy = jest.fn().mockName('noPendingTasks');
 
-        var deferId1 = browser.defer(noop, 0, 'foo');
-        var deferId2 = browser.defer(noop, 0, 'bar');
+        var deferId1 = browser.defer(angular.noop, 0, 'foo');
+        var deferId2 = browser.defer(angular.noop, 0, 'bar');
 
         browser.notifyWhenNoOutstandingRequests(noPendingFooTasksSpy, 'foo');
         browser.notifyWhenNoOutstandingRequests(noPendingTasksSpy);
@@ -377,27 +371,29 @@ describe('browser', function() {
         expect(noPendingTasksSpy).not.toHaveBeenCalled();
 
         browser.defer.cancel(deferId1);
-        expect(noPendingFooTasksSpy).toHaveBeenCalledOnce();
+        expect(noPendingFooTasksSpy).toHaveBeenCalledTimes(1);
         expect(noPendingTasksSpy).not.toHaveBeenCalled();
 
         browser.defer.cancel(deferId2);
-        expect(noPendingFooTasksSpy).toHaveBeenCalledOnce();
-        expect(noPendingTasksSpy).toHaveBeenCalledOnce();
+        expect(noPendingFooTasksSpy).toHaveBeenCalledTimes(1);
+        expect(noPendingTasksSpy).toHaveBeenCalledTimes(1);
       });
     });
   });
 
 
-  describe('url', function() {
-    var pushState, replaceState, locationReplace;
+  describe('url', () => {
+    var pushState;
+    var replaceState;
+    var locationReplace;
 
-    beforeEach(function() {
-      pushState = spyOn(fakeWindow.history, 'pushState');
-      replaceState = spyOn(fakeWindow.history, 'replaceState');
-      locationReplace = spyOn(fakeWindow.location, 'replace');
+     beforeEach(() => {
+      pushState = jest.spyOn(fakeWindow.history, 'pushState').mockImplementation(() => {});
+      replaceState = jest.spyOn(fakeWindow.history, 'replaceState').mockImplementation(() => {});
+      locationReplace = jest.spyOn(fakeWindow.location, 'replace').mockImplementation(() => {});
     });
 
-    it('should return current location.href', function() {
+    test('should return current location.href', () => {
       fakeWindow.location.href = 'http://test.com';
       expect(browser.url()).toEqual('http://test.com/');
 
@@ -405,7 +401,7 @@ describe('browser', function() {
       expect(browser.url()).toEqual('https://another.com/');
     });
 
-    it('should strip an empty hash fragment', function() {
+    test('should strip an empty hash fragment', () => {
       fakeWindow.location.href = 'http://test.com/#';
       expect(browser.url()).toEqual('http://test.com/');
 
@@ -413,31 +409,31 @@ describe('browser', function() {
       expect(browser.url()).toEqual('https://another.com/#foo');
     });
 
-    it('should use history.pushState when available', function() {
+    test('should use history.pushState when available', () => {
       sniffer.history = true;
       browser.url('http://new.org');
 
-      expect(pushState).toHaveBeenCalledOnce();
-      expect(pushState.calls.argsFor(0)[2]).toEqual('http://new.org/');
+      expect(pushState).toHaveBeenCalledTimes(1);
+      expect(pushState.mock.calls[0][2]).toEqual('http://new.org/');
 
       expect(replaceState).not.toHaveBeenCalled();
       expect(locationReplace).not.toHaveBeenCalled();
       expect(fakeWindow.location.href).toEqual('http://server/');
     });
 
-    it('should use history.replaceState when available', function() {
+    test('should use history.replaceState when available', () => {
       sniffer.history = true;
       browser.url('http://new.org', true);
 
-      expect(replaceState).toHaveBeenCalledOnce();
-      expect(replaceState.calls.argsFor(0)[2]).toEqual('http://new.org/');
+      expect(replaceState).toHaveBeenCalledTimes(1);
+      expect(replaceState.mock.calls[0][2]).toEqual('http://new.org/');
 
       expect(pushState).not.toHaveBeenCalled();
       expect(locationReplace).not.toHaveBeenCalled();
       expect(fakeWindow.location.href).toEqual('http://server/');
     });
 
-    it('should set location.href when pushState not available', function() {
+    test('should set location.href when pushState not available', () => {
       sniffer.history = false;
       browser.url('http://new.org');
 
@@ -448,7 +444,7 @@ describe('browser', function() {
       expect(locationReplace).not.toHaveBeenCalled();
     });
 
-    it('should set location.href and not use pushState when the url only changed in the hash fragment to please IE10/11', function() {
+    test('should set location.href and not use pushState when the url only changed in the hash fragment to please IE10/11', () => {
       sniffer.history = true;
       browser.url('http://server/#123');
 
@@ -459,7 +455,7 @@ describe('browser', function() {
       expect(locationReplace).not.toHaveBeenCalled();
     });
 
-    it('should retain the # character when the only change is clearing the hash fragment, to prevent page reload', function() {
+    test('should retain the # character when the only change is clearing the hash fragment, to prevent page reload', () => {
       sniffer.history = true;
 
       browser.url('http://server/#123');
@@ -470,7 +466,7 @@ describe('browser', function() {
 
     });
 
-    it('should use location.replace when history.replaceState not available', function() {
+    test('should use location.replace when history.replaceState not available', () => {
       sniffer.history = false;
       browser.url('http://new.org', true);
 
@@ -482,7 +478,7 @@ describe('browser', function() {
     });
 
 
-    it('should use location.replace and not use replaceState when the url only changed in the hash fragment to please IE10/11', function() {
+    test('should use location.replace and not use replaceState when the url only changed in the hash fragment to please IE10/11', () => {
       sniffer.history = true;
       browser.url('http://server/#123', true);
 
@@ -494,18 +490,18 @@ describe('browser', function() {
     });
 
 
-    it('should return $browser to allow chaining', function() {
+    test('should return $browser to allow chaining', () => {
       expect(browser.url('http://any.com')).toBe(browser);
     });
 
-    it('should return $browser to allow chaining even if the previous and current URLs and states match', function() {
+    test('should return $browser to allow chaining even if the previous and current URLs and states match', () => {
       expect(browser.url('http://any.com').url('http://any.com')).toBe(browser);
       var state = { any: 'foo' };
       expect(browser.url('http://any.com', false, state).url('http://any.com', false, state)).toBe(browser);
       expect(browser.url('http://any.com', true, state).url('http://any.com', true, state)).toBe(browser);
     });
 
-    it('should not set URL when the URL is already set', function() {
+    test('should not set URL when the URL is already set', () => {
       var current = fakeWindow.location.href;
       sniffer.history = false;
       fakeWindow.location.href = 'http://dontchange/';
@@ -513,7 +509,7 @@ describe('browser', function() {
       expect(fakeWindow.location.href).toBe('http://dontchange/');
     });
 
-    it('should not read out location.href if a reload was triggered but still allow to change the url', function() {
+    test('should not read out location.href if a reload was triggered but still allow to change the url', () => {
       sniffer.history = false;
       browser.url('http://server/someOtherUrlThatCausesReload');
       expect(fakeWindow.location.href).toBe('http://server/someOtherUrlThatCausesReload');
@@ -526,48 +522,46 @@ describe('browser', function() {
       expect(fakeWindow.location.href).toBe('http://server/someOtherUrl');
     });
 
-    it('assumes that changes to location.hash occur in sync', function(done) {
+    test('assumes that changes to location.hash occur in sync', async function() {
       // This is an asynchronous integration test that changes the
       // hash in all possible ways and checks
       // - whether the change to the hash can be read out in sync
       // - whether the change to the hash can be read out in the hashchange event
-      var realWin = window,
-          $realWin = jqLite(realWin),
-          hashInHashChangeEvent = [];
+      var realWin = window;
 
-      var job = createAsync(done);
-      job.runs(function() {
-        $realWin.on('hashchange', hashListener);
+      var $realWin = angular.element(realWin);
+      var hashInHashChangeEvent = [];
 
+      function hashListener() {
+        hashInHashChangeEvent.push(realWin.location.hash);
+      }
+
+      $realWin.on('hashchange', hashListener);
+
+      try {
         realWin.location.hash = '1';
         realWin.location.href += '2';
         realWin.location.replace(realWin.location.href + '3');
         realWin.location.assign(realWin.location.href + '4');
 
         expect(realWin.location.hash).toBe('#1234');
-      })
-      .waitsFor(function() {
-        return hashInHashChangeEvent.length > 3;
-      })
-      .runs(function() {
-        $realWin.off('hashchange', hashListener);
 
-        forEach(hashInHashChangeEvent, function(hash) {
+        await waitUntil(function() {
+          return hashInHashChangeEvent.length > 3;
+        });
+
+        angular.forEach(hashInHashChangeEvent, function(hash) {
           expect(hash).toBe('#1234');
         });
-      }).done();
-      job.start();
-
-      function hashListener() {
-        hashInHashChangeEvent.push(realWin.location.hash);
+      } finally {
+        $realWin.off('hashchange', hashListener);
       }
     });
-
   });
 
-  describe('url (with ie 11 weirdnesses)', function() {
+  describe('url (with ie 11 weirdnesses)', () => {
 
-    it('url() should actually set the url, even if IE 11 is weird and replaces HTML entities in the URL', function() {
+    test('url() should actually set the url, even if IE 11 is weird and replaces HTML entities in the URL', () => {
       // this test can not be expressed with the Jasmine spies in the previous describe block, because $browser.url()
       // needs to observe the change to location.href during its invocation to enter the failing code path, but the spies
       // are not callThrough
@@ -584,7 +578,7 @@ describe('browser', function() {
       // the initial URL contains a lengthy oauth token in the hash
       var initialUrl = 'http://test.com/oauthcallback#state=xxx%3D&not-before-policy=0';
       fakeWindow.location.href = initialUrl;
-      browser = new Browser(fakeWindow, fakeDocument, fakeLog, sniffer, taskTrackerFactory);
+      browser = new ngInternals.Browser(fakeWindow, fakeDocument, fakeLog, sniffer, taskTrackerFactory);
 
       // somehow, $location gets a version of this url where the = is no longer escaped, and tells the browser:
       var initialUrlFixedByLocation = initialUrl.replace('%3D', '=');
@@ -599,176 +593,171 @@ describe('browser', function() {
 
   });
 
-  describe('url (when state passed)', function() {
-    var currentHref, pushState, replaceState, locationReplace;
+  describe('url (when state passed)', () => {
+    var currentHref;
+    var pushState;
+    var replaceState;
+    var locationReplace;
 
-    beforeEach(function() {
+     beforeEach(() => {
+      sniffer = {history: true};
+
+      fakeWindow = new MockWindow();
+      currentHref = fakeWindow.location.href;
+      pushState = jest.spyOn(fakeWindow.history, 'pushState');
+      replaceState = jest.spyOn(fakeWindow.history, 'replaceState');
+      locationReplace = jest.spyOn(fakeWindow.location, 'replace');
+
+      browser = new ngInternals.Browser(fakeWindow, fakeDocument, fakeLog, sniffer, taskTrackerFactory);
+      browser.onUrlChange(function() {});
     });
 
-    describe('in IE', runTests({msie: true}));
-    describe('not in IE', runTests({msie: false}));
+    test('should change state', () => {
+      browser.url(currentHref, false, {prop: 'val1'});
+      expect(fakeWindow.history.state).toEqual({prop: 'val1'});
+      browser.url(currentHref + '/something', false, {prop: 'val2'});
+      expect(fakeWindow.history.state).toEqual({prop: 'val2'});
+    });
 
-    function runTests(options) {
-      return function() {
-        beforeEach(function() {
-          sniffer = {history: true};
+    test('should allow to set falsy states (except `undefined`)', () => {
+      fakeWindow.history.state = {prop: 'val1'};
+      fakeWindow.fire('popstate');
 
-          fakeWindow = new MockWindow({msie: options.msie});
-          currentHref = fakeWindow.location.href;
-          pushState = spyOn(fakeWindow.history, 'pushState').and.callThrough();
-          replaceState = spyOn(fakeWindow.history, 'replaceState').and.callThrough();
-          locationReplace = spyOn(fakeWindow.location, 'replace').and.callThrough();
+      browser.url(currentHref, false, null);
+      expect(fakeWindow.history.state).toBe(null);
 
-          browser = new Browser(fakeWindow, fakeDocument, fakeLog, sniffer, taskTrackerFactory);
-          browser.onUrlChange(function() {});
-        });
+      browser.url(currentHref, false, false);
+      expect(fakeWindow.history.state).toBe(false);
 
-        it('should change state', function() {
-          browser.url(currentHref, false, {prop: 'val1'});
-          expect(fakeWindow.history.state).toEqual({prop: 'val1'});
-          browser.url(currentHref + '/something', false, {prop: 'val2'});
-          expect(fakeWindow.history.state).toEqual({prop: 'val2'});
-        });
+      browser.url(currentHref, false, '');
+      expect(fakeWindow.history.state).toBe('');
 
-        it('should allow to set falsy states (except `undefined`)', function() {
-          fakeWindow.history.state = {prop: 'val1'};
-          fakeWindow.fire('popstate');
+      browser.url(currentHref, false, 0);
+      expect(fakeWindow.history.state).toBe(0);
+    });
 
-          browser.url(currentHref, false, null);
-          expect(fakeWindow.history.state).toBe(null);
+    test('should treat `undefined` state as `null`', () => {
+      fakeWindow.history.state = {prop: 'val1'};
+      fakeWindow.fire('popstate');
 
-          browser.url(currentHref, false, false);
-          expect(fakeWindow.history.state).toBe(false);
+      browser.url(currentHref, false, undefined);
+      expect(fakeWindow.history.state).toBe(null);
+    });
 
-          browser.url(currentHref, false, '');
-          expect(fakeWindow.history.state).toBe('');
+    test('should do pushState with the same URL and a different state', () => {
+      browser.url(currentHref, false, {prop: 'val1'});
+      expect(fakeWindow.history.state).toEqual({prop: 'val1'});
 
-          browser.url(currentHref, false, 0);
-          expect(fakeWindow.history.state).toBe(0);
-        });
+      browser.url(currentHref, false, null);
+      expect(fakeWindow.history.state).toBe(null);
 
-        it('should treat `undefined` state as `null`', function() {
-          fakeWindow.history.state = {prop: 'val1'};
-          fakeWindow.fire('popstate');
+      browser.url(currentHref, false, {prop: 'val2'});
+      browser.url(currentHref, false, {prop: 'val3'});
+      expect(fakeWindow.history.state).toEqual({prop: 'val3'});
+    });
 
-          browser.url(currentHref, false, undefined);
-          expect(fakeWindow.history.state).toBe(null);
-        });
+    test('should do pushState with the same URL and deep equal but referentially different state', () => {
+      fakeWindow.history.state = {prop: 'val'};
+      fakeWindow.fire('popstate');
+      expect(historyEntriesLength).toBe(1);
 
-        it('should do pushState with the same URL and a different state', function() {
-          browser.url(currentHref, false, {prop: 'val1'});
-          expect(fakeWindow.history.state).toEqual({prop: 'val1'});
+      browser.url(currentHref, false, {prop: 'val'});
+      expect(fakeWindow.history.state).toEqual({prop: 'val'});
+      expect(historyEntriesLength).toBe(2);
+    });
 
-          browser.url(currentHref, false, null);
-          expect(fakeWindow.history.state).toBe(null);
+    test('should not do pushState with the same URL and state from $browser.state()', () => {
+      browser.url(currentHref, false, {prop: 'val'});
 
-          browser.url(currentHref, false, {prop: 'val2'});
-          browser.url(currentHref, false, {prop: 'val3'});
-          expect(fakeWindow.history.state).toEqual({prop: 'val3'});
-        });
+      pushState.mockClear();
+      replaceState.mockClear();
+      locationReplace.mockClear();
 
-        it('should do pushState with the same URL and deep equal but referentially different state', function() {
-          fakeWindow.history.state = {prop: 'val'};
-          fakeWindow.fire('popstate');
-          expect(historyEntriesLength).toBe(1);
+      browser.url(currentHref, false, browser.state());
+      expect(pushState).not.toHaveBeenCalled();
+      expect(replaceState).not.toHaveBeenCalled();
+      expect(locationReplace).not.toHaveBeenCalled();
+    });
 
-          browser.url(currentHref, false, {prop: 'val'});
-          expect(fakeWindow.history.state).toEqual({prop: 'val'});
-          expect(historyEntriesLength).toBe(2);
-        });
+    test('should not do pushState with a URL using relative protocol', () => {
+      browser.url('http://server/');
 
-        it('should not do pushState with the same URL and state from $browser.state()', function() {
-          browser.url(currentHref, false, {prop: 'val'});
+      pushState.mockClear();
+      replaceState.mockClear();
+      locationReplace.mockClear();
 
-          pushState.calls.reset();
-          replaceState.calls.reset();
-          locationReplace.calls.reset();
+      browser.url('//server');
+      expect(pushState).not.toHaveBeenCalled();
+      expect(replaceState).not.toHaveBeenCalled();
+      expect(locationReplace).not.toHaveBeenCalled();
+    });
 
-          browser.url(currentHref, false, browser.state());
-          expect(pushState).not.toHaveBeenCalled();
-          expect(replaceState).not.toHaveBeenCalled();
-          expect(locationReplace).not.toHaveBeenCalled();
-        });
+    test('should not do pushState with a URL only adding a trailing slash after domain', () => {
+      // A domain without a trailing /
+      browser.url('http://server');
 
-        it('should not do pushState with a URL using relative protocol', function() {
-          browser.url('http://server/');
+      pushState.mockClear();
+      replaceState.mockClear();
+      locationReplace.mockClear();
 
-          pushState.calls.reset();
-          replaceState.calls.reset();
-          locationReplace.calls.reset();
+      // A domain from something such as window.location.href with a trailing slash
+      browser.url('http://server/');
+      expect(pushState).not.toHaveBeenCalled();
+      expect(replaceState).not.toHaveBeenCalled();
+      expect(locationReplace).not.toHaveBeenCalled();
+    });
 
-          browser.url('//server');
-          expect(pushState).not.toHaveBeenCalled();
-          expect(replaceState).not.toHaveBeenCalled();
-          expect(locationReplace).not.toHaveBeenCalled();
-        });
+    test('should not do pushState with a URL only removing a trailing slash after domain', () => {
+      // A domain from something such as window.location.href with a trailing slash
+      browser.url('http://server/');
 
-        it('should not do pushState with a URL only adding a trailing slash after domain', function() {
-          // A domain without a trailing /
-          browser.url('http://server');
+      pushState.mockClear();
+      replaceState.mockClear();
+      locationReplace.mockClear();
 
-          pushState.calls.reset();
-          replaceState.calls.reset();
-          locationReplace.calls.reset();
+      // A domain without a trailing /
+      browser.url('http://server');
+      expect(pushState).not.toHaveBeenCalled();
+      expect(replaceState).not.toHaveBeenCalled();
+      expect(locationReplace).not.toHaveBeenCalled();
+    });
 
-          // A domain from something such as window.location.href with a trailing slash
-          browser.url('http://server/');
-          expect(pushState).not.toHaveBeenCalled();
-          expect(replaceState).not.toHaveBeenCalled();
-          expect(locationReplace).not.toHaveBeenCalled();
-        });
+    test('should do pushState with a URL only adding a trailing slash after the path', () => {
+      browser.url('http://server/foo');
 
-        it('should not do pushState with a URL only removing a trailing slash after domain', function() {
-          // A domain from something such as window.location.href with a trailing slash
-          browser.url('http://server/');
+      pushState.mockClear();
+      replaceState.mockClear();
+      locationReplace.mockClear();
 
-          pushState.calls.reset();
-          replaceState.calls.reset();
-          locationReplace.calls.reset();
+      browser.url('http://server/foo/');
+      expect(pushState).toHaveBeenCalledTimes(1);
+      expect(fakeWindow.location.href).toEqual('http://server/foo/');
+    });
 
-          // A domain without a trailing /
-          browser.url('http://server');
-          expect(pushState).not.toHaveBeenCalled();
-          expect(replaceState).not.toHaveBeenCalled();
-          expect(locationReplace).not.toHaveBeenCalled();
-        });
+    test('should do pushState with a URL only removing a trailing slash after the path', () => {
+      browser.url('http://server/foo/');
 
-        it('should do pushState with a URL only adding a trailing slash after the path', function() {
-          browser.url('http://server/foo');
+      pushState.mockClear();
+      replaceState.mockClear();
+      locationReplace.mockClear();
 
-          pushState.calls.reset();
-          replaceState.calls.reset();
-          locationReplace.calls.reset();
-
-          browser.url('http://server/foo/');
-          expect(pushState).toHaveBeenCalledOnce();
-          expect(fakeWindow.location.href).toEqual('http://server/foo/');
-        });
-
-        it('should do pushState with a URL only removing a trailing slash after the path', function() {
-          browser.url('http://server/foo/');
-
-          pushState.calls.reset();
-          replaceState.calls.reset();
-          locationReplace.calls.reset();
-
-          browser.url('http://server/foo');
-          expect(pushState).toHaveBeenCalledOnce();
-          expect(fakeWindow.location.href).toEqual('http://server/foo');
-        });
-      };
-    }
+      browser.url('http://server/foo');
+      expect(pushState).toHaveBeenCalledTimes(1);
+      expect(fakeWindow.location.href).toEqual('http://server/foo');
+    });
   });
 
-  describe('state', function() {
+  describe('state', () => {
     var currentHref;
 
-    beforeEach(function() {
+     beforeEach(() => {
       sniffer = {history: true};
+      fakeWindow = new MockWindow();
+      browser = new ngInternals.Browser(fakeWindow, fakeDocument, fakeLog, sniffer, taskTrackerFactory);
       currentHref = fakeWindow.location.href;
     });
 
-    it('should not access `history.state` when `$sniffer.history` is false', function() {
+    test('should not access `history.state` when `$sniffer.history` is false', () => {
       // In the context of a Chrome Packaged App, although `history.state` is present, accessing it
       // is not allowed and logs an error in the console. We should not try to access
       // `history.state` in contexts where `$sniffer.history` is false.
@@ -779,66 +768,53 @@ describe('browser', function() {
 
       var _state = mockWindow.history.state;
       Object.defineProperty(mockWindow.history, 'state', {
-        get: function() {
+        get() {
           historyStateAccessed = true;
           return _state;
         }
       });
 
-      var browser = new Browser(mockWindow, fakeDocument, fakeLog, mockSniffer, taskTrackerFactory);
+      var browser = new ngInternals.Browser(mockWindow, fakeDocument, fakeLog, mockSniffer, taskTrackerFactory);
 
       expect(historyStateAccessed).toBe(false);
     });
 
-    describe('in IE', runTests({msie: true}));
-    describe('not in IE', runTests({msie: false}));
+    test('should return history.state', () => {
+      browser.url(currentHref, false, {prop: 'val'});
+      expect(browser.state()).toEqual({prop: 'val'});
+      browser.url(currentHref, false, 2);
+      expect(browser.state()).toEqual(2);
+      browser.url(currentHref, false, null);
+      expect(browser.state()).toEqual(null);
+    });
 
+    test('should return null if history.state is undefined', () => {
+      browser.url(currentHref, false, undefined);
+      expect(browser.state()).toBe(null);
+    });
 
-    function runTests(options) {
-      return function() {
-        beforeEach(function() {
-          fakeWindow = new MockWindow({msie: options.msie});
-          browser = new Browser(fakeWindow, fakeDocument, fakeLog, sniffer, taskTrackerFactory);
-        });
-
-        it('should return history.state', function() {
-          browser.url(currentHref, false, {prop: 'val'});
-          expect(browser.state()).toEqual({prop: 'val'});
-          browser.url(currentHref, false, 2);
-          expect(browser.state()).toEqual(2);
-          browser.url(currentHref, false, null);
-          expect(browser.state()).toEqual(null);
-        });
-
-        it('should return null if history.state is undefined', function() {
-          browser.url(currentHref, false, undefined);
-          expect(browser.state()).toBe(null);
-        });
-
-        it('should return the same state object in subsequent invocations in IE', function() {
-          browser.url(currentHref, false, {prop: 'val'});
-          expect(browser.state()).toBe(browser.state());
-        });
-      };
-    }
+    test('should return the same state object in subsequent invocations', () => {
+      browser.url(currentHref, false, {prop: 'val'});
+      expect(browser.state()).toBe(browser.state());
+    });
   });
 
-  describe('urlChange', function() {
+  describe('urlChange', () => {
     var callback;
 
-    beforeEach(function() {
-      callback = jasmine.createSpy('onUrlChange');
+     beforeEach(() => {
+      callback = jest.fn().mockName('onUrlChange');
     });
 
-    afterEach(function() {
-      if (!jQuery) jqLiteDealoc(fakeWindow);
+     afterEach(() => {
+      dealoc(fakeWindow);
     });
 
-    it('should return registered callback', function() {
+    test('should return registered callback', () => {
       expect(browser.onUrlChange(callback)).toBe(callback);
     });
 
-    it('should forward popstate event with new url when history supported', function() {
+    test('should forward popstate event with new url when history supported', () => {
       sniffer.history = true;
       browser.onUrlChange(callback);
       fakeWindow.location.href = 'http://server/new';
@@ -848,10 +824,10 @@ describe('browser', function() {
 
       fakeWindow.fire('hashchange');
       fakeWindow.setTimeout.flush();
-      expect(callback).toHaveBeenCalledOnce();
+      expect(callback).toHaveBeenCalledTimes(1);
     });
 
-    it('should forward only popstate event when history supported', function() {
+    test('should forward only popstate event when history supported', () => {
       sniffer.history = true;
       browser.onUrlChange(callback);
       fakeWindow.location.href = 'http://server/new';
@@ -861,10 +837,10 @@ describe('browser', function() {
 
       fakeWindow.fire('hashchange');
       fakeWindow.setTimeout.flush();
-      expect(callback).toHaveBeenCalledOnce();
+      expect(callback).toHaveBeenCalledTimes(1);
     });
 
-    it('should forward hashchange event with new url when history not supported', function() {
+    test('should forward hashchange event with new url when history not supported', () => {
       sniffer.history = false;
       browser.onUrlChange(callback);
       fakeWindow.location.href = 'http://server/new';
@@ -874,10 +850,10 @@ describe('browser', function() {
 
       fakeWindow.fire('popstate');
       fakeWindow.setTimeout.flush();
-      expect(callback).toHaveBeenCalledOnce();
+      expect(callback).toHaveBeenCalledTimes(1);
     });
 
-    it('should not fire urlChange if changed by browser.url method', function() {
+    test('should not fire urlChange if changed by browser.url method', () => {
       sniffer.history = false;
       browser.onUrlChange(callback);
       browser.url('http://new.com/');
@@ -886,38 +862,28 @@ describe('browser', function() {
       expect(callback).not.toHaveBeenCalled();
     });
 
-    describe('state handling', function() {
+    describe('state handling', () => {
       var currentHref;
 
-      beforeEach(function() {
+       beforeEach(() => {
         sniffer = {history: true};
+        fakeWindow = new MockWindow();
+        browser = new ngInternals.Browser(fakeWindow, fakeDocument, fakeLog, sniffer, taskTrackerFactory);
         currentHref = fakeWindow.location.href;
       });
 
-      describe('in IE', runTests({msie: true}));
-      describe('not in IE', runTests({msie: false}));
+      test('should fire onUrlChange listeners only once if both popstate and hashchange triggered', () => {
+        fakeWindow.history.state = {prop: 'val'};
+        browser.onUrlChange(callback);
 
-      function runTests(options) {
-        return function() {
-          beforeEach(function() {
-            fakeWindow = new MockWindow({msie: options.msie});
-            browser = new Browser(fakeWindow, fakeDocument, fakeLog, sniffer, taskTrackerFactory);
-          });
-
-          it('should fire onUrlChange listeners only once if both popstate and hashchange triggered', function() {
-            fakeWindow.history.state = {prop: 'val'};
-            browser.onUrlChange(callback);
-
-            fakeWindow.fire('hashchange');
-            fakeWindow.fire('popstate');
-            expect(callback).toHaveBeenCalledOnce();
-          });
-        };
-      }
+        fakeWindow.fire('hashchange');
+        fakeWindow.fire('popstate');
+        expect(callback).toHaveBeenCalledTimes(1);
+      });
     });
 
 
-    it('should stop calling callbacks when application has been torn down', function() {
+    test('should stop calling callbacks when application has been torn down', () => {
       sniffer.history = true;
       browser.onUrlChange(callback);
       fakeWindow.location.href = 'http://server/new';
@@ -935,24 +901,24 @@ describe('browser', function() {
   });
 
 
-  describe('baseHref', function() {
+  describe('baseHref', () => {
     var jqDocHead;
 
-    beforeEach(function() {
-      jqDocHead = jqLite(window.document).find('head');
+     beforeEach(() => {
+      jqDocHead = angular.element(window.document).find('head');
     });
 
-    it('should return value from <base href>', function() {
+    test('should return value from <base href>', () => {
       fakeDocument.basePath = '/base/path/';
       expect(browser.baseHref()).toEqual('/base/path/');
     });
 
-    it('should return \'\' (empty string) if no <base href>', function() {
+    test('should return \'\' (empty string) if no <base href>', () => {
       fakeDocument.basePath = undefined;
       expect(browser.baseHref()).toEqual('');
     });
 
-    it('should remove domain from <base href>', function() {
+    test('should remove domain from <base href>', () => {
       fakeDocument.basePath = 'http://host.com/base/path/';
       expect(browser.baseHref()).toEqual('/base/path/');
 
@@ -960,24 +926,24 @@ describe('browser', function() {
       expect(browser.baseHref()).toEqual('/base/path/index.html');
     });
 
-    it('should remove domain from <base href> beginning with \'//\'', function() {
+    test('should remove domain from <base href> beginning with \'//\'', () => {
       fakeDocument.basePath = '//google.com/base/path/';
       expect(browser.baseHref()).toEqual('/base/path/');
     });
   });
 
-  describe('integration tests with $location', function() {
+  describe('integration tests with $location', () => {
 
     function setup(options) {
       fakeWindow = new MockWindow(options);
-      browser = new Browser(fakeWindow, fakeDocument, fakeLog, sniffer, taskTrackerFactory);
+      browser = new ngInternals.Browser(fakeWindow, fakeDocument, fakeLog, sniffer, taskTrackerFactory);
 
-      module(function($provide, $locationProvider) {
+      angular.mock.module(function($provide, $locationProvider) {
 
-        spyOn(fakeWindow.history, 'pushState').and.callFake(function(stateObj, title, newUrl) {
+        jest.spyOn(fakeWindow.history, 'pushState').mockImplementation(function(stateObj, title, newUrl) {
           fakeWindow.location.href = newUrl;
         });
-        spyOn(fakeWindow.location, 'replace').and.callFake(function(newUrl) {
+        jest.spyOn(fakeWindow.location, 'replace').mockImplementation(function(newUrl) {
           fakeWindow.location.href = newUrl;
         });
         $provide.value('$browser', browser);
@@ -992,12 +958,12 @@ describe('browser', function() {
     describe('update $location when it was changed outside of AngularJS in sync ' +
        'before $digest was called', function() {
 
-      it('should work with no history support, no html5Mode', function() {
+      test('should work with no history support, no html5Mode', () => {
         setup({
           history: false,
           html5Mode: false
         });
-        inject(function($rootScope, $location) {
+        angular.mock.inject(function($rootScope, $location) {
           $rootScope.$apply(function() {
             $location.path('/initialPath');
           });
@@ -1011,12 +977,12 @@ describe('browser', function() {
         });
       });
 
-      it('should work with history support, no html5Mode', function() {
+      test('should work with history support, no html5Mode', () => {
         setup({
           history: true,
           html5Mode: false
         });
-        inject(function($rootScope, $location) {
+        angular.mock.inject(function($rootScope, $location) {
           $rootScope.$apply(function() {
             $location.path('/initialPath');
           });
@@ -1030,12 +996,12 @@ describe('browser', function() {
         });
       });
 
-      it('should work with no history support, with html5Mode', function() {
+      test('should work with no history support, with html5Mode', () => {
         setup({
           history: false,
           html5Mode: true
         });
-        inject(function($rootScope, $location) {
+        angular.mock.inject(function($rootScope, $location) {
           $rootScope.$apply(function() {
             $location.path('/initialPath');
           });
@@ -1049,12 +1015,12 @@ describe('browser', function() {
         });
       });
 
-      it('should work with history support, with html5Mode', function() {
+      test('should work with history support, with html5Mode', () => {
         setup({
           history: true,
           html5Mode: true
         });
-        inject(function($rootScope, $location) {
+        angular.mock.inject(function($rootScope, $location) {
           $rootScope.$apply(function() {
             $location.path('/initialPath');
           });
@@ -1070,7 +1036,7 @@ describe('browser', function() {
 
     });
 
-    it('should not reload the page on every $digest when the page will be reloaded due to url rewrite on load', function() {
+    test('should not reload the page on every $digest when the page will be reloaded due to url rewrite on load', () => {
       setup({
         history: false,
         html5Mode: true
@@ -1084,8 +1050,8 @@ describe('browser', function() {
         }
         return _url.call(this, newUrl, replace);
       };
-      spyOn(browser, 'url').and.callThrough();
-      inject(function($rootScope, $location) {
+      jest.spyOn(browser, 'url');
+      angular.mock.inject(function($rootScope, $location) {
         $rootScope.$digest();
         $rootScope.$digest();
         $rootScope.$digest();
@@ -1099,14 +1065,14 @@ describe('browser', function() {
     });
 
     // issue #12241
-    it('should not infinite digest if the browser does not synchronously update the location properties', function() {
+    test('should not infinite digest if the browser does not synchronously update the location properties', () => {
       setup({
         history: true,
         html5Mode: true,
         updateAsync: true // Simulate a browser that doesn't update the href synchronously
       });
 
-      inject(function($location, $rootScope) {
+      angular.mock.inject(function($location, $rootScope) {
 
         // Change the hash within AngularJS and check that we don't infinitely digest
         $location.hash('newHash');
@@ -1125,16 +1091,16 @@ describe('browser', function() {
     });
 
     // issue #16632
-    it('should not trigger `$locationChangeStart` more than once due to trailing `#`', function() {
+    test('should not trigger `$locationChangeStart` more than once due to trailing `#`', () => {
       setup({
         history: true,
         html5Mode: true
       });
 
-      inject(function($flushPendingTasks, $location, $rootScope) {
+      angular.mock.inject(function($flushPendingTasks, $location, $rootScope) {
         $rootScope.$digest();
 
-        var spy = jasmine.createSpy('$locationChangeStart');
+        var spy = jest.fn().mockName('$locationChangeStart');
         $rootScope.$on('$locationChangeStart', spy);
 
         $rootScope.$evalAsync(function() {
@@ -1145,20 +1111,20 @@ describe('browser', function() {
         expect(fakeWindow.location.href).toBe('http://server/#');
         expect($location.absUrl()).toBe('http://server/');
 
-        expect(spy.calls.count()).toBe(0);
+        expect(spy.mock.calls.length).toBe(0);
         expect(spy).not.toHaveBeenCalled();
       });
     });
   });
 
-  describe('integration test with $rootScope', function() {
+  describe('integration test with $rootScope', () => {
 
-    beforeEach(module(function($provide, $locationProvider) {
+    beforeEach(angular.mock.module(function($provide, $locationProvider) {
       $provide.value('$browser', browser);
     }));
 
-    it('should not interfere with legacy browser url replace behavior', function() {
-      inject(function($rootScope) {
+    test('should not interfere with legacy browser url replace behavior', () => {
+      angular.mock.inject(function($rootScope) {
         var current = fakeWindow.location.href;
         var newUrl = 'http://notyet/';
         sniffer.history = false;
@@ -1173,5 +1139,4 @@ describe('browser', function() {
     });
 
   });
-
 });

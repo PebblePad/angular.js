@@ -1,12 +1,11 @@
 'use strict';
-
-describe('$window', function() {
-  it('should inject $window', inject(function($window) {
+ describe('$window', () => {
+  test('should inject $window', angular.mock.inject(function($window) {
     expect($window).toBe(window);
   }));
 
-  it('should be able to mock $window without errors', function() {
-    module({$window: {}});
-    inject(['$sce', angular.noop]);
+  test('should be able to mock $window without errors', () => {
+    angular.mock.module({$window: {}});
+    angular.mock.inject(['$sce', angular.noop]);
   });
 });

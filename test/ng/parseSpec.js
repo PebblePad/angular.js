@@ -3,32 +3,30 @@
 // This file has many tests which read nicely if constant conditions
 // are used.
 /* eslint-disable no-constant-condition */
-
-describe('parser', function() {
-
-  describe('lexer', function() {
+ describe('parser', () => {
+  describe('lexer', () => {
     var lex;
 
-    beforeEach(function() {
+     beforeEach(() => {
       /* global Lexer: false */
       lex = function() {
-        var lexer = new Lexer({csp: false});
-        return lexer.lex.apply(lexer, arguments);
+        var lexer = new ngInternals.Lexer({csp: false});
+        return lexer.lex(...arguments);
       };
     });
 
-    it('should only match number chars with isNumber', function() {
-      expect(Lexer.prototype.isNumber('0')).toBe(true);
-      expect(Lexer.prototype.isNumber('')).toBeFalsy();
-      expect(Lexer.prototype.isNumber(' ')).toBeFalsy();
-      expect(Lexer.prototype.isNumber(0)).toBeFalsy();
-      expect(Lexer.prototype.isNumber(false)).toBeFalsy();
-      expect(Lexer.prototype.isNumber(true)).toBeFalsy();
-      expect(Lexer.prototype.isNumber(undefined)).toBeFalsy();
-      expect(Lexer.prototype.isNumber(null)).toBeFalsy();
+    test('should only match number chars with isNumber', () => {
+      expect(ngInternals.Lexer.prototype.isNumber('0')).toBe(true);
+      expect(ngInternals.Lexer.prototype.isNumber('')).toBeFalsy();
+      expect(ngInternals.Lexer.prototype.isNumber(' ')).toBeFalsy();
+      expect(ngInternals.Lexer.prototype.isNumber(0)).toBeFalsy();
+      expect(ngInternals.Lexer.prototype.isNumber(false)).toBeFalsy();
+      expect(ngInternals.Lexer.prototype.isNumber(true)).toBeFalsy();
+      expect(ngInternals.Lexer.prototype.isNumber(undefined)).toBeFalsy();
+      expect(ngInternals.Lexer.prototype.isNumber(null)).toBeFalsy();
     });
 
-    it('should tokenize a string', function() {
+    test('should tokenize a string', () => {
       var tokens = lex('a.bc[22]+1.3|f:\'a\\\'c\':"d\\"e"');
       var i = 0;
       expect(tokens[i].index).toEqual(0);
@@ -91,7 +89,7 @@ describe('parser', function() {
       expect(tokens[i].value).toEqual('d"e');
     });
 
-    it('should tokenize identifiers with spaces around dots the same as without spaces', function() {
+    test('should tokenize identifiers with spaces around dots the same as without spaces', () => {
       function getText(t) { return t.text; }
       var spaces = lex('foo. bar . baz').map(getText);
       var noSpaces = lex('foo.bar.baz').map(getText);
@@ -99,45 +97,45 @@ describe('parser', function() {
       expect(spaces).toEqual(noSpaces);
     });
 
-    it('should use callback functions to know when an identifier is valid', function() {
+    test('should use callback functions to know when an identifier is valid', () => {
       function getText(t) { return t.text; }
-      var isIdentifierStart = jasmine.createSpy('start');
-      var isIdentifierContinue = jasmine.createSpy('continue');
-      isIdentifierStart.and.returnValue(true);
-      var lex = new Lexer({csp: false, isIdentifierStart: isIdentifierStart, isIdentifierContinue: isIdentifierContinue});
+      var isIdentifierStart = jest.fn().mockName('start');
+      var isIdentifierContinue = jest.fn().mockName('continue');
+      isIdentifierStart.mockReturnValue(true);
+      var lex = new ngInternals.Lexer({csp: false, isIdentifierStart: isIdentifierStart, isIdentifierContinue: isIdentifierContinue});
 
-      isIdentifierContinue.and.returnValue(true);
+      isIdentifierContinue.mockReturnValue(true);
       var tokens = lex.lex('πΣε').map(getText);
       expect(tokens).toEqual(['πΣε']);
 
-      isIdentifierContinue.and.returnValue(false);
+      isIdentifierContinue.mockReturnValue(false);
       tokens = lex.lex('πΣε').map(getText);
       expect(tokens).toEqual(['π', 'Σ', 'ε']);
     });
 
-    it('should send the unicode characters and code points', function() {
+    test('should send the unicode characters and code points', () => {
       function getText(t) { return t.text; }
-      var isIdentifierStart = jasmine.createSpy('start');
-      var isIdentifierContinue = jasmine.createSpy('continue');
-      isIdentifierStart.and.returnValue(true);
-      isIdentifierContinue.and.returnValue(true);
-      var lex = new Lexer({csp: false, isIdentifierStart: isIdentifierStart, isIdentifierContinue: isIdentifierContinue});
+      var isIdentifierStart = jest.fn().mockName('start');
+      var isIdentifierContinue = jest.fn().mockName('continue');
+      isIdentifierStart.mockReturnValue(true);
+      isIdentifierContinue.mockReturnValue(true);
+      var lex = new ngInternals.Lexer({csp: false, isIdentifierStart: isIdentifierStart, isIdentifierContinue: isIdentifierContinue});
       var tokens = lex.lex('\uD801\uDC37\uD852\uDF62\uDBFF\uDFFF');
       expect(isIdentifierStart).toHaveBeenCalledTimes(1);
-      expect(isIdentifierStart.calls.argsFor(0)).toEqual(['\uD801\uDC37', 0x10437]);
+      expect(isIdentifierStart.mock.calls[0]).toEqual(['\uD801\uDC37', 0x10437]);
       expect(isIdentifierContinue).toHaveBeenCalledTimes(2);
-      expect(isIdentifierContinue.calls.argsFor(0)).toEqual(['\uD852\uDF62', 0x24B62]);
-      expect(isIdentifierContinue.calls.argsFor(1)).toEqual(['\uDBFF\uDFFF', 0x10FFFF]);
+      expect(isIdentifierContinue.mock.calls[0]).toEqual(['\uD852\uDF62', 0x24B62]);
+      expect(isIdentifierContinue.mock.calls[1]).toEqual(['\uDBFF\uDFFF', 0x10FFFF]);
     });
 
-    it('should tokenize undefined', function() {
+    test('should tokenize undefined', () => {
       var tokens = lex('undefined');
       var i = 0;
       expect(tokens[i].index).toEqual(0);
       expect(tokens[i].text).toEqual('undefined');
     });
 
-    it('should tokenize quoted string', function() {
+    test('should tokenize quoted string', () => {
       var str = '[\'\\\'\', "\\""]';
       var tokens = lex(str);
 
@@ -148,26 +146,26 @@ describe('parser', function() {
       expect(tokens[3].value).toEqual('"');
     });
 
-    it('should tokenize escaped quoted string', function() {
+    test('should tokenize escaped quoted string', () => {
       var str = '"\\"\\n\\f\\r\\t\\v\\u00A0"';
       var tokens = lex(str);
 
       expect(tokens[0].value).toEqual('"\n\f\r\t\v\u00A0');
     });
 
-    it('should tokenize unicode', function() {
+    test('should tokenize unicode', () => {
       var tokens = lex('"\\u00A0"');
       expect(tokens.length).toEqual(1);
       expect(tokens[0].value).toEqual('\u00a0');
     });
 
-    it('should ignore whitespace', function() {
+    test('should ignore whitespace', () => {
       var tokens = lex('a \t \n \r b');
       expect(tokens[0].text).toEqual('a');
       expect(tokens[1].text).toEqual('b');
     });
 
-    it('should tokenize relation and equality', function() {
+    test('should tokenize relation and equality', () => {
       var tokens = lex('! == != < > <= >= === !==');
       expect(tokens[0].text).toEqual('!');
       expect(tokens[1].text).toEqual('==');
@@ -180,7 +178,7 @@ describe('parser', function() {
       expect(tokens[8].text).toEqual('!==');
     });
 
-    it('should tokenize logical and ternary', function() {
+    test('should tokenize logical and ternary', () => {
       var tokens = lex('&& || ? :');
       expect(tokens[0].text).toEqual('&&');
       expect(tokens[1].text).toEqual('||');
@@ -188,7 +186,7 @@ describe('parser', function() {
       expect(tokens[3].text).toEqual(':');
     });
 
-    it('should tokenize statements', function() {
+    test('should tokenize statements', () => {
       var tokens = lex('a;b;');
       expect(tokens[0].text).toEqual('a');
       expect(tokens[1].text).toEqual(';');
@@ -196,23 +194,23 @@ describe('parser', function() {
       expect(tokens[3].text).toEqual(';');
     });
 
-    it('should tokenize function invocation', function() {
+    test('should tokenize function invocation', () => {
       var tokens = lex('a()');
       expect(tokens.map(function(t) { return t.text;})).toEqual(['a', '(', ')']);
     });
 
-    it('should tokenize method invocation', function() {
+    test('should tokenize method invocation', () => {
       var tokens = lex('a.b.c (d) - e.f()');
       expect(tokens.map(function(t) { return t.text;})).
           toEqual(['a', '.', 'b', '.', 'c',  '(', 'd', ')', '-', 'e', '.', 'f', '(', ')']);
     });
 
-    it('should tokenize number', function() {
+    test('should tokenize number', () => {
       var tokens = lex('0.5');
       expect(tokens[0].value).toEqual(0.5);
     });
 
-    it('should tokenize negative number', inject(function($rootScope) {
+    test('should tokenize negative number', angular.mock.inject(function($rootScope) {
       var value = $rootScope.$eval('-0.5');
       expect(value).toEqual(-0.5);
 
@@ -220,7 +218,7 @@ describe('parser', function() {
       expect(value).toEqual({a:-0.5});
     }));
 
-    it('should tokenize number with exponent', inject(function($rootScope) {
+    test('should tokenize number with exponent', angular.mock.inject(function($rootScope) {
       var tokens = lex('0.5E-10');
       expect(tokens[0].value).toEqual(0.5E-10);
       expect($rootScope.$eval('0.5E-10')).toEqual(0.5E-10);
@@ -229,7 +227,7 @@ describe('parser', function() {
       expect(tokens[0].value).toEqual(0.5E+10);
     }));
 
-    it('should throws exception for invalid exponent', function() {
+    test('should throws exception for invalid exponent', () => {
       expect(function() {
         lex('0.5E-');
       }).toThrowMinErr('$parse', 'lexerr', 'Lexer Error: Invalid exponent at column 4 in expression [0.5E-].');
@@ -239,36 +237,36 @@ describe('parser', function() {
       }).toThrowMinErr('$parse', 'lexerr', 'Lexer Error: Invalid exponent at column 4 in expression [0.5E-A].');
     });
 
-    it('should tokenize number starting with a dot', function() {
+    test('should tokenize number starting with a dot', () => {
       var tokens = lex('.5');
       expect(tokens[0].value).toEqual(0.5);
     });
 
-    it('should throw error on invalid unicode', function() {
+    test('should throw error on invalid unicode', () => {
       expect(function() {
         lex('\'\\u1\'\'bla\'');
       }).toThrowMinErr('$parse', 'lexerr', 'Lexer Error: Invalid unicode escape [\\u1\'\'b] at column 2 in expression [\'\\u1\'\'bla\'].');
     });
   });
 
-  describe('ast', function() {
+  describe('ast', () => {
     var createAst;
 
-    beforeEach(function() {
+     beforeEach(() => {
       /* global AST: false */
       createAst = function() {
-        var lexer = new Lexer({csp: false});
-        var ast = new AST(lexer, {csp: false, literals: {'true': true, 'false': false, 'undefined': undefined, 'null': null}});
-        return ast.ast.apply(ast, arguments);
+        var lexer = new ngInternals.Lexer({csp: false});
+        var ast = new ngInternals.AST(lexer, {csp: false, literals: {'true': true, 'false': false, 'undefined': undefined, 'null': null}});
+        return ast.ast(...arguments);
       };
     });
 
-    it('should handle an empty list of tokens', function() {
+    test('should handle an empty list of tokens', () => {
       expect(createAst('')).toEqual({type: 'Program', body: []});
     });
 
 
-    it('should understand identifiers', function() {
+    test('should understand identifiers', () => {
       expect(createAst('foo')).toEqual(
         {
           type: 'Program',
@@ -283,7 +281,7 @@ describe('parser', function() {
     });
 
 
-    it('should understand non-computed member expressions', function() {
+    test('should understand non-computed member expressions', () => {
       expect(createAst('foo.bar')).toEqual(
         {
           type: 'Program',
@@ -303,7 +301,7 @@ describe('parser', function() {
     });
 
 
-    it('should associate non-computed member expressions left-to-right', function() {
+    test('should associate non-computed member expressions left-to-right', () => {
       expect(createAst('foo.bar.baz')).toEqual(
         {
           type: 'Program',
@@ -328,7 +326,7 @@ describe('parser', function() {
     });
 
 
-    it('should understand computed member expressions', function() {
+    test('should understand computed member expressions', () => {
       expect(createAst('foo[bar]')).toEqual(
         {
           type: 'Program',
@@ -348,7 +346,7 @@ describe('parser', function() {
     });
 
 
-    it('should associate computed member expressions left-to-right', function() {
+    test('should associate computed member expressions left-to-right', () => {
       expect(createAst('foo[bar][baz]')).toEqual(
         {
           type: 'Program',
@@ -373,7 +371,7 @@ describe('parser', function() {
     });
 
 
-    it('should understand call expressions', function() {
+    test('should understand call expressions', () => {
       expect(createAst('foo()')).toEqual(
         {
           type: 'Program',
@@ -392,7 +390,7 @@ describe('parser', function() {
     });
 
 
-    it('should parse call expression arguments', function() {
+    test('should parse call expression arguments', () => {
       expect(createAst('foo(bar, baz)')).toEqual(
         {
           type: 'Program',
@@ -414,7 +412,7 @@ describe('parser', function() {
     });
 
 
-    it('should parse call expression left-to-right', function() {
+    test('should parse call expression left-to-right', () => {
       expect(createAst('foo(bar, baz)(man, shell)')).toEqual(
         {
           type: 'Program',
@@ -443,7 +441,7 @@ describe('parser', function() {
     });
 
 
-    it('should keep the context when having superfluous parenthesis', function() {
+    test('should keep the context when having superfluous parenthesis', () => {
       expect(createAst('(foo)(bar, baz)')).toEqual(
         {
           type: 'Program',
@@ -465,7 +463,7 @@ describe('parser', function() {
     });
 
 
-    it('should treat member expressions and call expression with the same precedence', function() {
+    test('should treat member expressions and call expression with the same precedence', () => {
       expect(createAst('foo.bar[baz]()')).toEqual(
         {
           type: 'Program',
@@ -543,9 +541,9 @@ describe('parser', function() {
     });
 
 
-    it('should understand literals', function() {
+    test('should understand literals', () => {
       // In a strict sense, `undefined` is not a literal but an identifier
-      forEach({'123': 123, '"123"': '123', 'true': true, 'false': false, 'null': null, 'undefined': undefined}, function(value, expression) {
+      angular.forEach({'123': 123, '"123"': '123', 'true': true, 'false': false, 'null': null, 'undefined': undefined}, function(value, expression) {
         expect(createAst(expression)).toEqual(
           {
             type: 'Program',
@@ -561,7 +559,7 @@ describe('parser', function() {
     });
 
 
-    it('should understand the `this` expression', function() {
+    test('should understand the `this` expression', () => {
       expect(createAst('this')).toEqual(
         {
           type: 'Program',
@@ -576,7 +574,7 @@ describe('parser', function() {
     });
 
 
-    it('should understand the `$locals` expression', function() {
+    test('should understand the `$locals` expression', () => {
       expect(createAst('$locals')).toEqual(
         {
           type: 'Program',
@@ -591,8 +589,8 @@ describe('parser', function() {
     });
 
 
-    it('should not confuse `this`, `$locals`, `undefined`, `true`, `false`, `null` when used as identifiers', function() {
-      forEach(['this', '$locals', 'undefined', 'true', 'false', 'null'], function(identifier) {
+    test('should not confuse `this`, `$locals`, `undefined`, `true`, `false`, `null` when used as identifiers', () => {
+      angular.forEach(['this', '$locals', 'undefined', 'true', 'false', 'null'], function(identifier) {
         expect(createAst('foo.' + identifier)).toEqual(
           {
             type: 'Program',
@@ -613,20 +611,20 @@ describe('parser', function() {
     });
 
 
-    it('should throw when trying to use non-identifiers as identifiers', function() {
+    test('should throw when trying to use non-identifiers as identifiers', () => {
       expect(function() { createAst('foo.)'); }).toThrowMinErr('$parse', 'syntax',
           'Syntax Error: Token \')\' is not a valid identifier at column 5 of the expression [foo.)');
     });
 
 
-    it('should throw when all tokens are not consumed', function() {
+    test('should throw when all tokens are not consumed', () => {
       expect(function() { createAst('foo bar'); }).toThrowMinErr('$parse', 'syntax',
           'Syntax Error: Token \'bar\' is an unexpected token at column 5 of the expression [foo bar] starting at [bar]');
     });
 
 
-    it('should understand the unary operators `-`, `+` and `!`', function() {
-      forEach(['-', '+', '!'], function(operator) {
+    test('should understand the unary operators `-`, `+` and `!`', () => {
+      angular.forEach(['-', '+', '!'], function(operator) {
         expect(createAst(operator + 'foo')).toEqual(
           {
             type: 'Program',
@@ -647,8 +645,8 @@ describe('parser', function() {
     });
 
 
-    it('should handle all unary operators with the same precedence', function() {
-      forEach([['+', '-', '!'], ['-', '!', '+'], ['!', '+', '-']], function(operators) {
+    test('should handle all unary operators with the same precedence', () => {
+      angular.forEach([['+', '-', '!'], ['-', '!', '+'], ['!', '+', '-']], function(operators) {
         expect(createAst(operators.join('') + 'foo')).toEqual(
           {
             type: 'Program',
@@ -679,8 +677,8 @@ describe('parser', function() {
     });
 
 
-    it('should be able to understand binary operators', function() {
-      forEach(['*', '/', '%', '+', '-', '<', '>', '<=', '>=', '==','!=','===','!=='], function(operator) {
+    test('should be able to understand binary operators', () => {
+      angular.forEach(['*', '/', '%', '+', '-', '<', '>', '<=', '>=', '==','!=','===','!=='], function(operator) {
         expect(createAst('foo' + operator + 'bar')).toEqual(
           {
             type: 'Program',
@@ -701,11 +699,11 @@ describe('parser', function() {
     });
 
 
-    it('should associate binary operators with the same precedence left-to-right', function() {
+    test('should associate binary operators with the same precedence left-to-right', () => {
       var operatorsByPrecedence = [['*', '/', '%'], ['+', '-'], ['<', '>', '<=', '>='], ['==','!=','===','!==']];
-      forEach(operatorsByPrecedence, function(operators) {
-        forEach(operators, function(op1) {
-          forEach(operators, function(op2) {
+      angular.forEach(operatorsByPrecedence, function(operators) {
+        angular.forEach(operators, function(op1) {
+          angular.forEach(operators, function(op2) {
             expect(createAst('foo' + op1 + 'bar' + op2 + 'baz')).toEqual(
               {
                 type: 'Program',
@@ -733,8 +731,8 @@ describe('parser', function() {
     });
 
 
-    it('should give higher precedence to member calls than to unary expressions', function() {
-      forEach(['!', '+', '-'], function(operator) {
+    test('should give higher precedence to member calls than to unary expressions', () => {
+      angular.forEach(['!', '+', '-'], function(operator) {
         expect(createAst(operator + 'foo()')).toEqual(
           {
             type: 'Program',
@@ -801,9 +799,9 @@ describe('parser', function() {
     });
 
 
-    it('should give higher precedence to unary operators over multiplicative operators', function() {
-      forEach(['!', '+', '-'], function(op1) {
-        forEach(['*', '/', '%'], function(op2) {
+    test('should give higher precedence to unary operators over multiplicative operators', () => {
+      angular.forEach(['!', '+', '-'], function(op1) {
+        angular.forEach(['*', '/', '%'], function(op2) {
           expect(createAst(op1 + 'foo' + op2 + op1 + 'bar')).toEqual(
             {
               type: 'Program',
@@ -835,11 +833,11 @@ describe('parser', function() {
     });
 
 
-    it('should give binary operators their right precedence', function() {
+    test('should give binary operators their right precedence', () => {
       var operatorsByPrecedence = [['*', '/', '%'], ['+', '-'], ['<', '>', '<=', '>='], ['==','!=','===','!==']];
       for (var i = 0; i < operatorsByPrecedence.length - 1; ++i) {
-        forEach(operatorsByPrecedence[i], function(op1) {
-          forEach(operatorsByPrecedence[i + 1], function(op2) {
+        angular.forEach(operatorsByPrecedence[i], function(op1) {
+          angular.forEach(operatorsByPrecedence[i + 1], function(op2) {
             expect(createAst('foo' + op1 + 'bar' + op2 + 'baz' + op1 + 'man')).toEqual(
               {
                 type: 'Program',
@@ -872,8 +870,8 @@ describe('parser', function() {
     });
 
 
-    it('should understand logical operators', function() {
-      forEach(['||', '&&'], function(operator) {
+    test('should understand logical operators', () => {
+      angular.forEach(['||', '&&'], function(operator) {
         expect(createAst('foo' + operator + 'bar')).toEqual(
           {
             type: 'Program',
@@ -894,8 +892,8 @@ describe('parser', function() {
     });
 
 
-    it('should associate logical operators left-to-right', function() {
-      forEach(['||', '&&'], function(op) {
+    test('should associate logical operators left-to-right', () => {
+      angular.forEach(['||', '&&'], function(op) {
         expect(createAst('foo' + op + 'bar' + op + 'baz')).toEqual(
           {
             type: 'Program',
@@ -921,7 +919,7 @@ describe('parser', function() {
     });
 
 
-    it('should understand ternary operators', function() {
+    test('should understand ternary operators', () => {
       expect(createAst('foo?bar:baz')).toEqual(
         {
           type: 'Program',
@@ -941,7 +939,7 @@ describe('parser', function() {
     });
 
 
-    it('should associate the conditional operator right-to-left', function() {
+    test('should associate the conditional operator right-to-left', () => {
       expect(createAst('foo0?foo1:foo2?bar0?bar1:bar2:man0?man1:man2')).toEqual(
         {
           type: 'Program',
@@ -976,7 +974,7 @@ describe('parser', function() {
     });
 
 
-    it('should understand assignment operator', function() {
+    test('should understand assignment operator', () => {
       // Currently, only `=` is supported
       expect(createAst('foo=bar')).toEqual(
         {
@@ -997,7 +995,7 @@ describe('parser', function() {
     });
 
 
-    it('should associate assignments right-to-left', function() {
+    test('should associate assignments right-to-left', () => {
       // Currently, only `=` is supported
       expect(createAst('foo=bar=man')).toEqual(
         {
@@ -1023,8 +1021,8 @@ describe('parser', function() {
     });
 
 
-    it('should give higher precedence to equality than to the logical `and` operator', function() {
-      forEach(['==','!=','===','!=='], function(operator) {
+    test('should give higher precedence to equality than to the logical `and` operator', () => {
+      angular.forEach(['==','!=','===','!=='], function(operator) {
         expect(createAst('foo' + operator + 'bar && man' + operator + 'shell')).toEqual(
           {
             type: 'Program',
@@ -1055,7 +1053,7 @@ describe('parser', function() {
     });
 
 
-    it('should give higher precedence to logical `and` than to logical `or`', function() {
+    test('should give higher precedence to logical `and` than to logical `or`', () => {
       expect(createAst('foo&&bar||man&&shell')).toEqual(
         {
           type: 'Program',
@@ -1085,7 +1083,7 @@ describe('parser', function() {
     });
 
 
-    it('should give higher precedence to the logical `or` than to the conditional operator', function() {
+    test('should give higher precedence to the logical `or` than to the conditional operator', () => {
       expect(createAst('foo||bar?man:shell')).toEqual(
         {
           type: 'Program',
@@ -1110,7 +1108,7 @@ describe('parser', function() {
     });
 
 
-    it('should give higher precedence to the conditional operator than to assignment operators', function() {
+    test('should give higher precedence to the conditional operator than to assignment operators', () => {
       expect(createAst('foo=bar?man:shell')).toEqual(
         {
           type: 'Program',
@@ -1135,7 +1133,7 @@ describe('parser', function() {
     });
 
 
-    it('should understand array literals', function() {
+    test('should understand array literals', () => {
       expect(createAst('[]')).toEqual(
         {
           type: 'Program',
@@ -1223,7 +1221,7 @@ describe('parser', function() {
     });
 
 
-    it('should understand objects', function() {
+    test('should understand objects', () => {
       expect(createAst('{}')).toEqual(
         {
           type: 'Program',
@@ -1357,7 +1355,7 @@ describe('parser', function() {
     });
 
 
-    it('should understand ES6 object initializer', function() {
+    test('should understand ES6 object initializer', () => {
       // Shorthand properties definitions.
       expect(createAst('{x, y, z}')).toEqual(
         {
@@ -1450,7 +1448,7 @@ describe('parser', function() {
     });
 
 
-    it('should understand multiple expressions', function() {
+    test('should understand multiple expressions', () => {
       expect(createAst('foo = bar; man = shell')).toEqual(
         {
           type: 'Program',
@@ -1480,7 +1478,7 @@ describe('parser', function() {
 
 
     // This is non-standard syntax
-    it('should understand filters', function() {
+    test('should understand filters', () => {
       expect(createAst('foo | bar')).toEqual(
         {
           type: 'Program',
@@ -1502,7 +1500,7 @@ describe('parser', function() {
     });
 
 
-    it('should understand filters with extra parameters', function() {
+    test('should understand filters with extra parameters', () => {
       expect(createAst('foo | bar:baz')).toEqual(
         {
           type: 'Program',
@@ -1525,7 +1523,7 @@ describe('parser', function() {
     });
 
 
-    it('should associate filters right-to-left', function() {
+    test('should associate filters right-to-left', () => {
       expect(createAst('foo | bar:man | shell')).toEqual(
         {
           type: 'Program',
@@ -1555,7 +1553,7 @@ describe('parser', function() {
     });
 
 
-    it('should give higher precedence to assignments over filters', function() {
+    test('should give higher precedence to assignments over filters', () => {
       expect(createAst('foo=bar | man')).toEqual(
         {
           type: 'Program',
@@ -1582,7 +1580,7 @@ describe('parser', function() {
     });
 
 
-    it('should accept expression as filters parameters', function() {
+    test('should accept expression as filters parameters', () => {
       expect(createAst('foo | bar:baz=man')).toEqual(
         {
           type: 'Program',
@@ -1610,7 +1608,7 @@ describe('parser', function() {
     });
 
 
-    it('should accept expression as computer members', function() {
+    test('should accept expression as computer members', () => {
       expect(createAst('foo[a = 1]')).toEqual(
         {
           type: 'Program',
@@ -1635,7 +1633,7 @@ describe('parser', function() {
     });
 
 
-    it('should accept expression in function arguments', function() {
+    test('should accept expression in function arguments', () => {
       expect(createAst('foo(a = 1)')).toEqual(
         {
           type: 'Program',
@@ -1661,7 +1659,7 @@ describe('parser', function() {
     });
 
 
-    it('should accept expression as part of ternary operators', function() {
+    test('should accept expression as part of ternary operators', () => {
       expect(createAst('foo || bar ? man = 1 : shell = 1')).toEqual(
         {
           type: 'Program',
@@ -1696,7 +1694,7 @@ describe('parser', function() {
     });
 
 
-    it('should accept expression as part of array literals', function() {
+    test('should accept expression as part of array literals', () => {
       expect(createAst('[foo = 1]')).toEqual(
         {
           type: 'Program',
@@ -1721,7 +1719,7 @@ describe('parser', function() {
     });
 
 
-    it('should accept expression as part of object literals', function() {
+    test('should accept expression as part of object literals', () => {
       expect(createAst('{foo: bar = 1}')).toEqual(
         {
           type: 'Program',
@@ -1752,7 +1750,7 @@ describe('parser', function() {
     });
 
 
-    it('should be possible to use parenthesis to indicate precedence', function() {
+    test('should be possible to use parenthesis to indicate precedence', () => {
       expect(createAst('(foo + bar).man')).toEqual(
         {
           type: 'Program',
@@ -1777,7 +1775,7 @@ describe('parser', function() {
     });
 
 
-    it('should skip empty expressions', function() {
+    test('should skip empty expressions', () => {
       expect(createAst('foo;;;;bar')).toEqual(
         {
           type: 'Program',
@@ -1818,19 +1816,20 @@ describe('parser', function() {
     });
   });
 
-  var $filterProvider, scope;
+  var $filterProvider;
+  var scope;
 
-  beforeEach(module(['$filterProvider', function(filterProvider) {
+  beforeEach(angular.mock.module(['$filterProvider', function(filterProvider) {
     $filterProvider = filterProvider;
   }]));
 
-  forEach([true, false], function(cspEnabled) {
-    beforeEach(module(function($parseProvider) {
+  angular.forEach([true, false], function(cspEnabled) {
+    beforeEach(angular.mock.module(function($parseProvider) {
       $parseProvider.addLiteral('Infinity', Infinity);
-      csp().noUnsafeEval = cspEnabled;
+      angular.$$csp().noUnsafeEval = cspEnabled;
     }));
 
-    it('should allow extending literals with csp ' + cspEnabled, inject(function($rootScope) {
+    test('should allow extending literals with csp ' + cspEnabled, angular.mock.inject(function($rootScope) {
       expect($rootScope.$eval('Infinity')).toEqual(Infinity);
       expect($rootScope.$eval('-Infinity')).toEqual(-Infinity);
       expect(function() {$rootScope.$eval('Infinity = 1');}).toThrow();
@@ -1838,20 +1837,20 @@ describe('parser', function() {
     }));
   });
 
-  forEach([true, false], function(cspEnabled) {
-    describe('csp: ' + cspEnabled, function() {
+  angular.forEach([true, false], function(cspEnabled) {
+    describe('csp: ' + cspEnabled, () => {
 
-      beforeEach(module(function() {
-        expect(csp().noUnsafeEval === true ||
-               csp().noUnsafeEval === false).toEqual(true);
-        csp().noUnsafeEval = cspEnabled;
+      beforeEach(angular.mock.module(function() {
+        expect(angular.$$csp().noUnsafeEval === true ||
+               angular.$$csp().noUnsafeEval === false).toEqual(true);
+        angular.$$csp().noUnsafeEval = cspEnabled;
       }, provideLog));
 
-      beforeEach(inject(function($rootScope) {
+      beforeEach(angular.mock.inject(function($rootScope) {
         scope = $rootScope;
       }));
 
-      it('should parse expressions', function() {
+      test('should parse expressions', () => {
         expect(scope.$eval('-1')).toEqual(-1);
         expect(scope.$eval('1 + 2.5')).toEqual(3.5);
         expect(scope.$eval('1 + -2.5')).toEqual(-1.5);
@@ -1861,7 +1860,7 @@ describe('parser', function() {
         expect(scope.$eval('1/2*3')).toEqual(1 / 2 * 3);
       });
 
-      it('should parse unary', function() {
+      test('should parse unary', () => {
         expect(scope.$eval('+1')).toEqual(+1);
         expect(scope.$eval('-1')).toEqual(-1);
         expect(scope.$eval('+\'1\'')).toEqual(+'1');
@@ -1878,7 +1877,7 @@ describe('parser', function() {
         expect(scope.$eval('-true')).toEqual(-true);
       });
 
-      it('should parse comparison', function() {
+      test('should parse comparison', () => {
         /* eslint-disable eqeqeq, no-self-compare */
         expect(scope.$eval('false')).toBeFalsy();
         expect(scope.$eval('!true')).toBeFalsy();
@@ -1905,7 +1904,7 @@ describe('parser', function() {
         /* eslint-enable */
       });
 
-      it('should parse logical', function() {
+      test('should parse logical', () => {
         expect(scope.$eval('0&&2')).toEqual(0 && 2);
         expect(scope.$eval('0||2')).toEqual(0 || 2);
         expect(scope.$eval('0||1&&2')).toEqual(0 || 1 && 2);
@@ -1921,7 +1920,7 @@ describe('parser', function() {
         expect(scope.$eval('false||a.b.c')).toEqual(false || undefined);
       });
 
-      it('should parse ternary', function() {
+      test('should parse ternary', () => {
         var returnTrue = scope.returnTrue = function() { return true; };
         var returnFalse = scope.returnFalse = function() { return false; };
         var returnString = scope.returnString = function() { return 'asd'; };
@@ -1982,15 +1981,15 @@ describe('parser', function() {
         expect(scope.$eval('returnTrue() ? returnString() : returnInt()')).toEqual(returnTrue() ? returnString() : returnInt());
         expect(scope.$eval('returnFalse() ? returnString() : returnInt()')).toEqual(returnFalse() ? returnString() : returnInt());
         expect(scope.$eval('returnTrue() ? returnString() : returnInt()')).toEqual(returnTrue() ? returnString() : returnInt());
-        expect(scope.$eval('identity(returnFalse() ? returnString() : returnInt())')).toEqual(identity(returnFalse() ? returnString() : returnInt()));
+        expect(scope.$eval('identity(returnFalse() ? returnString() : returnInt())')).toEqual(angular.identity(returnFalse() ? returnString() : returnInt()));
       });
 
-      it('should parse string', function() {
+      test('should parse string', () => {
         expect(scope.$eval('\'a\' + \'b c\'')).toEqual('ab c');
       });
 
-      it('should parse filters', function() {
-        $filterProvider.register('substring', valueFn(function(input, start, end) {
+      test('should parse filters', () => {
+        $filterProvider.register('substring', ngInternals.valueFn(function(input, start, end) {
           return input.substring(start, end);
         }));
 
@@ -2003,7 +2002,7 @@ describe('parser', function() {
         expect(scope.$eval('\'abcd\'|substring:1:3|uppercase')).toEqual('BC');
       });
 
-      it('should access scope', function() {
+      test('should access scope', () => {
         scope.a =  123;
         scope.b = {c: 456};
         expect(scope.$eval('a', scope)).toEqual(123);
@@ -2011,7 +2010,7 @@ describe('parser', function() {
         expect(scope.$eval('x.y.z', scope)).not.toBeDefined();
       });
 
-      it('should handle white-spaces around dots in paths', function() {
+      test('should handle white-spaces around dots in paths', () => {
         scope.a = {b: 4};
         expect(scope.$eval('a . b', scope)).toEqual(4);
         expect(scope.$eval('a. b', scope)).toEqual(4);
@@ -2019,15 +2018,15 @@ describe('parser', function() {
         expect(scope.$eval('a    . \nb', scope)).toEqual(4);
       });
 
-      it('should handle white-spaces around dots in method invocations', function() {
-        scope.a = {b: function() { return this.c; }, c: 4};
+      test('should handle white-spaces around dots in method invocations', () => {
+        scope.a = {b() { return this.c; }, c: 4};
         expect(scope.$eval('a . b ()', scope)).toEqual(4);
         expect(scope.$eval('a. b ()', scope)).toEqual(4);
         expect(scope.$eval('a .b ()', scope)).toEqual(4);
         expect(scope.$eval('a  \n  . \nb   \n ()', scope)).toEqual(4);
       });
 
-      it('should throw syntax error exception for identifiers ending with a dot', function() {
+      test('should throw syntax error exception for identifiers ending with a dot', () => {
         scope.a = {b: 4};
 
         expect(function() {
@@ -2041,15 +2040,17 @@ describe('parser', function() {
           'Unexpected end of expression: a .');
       });
 
-      it('should resolve deeply nested paths (important for CSP mode)', function() {
+      test('should resolve deeply nested paths (important for CSP mode)', () => {
         scope.a = {b: {c: {d: {e: {f: {g: {h: {i: {j: {k: {l: {m: {n: 'nooo!'}}}}}}}}}}}}};
         expect(scope.$eval('a.b.c.d.e.f.g.h.i.j.k.l.m.n', scope)).toBe('nooo!');
       });
 
-      forEach([2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 42, 99], function(pathLength) {
-        it('should resolve nested paths of length ' + pathLength, function() {
+      angular.forEach([2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 42, 99], function(pathLength) {
+        test('should resolve nested paths of length ' + pathLength, () => {
           // Create a nested object {x2: {x3: {x4: ... {x[n]: 42} ... }}}.
-          var obj = 42, locals = {};
+          var obj = 42;
+
+          var locals = {};
           for (var i = pathLength; i >= 2; i--) {
             var newObj = {};
             newObj['x' + i] = obj;
@@ -2067,7 +2068,7 @@ describe('parser', function() {
         });
       });
 
-      it('should be forgiving', function() {
+      test('should be forgiving', () => {
         scope.a = {b: 23};
         expect(scope.$eval('b')).toBeUndefined();
         expect(scope.$eval('a.x')).toBeUndefined();
@@ -2084,7 +2085,7 @@ describe('parser', function() {
         expect(scope.$eval('a + b')).toBe(0);
       });
 
-      it('should support property names that collide with native object properties', function() {
+      test('should support property names that collide with native object properties', () => {
         // regression
         scope.watch = 1;
         scope.toString = function toString() {
@@ -2095,7 +2096,7 @@ describe('parser', function() {
         expect(scope.$eval('toString()', scope)).toBe('custom toString');
       });
 
-      it('should not break if hasOwnProperty is referenced in an expression', function() {
+      test('should not break if hasOwnProperty is referenced in an expression', () => {
         scope.obj = { value: 1};
         // By evaluating an expression that calls hasOwnProperty, the getterFnCache
         // will store a property called hasOwnProperty.  This is effectively:
@@ -2106,7 +2107,7 @@ describe('parser', function() {
         expect(scope.$eval('obj.value')).toBe(1);
       });
 
-      it('should not break if the expression is "hasOwnProperty"', function() {
+      test('should not break if the expression is "hasOwnProperty"', () => {
         scope.fooExp = 'barVal';
         // By evaluating hasOwnProperty, the $parse cache will store a getter for
         // the scope's own hasOwnProperty function, which will mess up future cache look ups.
@@ -2115,11 +2116,11 @@ describe('parser', function() {
         expect(scope.$eval('fooExp')).toBe('barVal');
       });
 
-      it('should evaluate grouped expressions', function() {
+      test('should evaluate grouped expressions', () => {
         expect(scope.$eval('(1+2)*3')).toEqual((1 + 2) * 3);
       });
 
-      it('should evaluate assignments', function() {
+      test('should evaluate assignments', () => {
         expect(scope.$eval('a=12')).toEqual(12);
         expect(scope.a).toEqual(12);
 
@@ -2131,7 +2132,7 @@ describe('parser', function() {
         expect(scope.b).toEqual(234);
       });
 
-      it('should throw with invalid left-val in assignments', function() {
+      test('should throw with invalid left-val in assignments', () => {
         expect(function() { scope.$eval('1 = 1'); }).toThrowMinErr('$parse', 'lval');
         expect(function() { scope.$eval('{} = 1'); }).toThrowMinErr('$parse', 'lval');
         expect(function() { scope.$eval('[] = 1'); }).toThrowMinErr('$parse', 'lval');
@@ -2145,7 +2146,7 @@ describe('parser', function() {
         expect(function() { scope.$eval('(1?v1:v2) = 1'); }).toThrowMinErr('$parse', 'lval');
       });
 
-      it('should evaluate assignments in ternary operator', function() {
+      test('should evaluate assignments in ternary operator', () => {
         scope.$eval('a = 1 ? 2 : 3');
         expect(scope.a).toBe(2);
 
@@ -2156,19 +2157,19 @@ describe('parser', function() {
         expect(scope.a).toBe(2);
       });
 
-      it('should evaluate function call without arguments', function() {
+      test('should evaluate function call without arguments', () => {
         scope['const'] =  function(a, b) {return 123;};
         expect(scope.$eval('const()')).toEqual(123);
       });
 
-      it('should evaluate function call with arguments', function() {
+      test('should evaluate function call with arguments', () => {
         scope.add =  function(a, b) {
           return a + b;
         };
         expect(scope.$eval('add(1,2)')).toEqual(3);
       });
 
-      it('should allow filter chains as arguments', function() {
+      test('should allow filter chains as arguments', () => {
         scope.concat = function(a, b) {
           return a + b;
         };
@@ -2177,28 +2178,24 @@ describe('parser', function() {
         expect(scope.$eval('concat(\'abcd\'|limitTo:limit:begin,\'abcd\'|limitTo:2:1|uppercase)')).toEqual('bcBC');
       });
 
-      it('should evaluate function call from a return value', function() {
+      test('should evaluate function call from a return value', () => {
         scope.getter = function() { return function() { return 33; }; };
         expect(scope.$eval('getter()()')).toBe(33);
       });
 
-      // Support: IE 9 only
-      // There is no "strict mode" in IE9
-      if (msie !== 9) {
-        it('should set no context to functions returned by other functions', function() {
-          scope.getter = function() { return function() { expect(this).toBeUndefined(); }; };
-          scope.$eval('getter()()');
-        });
-      }
+      test('should set no context to functions returned by other functions', () => {
+        scope.getter = function() { return function() { expect(this).toBeUndefined(); }; };
+        scope.$eval('getter()()');
+      });
 
-      it('should evaluate multiplication and division', function() {
+      test('should evaluate multiplication and division', () => {
         scope.taxRate =  8;
         scope.subTotal =  100;
         expect(scope.$eval('taxRate / 100 * subTotal')).toEqual(8);
         expect(scope.$eval('subTotal * taxRate / 100')).toEqual(8);
       });
 
-      it('should evaluate array', function() {
+      test('should evaluate array', () => {
         expect(scope.$eval('[]').length).toEqual(0);
         expect(scope.$eval('[1, 2]').length).toEqual(2);
         expect(scope.$eval('[1, 2]')[0]).toEqual(1);
@@ -2207,14 +2204,14 @@ describe('parser', function() {
         expect(scope.$eval('[1, 2,]').length).toEqual(2);
       });
 
-      it('should evaluate array access', function() {
+      test('should evaluate array access', () => {
         expect(scope.$eval('[1][0]')).toEqual(1);
         expect(scope.$eval('[[1]][0][0]')).toEqual(1);
         expect(scope.$eval('[].length')).toEqual(0);
         expect(scope.$eval('[1, 2].length')).toEqual(2);
       });
 
-      it('should evaluate object', function() {
+      test('should evaluate object', () => {
         expect(scope.$eval('{}')).toEqual({});
         expect(scope.$eval('{a:\'b\'}')).toEqual({a:'b'});
         expect(scope.$eval('{\'a\':\'b\'}')).toEqual({a:'b'});
@@ -2239,7 +2236,7 @@ describe('parser', function() {
             .toEqual({x: 1, '1': 1, '2': 2, '3': 3, '4': 4, '5': 5});
       });
 
-      it('should throw syntax error exception for non constant/identifier JSON keys', function() {
+      test('should throw syntax error exception for non constant/identifier JSON keys', () => {
         expect(function() { scope.$eval('{[:0}'); }).toThrowMinErr('$parse', 'syntax',
           'Syntax Error: Token \':\' not a primary expression at column 3 of the expression [{[:0}] starting at [:0}]');
         expect(function() { scope.$eval('{{:0}'); }).toThrowMinErr('$parse', 'syntax',
@@ -2250,21 +2247,21 @@ describe('parser', function() {
           'Syntax Error: Token \')\' invalid key at column 2 of the expression [{):0}] starting at [):0}]');
       });
 
-      it('should evaluate object access', function() {
+      test('should evaluate object access', () => {
         expect(scope.$eval('{false:\'WC\', true:\'CC\'}[false]')).toEqual('WC');
       });
 
-      it('should evaluate JSON', function() {
+      test('should evaluate JSON', () => {
         expect(scope.$eval('[{}]')).toEqual([{}]);
         expect(scope.$eval('[{a:[]}, {b:1}]')).toEqual([{a:[]}, {b:1}]);
       });
 
-      it('should evaluate multiple statements', function() {
+      test('should evaluate multiple statements', () => {
         expect(scope.$eval('a=1;b=3;a+b')).toEqual(4);
         expect(scope.$eval(';;1;;')).toEqual(1);
       });
 
-      it('should evaluate object methods in correct context (this)', function() {
+      test('should evaluate object methods in correct context (this)', () => {
         function C() {
           this.a = 123;
         }
@@ -2277,7 +2274,7 @@ describe('parser', function() {
         expect(scope.$eval('obj[\'getA\']()')).toEqual(123);
       });
 
-      it('should evaluate methods in correct context (this) in argument', function() {
+      test('should evaluate methods in correct context (this) in argument', () => {
         function C() {
           this.a = 123;
         }
@@ -2293,24 +2290,24 @@ describe('parser', function() {
         expect(scope.$eval('obj[\'sum\'](obj.getA())')).toEqual(246);
       });
 
-      it('should evaluate objects on scope context', function() {
+      test('should evaluate objects on scope context', () => {
         scope.a =  'abc';
         expect(scope.$eval('{a:a}').a).toEqual('abc');
       });
 
-      it('should evaluate field access on function call result', function() {
+      test('should evaluate field access on function call result', () => {
         scope.a =  function() {
           return {name:'misko'};
         };
         expect(scope.$eval('a().name')).toEqual('misko');
       });
 
-      it('should evaluate field access after array access', function() {
+      test('should evaluate field access after array access', () => {
         scope.items =  [{}, {name:'misko'}];
         expect(scope.$eval('items[1].name')).toEqual('misko');
       });
 
-      it('should evaluate array assignment', function() {
+      test('should evaluate array assignment', () => {
         scope.items =  [];
 
         expect(scope.$eval('items[1] = "abc"')).toEqual('abc');
@@ -2319,63 +2316,63 @@ describe('parser', function() {
         expect(scope.$eval('books[1]')).toEqual('moby');
       });
 
-      it('should evaluate grouped filters', function() {
+      test('should evaluate grouped filters', () => {
         scope.name = 'MISKO';
         expect(scope.$eval('n = (name|lowercase)')).toEqual('misko');
         expect(scope.$eval('n')).toEqual('misko');
       });
 
-      it('should evaluate remainder', function() {
+      test('should evaluate remainder', () => {
         expect(scope.$eval('1%2')).toEqual(1);
       });
 
-      it('should evaluate sum with undefined', function() {
+      test('should evaluate sum with undefined', () => {
         expect(scope.$eval('1+undefined')).toEqual(1);
         expect(scope.$eval('undefined+1')).toEqual(1);
       });
 
-      it('should throw exception on non-closed bracket', function() {
+      test('should throw exception on non-closed bracket', () => {
         expect(function() {
           scope.$eval('[].count(');
         }).toThrowMinErr('$parse', 'ueoe', 'Unexpected end of expression: [].count(');
       });
 
-      it('should evaluate double negation', function() {
+      test('should evaluate double negation', () => {
         expect(scope.$eval('true')).toBeTruthy();
         expect(scope.$eval('!true')).toBeFalsy();
         expect(scope.$eval('!!true')).toBeTruthy();
         expect(scope.$eval('{true:"a", false:"b"}[!!true]')).toEqual('a');
       });
 
-      it('should evaluate negation', function() {
+      test('should evaluate negation', () => {
         expect(scope.$eval('!false || true')).toEqual(!false || true);
         // eslint-disable-next-line eqeqeq
         expect(scope.$eval('!11 == 10')).toEqual(!11 == 10);
         expect(scope.$eval('12/6/2')).toEqual(12 / 6 / 2);
       });
 
-      it('should evaluate exclamation mark', function() {
+      test('should evaluate exclamation mark', () => {
         expect(scope.$eval('suffix = "!"')).toEqual('!');
       });
 
-      it('should evaluate minus', function() {
+      test('should evaluate minus', () => {
         expect(scope.$eval('{a:\'-\'}')).toEqual({a: '-'});
       });
 
-      it('should evaluate undefined', function() {
+      test('should evaluate undefined', () => {
         expect(scope.$eval('undefined')).not.toBeDefined();
         expect(scope.$eval('a=undefined')).not.toBeDefined();
         expect(scope.a).not.toBeDefined();
       });
 
-      it('should allow assignment after array dereference', function() {
+      test('should allow assignment after array dereference', () => {
         scope.obj = [{}];
         scope.$eval('obj[0].name=1');
         expect(scope.obj.name).toBeUndefined();
         expect(scope.obj[0].name).toEqual(1);
       });
 
-      it('should short-circuit AND operator', function() {
+      test('should short-circuit AND operator', () => {
         scope.run = function() {
           throw new Error('IT SHOULD NOT HAVE RUN');
         };
@@ -2383,7 +2380,7 @@ describe('parser', function() {
         expect(scope.$eval('false && true && run()')).toBe(false);
       });
 
-      it('should short-circuit OR operator', function() {
+      test('should short-circuit OR operator', () => {
         scope.run = function() {
           throw new Error('IT SHOULD NOT HAVE RUN');
         };
@@ -2391,12 +2388,12 @@ describe('parser', function() {
         expect(scope.$eval('true || false || run()')).toBe(true);
       });
 
-      it('should throw TypeError on using a \'broken\' object as a key to access a property', function() {
+      test('should throw TypeError on using a \'broken\' object as a key to access a property', () => {
         scope.object = {};
-        forEach([
+        angular.forEach([
           { toString: 2 },
           { toString: null },
-          { toString: function() { return {}; } }
+          { toString() { return {}; } }
         ], function(brokenObject) {
           scope.brokenObject = brokenObject;
           expect(function() {
@@ -2405,7 +2402,7 @@ describe('parser', function() {
         });
       });
 
-      it('should support method calls on primitive types', function() {
+      test('should support method calls on primitive types', () => {
         scope.empty = '';
         scope.zero = 0;
         scope.bool = false;
@@ -2415,7 +2412,7 @@ describe('parser', function() {
         expect(scope.$eval('bool.toString()')).toBe('false');
       });
 
-      it('should evaluate expressions with line terminators', function() {
+      test('should evaluate expressions with line terminators', () => {
         scope.a = 'a';
         scope.b = {c: 'bc'};
         expect(scope.$eval('a + \n b.c + \r "\td" + \t \r\n\r "\r\n\n"')).toEqual('abc\td\r\n\n');
@@ -2423,44 +2420,44 @@ describe('parser', function() {
 
 
       // https://github.com/angular/angular.js/issues/10968
-      it('should evaluate arrays literals initializers left-to-right', inject(function($parse) {
-        var s = {c:function() {return {b: 1}; }};
+      test('should evaluate arrays literals initializers left-to-right', angular.mock.inject(function($parse) {
+        var s = {c() {return {b: 1}; }};
         expect($parse('e=1;[a=c(),d=a.b+1]')(s)).toEqual([{b: 1}, 2]);
       }));
 
-      it('should evaluate function arguments left-to-right', inject(function($parse) {
-        var s = {c:function() {return {b: 1}; }, i: function(x, y) { return [x, y];}};
+      test('should evaluate function arguments left-to-right', angular.mock.inject(function($parse) {
+        var s = {c() {return {b: 1}; }, i(x, y) { return [x, y];}};
         expect($parse('e=1;i(a=c(),d=a.b+1)')(s)).toEqual([{b: 1}, 2]);
       }));
 
-      it('should evaluate object properties expressions left-to-right', inject(function($parse) {
-        var s = {c:function() {return {b: 1}; }};
+      test('should evaluate object properties expressions left-to-right', angular.mock.inject(function($parse) {
+        var s = {c() {return {b: 1}; }};
         expect($parse('e=1;{x: a=c(), y: d=a.b+1}')(s)).toEqual({x: {b: 1}, y: 2});
       }));
 
 
-      it('should call the function from the received instance and not from a new one', function() {
+      test('should call the function from the received instance and not from a new one', () => {
         var n = 0;
         scope.fn = function() {
           var c = n++;
-          return { c: c, anotherFn: function() { return this.c === c; } };
+          return { c: c, anotherFn() { return this.c === c; } };
         };
         expect(scope.$eval('fn().anotherFn()')).toBe(true);
       });
 
 
-      it('should call the function once when it is part of the context', function() {
+      test('should call the function once when it is part of the context', () => {
         var count = 0;
         scope.fn = function() {
           count++;
-          return { anotherFn: function() { return 'lucas'; } };
+          return { anotherFn() { return 'lucas'; } };
         };
         expect(scope.$eval('fn().anotherFn()')).toBe('lucas');
         expect(count).toBe(1);
       });
 
 
-      it('should call the function once when it is not part of the context', function() {
+      test('should call the function once when it is not part of the context', () => {
         var count = 0;
         scope.fn = function() {
           count++;
@@ -2471,7 +2468,7 @@ describe('parser', function() {
       });
 
 
-      it('should call the function once when it is part of the context on assignments', function() {
+      test('should call the function once when it is part of the context on assignments', () => {
         var count = 0;
         var element = {};
         scope.fn = function() {
@@ -2484,7 +2481,7 @@ describe('parser', function() {
       });
 
 
-      it('should call the function once when it is part of the context on array lookups', function() {
+      test('should call the function once when it is part of the context on array lookups', () => {
         var count = 0;
         var element = [];
         scope.fn = function() {
@@ -2497,9 +2494,9 @@ describe('parser', function() {
       });
 
 
-      it('should call the function once when it is part of the context on array lookup function', function() {
+      test('should call the function once when it is part of the context on array lookup function', () => {
         var count = 0;
-        var element = [{anotherFn: function() { return 'lucas';} }];
+        var element = [{anotherFn() { return 'lucas';} }];
         scope.fn = function() {
           count++;
           return element;
@@ -2509,9 +2506,9 @@ describe('parser', function() {
       });
 
 
-      it('should call the function once when it is part of the context on property lookup function', function() {
+      test('should call the function once when it is part of the context on property lookup function', () => {
         var count = 0;
-        var element = {name: {anotherFn: function() { return 'lucas';} } };
+        var element = {name: {anotherFn() { return 'lucas';} } };
         scope.fn = function() {
           count++;
           return element;
@@ -2521,7 +2518,7 @@ describe('parser', function() {
       });
 
 
-      it('should call the function once when it is part of a sub-expression', function() {
+      test('should call the function once when it is part of a sub-expression', () => {
         var count = 0;
         scope.element = [{}];
         scope.fn = function() {
@@ -2534,8 +2531,8 @@ describe('parser', function() {
       });
 
 
-      describe('assignable', function() {
-        it('should expose assignment function', inject(function($parse) {
+      describe('assignable', () => {
+        test('should expose assignment function', angular.mock.inject(function($parse) {
           var fn = $parse('a');
           expect(fn.assign).toBeTruthy();
           var scope = {};
@@ -2543,7 +2540,7 @@ describe('parser', function() {
           expect(scope).toEqual({a:123});
         }));
 
-        it('should return the assigned value', inject(function($parse) {
+        test('should return the assigned value', angular.mock.inject(function($parse) {
           var fn = $parse('a');
           var scope = {};
           expect(fn.assign(scope, 123)).toBe(123);
@@ -2551,7 +2548,7 @@ describe('parser', function() {
           expect(fn.assign(scope, someObject)).toBe(someObject);
         }));
 
-        it('should expose working assignment function for expressions ending with brackets', inject(function($parse) {
+        test('should expose working assignment function for expressions ending with brackets', angular.mock.inject(function($parse) {
           var fn = $parse('a.b["c"]');
           expect(fn.assign).toBeTruthy();
           var scope = {};
@@ -2559,7 +2556,7 @@ describe('parser', function() {
           expect(scope.a.b.c).toEqual(123);
         }));
 
-        it('should expose working assignment function for expressions with brackets in the middle', inject(function($parse) {
+        test('should expose working assignment function for expressions with brackets in the middle', angular.mock.inject(function($parse) {
           var fn = $parse('a["b"].c');
           expect(fn.assign).toBeTruthy();
           var scope = {};
@@ -2567,21 +2564,21 @@ describe('parser', function() {
           expect(scope.a.b.c).toEqual(123);
         }));
 
-        it('should create objects when finding a null', inject(function($parse) {
+        test('should create objects when finding a null', angular.mock.inject(function($parse) {
           var fn = $parse('foo.bar');
           var scope = {foo: null};
           fn.assign(scope, 123);
           expect(scope.foo.bar).toEqual(123);
         }));
 
-        it('should create objects when finding a null', inject(function($parse) {
+        test('should create objects when finding a null', angular.mock.inject(function($parse) {
           var fn = $parse('foo["bar"]');
           var scope = {foo: null};
           fn.assign(scope, 123);
           expect(scope.foo.bar).toEqual(123);
         }));
 
-        it('should create objects when finding a null', inject(function($parse) {
+        test('should create objects when finding a null', angular.mock.inject(function($parse) {
           var fn = $parse('foo.bar.baz');
           var scope = {foo: null};
           fn.assign(scope, 123);
@@ -2589,13 +2586,13 @@ describe('parser', function() {
         }));
       });
 
-      describe('one-time binding', function() {
-        it('should always use the cache', inject(function($parse) {
+      describe('one-time binding', () => {
+        test('should always use the cache', angular.mock.inject(function($parse) {
           expect($parse('foo')).toBe($parse('foo'));
           expect($parse('::foo')).toBe($parse('::foo'));
         }));
 
-        it('should not affect calling the parseFn directly', inject(function($parse, $rootScope) {
+        test('should not affect calling the parseFn directly', angular.mock.inject(function($parse, $rootScope) {
           var fn = $parse('::foo');
           $rootScope.$watch(fn);
 
@@ -2618,7 +2615,7 @@ describe('parser', function() {
           expect(fn($rootScope)).toEqual('shell');
         }));
 
-        it('should stay stable once the value defined', inject(function($parse, $rootScope, log) {
+        test('should stay stable once the value defined', angular.mock.inject(function($parse, $rootScope, log) {
           var fn = $parse('::foo');
           $rootScope.$watch(fn, function(value, old) { if (value !== old) log(value); });
 
@@ -2637,7 +2634,7 @@ describe('parser', function() {
           expect(log).toEqual('');
         }));
 
-        it('should have a stable value if at the end of a $digest it has a defined value', inject(function($parse, $rootScope, log) {
+        test('should have a stable value if at the end of a $digest it has a defined value', angular.mock.inject(function($parse, $rootScope, log) {
           var fn = $parse('::foo');
           $rootScope.$watch(fn, function(value, old) { if (value !== old) log(value); });
           $rootScope.$watch('foo', function() { if ($rootScope.foo === 'bar') {$rootScope.foo = undefined; } });
@@ -2658,7 +2655,7 @@ describe('parser', function() {
           expect(log).toEqual('; man');
         }));
 
-        it('should not throw if the stable value is `null`', inject(function($parse, $rootScope) {
+        test('should not throw if the stable value is `null`', angular.mock.inject(function($parse, $rootScope) {
           var fn = $parse('::foo');
           $rootScope.$watch(fn);
           $rootScope.foo = null;
@@ -2668,20 +2665,20 @@ describe('parser', function() {
           expect(fn()).toEqual(undefined);
         }));
 
-        it('should invoke a stateless filter once when the parsed expression has an interceptor',
-           inject(function($parse, $rootScope) {
-          var countFilter = jasmine.createSpy();
-          var interceptor = jasmine.createSpy();
-          countFilter.and.returnValue(1);
-          $filterProvider.register('count', valueFn(countFilter));
+        test('should invoke a stateless filter once when the parsed expression has an interceptor',
+           angular.mock.inject(function($parse, $rootScope) {
+          var countFilter = jest.fn();
+          var interceptor = jest.fn();
+          countFilter.mockReturnValue(1);
+          $filterProvider.register('count', ngInternals.valueFn(countFilter));
           $rootScope.foo = function() { return 1; };
           $rootScope.$watch($parse(':: foo() | count', interceptor));
           $rootScope.$digest();
-          expect(countFilter.calls.count()).toBe(1);
+          expect(countFilter.mock.calls.length).toBe(1);
         }));
 
-        describe('literal expressions', function() {
-          it('should mark an empty expressions as literal', inject(function($parse) {
+        describe('literal expressions', () => {
+          test('should mark an empty expressions as literal', angular.mock.inject(function($parse) {
             expect($parse('').literal).toBe(true);
             expect($parse('   ').literal).toBe(true);
             expect($parse('::').literal).toBe(true);
@@ -2690,7 +2687,7 @@ describe('parser', function() {
 
           [true, false].forEach(function(isDeep) {
             describe(isDeep ? 'deepWatch' : 'watch', function() {
-              it('should only become stable when all the properties of an object have defined values', inject(function($parse, $rootScope, log) {
+              test('should only become stable when all the properties of an object have defined values', angular.mock.inject(function($parse, $rootScope, log) {
                 var fn = $parse('::{foo: foo, bar: bar}');
                 $rootScope.$watch(fn, function(value) { log(value); }, isDeep);
 
@@ -2718,7 +2715,7 @@ describe('parser', function() {
                 expect(log.empty()).toEqual([]);
               }));
 
-              it('should only become stable when all the elements of an array have defined values', inject(function($parse, $rootScope, log) {
+              test('should only become stable when all the elements of an array have defined values', angular.mock.inject(function($parse, $rootScope, log) {
                 var fn = $parse('::[foo,bar]');
                 $rootScope.$watch(fn, function(value) { log(value); }, isDeep);
 
@@ -2746,7 +2743,7 @@ describe('parser', function() {
                 expect(log.empty()).toEqual([]);
               }));
 
-              it('should only become stable when all the elements of an array have defined values at the end of a $digest', inject(function($parse, $rootScope, log) {
+              test('should only become stable when all the elements of an array have defined values at the end of a $digest', angular.mock.inject(function($parse, $rootScope, log) {
                 var fn = $parse('::[foo]');
                 $rootScope.$watch(fn, function(value) { log(value); }, isDeep);
                 $rootScope.$watch('foo', function() { if ($rootScope.foo === 'bar') {$rootScope.foo = undefined; } });
@@ -2772,9 +2769,9 @@ describe('parser', function() {
       });
 
 
-      describe('watched $parse expressions', function() {
+      describe('watched $parse expressions', () => {
 
-        it('should respect short-circuiting AND if it could have side effects', function() {
+        test('should respect short-circuiting AND if it could have side effects', () => {
           var bCalled = 0;
           scope.b = function() { bCalled++; };
 
@@ -2790,7 +2787,7 @@ describe('parser', function() {
           expect(bCalled).toBe(2);
         });
 
-        it('should respect short-circuiting OR if it could have side effects', function() {
+        test('should respect short-circuiting OR if it could have side effects', () => {
           var bCalled = false;
           scope.b = function() { bCalled = true; };
 
@@ -2804,7 +2801,7 @@ describe('parser', function() {
           expect(bCalled).toBe(false);
         });
 
-        it('should respect the branching ternary operator if it could have side effects', function() {
+        test('should respect the branching ternary operator if it could have side effects', () => {
           var bCalled = false;
           scope.b = function() { bCalled = true; };
 
@@ -2817,11 +2814,11 @@ describe('parser', function() {
           expect(bCalled).toBe(true);
         });
 
-        describe('filters', function() {
+        describe('filters', () => {
 
-          it('should not be invoked unless the input/arguments change', function() {
+          test('should not be invoked unless the input/arguments change', () => {
             var filterCalled = false;
-            $filterProvider.register('foo', valueFn(function(input) {
+            $filterProvider.register('foo', ngInternals.valueFn(function(input) {
               filterCalled = true;
               return input;
             }));
@@ -2840,9 +2837,9 @@ describe('parser', function() {
             expect(filterCalled).toBe(true);
           });
 
-          it('should not be invoked unless the input/arguments change within literals', function() {
+          test('should not be invoked unless the input/arguments change within literals', () => {
             var filterCalls = [];
-            $filterProvider.register('foo', valueFn(function(input) {
+            $filterProvider.register('foo', ngInternals.valueFn(function(input) {
               filterCalls.push(input);
               return input;
             }));
@@ -2860,9 +2857,9 @@ describe('parser', function() {
             expect(filterCalls).toEqual([0, 1]);
           });
 
-          it('should not be invoked unless the input/arguments change within literals (one-time)', function() {
+          test('should not be invoked unless the input/arguments change within literals (one-time)', () => {
             var filterCalls = [];
-            $filterProvider.register('foo', valueFn(function(input) {
+            $filterProvider.register('foo', ngInternals.valueFn(function(input) {
               filterCalls.push(input);
               return input;
             }));
@@ -2880,9 +2877,9 @@ describe('parser', function() {
             expect(filterCalls).toEqual([0, 1]);
           });
 
-          it('should always be invoked if they are marked as having $stateful', function() {
+          test('should always be invoked if they are marked as having $stateful', () => {
             var filterCalled = false;
-            $filterProvider.register('foo', valueFn(extend(function(input) {
+            $filterProvider.register('foo', ngInternals.valueFn(angular.extend(function(input) {
               filterCalled = true;
               return input;
             }, {$stateful: true})));
@@ -2897,9 +2894,9 @@ describe('parser', function() {
             expect(filterCalled).toBe(true);
           });
 
-          it('should be treated as constant when input are constant', inject(function($parse) {
+          test('should be treated as constant when input are constant', angular.mock.inject(function($parse) {
             var filterCalls = 0;
-            $filterProvider.register('foo', valueFn(function(input) {
+            $filterProvider.register('foo', ngInternals.valueFn(function(input) {
               filterCalls++;
               return input;
             }));
@@ -2923,7 +2920,7 @@ describe('parser', function() {
             expect(watcherCalls).toBe(1);
           }));
 
-          it('should ignore changes within nested objects', function() {
+          test('should ignore changes within nested objects', () => {
             var watchCalls = [];
             scope.$watch('[a]', function(a) { watchCalls.push(a[0]); });
             scope.a = 0;
@@ -2946,7 +2943,7 @@ describe('parser', function() {
             expect(watchCalls).toEqual([0, 1, {foo: 42}]);
           });
 
-          it('should ignore changes within nested objects (one-time)', function() {
+          test('should ignore changes within nested objects (one-time)', () => {
             var watchCalls = [];
             scope.$watch('::[a, undefined]', function(a) { watchCalls.push(a[0]); });
             scope.a = 0;
@@ -2969,13 +2966,13 @@ describe('parser', function() {
             expect(watchCalls).toEqual([0, 1, {foo: 42}]);
           });
 
-          describe('with non-primitive input', function() {
+          describe('with non-primitive input', () => {
 
-            describe('that does NOT support valueOf()', function() {
+            describe('that does NOT support valueOf()', () => {
 
-              it('should always be reevaluated', inject(function($parse) {
+              test('should always be reevaluated', angular.mock.inject(function($parse) {
                 var filterCalls = 0;
-                $filterProvider.register('foo', valueFn(function(input) {
+                $filterProvider.register('foo', ngInternals.valueFn(function(input) {
                   filterCalls++;
                   return input;
                 }));
@@ -2998,8 +2995,8 @@ describe('parser', function() {
                 expect(watcherCalls).toBe(1);
               }));
 
-              it('should always be reevaluated in literals', inject(function($parse) {
-                $filterProvider.register('foo', valueFn(function(input) {
+              test('should always be reevaluated in literals', angular.mock.inject(function($parse) {
+                $filterProvider.register('foo', ngInternals.valueFn(function(input) {
                   return input.b > 0;
                 }));
 
@@ -3009,7 +3006,7 @@ describe('parser', function() {
                 expect(function() { scope.$apply('a = {b: 1}'); }).toThrowMinErr('$rootScope', 'infdig');
               }));
 
-              it('should always be reevaluated when passed literals', inject(function($parse) {
+              test('should always be reevaluated when passed literals', angular.mock.inject(function($parse) {
                 scope.$watch('[a] | filter', function() {});
 
                 scope.$apply('a = 1');
@@ -3019,12 +3016,12 @@ describe('parser', function() {
               }));
             });
 
-            describe('that does support valueOf()', function() {
+            describe('that does support valueOf()', () => {
 
-              it('should not be reevaluated',
-                  inject(function($parse) {
+              test('should not be reevaluated',
+                  angular.mock.inject(function($parse) {
                 var filterCalls = 0;
-                $filterProvider.register('foo', valueFn(function(input) {
+                $filterProvider.register('foo', ngInternals.valueFn(function(input) {
                   filterCalls++;
                   expect(input instanceof Date).toBe(true);
                   return input;
@@ -3048,9 +3045,9 @@ describe('parser', function() {
                 expect(watcherCalls).toBe(1);
               }));
 
-              it('should not be reevaluated in literals', inject(function($parse) {
+              test('should not be reevaluated in literals', angular.mock.inject(function($parse) {
                 var filterCalls = 0;
-                $filterProvider.register('foo', valueFn(function(input) {
+                $filterProvider.register('foo', ngInternals.valueFn(function(input) {
                   filterCalls++;
                   return input;
                 }));
@@ -3071,9 +3068,9 @@ describe('parser', function() {
                 expect(watcherCalls).toBe(1);
               }));
 
-              it('should be reevaluated when valueOf() changes', inject(function($parse) {
+              test('should be reevaluated when valueOf() changes', angular.mock.inject(function($parse) {
                 var filterCalls = 0;
-                $filterProvider.register('foo', valueFn(function(input) {
+                $filterProvider.register('foo', ngInternals.valueFn(function(input) {
                   filterCalls++;
                   expect(input instanceof Date).toBe(true);
                   return input;
@@ -3099,9 +3096,9 @@ describe('parser', function() {
                 expect(watcherCalls).toBe(1);
               }));
 
-              it('should be reevaluated in literals when valueOf() changes', inject(function($parse) {
+              test('should be reevaluated in literals when valueOf() changes', angular.mock.inject(function($parse) {
                 var filterCalls = 0;
-                $filterProvider.register('foo', valueFn(function(input) {
+                $filterProvider.register('foo', ngInternals.valueFn(function(input) {
                   filterCalls++;
                   return input;
                 }));
@@ -3124,9 +3121,9 @@ describe('parser', function() {
                 expect(watcherCalls).toBe(2);
               }));
 
-              it('should not be reevaluated when the instance changes but valueOf() does not', inject(function($parse) {
+              test('should not be reevaluated when the instance changes but valueOf() does not', angular.mock.inject(function($parse) {
                 var filterCalls = 0;
-                $filterProvider.register('foo', valueFn(function(input) {
+                $filterProvider.register('foo', ngInternals.valueFn(function(input) {
                   filterCalls++;
                   return input;
                 }));
@@ -3149,9 +3146,9 @@ describe('parser', function() {
               }));
             });
 
-            it('should not be reevaluated when input is simplified via unary operators', inject(function($parse) {
+            test('should not be reevaluated when input is simplified via unary operators', angular.mock.inject(function($parse) {
               var filterCalls = 0;
-              $filterProvider.register('foo', valueFn(function(input) {
+              $filterProvider.register('foo', ngInternals.valueFn(function(input) {
                 filterCalls++;
                 return input;
               }));
@@ -3172,9 +3169,9 @@ describe('parser', function() {
               expect(watcherCalls).toBe(1);
             }));
 
-            it('should not be reevaluated when input is simplified via non-plus/concat binary operators', inject(function($parse) {
+            test('should not be reevaluated when input is simplified via non-plus/concat binary operators', angular.mock.inject(function($parse) {
               var filterCalls = 0;
-              $filterProvider.register('foo', valueFn(function(input) {
+              $filterProvider.register('foo', ngInternals.valueFn(function(input) {
                 filterCalls++;
                 return input;
               }));
@@ -3195,9 +3192,9 @@ describe('parser', function() {
               expect(watcherCalls).toBe(1);
             }));
 
-            it('should be reevaluated when input is simplified via plus/concat', inject(function($parse) {
+            test('should be reevaluated when input is simplified via plus/concat', angular.mock.inject(function($parse) {
               var filterCalls = 0;
-              $filterProvider.register('foo', valueFn(function(input) {
+              $filterProvider.register('foo', ngInternals.valueFn(function(input) {
                 filterCalls++;
                 return input;
               }));
@@ -3218,12 +3215,12 @@ describe('parser', function() {
               expect(watcherCalls).toBe(1);
             }));
 
-            it('should reevaluate computed member expressions', inject(function($parse) {
+            test('should reevaluate computed member expressions', angular.mock.inject(function($parse) {
               var toStringCalls = 0;
 
               scope.obj = {};
               scope.key = {
-                toString: function() {
+                toString() {
                   toStringCalls++;
                   return 'foo';
                 }
@@ -3243,9 +3240,9 @@ describe('parser', function() {
               expect(watcherCalls).toBe(1);
             }));
 
-            it('should be reevaluated with input created with null prototype', inject(function($parse) {
+            test('should be reevaluated with input created with null prototype', angular.mock.inject(function($parse) {
               var filterCalls = 0;
-              $filterProvider.register('foo', valueFn(function(input) {
+              $filterProvider.register('foo', ngInternals.valueFn(function(input) {
                 filterCalls++;
                 return input;
               }));
@@ -3269,11 +3266,11 @@ describe('parser', function() {
             }));
           });
 
-          describe('with primitive input', function() {
+          describe('with primitive input', () => {
 
-            it('should not be reevaluated when passed literals', inject(function($parse) {
+            test('should not be reevaluated when passed literals', angular.mock.inject(function($parse) {
               var filterCalls = 0;
-              $filterProvider.register('foo', valueFn(function(input) {
+              $filterProvider.register('foo', ngInternals.valueFn(function(input) {
                 filterCalls++;
                 return input;
               }));
@@ -3292,9 +3289,9 @@ describe('parser', function() {
               expect(watcherCalls).toBe(2);
             }));
 
-            it('should not be reevaluated in literals', inject(function($parse) {
+            test('should not be reevaluated in literals', angular.mock.inject(function($parse) {
               var filterCalls = 0;
-              $filterProvider.register('foo', valueFn(function(input) {
+              $filterProvider.register('foo', ngInternals.valueFn(function(input) {
                 filterCalls++;
                 return input;
               }));
@@ -3317,11 +3314,11 @@ describe('parser', function() {
           });
         });
 
-        describe('interceptorFns', function() {
-          it('should only be passed the intercepted value', inject(function($parse) {
+        describe('interceptorFns', () => {
+          test('should only be passed the intercepted value', angular.mock.inject(function($parse) {
             var args;
             function interceptor(v) {
-              args = sliceArgs(arguments);
+              args = ngInternals.sliceArgs(arguments);
               return v;
             }
 
@@ -3332,10 +3329,10 @@ describe('parser', function() {
             expect(args).toEqual([1]);
           }));
 
-          it('should only be passed the intercepted value when wrapping one-time', inject(function($parse) {
+          test('should only be passed the intercepted value when wrapping one-time', angular.mock.inject(function($parse) {
             var args;
             function interceptor(v) {
-              args = sliceArgs(arguments);
+              args = ngInternals.sliceArgs(arguments);
               return v;
             }
 
@@ -3346,16 +3343,16 @@ describe('parser', function() {
             expect(args).toEqual([1]);
           }));
 
-          it('should only be passed the intercepted value when double-intercepted',
-              inject(function($parse) {
+          test('should only be passed the intercepted value when double-intercepted',
+              angular.mock.inject(function($parse) {
             var args1;
             function int1(v) {
-              args1 = sliceArgs(arguments);
+              args1 = ngInternals.sliceArgs(arguments);
               return v + 2;
             }
             var args2;
             function int2(v) {
-              args2 = sliceArgs(arguments);
+              args2 = ngInternals.sliceArgs(arguments);
               return v + 4;
             }
 
@@ -3367,10 +3364,10 @@ describe('parser', function() {
             expect(args2).toEqual([3]);
           }));
 
-          it('should support locals', inject(function($parse) {
+          test('should support locals', angular.mock.inject(function($parse) {
             var args;
             function interceptor(v) {
-              args = sliceArgs(arguments);
+              args = ngInternals.sliceArgs(arguments);
               return v + 4;
             }
 
@@ -3381,15 +3378,15 @@ describe('parser', function() {
             expect(args).toEqual([3]);
           }));
 
-          it('should support locals when double-intercepted', inject(function($parse) {
+          test('should support locals when double-intercepted', angular.mock.inject(function($parse) {
             var args1;
             function int1(v) {
-              args1 = sliceArgs(arguments);
+              args1 = ngInternals.sliceArgs(arguments);
               return v + 4;
             }
             var args2;
             function int2(v) {
-              args2 = sliceArgs(arguments);
+              args2 = ngInternals.sliceArgs(arguments);
               return v + 8;
             }
 
@@ -3401,8 +3398,8 @@ describe('parser', function() {
             expect(args2).toEqual([7]);
           }));
 
-          it('should always be invoked if they are flagged as having $stateful',
-              inject(function($parse) {
+          test('should always be invoked if they are flagged as having $stateful',
+              angular.mock.inject(function($parse) {
             var called = false;
             function interceptor() {
               called = true;
@@ -3424,8 +3421,8 @@ describe('parser', function() {
             expect(called).toBe(true);
           }));
 
-          it('should always be invoked if flagged as $stateful when wrapping one-time',
-              inject(function($parse) {
+          test('should always be invoked if flagged as $stateful when wrapping one-time',
+              angular.mock.inject(function($parse) {
 
             var interceptorCalls = 0;
             function interceptor() {
@@ -3445,10 +3442,10 @@ describe('parser', function() {
             expect(interceptorCalls).not.toBe(0);
           }));
 
-          it('should always be invoked if flagged as $stateful when wrapping one-time with inputs',
-              inject(function($parse) {
+          test('should always be invoked if flagged as $stateful when wrapping one-time with inputs',
+              angular.mock.inject(function($parse) {
 
-            $filterProvider.register('identity', valueFn(identity));
+            $filterProvider.register('identity', ngInternals.valueFn(angular.identity));
 
             var interceptorCalls = 0;
             function interceptor() {
@@ -3468,8 +3465,8 @@ describe('parser', function() {
             expect(interceptorCalls).not.toBe(0);
           }));
 
-          it('should always be invoked if flagged as $stateful when wrapping one-time literal',
-              inject(function($parse) {
+          test('should always be invoked if flagged as $stateful when wrapping one-time literal',
+              angular.mock.inject(function($parse) {
 
             var interceptorCalls = 0;
             function interceptor() {
@@ -3489,7 +3486,7 @@ describe('parser', function() {
             expect(interceptorCalls).not.toBe(0);
           }));
 
-          it('should not be invoked unless the input changes', inject(function($parse) {
+          test('should not be invoked unless the input changes', angular.mock.inject(function($parse) {
             var called = false;
             function interceptor(v) {
               called = true;
@@ -3510,7 +3507,7 @@ describe('parser', function() {
             expect(called).toBe(true);
           }));
 
-          it('should always be invoked if inputs are non-primitive', inject(function($parse) {
+          test('should always be invoked if inputs are non-primitive', angular.mock.inject(function($parse) {
             var called = false;
             function interceptor(v) {
               called = true;
@@ -3529,7 +3526,7 @@ describe('parser', function() {
             expect(called).toBe(true);
           }));
 
-          it('should not be invoked unless the input.valueOf() changes even if the instance changes', inject(function($parse) {
+          test('should not be invoked unless the input.valueOf() changes even if the instance changes', angular.mock.inject(function($parse) {
             var called = false;
             function interceptor(v) {
               called = true;
@@ -3546,7 +3543,7 @@ describe('parser', function() {
             expect(called).toBe(false);
           }));
 
-          it('should be invoked if input.valueOf() changes even if the instance does not', inject(function($parse) {
+          test('should be invoked if input.valueOf() changes even if the instance does not', angular.mock.inject(function($parse) {
             var called = false;
             function interceptor(v) {
               called = true;
@@ -3563,7 +3560,7 @@ describe('parser', function() {
             expect(called).toBe(true);
           }));
 
-          it('should be invoked when the expression is `undefined`', inject(function($parse) {
+          test('should be invoked when the expression is `undefined`', angular.mock.inject(function($parse) {
             var called = false;
             function interceptor(v) {
               called = true;
@@ -3574,9 +3571,9 @@ describe('parser', function() {
             expect(called).toBe(true);
           }));
 
-          it('should not affect when a one-time binding becomes stable', inject(function($parse) {
+          test('should not affect when a one-time binding becomes stable', angular.mock.inject(function($parse) {
             scope.$watch($parse('::x'));
-            scope.$watch($parse('::x', identity));
+            scope.$watch($parse('::x', angular.identity));
             scope.$watch($parse('::x', function() { return 1; }));  //interceptor that returns non-undefined
 
             scope.$digest();
@@ -3587,9 +3584,9 @@ describe('parser', function() {
             expect(scope.$$watchersCount).toBe(0);
           }));
 
-          it('should not affect when a one-time literal binding becomes stable', inject(function($parse) {
+          test('should not affect when a one-time literal binding becomes stable', angular.mock.inject(function($parse) {
             scope.$watch($parse('::[x]'));
-            scope.$watch($parse('::[x]', identity));
+            scope.$watch($parse('::[x]', angular.identity));
             scope.$watch($parse('::[x]', function() { return 1; }));  //interceptor that returns non-literal
 
             scope.$digest();
@@ -3600,7 +3597,7 @@ describe('parser', function() {
             expect(scope.$$watchersCount).toBe(0);
           }));
 
-          it('should watch the intercepted value of one-time bindings', inject(function($parse, log) {
+          test('should watch the intercepted value of one-time bindings', angular.mock.inject(function($parse, log) {
             scope.$watch($parse('::{x:x, y:y}', function(lit) { return lit.x; }), log);
 
             scope.$apply();
@@ -3616,8 +3613,8 @@ describe('parser', function() {
             expect(log.empty()).toEqual([]);
           }));
 
-          it('should watch the intercepted value of one-time bindings in nested interceptors', inject(function($parse, log) {
-            scope.$watch($parse($parse('::{x:x, y:y}', function(lit) { return lit.x; }), identity), log);
+          test('should watch the intercepted value of one-time bindings in nested interceptors', angular.mock.inject(function($parse, log) {
+            scope.$watch($parse($parse('::{x:x, y:y}', function(lit) { return lit.x; }), angular.identity), log);
 
             scope.$apply();
             expect(log.empty()).toEqual([undefined]);
@@ -3632,7 +3629,7 @@ describe('parser', function() {
             expect(log.empty()).toEqual([]);
           }));
 
-          it('should nest interceptors around eachother, not around the intercepted', inject(function($parse) {
+          test('should nest interceptors around eachother, not around the intercepted', angular.mock.inject(function($parse) {
             function origin() { return 0; }
 
             var fn = origin;
@@ -3651,7 +3648,7 @@ describe('parser', function() {
             expect(fn()).toBe(3);
           }));
 
-          it('should not propogate $$watchDelegate to the interceptor wrapped expression', inject(function($parse) {
+          test('should not propogate $$watchDelegate to the interceptor wrapped expression', angular.mock.inject(function($parse) {
             function getter(s) {
               return s.x;
             }
@@ -3675,9 +3672,9 @@ describe('parser', function() {
           }));
         });
 
-        describe('literals', function() {
+        describe('literals', () => {
 
-          it('should support watching', inject(function($parse) {
+          test('should support watching', angular.mock.inject(function($parse) {
             var lastVal = NaN;
             var callCount = 0;
             var listener = function(val) { callCount++; lastVal = val; };
@@ -3701,7 +3698,7 @@ describe('parser', function() {
             expect(lastVal).toEqual({val: {}});
           }));
 
-          it('should only watch the direct inputs', inject(function($parse) {
+          test('should only watch the direct inputs', angular.mock.inject(function($parse) {
             var lastVal = NaN;
             var callCount = 0;
             var listener = function(val) { callCount++; lastVal = val; };
@@ -3723,7 +3720,7 @@ describe('parser', function() {
             expect(callCount).toBe(2);
           }));
 
-          it('should only watch the direct inputs when nested', inject(function($parse) {
+          test('should only watch the direct inputs when nested', angular.mock.inject(function($parse) {
             var lastVal = NaN;
             var callCount = 0;
             var listener = function(val) { callCount++; lastVal = val; };
@@ -3745,10 +3742,10 @@ describe('parser', function() {
             expect(callCount).toBe(2);
           }));
 
-          describe('with non-primative input', function() {
+          describe('with non-primative input', () => {
 
-            describe('that does NOT support valueOf()', function() {
-              it('should not be reevaluated', inject(function($parse) {
+            describe('that does NOT support valueOf()', () => {
+              test('should not be reevaluated', angular.mock.inject(function($parse) {
                 var obj = scope.obj = {};
 
                 var parsed = $parse('[obj]');
@@ -3766,8 +3763,8 @@ describe('parser', function() {
               }));
             });
 
-            describe('that does support valueOf()', function() {
-              it('should not be reevaluated', inject(function($parse) {
+            describe('that does support valueOf()', () => {
+              test('should not be reevaluated', angular.mock.inject(function($parse) {
                 var date = scope.date = new Date();
 
                 var parsed = $parse('[date]');
@@ -3784,7 +3781,7 @@ describe('parser', function() {
                 expect(watcherCalls).toBe(1);
               }));
 
-              it('should be reevaluated even when valueOf() changes', inject(function($parse) {
+              test('should be reevaluated even when valueOf() changes', angular.mock.inject(function($parse) {
                 var date = scope.date = new Date();
 
                 var parsed = $parse('[date]');
@@ -3803,7 +3800,7 @@ describe('parser', function() {
                 expect(watcherCalls).toBe(2);
               }));
 
-              it('should not be reevaluated when the instance changes but valueOf() does not', inject(function($parse) {
+              test('should not be reevaluated when the instance changes but valueOf() does not', angular.mock.inject(function($parse) {
                 scope.date = new Date(1234567890123);
 
                 var parsed = $parse('[date]');
@@ -3820,7 +3817,7 @@ describe('parser', function() {
                 expect(watcherCalls).toBe(1);
               }));
 
-              it('should be reevaluated when the instance does not change but valueOf() does', inject(function($parse) {
+              test('should be reevaluated when the instance does not change but valueOf() does', angular.mock.inject(function($parse) {
 
                 scope.date = new Date(1234567890123);
 
@@ -3841,12 +3838,12 @@ describe('parser', function() {
           });
         });
 
-        it('should continue with the evaluation of the expression without invoking computed parts',
-            inject(function($parse) {
+        test('should continue with the evaluation of the expression without invoking computed parts',
+            angular.mock.inject(function($parse) {
           var value = 'foo';
-          var spy = jasmine.createSpy();
+          var spy = jest.fn();
 
-          spy.and.callFake(function() { return value; });
+          spy.mockImplementation(function() { return value; });
           scope.foo = spy;
           scope.$watch('foo() | uppercase');
           scope.$digest();
@@ -3858,7 +3855,7 @@ describe('parser', function() {
           expect(spy).toHaveBeenCalledTimes(5);
         }));
 
-        it('should invoke all statements in multi-statement expressions', inject(function($parse) {
+        test('should invoke all statements in multi-statement expressions', angular.mock.inject(function($parse) {
           var lastVal = NaN;
           var listener = function(val) { lastVal = val; };
 
@@ -3880,14 +3877,14 @@ describe('parser', function() {
           expect(lastVal).toBe(3);
         }));
 
-        it('should watch the left side of assignments', inject(function($parse) {
+        test('should watch the left side of assignments', angular.mock.inject(function($parse) {
           var lastVal = NaN;
           var listener = function(val) { lastVal = val; };
 
           var objA = {};
           var objB = {};
 
-          scope.$watch('curObj.value = input', noop);
+          scope.$watch('curObj.value = input', angular.noop);
 
           scope.curObj = objA;
           scope.input = 1;
@@ -3903,7 +3900,7 @@ describe('parser', function() {
           expect(objB.value).toBe(scope.input);
         }));
 
-        it('should watch ES6 object computed property changes', function() {
+        test('should watch ES6 object computed property changes', () => {
           var count = 0;
           var lastValue;
 
@@ -3936,7 +3933,7 @@ describe('parser', function() {
           expect(lastValue).toEqual({'undefined': true});
         });
 
-        it('should not shallow-watch ES6 object computed properties in case of stateful toString', function() {
+        test('should not shallow-watch ES6 object computed properties in case of stateful toString', () => {
           var count = 0;
           var lastValue;
 
@@ -3945,7 +3942,7 @@ describe('parser', function() {
             lastValue = val;
           });
 
-          scope.a = {toString: function() { return this.b; }};
+          scope.a = {toString() { return this.b; }};
           scope.a.b = 1;
 
           //TODO: would be great if it didn't throw!
@@ -3957,28 +3954,29 @@ describe('parser', function() {
         });
       });
 
-      describe('locals', function() {
-        it('should expose local variables', inject(function($parse) {
+      describe('locals', () => {
+        test('should expose local variables', angular.mock.inject(function($parse) {
           expect($parse('a')({a: 0}, {a: 1})).toEqual(1);
-          expect($parse('add(a,b)')({b: 1, add: function(a, b) { return a + b; }}, {a: 2})).toEqual(3);
+          expect($parse('add(a,b)')({b: 1, add(a, b) { return a + b; }}, {a: 2})).toEqual(3);
         }));
 
-        it('should expose traverse locals', inject(function($parse) {
+        test('should expose traverse locals', angular.mock.inject(function($parse) {
           expect($parse('a.b')({a: {b: 0}}, {a: {b:1}})).toEqual(1);
           expect($parse('a.b')({a: null}, {a: {b:1}})).toEqual(1);
           expect($parse('a.b')({a: {b: 0}}, {a: null})).toEqual(undefined);
           expect($parse('a.b.c')({a: null}, {a: {b: {c: 1}}})).toEqual(1);
         }));
 
-        it('should not use locals to resolve object properties', inject(function($parse) {
+        test('should not use locals to resolve object properties', angular.mock.inject(function($parse) {
           expect($parse('a[0].b')({a: [{b: 'scope'}]}, {b: 'locals'})).toBe('scope');
           expect($parse('a[0]["b"]')({a: [{b: 'scope'}]}, {b: 'locals'})).toBe('scope');
           expect($parse('a[0][0].b')({a: [[{b: 'scope'}]]}, {b: 'locals'})).toBe('scope');
           expect($parse('a[0].b.c')({a: [{b: {c: 'scope'}}] }, {b: {c: 'locals'} })).toBe('scope');
         }));
 
-        it('should assign directly to locals when the local property exists', inject(function($parse) {
-          var s = {}, l = {};
+        test('should assign directly to locals when the local property exists', angular.mock.inject(function($parse) {
+          var s = {};
+          var l = {};
 
           $parse('a = 1')(s, l);
           expect(s.a).toBe(1);
@@ -3990,11 +3988,11 @@ describe('parser', function() {
           expect(l.a).toBe(0);
 
           $parse('toString = 1')(s, l);
-          expect(isFunction(s.toString)).toBe(true);
+          expect(angular.isFunction(s.toString)).toBe(true);
           expect(l.toString).toBe(1);
         }));
 
-        it('should overwrite undefined / null scope properties when assigning', inject(function($parse) {
+        test('should overwrite undefined / null scope properties when assigning', angular.mock.inject(function($parse) {
           var scope;
 
           scope = {};
@@ -4028,9 +4026,9 @@ describe('parser', function() {
           expect(scope).toEqual({a: {b: {c: 1}, c: {d: 2}}});
         }));
 
-        they('should not overwrite $prop scope properties when assigning', [0, false, '', NaN],
-          function(falsyValue) {
-            inject(function($parse) {
+        test.each([0, false, '', NaN].map((prop) => ({ prop })))(
+            'should not overwrite $prop scope properties when assigning', function({ prop: falsyValue }) {
+            angular.mock.inject(function($parse) {
               var scope;
 
               scope = {a: falsyValue, c: falsyValue};
@@ -4061,8 +4059,8 @@ describe('parser', function() {
           });
       });
 
-      describe('literal', function() {
-        it('should mark scalar value expressions as literal', inject(function($parse) {
+      describe('literal', () => {
+        test('should mark scalar value expressions as literal', angular.mock.inject(function($parse) {
           expect($parse('0').literal).toBe(true);
           expect($parse('"hello"').literal).toBe(true);
           expect($parse('true').literal).toBe(true);
@@ -4071,34 +4069,34 @@ describe('parser', function() {
           expect($parse('undefined').literal).toBe(true);
         }));
 
-        it('should mark array expressions as literal', inject(function($parse) {
+        test('should mark array expressions as literal', angular.mock.inject(function($parse) {
           expect($parse('[]').literal).toBe(true);
           expect($parse('[1, 2, 3]').literal).toBe(true);
           expect($parse('[1, identifier]').literal).toBe(true);
         }));
 
-        it('should mark object expressions as literal', inject(function($parse) {
+        test('should mark object expressions as literal', angular.mock.inject(function($parse) {
           expect($parse('{}').literal).toBe(true);
           expect($parse('{x: 1}').literal).toBe(true);
           expect($parse('{foo: bar}').literal).toBe(true);
         }));
 
-        it('should not mark function calls or operator expressions as literal', inject(function($parse) {
+        test('should not mark function calls or operator expressions as literal', angular.mock.inject(function($parse) {
           expect($parse('1 + 1').literal).toBe(false);
           expect($parse('call()').literal).toBe(false);
           expect($parse('[].length').literal).toBe(false);
         }));
       });
 
-      describe('constant', function() {
-        it('should mark an empty expressions as constant', inject(function($parse) {
+      describe('constant', () => {
+        test('should mark an empty expressions as constant', angular.mock.inject(function($parse) {
           expect($parse('').constant).toBe(true);
           expect($parse('   ').constant).toBe(true);
           expect($parse('::').constant).toBe(true);
           expect($parse('::    ').constant).toBe(true);
         }));
 
-        it('should mark scalar value expressions as constant', inject(function($parse) {
+        test('should mark scalar value expressions as constant', angular.mock.inject(function($parse) {
           expect($parse('12.3').constant).toBe(true);
           expect($parse('"string"').constant).toBe(true);
           expect($parse('true').constant).toBe(true);
@@ -4107,7 +4105,7 @@ describe('parser', function() {
           expect($parse('undefined').constant).toBe(true);
         }));
 
-        it('should mark arrays as constant if they only contain constant elements', inject(function($parse) {
+        test('should mark arrays as constant if they only contain constant elements', angular.mock.inject(function($parse) {
           expect($parse('[]').constant).toBe(true);
           expect($parse('[1, 2, 3]').constant).toBe(true);
           expect($parse('["string", null]').constant).toBe(true);
@@ -4115,13 +4113,13 @@ describe('parser', function() {
           expect($parse('[1, [2, 3], {4: 5}]').constant).toBe(true);
         }));
 
-        it('should not mark arrays as constant if they contain any non-constant elements', inject(function($parse) {
+        test('should not mark arrays as constant if they contain any non-constant elements', angular.mock.inject(function($parse) {
           expect($parse('[foo]').constant).toBe(false);
           expect($parse('[x + 1]').constant).toBe(false);
           expect($parse('[bar[0]]').constant).toBe(false);
         }));
 
-        it('should mark complex expressions involving constant values as constant', inject(function($parse) {
+        test('should mark complex expressions involving constant values as constant', angular.mock.inject(function($parse) {
           expect($parse('!true').constant).toBe(true);
           expect($parse('-42').constant).toBe(true);
           expect($parse('1 - 1').constant).toBe(true);
@@ -4136,88 +4134,88 @@ describe('parser', function() {
           expect($parse('{x: 1}["x"]').constant).toBe(true);
         }));
 
-        it('should not mark any expression involving variables or function calls as constant', inject(function($parse) {
+        test('should not mark any expression involving variables or function calls as constant', angular.mock.inject(function($parse) {
           expect($parse('true.toString()').constant).toBe(false);
           expect($parse('foo(1, 2, 3)').constant).toBe(false);
           expect($parse('"name" + id').constant).toBe(false);
         }));
       });
 
-      describe('null/undefined in expressions', function() {
+      describe('null/undefined in expressions', () => {
         // simpleGetterFn1
-        it('should return null for `a` where `a` is null', inject(function($rootScope) {
+        test('should return null for `a` where `a` is null', angular.mock.inject(function($rootScope) {
           $rootScope.a = null;
           expect($rootScope.$eval('a')).toBe(null);
         }));
 
-        it('should return undefined for `a` where `a` is undefined', inject(function($rootScope) {
+        test('should return undefined for `a` where `a` is undefined', angular.mock.inject(function($rootScope) {
           expect($rootScope.$eval('a')).toBeUndefined();
         }));
 
         // simpleGetterFn2
-        it('should return undefined for properties of `null` constant', inject(function($rootScope) {
+        test('should return undefined for properties of `null` constant', angular.mock.inject(function($rootScope) {
           expect($rootScope.$eval('null.a')).toBeUndefined();
         }));
 
-        it('should return undefined for properties of `null` values', inject(function($rootScope) {
+        test('should return undefined for properties of `null` values', angular.mock.inject(function($rootScope) {
           $rootScope.a = null;
           expect($rootScope.$eval('a.b')).toBeUndefined();
         }));
 
-        it('should return null for `a.b` where `b` is null', inject(function($rootScope) {
+        test('should return null for `a.b` where `b` is null', angular.mock.inject(function($rootScope) {
           $rootScope.a = { b: null };
           expect($rootScope.$eval('a.b')).toBe(null);
         }));
 
         // cspSafeGetter && pathKeys.length < 6 || pathKeys.length > 2
-        it('should return null for `a.b.c.d.e` where `e` is null', inject(function($rootScope) {
+        test('should return null for `a.b.c.d.e` where `e` is null', angular.mock.inject(function($rootScope) {
           $rootScope.a = { b: { c: { d: { e: null } } } };
           expect($rootScope.$eval('a.b.c.d.e')).toBe(null);
         }));
 
-        it('should return undefined for `a.b.c.d.e` where `d` is null', inject(function($rootScope) {
+        test('should return undefined for `a.b.c.d.e` where `d` is null', angular.mock.inject(function($rootScope) {
           $rootScope.a = { b: { c: { d: null } } };
           expect($rootScope.$eval('a.b.c.d.e')).toBeUndefined();
         }));
 
         // cspSafeGetter || pathKeys.length > 6
-        it('should return null for `a.b.c.d.e.f.g` where `g` is null', inject(function($rootScope) {
+        test('should return null for `a.b.c.d.e.f.g` where `g` is null', angular.mock.inject(function($rootScope) {
           $rootScope.a = { b: { c: { d: { e: { f: { g: null } } } } } };
           expect($rootScope.$eval('a.b.c.d.e.f.g')).toBe(null);
         }));
 
-        it('should return undefined for `a.b.c.d.e.f.g` where `f` is null', inject(function($rootScope) {
+        test('should return undefined for `a.b.c.d.e.f.g` where `f` is null', angular.mock.inject(function($rootScope) {
           $rootScope.a = { b: { c: { d: { e: { f: null } } } } };
           expect($rootScope.$eval('a.b.c.d.e.f.g')).toBeUndefined();
         }));
 
 
-        it('should return undefined if the return value of a function invocation is undefined',
-            inject(function($rootScope) {
+        test('should return undefined if the return value of a function invocation is undefined',
+            angular.mock.inject(function($rootScope) {
           $rootScope.fn = function() {};
           expect($rootScope.$eval('fn()')).toBeUndefined();
         }));
 
-        it('should ignore undefined values when doing addition/concatenation',
-            inject(function($rootScope) {
+        test('should ignore undefined values when doing addition/concatenation',
+            angular.mock.inject(function($rootScope) {
           $rootScope.fn = function() {};
           expect($rootScope.$eval('foo + "bar" + fn()')).toBe('bar');
         }));
 
-        it('should treat properties named null/undefined as normal properties', inject(function($rootScope) {
+        test('should treat properties named null/undefined as normal properties', angular.mock.inject(function($rootScope) {
           expect($rootScope.$eval('a.null.undefined.b', {a:{null:{undefined:{b: 1}}}})).toBe(1);
         }));
 
-        it('should not allow overriding null/undefined keywords', inject(function($rootScope) {
+        test('should not allow overriding null/undefined keywords', angular.mock.inject(function($rootScope) {
           expect($rootScope.$eval('null.a', {null: {a: 42}})).toBeUndefined();
         }));
 
-        it('should allow accessing null/undefined properties on `this`', inject(function($rootScope) {
+        test('should allow accessing null/undefined properties on `this`', angular.mock.inject(function($rootScope) {
           $rootScope.null = {a: 42};
           expect($rootScope.$eval('this.null.a')).toBe(42);
         }));
 
-        it('should allow accessing $locals', inject(function($rootScope) {
+        test('should allow accessing $locals', angular.mock.inject(function($rootScope) {
           $rootScope.foo = 'foo';
           $rootScope.bar = 'bar';
           $rootScope.$locals = 'foo';
@@ -4244,32 +4242,32 @@ describe('parser', function() {
     });
   });
 
-  forEach([true, false], function(cspEnabled) {
-    describe('custom identifiers (csp: ' + cspEnabled + ')', function() {
+  angular.forEach([true, false], function(cspEnabled) {
+    describe('custom identifiers (csp: ' + cspEnabled + ')', () => {
       var isIdentifierStartRe = /[#a-z]/;
       var isIdentifierContinueRe = /[-a-z]/;
       var isIdentifierStartFn;
       var isIdentifierContinueFn;
       var scope;
 
-      beforeEach(module(function($parseProvider) {
-        isIdentifierStartFn = jasmine.
-          createSpy('isIdentifierStart').
-          and.callFake(function(ch, cp) { return isIdentifierStartRe.test(ch); });
-        isIdentifierContinueFn = jasmine.
-          createSpy('isIdentifierContinue').
-          and.callFake(function(ch, cp) { return isIdentifierContinueRe.test(ch); });
+      beforeEach(angular.mock.module(function($parseProvider) {
+        isIdentifierStartFn = jest.fn()
+          .mockName('isIdentifierStart')
+          .mockImplementation(function(ch, cp) { return isIdentifierStartRe.test(ch); });
+        isIdentifierContinueFn = jest.fn()
+          .mockName('isIdentifierContinue')
+          .mockImplementation(function(ch, cp) { return isIdentifierContinueRe.test(ch); });
 
         $parseProvider.setIdentifierFns(isIdentifierStartFn, isIdentifierContinueFn);
-        csp().noUnsafeEval = cspEnabled;
+        angular.$$csp().noUnsafeEval = cspEnabled;
       }));
 
-      beforeEach(inject(function($rootScope) {
+      beforeEach(angular.mock.inject(function($rootScope) {
         scope = $rootScope;
       }));
 
 
-      it('should allow specifying a custom `isIdentifierStart/Continue` functions', function() {
+      test('should allow specifying a custom `isIdentifierStart/Continue` functions', () => {
         scope.x = {};
 
         scope['#foo'] = 'foo';
@@ -4297,17 +4295,17 @@ describe('parser', function() {
       });
 
 
-      it('should pass the character and codepoint to the custom functions', function() {
+      test('should pass the character and codepoint to the custom functions', () => {
         scope.$eval('#-');
         expect(isIdentifierStartFn).toHaveBeenCalledOnceWith('#', '#'.charCodeAt(0));
         expect(isIdentifierContinueFn).toHaveBeenCalledOnceWith('-', '-'.charCodeAt(0));
 
-        isIdentifierStartFn.calls.reset();
-        isIdentifierContinueFn.calls.reset();
+        isIdentifierStartFn.mockClear();
+        isIdentifierContinueFn.mockClear();
 
         scope.$eval('#.foo.#-.bar-');
         expect(isIdentifierStartFn).toHaveBeenCalledTimes(7);
-        expect(isIdentifierStartFn.calls.allArgs()).toEqual([
+        expect(isIdentifierStartFn.mock.calls).toEqual([
           ['#', '#'.charCodeAt(0)],
           ['.', '.'.charCodeAt(0)],
           ['f', 'f'.charCodeAt(0)],
@@ -4317,7 +4315,7 @@ describe('parser', function() {
           ['b', 'b'.charCodeAt(0)]
         ]);
         expect(isIdentifierContinueFn).toHaveBeenCalledTimes(9);
-        expect(isIdentifierContinueFn.calls.allArgs()).toEqual([
+        expect(isIdentifierContinueFn.mock.calls).toEqual([
           ['.', '.'.charCodeAt(0)],
           ['o', 'o'.charCodeAt(0)],
           ['o', 'o'.charCodeAt(0)],
@@ -4332,13 +4330,13 @@ describe('parser', function() {
     });
   });
 
-  describe('hidden/unsupported features', function() {
-    describe('$$getAst()', function() {
-      it('should be a method exposed on the `$parse` service', inject(function($parse) {
-        expect(isFunction($parse.$$getAst)).toBeTruthy();
+  describe('hidden/unsupported features', () => {
+    describe('$$getAst()', () => {
+      test('should be a method exposed on the `$parse` service', angular.mock.inject(function($parse) {
+        expect(angular.isFunction($parse.$$getAst)).toBeTruthy();
       }));
 
-      it('should accept a string expression argument and return the corresponding AST', inject(function($parse) {
+      test('should accept a string expression argument and return the corresponding AST', angular.mock.inject(function($parse) {
         var ast = $parse.$$getAst('foo.bar');
         expect(ast).toEqual({
           type: 'Program',
@@ -4356,7 +4354,7 @@ describe('parser', function() {
         });
       }));
 
-      it('should parse one time binding expressions', inject(function($parse) {
+      test('should parse one time binding expressions', angular.mock.inject(function($parse) {
         var ast = $parse.$$getAst('::foo.bar');
         expect(ast).toEqual({
           type: 'Program',

@@ -1,19 +1,18 @@
 'use strict';
-
-describe('$locale', function() {
+ describe('$locale', () => {
   /* global $LocaleProvider: false */
 
   var $locale;
-  beforeEach(inject(function(_$locale_) {
+  beforeEach(angular.mock.inject(function(_$locale_) {
     $locale = _$locale_;
   }));
 
-  it('should have locale id set to en-us', function() {
+  test('should have locale id set to en-us', () => {
     expect($locale.id).toBe('en-us');
   });
 
 
-  it('should have NUMBER_FORMATS', function() {
+  test('should have NUMBER_FORMATS', () => {
     var numberFormats = $locale.NUMBER_FORMATS;
     expect(numberFormats).toBeDefined();
     expect(numberFormats.PATTERNS.length).toBe(2);
@@ -31,7 +30,7 @@ describe('$locale', function() {
   });
 
 
-  it('should have DATETIME_FORMATS', function() {
+  test('should have DATETIME_FORMATS', () => {
     var datetime = $locale.DATETIME_FORMATS;
     expect(datetime).toBeDefined();
     expect(datetime.DAY.length).toBe(7);
@@ -42,7 +41,7 @@ describe('$locale', function() {
   });
 
 
-  it('should return correct plural types', function() {
+  test('should return correct plural types', () => {
     expect($locale.pluralCat(-1)).toBe('other');
     expect($locale.pluralCat(0)).toBe('other');
     expect($locale.pluralCat(2)).toBe('other');

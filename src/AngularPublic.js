@@ -119,11 +119,11 @@
 var version = {
   // These placeholder strings will be replaced by grunt's `build` task.
   // They need to be double- or single-quoted.
-  full: '"NG_VERSION_FULL"',
+  full: 'NG_VERSION_FULL',
   major: 'NG_VERSION_MAJOR',
   minor: 'NG_VERSION_MINOR',
   dot: 'NG_VERSION_DOT',
-  codeName: '"NG_VERSION_CODENAME"'
+  codeName: 'ultimate-farewell'
 };
 
 
@@ -132,6 +132,7 @@ function publishExternalAPI(angular) {
     'errorHandlingConfig': errorHandlingConfig,
     'bootstrap': bootstrap,
     'copy': copy,
+    'shallowCopy': shallowCopy,
     'extend': extend,
     'merge': merge,
     'equals': equals,
@@ -152,7 +153,9 @@ function publishExternalAPI(angular) {
     'isElement': isElement,
     'isArray': isArray,
     'version': version,
+    'isRegExp': isRegExp,
     'isDate': isDate,
+    'includes': includes,
     'callbacks': {$$counter: 0},
     'getTestability': getTestability,
     'reloadWithDebugInfo': reloadWithDebugInfo,

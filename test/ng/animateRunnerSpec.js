@@ -1,8 +1,7 @@
 'use strict';
-
-describe('$$animateAsyncRun', function() {
-  it('should fire the callback only when one or more RAFs have passed',
-    inject(function($$animateAsyncRun, $$rAF) {
+ describe('$$animateAsyncRun', () => {
+  test('should fire the callback only when one or more RAFs have passed',
+    angular.mock.inject(function($$animateAsyncRun, $$rAF) {
 
     var trigger = $$animateAsyncRun();
     var called = false;
@@ -15,8 +14,8 @@ describe('$$animateAsyncRun', function() {
     expect(called).toBe(true);
   }));
 
-  it('should immediately fire the callback if a RAF has passed since construction',
-    inject(function($$animateAsyncRun, $$rAF) {
+  test('should immediately fire the callback if a RAF has passed since construction',
+    angular.mock.inject(function($$animateAsyncRun, $$rAF) {
 
     var trigger = $$animateAsyncRun();
     $$rAF.flush();
@@ -28,26 +27,25 @@ describe('$$animateAsyncRun', function() {
     expect(called).toBe(true);
   }));
 });
+ describe('$$AnimateRunner', () => {
+  test.each(['end', 'cancel', 'pause', 'resume'].map((prop) => ({ prop })))(
+      'should trigger the host $prop function', function({ prop: method }) {
 
-describe('$$AnimateRunner', function() {
-  they('should trigger the host $prop function',
-    ['end', 'cancel', 'pause', 'resume'], function(method) {
-
-    inject(function($$AnimateRunner) {
+    angular.mock.inject(function($$AnimateRunner) {
       var host = {};
-      var spy = host[method] = jasmine.createSpy();
+      var spy = host[method] = jest.fn();
       var runner = new $$AnimateRunner(host);
       runner[method]();
       expect(spy).toHaveBeenCalled();
     });
   });
 
-  they('should trigger the inner runner\'s host $prop function',
-    ['end', 'cancel', 'pause', 'resume'], function(method) {
+  test.each(['end', 'cancel', 'pause', 'resume'].map((prop) => ({ prop })))(
+      'should trigger the inner runner\'s host $prop function', function({ prop: method }) {
 
-    inject(function($$AnimateRunner) {
+    angular.mock.inject(function($$AnimateRunner) {
       var host = {};
-      var spy = host[method] = jasmine.createSpy();
+      var spy = host[method] = jest.fn();
       var runner1 = new $$AnimateRunner();
       var runner2 = new $$AnimateRunner(host);
       runner1.setHost(runner2);
@@ -56,11 +54,11 @@ describe('$$AnimateRunner', function() {
     });
   });
 
-  it('should resolve the done function only if one RAF has passed',
-    inject(function($$AnimateRunner, $$rAF) {
+  test('should resolve the done function only if one RAF has passed',
+    angular.mock.inject(function($$AnimateRunner, $$rAF) {
 
     var runner = new $$AnimateRunner();
-    var spy = jasmine.createSpy();
+    var spy = jest.fn();
     runner.done(spy);
     runner.complete(true);
     expect(spy).not.toHaveBeenCalled();
@@ -68,8 +66,8 @@ describe('$$AnimateRunner', function() {
     expect(spy).toHaveBeenCalled();
   }));
 
-  it('should resolve with the status provided in the completion function',
-    inject(function($$AnimateRunner, $$rAF) {
+  test('should resolve with the status provided in the completion function',
+    angular.mock.inject(function($$AnimateRunner, $$rAF) {
 
     var runner = new $$AnimateRunner();
     var capturedValue;
@@ -81,15 +79,17 @@ describe('$$AnimateRunner', function() {
     expect(capturedValue).toBe('special value');
   }));
 
-  they('should immediately resolve each combined runner in a bottom-up order when $prop is called',
-    ['end', 'cancel'], function(method) {
+  test.each(['end', 'cancel'].map((prop) => ({ prop })))(
+      'should immediately resolve each combined runner in a bottom-up order when $prop is called', function({ prop: method }) {
 
-    inject(function($$AnimateRunner) {
+    angular.mock.inject(function($$AnimateRunner) {
       var runner1 = new $$AnimateRunner();
       var runner2 = new $$AnimateRunner();
       runner1.setHost(runner2);
 
-      var status1, status2, signature = '';
+      var status1;
+      var status2;
+      var signature = '';
       runner1.done(function(status) {
         signature += '1';
         status1 = status;
@@ -109,10 +109,10 @@ describe('$$AnimateRunner', function() {
     });
   });
 
-  they('should resolve/reject using a newly created promise when .then() is used upon $prop',
-    ['end', 'cancel'], function(method) {
+  test.each(['end', 'cancel'].map((prop) => ({ prop })))(
+      'should resolve/reject using a newly created promise when .then() is used upon $prop', function({ prop: method }) {
 
-    inject(function($$AnimateRunner, $rootScope) {
+    angular.mock.inject(function($$AnimateRunner, $rootScope) {
       var runner1 = new $$AnimateRunner();
       var runner2 = new $$AnimateRunner();
       runner1.setHost(runner2);
@@ -140,15 +140,15 @@ describe('$$AnimateRunner', function() {
     });
   });
 
-  it('should expose/create the contained promise when getPromise() is called',
-    inject(function($$AnimateRunner, $rootScope) {
+  test('should expose/create the contained promise when getPromise() is called',
+    angular.mock.inject(function($$AnimateRunner, $rootScope) {
 
     var runner = new $$AnimateRunner();
-    expect(isPromiseLike(runner.getPromise())).toBeTruthy();
+    expect(ngInternals.isPromiseLike(runner.getPromise())).toBeTruthy();
   }));
 
-  it('should expose the `catch` promise function to handle the rejected state',
-    inject(function($$AnimateRunner, $rootScope) {
+  test('should expose the `catch` promise function to handle the rejected state',
+    angular.mock.inject(function($$AnimateRunner, $rootScope) {
 
     var runner = new $$AnimateRunner();
     var animationFailed = false;
@@ -160,18 +160,18 @@ describe('$$AnimateRunner', function() {
     expect(animationFailed).toBe(true);
   }));
 
-  it('should use timeouts to trigger async operations when the document is hidden', function() {
+  test('should use timeouts to trigger async operations when the document is hidden', () => {
     var hidden = true;
 
-    module(function($provide) {
+    angular.mock.module(function($provide) {
 
       $provide.value('$$isDocumentHidden', function() {
         return hidden;
       });
     });
 
-    inject(function($$AnimateRunner, $rootScope, $$rAF, $timeout) {
-      var spy = jasmine.createSpy();
+    angular.mock.inject(function($$AnimateRunner, $rootScope, $$rAF, $timeout) {
+      var spy = jest.fn();
       var runner = new $$AnimateRunner();
       runner.done(spy);
       runner.complete(true);
@@ -183,7 +183,7 @@ describe('$$AnimateRunner', function() {
 
       hidden = false;
 
-      spy = jasmine.createSpy();
+      spy = jest.fn();
       runner = new $$AnimateRunner();
       runner.done(spy);
       runner.complete(true);
@@ -196,23 +196,23 @@ describe('$$AnimateRunner', function() {
     });
   });
 
-  they('should expose the `finally` promise function to handle the final state when $prop',
-    { 'rejected': 'cancel', 'resolved': 'end' }, function(method) {
-    inject(function($$AnimateRunner, $rootScope) {
+  test.each(Object.entries({ 'rejected': 'cancel', 'resolved': 'end' }).map(([prop, value]) => ({ prop, value })))(
+      'should expose the `finally` promise function to handle the final state when $prop', function({ value: method }) {
+    angular.mock.inject(function($$AnimateRunner, $rootScope) {
         var runner = new $$AnimateRunner();
         var animationComplete = false;
         runner.finally(function() {
           animationComplete = true;
-        }).catch(noop);
+        }).catch(angular.noop);
         runner[method]();
         $rootScope.$digest();
         expect(animationComplete).toBe(true);
     });
   });
 
-  describe('.all()', function() {
-    it('should resolve when all runners have naturally resolved',
-      inject(function($$rAF, $$AnimateRunner) {
+  describe('.all()', () => {
+    test('should resolve when all runners have naturally resolved',
+      angular.mock.inject(function($$rAF, $$AnimateRunner) {
 
       var runner1 = new $$AnimateRunner();
       var runner2 = new $$AnimateRunner();
@@ -234,10 +234,10 @@ describe('$$AnimateRunner', function() {
       expect(status).toBe(true);
     }));
 
-    they('should immediately resolve if and when all runners have been $prop',
-      { ended: 'end', cancelled: 'cancel' }, function(method) {
+    test.each(Object.entries({ ended: 'end', cancelled: 'cancel' }).map(([prop, value]) => ({ prop, value })))(
+        'should immediately resolve if and when all runners have been $prop', function({ value: method }) {
 
-      inject(function($$AnimateRunner) {
+      angular.mock.inject(function($$AnimateRunner) {
         var runner1 = new $$AnimateRunner();
         var runner2 = new $$AnimateRunner();
         var runner3 = new $$AnimateRunner();
@@ -257,8 +257,8 @@ describe('$$AnimateRunner', function() {
       });
     });
 
-    it('should return a status of `false` if one or more runners was cancelled',
-      inject(function($$AnimateRunner) {
+    test('should return a status of `false` if one or more runners was cancelled',
+      angular.mock.inject(function($$AnimateRunner) {
 
       var runner1 = new $$AnimateRunner();
       var runner2 = new $$AnimateRunner();
@@ -277,9 +277,9 @@ describe('$$AnimateRunner', function() {
     }));
   });
 
-  describe('.chain()', function() {
-    it('should evaluate an array of functions in a chain',
-      inject(function($$rAF, $$AnimateRunner) {
+  describe('.chain()', () => {
+    test('should evaluate an array of functions in a chain',
+      angular.mock.inject(function($$rAF, $$AnimateRunner) {
 
       var runner1 = new $$AnimateRunner();
       var runner2 = new $$AnimateRunner();
@@ -329,8 +329,8 @@ describe('$$AnimateRunner', function() {
       expect(status).toBe(true);
     }));
 
-    it('should break the chain when a function evaluates to false',
-      inject(function($$rAF, $$AnimateRunner) {
+    test('should break the chain when a function evaluates to false',
+      angular.mock.inject(function($$rAF, $$AnimateRunner) {
 
       var runner1 = new $$AnimateRunner();
       var runner2 = new $$AnimateRunner();

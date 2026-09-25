@@ -1,14 +1,13 @@
 'use strict';
-
-describe('Filter: filter', function() {
+ describe('Filter: filter', () => {
   var filter;
 
-  beforeEach(inject(function($filter) {
+  beforeEach(angular.mock.inject(function($filter) {
     filter = $filter('filter');
   }));
 
 
-  it('should filter by string', function() {
+  test('should filter by string', () => {
     var items = ['MIsKO', {name: 'shyam'}, ['adam'], 1234];
     expect(filter(items, '').length).toBe(4);
     expect(filter(items, undefined).length).toBe(4);
@@ -29,7 +28,7 @@ describe('Filter: filter', function() {
   });
 
 
-  it('should not read $ properties', function() {
+  test('should not read $ properties', () => {
     expect(''.charAt(0)).toBe(''); // assumption
 
     var items = [{$name: 'misko'}];
@@ -37,7 +36,7 @@ describe('Filter: filter', function() {
   });
 
 
-  it('should filter on specific property', function() {
+  test('should filter on specific property', () => {
     var items = [{ignore: 'a', name: 'a'}, {ignore: 'a', name: 'abc'}];
     expect(filter(items, {}).length).toBe(2);
 
@@ -48,7 +47,7 @@ describe('Filter: filter', function() {
   });
 
 
-  it('should ignore undefined properties of the expression object', function() {
+  test('should ignore undefined properties of the expression object', () => {
     var items = [{name: 'a'}, {name: 'abc'}];
     expect(filter(items, {name: undefined})).toEqual([{name: 'a'}, {name: 'abc'}]);
 
@@ -57,13 +56,13 @@ describe('Filter: filter', function() {
   });
 
 
-  it('should take function as predicate', function() {
+  test('should take function as predicate', () => {
     var items = [{name: 'a'}, {name: 'abc', done: true}];
     expect(filter(items, function(i) {return i.done;}).length).toBe(1);
   });
 
 
-  it('should pass the index to a function predicate', function() {
+  test('should pass the index to a function predicate', () => {
     var items = [0, 1, 2, 3];
 
     var result = filter(items, function(value, index) {
@@ -74,9 +73,10 @@ describe('Filter: filter', function() {
   });
 
 
-  it('should match primitive array values against top-level `$` property in object expression',
+  test('should match primitive array values against top-level `$` property in object expression',
     function() {
-      var items, expr;
+      var items;
+      var expr;
 
       items = ['something', 'something else', 'another thing'];
       expr = {$: 'some'};
@@ -101,40 +101,41 @@ describe('Filter: filter', function() {
   );
 
 
-  it('should match items with array properties containing one or more matching items', function() {
-      var items, expr;
+  test('should match items with array properties containing one or more matching items', () => {
+    var items;
+    var expr;
 
-      items = [
-        {tags: ['web', 'html', 'css', 'js']},
-        {tags: ['hybrid', 'html', 'css', 'js', 'ios', 'android']},
-        {tags: ['mobile', 'ios', 'android']}
-      ];
-      expr = {tags: 'html'};
-      expect(filter(items, expr).length).toBe(2);
-      expect(filter(items, expr)).toEqual([items[0], items[1]]);
+    items = [
+      {tags: ['web', 'html', 'css', 'js']},
+      {tags: ['hybrid', 'html', 'css', 'js', 'ios', 'android']},
+      {tags: ['mobile', 'ios', 'android']}
+    ];
+    expr = {tags: 'html'};
+    expect(filter(items, expr).length).toBe(2);
+    expect(filter(items, expr)).toEqual([items[0], items[1]]);
 
-      items = [
-        {nums: [1, 345, 12]},
-        {nums: [0, 46, 78]},
-        {nums: [123, 4, 67]}
-      ];
-      expr = {nums: 12};
-      expect(filter(items, expr).length).toBe(2);
-      expect(filter(items, expr)).toEqual([items[0], items[2]]);
+    items = [
+      {nums: [1, 345, 12]},
+      {nums: [0, 46, 78]},
+      {nums: [123, 4, 67]}
+    ];
+    expr = {nums: 12};
+    expect(filter(items, expr).length).toBe(2);
+    expect(filter(items, expr)).toEqual([items[0], items[2]]);
 
-      items = [
-        {customers: [{name: 'John'}, {name: 'Elena'}, {name: 'Bill'}]},
-        {customers: [{name: 'Sam'}, {name: 'Klara'}, {name: 'Bill'}]},
-        {customers: [{name: 'Molli'}, {name: 'Elena'}, {name: 'Lora'}]}
-      ];
-      expr = {customers: {name: 'Bill'}};
-      expect(filter(items, expr).length).toBe(2);
-      expect(filter(items, expr)).toEqual([items[0], items[1]]);
-    }
+    items = [
+      {customers: [{name: 'John'}, {name: 'Elena'}, {name: 'Bill'}]},
+      {customers: [{name: 'Sam'}, {name: 'Klara'}, {name: 'Bill'}]},
+      {customers: [{name: 'Molli'}, {name: 'Elena'}, {name: 'Lora'}]}
+    ];
+    expr = {customers: {name: 'Bill'}};
+    expect(filter(items, expr).length).toBe(2);
+    expect(filter(items, expr)).toEqual([items[0], items[1]]);
+  }
   );
 
 
-  it('should take object as predicate', function() {
+  test('should take object as predicate', () => {
     var items = [{first: 'misko', last: 'hevery'},
                  {first: 'adam', last: 'abrons'}];
 
@@ -146,7 +147,7 @@ describe('Filter: filter', function() {
   });
 
 
-  it('should support predicate object with dots in the name', function() {
+  test('should support predicate object with dots in the name', () => {
     var items = [{'first.name': 'misko', 'last.name': 'hevery'},
                  {'first.name': 'adam', 'last.name': 'abrons'}];
 
@@ -155,7 +156,7 @@ describe('Filter: filter', function() {
   });
 
 
-  it('should support deep predicate objects', function() {
+  test('should support deep predicate objects', () => {
     var items = [{person: {name: 'John'}},
                  {person: {name: 'Rita'}},
                  {person: {name: 'Billy'}},
@@ -167,7 +168,7 @@ describe('Filter: filter', function() {
   });
 
 
-  it('should support deep expression objects with multiple properties', function() {
+  test('should support deep expression objects with multiple properties', () => {
     var items = [{person: {name: 'Annet', email: 'annet@example.com'}},
                  {person: {name: 'Billy', email: 'me@billy.com'}},
                  {person: {name: 'Joan', email: 'joan@example.net'}},
@@ -180,7 +181,7 @@ describe('Filter: filter', function() {
   });
 
 
-  it('should match any properties for given "$" property', function() {
+  test('should match any properties for given "$" property', () => {
     var items = [{first: 'tom', last: 'hevery'},
                  {first: 'adam', last: 'hevery', alias: 'tom', done: false},
                  {first: 'john', last: 'clark', middle: 'tommy'}];
@@ -192,7 +193,7 @@ describe('Filter: filter', function() {
   });
 
 
-  it('should allow specifying the special "match-all" property', function() {
+  test('should allow specifying the special "match-all" property', () => {
     var items = [
       {foo: 'baz'},
       {bar: 'baz'},
@@ -211,7 +212,7 @@ describe('Filter: filter', function() {
   });
 
 
-  it('should match any properties in the nested object for given deep "$" property', function() {
+  test('should match any properties in the nested object for given deep "$" property', () => {
     var items = [{person: {name: 'Annet', email: 'annet@example.com'}},
                  {person: {name: 'Billy', email: 'me@billy.com'}},
                  {person: {name: 'Joan', email: 'joan@example.net'}},
@@ -224,7 +225,7 @@ describe('Filter: filter', function() {
   });
 
 
-  it('should match named properties only against named properties on the same level', function() {
+  test('should match named properties only against named properties on the same level', () => {
     var expr = {person: {name: 'John'}};
     var items = [{person: 'John'},                                  // No match (1 level higher)
                  {person: {name: 'John'}},                          // Match (same level)
@@ -235,7 +236,7 @@ describe('Filter: filter', function() {
   });
 
 
-  it('should match any properties on same or deeper level for given "$" property', function() {
+  test('should match any properties on same or deeper level for given "$" property', () => {
     var items = [{level1: 'test', foo1: 'bar1'},
                  {level1: {level2: 'test', foo2:'bar2'}, foo1: 'bar1'},
                  {level1: {level2: {level3: 'test', foo3: 'bar3'}, foo2: 'bar2'}, foo1: 'bar1'}];
@@ -251,7 +252,7 @@ describe('Filter: filter', function() {
   });
 
 
-  it('should respect the nesting level of "$"', function() {
+  test('should respect the nesting level of "$"', () => {
     var items = [{supervisor: 'me', person: {name: 'Annet', email: 'annet@example.com'}},
                  {supervisor: 'me', person: {name: 'Billy', email: 'me@billy.com'}},
                  {supervisor: 'me', person: {name: 'Joan', email: 'joan@example.net'}},
@@ -264,7 +265,7 @@ describe('Filter: filter', function() {
   });
 
 
-  it('should support boolean properties', function() {
+  test('should support boolean properties', () => {
     var items = [{name: 'tom', current: true},
                  {name: 'demi', current: false},
                  {name: 'sofia'}];
@@ -276,7 +277,7 @@ describe('Filter: filter', function() {
   });
 
 
-  it('should support negation operator', function() {
+  test('should support negation operator', () => {
     var items = ['misko', 'adam'];
 
     expect(filter(items, '!isk').length).toBe(1);
@@ -284,10 +285,10 @@ describe('Filter: filter', function() {
   });
 
 
-  it('should ignore function properties in items', function() {
+  test('should ignore function properties in items', () => {
     // Own function properties
     var items = [
-      {text: 'hello', func: noop},
+      {text: 'hello', func: angular.noop},
       {text: 'goodbye'},
       {text: 'kittens'},
       {text: 'puppies'}
@@ -303,7 +304,7 @@ describe('Filter: filter', function() {
     function Item(text) {
         this.text = text;
     }
-    Item.prototype.func = noop;
+    Item.prototype.func = angular.noop;
 
     items = [
       new Item('hello'),
@@ -319,7 +320,7 @@ describe('Filter: filter', function() {
   });
 
 
-  it('should ignore function properties in expression', function() {
+  test('should ignore function properties in expression', () => {
     // Own function properties
     var items = [
       {text: 'hello'},
@@ -327,7 +328,7 @@ describe('Filter: filter', function() {
       {text: 'kittens'},
       {text: 'puppies'}
     ];
-    var expr = {text: 'hello', func: noop};
+    var expr = {text: 'hello', func: angular.noop};
 
     expect(filter(items, expr).length).toBe(1);
     expect(filter(items, expr)[0]).toBe(items[0]);
@@ -338,7 +339,7 @@ describe('Filter: filter', function() {
     function Expr(text) {
         this.text = text;
     }
-    Expr.prototype.func = noop;
+    Expr.prototype.func = angular.noop;
 
     expr = new Expr('hello');
 
@@ -349,7 +350,7 @@ describe('Filter: filter', function() {
   });
 
 
-  it('should consider inherited properties in items', function() {
+  test('should consider inherited properties in items', () => {
     function Item(text) {
       this.text = text;
     }
@@ -375,7 +376,7 @@ describe('Filter: filter', function() {
   });
 
 
-  it('should consider inherited properties in expression', function() {
+  test('should consider inherited properties in expression', () => {
     function Expr(text) {
       this.text = text;
     }
@@ -399,15 +400,15 @@ describe('Filter: filter', function() {
   });
 
 
-  it('should not be affected by `Object.prototype` when using a string expression', function() {
+  test('should not be affected by `Object.prototype` when using a string expression', () => {
     // eslint-disable-next-line no-extend-native
     Object.prototype.someProp = 'oo';
 
     var items = [
-      createMap(),
-      createMap(),
-      createMap(),
-      createMap()
+      ngInternals.createMap(),
+      ngInternals.createMap(),
+      ngInternals.createMap(),
+      ngInternals.createMap()
     ];
     items[0].someProp = 'hello';
     items[1].someProp = 'goodbye';
@@ -428,7 +429,7 @@ describe('Filter: filter', function() {
   });
 
 
-  it('should throw an error when is not used with an array', function() {
+  test('should throw an error when is not used with an array', () => {
     var item = {'not': 'array'};
     expect(function() { filter(item, {}); }).
       toThrowMinErr('filter', 'notarray', 'Expected array but received: {"not":"array"}');
@@ -446,15 +447,15 @@ describe('Filter: filter', function() {
   });
 
 
-  it('should not throw an error if used with an array like object', function() {
+  test('should not throw an error if used with an array like object', () => {
     function getArguments() {
       return arguments;
     }
     var argsObj = getArguments({name: 'Misko'}, {name: 'Igor'}, {name: 'Brad'});
 
-    var nodeList = jqLite('<p><span>Misko</span><span>Igor</span><span>Brad</span></p>')[0].childNodes;
+    var nodeList = angular.element('<p><span>Misko</span><span>Igor</span><span>Brad</span></p>')[0].childNodes;
     function nodeFilterPredicate(node) {
-      return node.innerHTML.indexOf('I') !== -1;
+      return node.innerHTML.includes('I');
     }
 
     expect(filter(argsObj, 'i').length).toBe(2);
@@ -463,18 +464,18 @@ describe('Filter: filter', function() {
   });
 
 
-  it('should return undefined when the array is undefined', function() {
+  test('should return undefined when the array is undefined', () => {
     expect(filter(undefined, {})).toBeUndefined();
   });
 
 
-  it('should return null when the value of the array is null', function() {
+  test('should return null when the value of the array is null', () => {
     var item = null;
     expect(filter(item, {})).toBe(null);
   });
 
 
-  it('should not throw an error if property is null when comparing object', function() {
+  test('should not throw an error if property is null when comparing object', () => {
     var items = [
         { office:1, people: {name:'john'}},
         { office:2, people: {name:'jane'}},
@@ -500,7 +501,7 @@ describe('Filter: filter', function() {
   });
 
 
-  it('should match `null` against `null` only', function() {
+  test('should match `null` against `null` only', () => {
     var items = [
       {value: null},
       {value: undefined},
@@ -527,22 +528,22 @@ describe('Filter: filter', function() {
     expect(filter(items, flt).length).toBe(items.length);
 
     flt = {value: NaN};
-    expect(includes(filter(items, flt), items[0])).toBeFalsy();
+    expect(angular.includes(filter(items, flt), items[0])).toBeFalsy();
 
     flt = {value: false};
-    expect(includes(filter(items, flt), items[0])).toBeFalsy();
+    expect(angular.includes(filter(items, flt), items[0])).toBeFalsy();
 
     flt = '';
-    expect(includes(filter(items, flt), items[0])).toBeFalsy();
+    expect(angular.includes(filter(items, flt), items[0])).toBeFalsy();
 
     flt = {value: 'null'};
-    expect(includes(filter(items, flt), items[0])).toBeFalsy();
+    expect(angular.includes(filter(items, flt), items[0])).toBeFalsy();
   });
 
 
-  describe('should support comparator', function() {
+  describe('should support comparator', () => {
 
-    it('not convert `null` or `undefined` to string in non-strict comparison', function() {
+    test('not convert `null` or `undefined` to string in non-strict comparison', () => {
       var items = [
         {value: null},
         {value: undefined}
@@ -553,28 +554,28 @@ describe('Filter: filter', function() {
     });
 
 
-    it('not consider objects without a custom `toString` in non-strict comparison', function() {
+    test('not consider objects without a custom `toString` in non-strict comparison', () => {
       var items = [{test: {}}];
       var expr = '[object';
       expect(filter(items, expr).length).toBe(0);
     });
 
 
-    it('should consider objects with custom `toString()` in non-strict comparison', function() {
+    test('should consider objects with custom `toString()` in non-strict comparison', () => {
       var obj = new Date(1970, 1);
       var items = [{test: obj}];
       expect(filter(items, '1970').length).toBe(1);
       expect(filter(items, 1970).length).toBe(1);
 
       obj = {
-        toString: function() { return 'custom'; }
+        toString() { return 'custom'; }
       };
       items = [{test: obj}];
       expect(filter(items, 'custom').length).toBe(1);
     });
 
 
-    it('should cope with objects that have no `toString()` in non-strict comparison', function() {
+    test('should cope with objects that have no `toString()` in non-strict comparison', () => {
       var obj = Object.create(null);
       var items = [{test: obj}];
       expect(function() {
@@ -584,7 +585,7 @@ describe('Filter: filter', function() {
     });
 
 
-    it('should cope with objects where `toString` is not a function in non-strict comparison', function() {
+    test('should cope with objects where `toString` is not a function in non-strict comparison', () => {
       var obj = {
         toString: 'moo'
       };
@@ -596,7 +597,7 @@ describe('Filter: filter', function() {
     });
 
 
-    it('as equality when true', function() {
+    test('as equality when true', () => {
       var items = ['misko', 'adam', 'adamson'];
       var expr = 'adam';
       expect(filter(items, expr, true)).toEqual([items[1]]);
@@ -626,7 +627,7 @@ describe('Filter: filter', function() {
     });
 
 
-    it('and use the function given to compare values', function() {
+    test('and use the function given to compare values', () => {
       var items = [
         {key: 1, nonkey: 1},
         {key: 2, nonkey: 2},
@@ -644,13 +645,14 @@ describe('Filter: filter', function() {
     });
 
 
-    it('and use it correctly with deep expression objects', function() {
+    test('and use it correctly with deep expression objects', () => {
       var items = [
         {id: 0, details: {email: 'admin@example.com', role: 'admin'}},
         {id: 1, details: {email: 'user1@example.com', role: 'user'}},
         {id: 2, details: {email: 'user2@example.com', role: 'user'}}
       ];
-      var expr, comp;
+      var expr;
+      var comp;
 
       expr = {details: {email: 'user@example.com', role: 'adm'}};
       expect(filter(items, expr)).toEqual([]);
@@ -674,7 +676,7 @@ describe('Filter: filter', function() {
       expect(filter(items, expr)).toEqual([items[1]]);
 
       comp = function(actual, expected) {
-        return isString(actual) && isString(expected) && (actual.indexOf(expected) === 0);
+        return angular.isString(actual) && angular.isString(expected) && (actual.indexOf(expected) === 0);
       };
 
       expr = {details: {email: 'admin@example.com', role: 'min'}};

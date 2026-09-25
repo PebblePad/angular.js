@@ -1,11 +1,12 @@
 'use strict';
+ describe('a', () => {
+  var element;
+  var $compile;
+  var $rootScope;
 
-describe('a', function() {
-  var element, $compile, $rootScope;
-
-  beforeEach(module(function($compileProvider) {
+  beforeEach(angular.mock.module(function($compileProvider) {
     $compileProvider.
-      directive('linkTo', valueFn({
+      directive('linkTo', ngInternals.valueFn({
         restrict: 'A',
         template: '<div class="my-link"><a href="{{destination}}">{{destination}}</a></div>',
         replace: true,
@@ -13,7 +14,7 @@ describe('a', function() {
           destination: '@linkTo'
         }
       })).
-      directive('linkNot', valueFn({
+      directive('linkNot', ngInternals.valueFn({
         restrict: 'A',
         template: '<div class="my-link"><a href>{{destination}}</a></div>',
         replace: true,
@@ -23,21 +24,21 @@ describe('a', function() {
       }));
   }));
 
-  beforeEach(inject(function(_$compile_, _$rootScope_) {
+  beforeEach(angular.mock.inject(function(_$compile_, _$rootScope_) {
     $compile = _$compile_;
     $rootScope = _$rootScope_;
   }));
 
 
-  afterEach(function() {
+   afterEach(() => {
     dealoc(element);
   });
 
 
-  it('should prevent default action to be executed when href is empty', function() {
-    var orgLocation = window.document.location.href,
-        preventDefaultCalled = false,
-        event;
+  test('should prevent default action to be executed when href is empty', () => {
+    var orgLocation = window.document.location.href;
+    var preventDefaultCalled = false;
+    var event;
 
     element = $compile('<a href="">empty link</a>')($rootScope);
 
@@ -59,9 +60,9 @@ describe('a', function() {
   });
 
 
-  it('should prevent IE for changing text content when setting attribute', function() {
+  test('should prevent IE for changing text content when setting attribute', () => {
     // see issue #1949
-    element = jqLite('<a href="">hello@you</a>');
+    element = angular.element('<a href="">hello@you</a>');
     $compile(element);
     element.attr('href', 'bye@me');
 
@@ -69,26 +70,27 @@ describe('a', function() {
   });
 
 
-  it('should not link and hookup an event if href is present at compile', function() {
-    var jq = jQuery || jqLite;
-    element = jq('<a href="//a.com">hello@you</a>');
+  test('should not link and hookup an event if href is present at compile', () => {
+    var jq = angular.element;
+    element = ngInternals.jq('<a href="//a.com">hello@you</a>');
     var linker = $compile(element);
 
-    spyOn(jq.prototype, 'on');
+    const spy = jest.spyOn(jq.prototype, 'on').mockImplementation(() => {});
 
     linker($rootScope);
 
     expect(jq.prototype.on).not.toHaveBeenCalled();
+    spy.mockRestore();
   });
 
 
-  it('should not preventDefault if anchor element is replaced with href-containing element', function() {
-    spyOn(jqLite.prototype, 'on').and.callThrough();
+  test('should not preventDefault if anchor element is replaced with href-containing element', () => {
+    const spy = jest.spyOn(angular.element.prototype, 'on');
     element = $compile('<a link-to="https://www.google.com">')($rootScope);
     $rootScope.$digest();
 
     var child = element.children('a');
-    var preventDefault = jasmine.createSpy('preventDefault');
+    var preventDefault = jest.fn().mockName('preventDefault');
 
     child.triggerHandler({
       type: 'click',
@@ -96,16 +98,17 @@ describe('a', function() {
     });
 
     expect(preventDefault).not.toHaveBeenCalled();
+    spy.mockRestore();
   });
 
 
-  it('should preventDefault if anchor element is replaced with element without href attribute', function() {
-    spyOn(jqLite.prototype, 'on').and.callThrough();
+  test('should preventDefault if anchor element is replaced with element without href attribute', () => {
+    const spy = jest.spyOn(angular.element.prototype, 'on');
     element = $compile('<a link-not="https://www.google.com">')($rootScope);
     $rootScope.$digest();
 
     var child = element.children('a');
-    var preventDefault = jasmine.createSpy('preventDefault');
+    var preventDefault = jest.fn().mockName('preventDefault');
 
     child.triggerHandler({
       type: 'click',
@@ -113,16 +116,17 @@ describe('a', function() {
     });
 
     expect(preventDefault).toHaveBeenCalled();
+    spy.mockRestore();
   });
 
 
-  if (isDefined(window.SVGElement)) {
-    describe('SVGAElement', function() {
-      it('should prevent default action to be executed when href is empty', function() {
-        var orgLocation = window.document.location.href,
-            preventDefaultCalled = false,
-            event,
-            child;
+  if (angular.isDefined(window.SVGElement)) {
+    describe('SVGAElement', () => {
+      test('should prevent default action to be executed when href is empty', () => {
+        var orgLocation = window.document.location.href;
+        var preventDefaultCalled = false;
+        var event;
+        var child;
 
         element = $compile('<svg><a xlink:href="">empty link</a></svg>')($rootScope);
         child = element.children('a');
@@ -144,16 +148,17 @@ describe('a', function() {
       });
 
 
-      it('should not link and hookup an event if xlink:href is present at compile', function() {
-        var jq = jQuery || jqLite;
-        element = jq('<svg><a xlink:href="bobby">hello@you</a></svg>');
+      test('should not link and hookup an event if xlink:href is present at compile', () => {
+        var jq = angular.element;
+        element = ngInternals.jq('<svg><a xlink:href="bobby">hello@you</a></svg>');
         var linker = $compile(element);
 
-        spyOn(jq.prototype, 'on');
+        const spy = jest.spyOn(jq.prototype, 'on').mockImplementation(() => {});
 
         linker($rootScope);
 
         expect(jq.prototype.on).not.toHaveBeenCalled();
+        spy.mockRestore();
       });
     });
   }

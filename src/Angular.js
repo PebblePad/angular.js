@@ -162,7 +162,7 @@ var /** @name angular */
 angular           = window.angular || (window.angular = {});
 
 var angularModule;
-var uid               = 0;
+var uid = { current: 0 };
 
 /**
  * @private
@@ -298,7 +298,7 @@ function reverseParams(iteratorFn) {
  * @returns {number} an unique alpha-numeric string
  */
 function nextUid() {
-  return ++uid;
+  return ++uid.current;
 }
 
 
@@ -1905,11 +1905,11 @@ function snake_case(name, separator) {
   });
 }
 
-var bindJQueryFired = false;
+var bindJQueryFiredRef = { current: false };
 function bindJQuery() {
   var originalCleanData;
 
-  if (bindJQueryFired) {
+  if (bindJQueryFiredRef.current) {
     return;
   }
 
@@ -1954,7 +1954,7 @@ function bindJQuery() {
   angular.element = jqLite;
 
   // Prevent double-proxying.
-  bindJQueryFired = true;
+  bindJQueryFiredRef.current = true;
 }
 
 /**

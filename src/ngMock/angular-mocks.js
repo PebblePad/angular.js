@@ -2275,7 +2275,7 @@ function MockXhr() {
   };
 
   this.abort = function() {
-    if (isFunction(this.onabort)) {
+    if (angular.isFunction(this.onabort)) {
       this.onabort();
     }
   };
@@ -3046,8 +3046,8 @@ angular.mock.$RootScopeDecorator = ['$delegate', function($delegate) {
 }];
 
 
-(function(jasmineOrMocha) {
-  if (!jasmineOrMocha) {
+(isUsingSupportedTestingFramework => {
+  if (!isUsingSupportedTestingFramework) {
     return;
   }
 
@@ -3073,7 +3073,7 @@ angular.mock.$RootScopeDecorator = ['$delegate', function($delegate) {
    * @description
    *
    * *NOTE*: This function is also published on window for easy access.<br>
-   * *NOTE*: This function is declared ONLY WHEN running tests with jasmine or mocha
+   * *NOTE*: This function is declared ONLY WHEN running tests with jest
    *
    * This function registers a module configuration code. It collects the configuration information
    * which will be used when the injector is created by {@link angular.mock.inject inject}.
@@ -3131,12 +3131,12 @@ angular.mock.$RootScopeDecorator = ['$delegate', function($delegate) {
    * @name angular.mock.module.sharedInjector
    * @description
    *
-   * *NOTE*: This function is declared ONLY WHEN running tests with jasmine or mocha
+   * *NOTE*: This function is declared ONLY WHEN running tests with jest
    *
    * This function ensures a single injector will be used for all tests in a given describe context.
    * This contrasts with the default behaviour where a new injector is created per test case.
    *
-   * Use sharedInjector when you want to take advantage of Jasmine's `beforeAll()`, or mocha's
+   * Use sharedInjector when you want to take advantage of jest's `beforeAll()`
    * `before()` methods. Call `module.sharedInjector()` before you setup any other hooks that
    * will create (i.e call `module()`) or use (i.e call `inject()`) the injector.
    *
@@ -3276,7 +3276,7 @@ angular.mock.$RootScopeDecorator = ['$delegate', function($delegate) {
    * @description
    *
    * *NOTE*: This function is also published on window for easy access.<br>
-   * *NOTE*: This function is declared ONLY WHEN running tests with jasmine or mocha
+   * *NOTE*: This function is declared ONLY WHEN running tests with jest
    *
    * The inject function wraps a function into an injectable function. The inject() creates new
    * instance of {@link auto.$injector $injector} per test, which is then used for
@@ -3316,7 +3316,7 @@ angular.mock.$RootScopeDecorator = ['$delegate', function($delegate) {
    * See also {@link angular.mock.module angular.mock.module}
    *
    * ## Example
-   * Example of what a typical jasmine tests looks like with the inject method.
+   * Example of what a typical jest tests looks like with the inject method.
    * ```js
    *
    *   angular.module('myApplicationModule', [])
@@ -3445,4 +3445,8 @@ angular.mock.$RootScopeDecorator = ['$delegate', function($delegate) {
       return !this.shared || this.sharedError;
     };
   }
-})(window.jasmine || window.mocha);
+
+  angular.mock.MockXhr = MockXhr;
+  angular.mock.MockHttpExpectation = MockHttpExpectation;
+  angular.mock.createMockXhr = createMockXhr;
+})(typeof jest !== 'undefined')

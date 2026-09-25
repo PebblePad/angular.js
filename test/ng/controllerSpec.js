@@ -1,24 +1,24 @@
 'use strict';
+ describe('$controller', () => {
+  var $controllerProvider;
+  var $controller;
 
-describe('$controller', function() {
-  var $controllerProvider, $controller;
-
-  beforeEach(module(function(_$controllerProvider_) {
+  beforeEach(angular.mock.module(function(_$controllerProvider_) {
     $controllerProvider = _$controllerProvider_;
   }));
 
 
-  beforeEach(inject(function(_$controller_) {
+  beforeEach(angular.mock.inject(function(_$controller_) {
     $controller = _$controller_;
   }));
 
 
-  describe('provider', function() {
+  describe('provider', () => {
 
-    it('should allow registration of controllers', function() {
-      var FooCtrl = function($scope) { $scope.foo = 'bar'; },
-        scope = {},
-        ctrl;
+    test('should allow registration of controllers', () => {
+      var FooCtrl = function($scope) { $scope.foo = 'bar'; };
+      var scope = {};
+      var ctrl;
 
       $controllerProvider.register('FooCtrl', FooCtrl);
       ctrl = $controller('FooCtrl', {$scope: scope});
@@ -27,10 +27,10 @@ describe('$controller', function() {
       expect(ctrl instanceof FooCtrl).toBe(true);
     });
 
-    it('should allow registration of bound controller functions', function() {
-      var FooCtrl = function($scope) { $scope.foo = 'bar'; },
-        scope = {},
-        ctrl;
+    test('should allow registration of bound controller functions', () => {
+      var FooCtrl = function($scope) { $scope.foo = 'bar'; };
+      var scope = {};
+      var ctrl;
 
       var BoundFooCtrl = FooCtrl.bind(null);
 
@@ -40,11 +40,11 @@ describe('$controller', function() {
       expect(scope.foo).toBe('bar');
     });
 
-    it('should allow registration of map of controllers', function() {
-      var FooCtrl = function($scope) { $scope.foo = 'foo'; },
-          BarCtrl = function($scope) { $scope.bar = 'bar'; },
-          scope = {},
-          ctrl;
+    test('should allow registration of map of controllers', () => {
+      var FooCtrl = function($scope) { $scope.foo = 'foo'; };
+      var BarCtrl = function($scope) { $scope.bar = 'bar'; };
+      var scope = {};
+      var ctrl;
 
       $controllerProvider.register({FooCtrl: FooCtrl, BarCtrl: BarCtrl});
 
@@ -58,10 +58,10 @@ describe('$controller', function() {
     });
 
 
-    it('should allow registration of controllers annotated with arrays', function() {
-      var FooCtrl = function($scope) { $scope.foo = 'bar'; },
-          scope = {},
-          ctrl;
+    test('should allow registration of controllers annotated with arrays', () => {
+      var FooCtrl = function($scope) { $scope.foo = 'bar'; };
+      var scope = {};
+      var ctrl;
 
       $controllerProvider.register('FooCtrl', ['$scope', FooCtrl]);
       ctrl = $controller('FooCtrl', {$scope: scope});
@@ -71,19 +71,19 @@ describe('$controller', function() {
     });
 
 
-    it('should throw an exception if a controller is called "hasOwnProperty"', function() {
+    test('should throw an exception if a controller is called "hasOwnProperty"', () => {
       expect(function() {
         $controllerProvider.register('hasOwnProperty', function($scope) {});
       }).toThrowMinErr('ng', 'badname', 'hasOwnProperty is not a valid controller name');
     });
 
 
-    it('should allow checking the availability of a controller', function() {
-      $controllerProvider.register('FooCtrl', noop);
-      $controllerProvider.register('BarCtrl', ['dep1', 'dep2', noop]);
+    test('should allow checking the availability of a controller', () => {
+      $controllerProvider.register('FooCtrl', angular.noop);
+      $controllerProvider.register('BarCtrl', ['dep1', 'dep2', angular.noop]);
       $controllerProvider.register({
-        'BazCtrl': noop,
-        'QuxCtrl': ['dep1', 'dep2', noop]
+        'BazCtrl': angular.noop,
+        'QuxCtrl': ['dep1', 'dep2', angular.noop]
       });
 
       expect($controllerProvider.has('FooCtrl')).toBe(true);
@@ -95,7 +95,7 @@ describe('$controller', function() {
     });
 
 
-    it('should throw ctrlfmt if name contains spaces', function() {
+    test('should throw ctrlfmt if name contains spaces', () => {
       expect(function() {
         $controller('ctrl doom');
       }).toThrowMinErr('$controller', 'ctrlfmt',
@@ -105,15 +105,15 @@ describe('$controller', function() {
   });
 
 
-  it('should return instance of given controller class', function() {
-    var MyClass = function() {},
-        ctrl = $controller(MyClass);
+  test('should return instance of given controller class', () => {
+    var MyClass = function() {};
+    var ctrl = $controller(MyClass);
 
     expect(ctrl).toBeDefined();
     expect(ctrl instanceof MyClass).toBe(true);
   });
 
-  it('should inject arguments', inject(function($http) {
+  test('should inject arguments', angular.mock.inject(function($http) {
     var MyClass = function($http) {
       this.$http = $http;
     };
@@ -123,19 +123,19 @@ describe('$controller', function() {
   }));
 
 
-  it('should inject given scope', function() {
+  test('should inject given scope', () => {
     var MyClass = function($scope) {
       this.$scope = $scope;
     };
 
-    var scope = {},
-        ctrl = $controller(MyClass, {$scope: scope});
+    var scope = {};
+    var ctrl = $controller(MyClass, {$scope: scope});
 
     expect(ctrl.$scope).toBe(scope);
   });
 
 
-  it('should not instantiate a controller defined on window', inject(function($window) {
+  test('should not instantiate a controller defined on window', angular.mock.inject(function($window) {
     var scope = {};
     var Foo = function() {};
 
@@ -146,16 +146,16 @@ describe('$controller', function() {
     }).toThrow();
   }));
 
-  it('should throw ctrlreg when the controller name does not match a registered controller', function() {
+  test('should throw ctrlreg when the controller name does not match a registered controller', () => {
     expect(function() {
       $controller('IDoNotExist', {$scope: {}});
     }).toThrowMinErr('$controller', 'ctrlreg', 'The controller with the name \'IDoNotExist\' is not registered.');
   });
 
 
-  describe('ctrl as syntax', function() {
+  describe('ctrl as syntax', () => {
 
-    it('should publish controller instance into scope', function() {
+    test('should publish controller instance into scope', () => {
       var scope = {};
 
       $controllerProvider.register('FooCtrl', function() { this.mark = 'foo'; });
@@ -166,7 +166,7 @@ describe('$controller', function() {
     });
 
 
-    it('should allow controllers with dots', function() {
+    test('should allow controllers with dots', () => {
       var scope = {};
 
       $controllerProvider.register('a.b.FooCtrl', function() { this.mark = 'foo'; });
@@ -177,7 +177,7 @@ describe('$controller', function() {
     });
 
 
-    it('should throw an error if $scope is not provided', function() {
+    test('should throw an error if $scope is not provided', () => {
       $controllerProvider.register('a.b.FooCtrl', function() { this.mark = 'foo'; });
 
       expect(function() {
@@ -187,7 +187,7 @@ describe('$controller', function() {
     });
 
 
-    it('should throw ctrlfmt if identifier contains non-ident characters', function() {
+    test('should throw ctrlfmt if identifier contains non-ident characters', () => {
       expect(function() {
         $controller('ctrl as foo<bar');
       }).toThrowMinErr('$controller', 'ctrlfmt',
@@ -196,7 +196,7 @@ describe('$controller', function() {
     });
 
 
-    it('should throw ctrlfmt if identifier contains spaces', function() {
+    test('should throw ctrlfmt if identifier contains spaces', () => {
       expect(function() {
         $controller('ctrl as foo bar');
       }).toThrowMinErr('$controller', 'ctrlfmt',
@@ -205,7 +205,7 @@ describe('$controller', function() {
     });
 
 
-    it('should throw ctrlfmt if identifier missing after " as "', function() {
+    test('should throw ctrlfmt if identifier missing after " as "', () => {
       expect(function() {
         $controller('ctrl as ');
       }).toThrowMinErr('$controller', 'ctrlfmt',
@@ -218,7 +218,7 @@ describe('$controller', function() {
                        'Must match `__name__ as __id__` or `__name__`.');
     });
 
-    it('should allow identifiers containing `$`', function() {
+    test('should allow identifiers containing `$`', () => {
       var scope = {};
 
       $controllerProvider.register('FooCtrl', function() { this.mark = 'foo'; });

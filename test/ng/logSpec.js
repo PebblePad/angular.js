@@ -1,10 +1,15 @@
 /* global $LogProvider: false */
 'use strict';
+ describe('$log', () => {
+  var $window;
+  var logger;
+  var log;
+  var warn;
+  var info;
+  var error;
+  var debug;
 
-describe('$log', function() {
-  var $window, logger, log, warn, info, error, debug;
-
-  beforeEach(module(function($provide) {
+  beforeEach(angular.mock.module(function($provide) {
     $window = {
       navigator: {userAgent: window.navigator.userAgent},
       document: {}
@@ -16,12 +21,12 @@ describe('$log', function() {
     error = function() { logger += 'error;'; };
     debug = function() { logger += 'debug;'; };
 
-    $provide.provider('$log', $LogProvider);
+    $provide.provider('$log', ngInternals.$LogProvider);
     $provide.value('$exceptionHandler', angular.mock.rethrow);
     $provide.value('$window', $window);
   }));
 
-  it('should use console if present', inject(
+  test('should use console if present', angular.mock.inject(
     function() {
       $window.console = {log: log,
                          warn: warn,
@@ -40,7 +45,7 @@ describe('$log', function() {
   ));
 
 
-  it('should use console.log() if other not present', inject(
+  test('should use console.log() if other not present', angular.mock.inject(
     function() {
       $window.console = {log: log};
     },
@@ -55,7 +60,7 @@ describe('$log', function() {
   ));
 
 
-  it('should use noop if no console', inject(
+  test('should use noop if no console', angular.mock.inject(
     function($log) {
       $log.log();
       $log.warn();
@@ -92,16 +97,16 @@ describe('$log', function() {
     }
 
     describe(ie9Mode ? 'IE 9 logging behavior' : 'Modern browsers\' logging behavior', function() {
-      beforeEach(module(attachMockConsoleTo$window));
+      beforeEach(angular.mock.module(attachMockConsoleTo$window));
 
-      it('should work if $window.navigator not defined', inject(
+      test('should work if $window.navigator not defined', angular.mock.inject(
         function() {
           delete $window.navigator;
         },
         function($log) {}
       ));
 
-      it('should have a working apply method', inject(function($log) {
+      test('should have a working apply method', angular.mock.inject(function($log) {
         $log.log.apply($log);
         $log.warn.apply($log);
         $log.info.apply($log);
@@ -114,7 +119,7 @@ describe('$log', function() {
       // For some reason Safari thinks there is always 1 parameter passed here.
       if (!/\b9\.\d(\.\d+)* safari/i.test(window.navigator.userAgent) &&
         !/\biphone os 9_/i.test(window.navigator.userAgent)) {
-        it('should not attempt to log the second argument in IE if it is not specified', inject(
+        test('should not attempt to log the second argument in IE if it is not specified', angular.mock.inject(
           function() {
             log = function(arg1, arg2) { logger += 'log,' + arguments.length + ';'; };
             warn = function(arg1, arg2) { logger += 'warn,' + arguments.length + ';'; };
@@ -134,11 +139,11 @@ describe('$log', function() {
         );
       }
 
-      describe('$log.debug', function() {
+      describe('$log.debug', () => {
 
         beforeEach(initService(false));
 
-        it('should skip debugging output if disabled', inject(
+        test('should skip debugging output if disabled', angular.mock.inject(
           function() {
             $window.console = {log: log,
                                warn: warn,
@@ -158,8 +163,9 @@ describe('$log', function() {
 
       });
 
-      describe('$log.error', function() {
-        var e, $log;
+      describe('$log.error', () => {
+        var e;
+        var $log;
 
         function TestError() {
           Error.prototype.constructor.apply(this, arguments);
@@ -171,11 +177,11 @@ describe('$log', function() {
         TestError.prototype = Object.create(Error.prototype);
         TestError.prototype.constructor = TestError;
 
-        beforeEach(inject(
+        beforeEach(angular.mock.inject(
           function() {
             e = new TestError('');
             $window.console = {
-              error: jasmine.createSpy('error')
+              error: jest.fn().mockName('error')
             };
           },
 
@@ -184,26 +190,26 @@ describe('$log', function() {
           }
         ));
 
-        it('should pass error if does not have trace', function() {
+        test('should pass error if does not have trace', () => {
           $log.error('abc', e);
           expect($window.console.error).toHaveBeenCalledWith('abc', e);
         });
 
-        if (msie || /\bEdge\//.test(window.navigator.userAgent)) {
-          it('should print stack', function() {
+        if (/\bEdge\//.test(window.navigator.userAgent)) {
+          test('should print stack', () => {
             e.stack = 'stack';
             $log.error('abc', e);
             expect($window.console.error).toHaveBeenCalledWith('abc', 'stack');
           });
         } else {
-          it('should print a raw error', function() {
+          test('should print a raw error', () => {
             e.stack = 'stack';
             $log.error('abc', e);
             expect($window.console.error).toHaveBeenCalledWith('abc', e);
           });
         }
 
-        it('should print line', function() {
+        test('should print line', () => {
           e.message = 'message';
           e.sourceURL = 'sourceURL';
           e.line = '123';
@@ -216,7 +222,7 @@ describe('$log', function() {
 
 
   function initService(debugEnabled) {
-    return module(function($logProvider) {
+    return angular.mock.module(function($logProvider) {
       $logProvider.debugEnabled(debugEnabled);
     });
   }

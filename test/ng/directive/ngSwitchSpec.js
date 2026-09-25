@@ -1,15 +1,14 @@
 'use strict';
-
-describe('ngSwitch', function() {
+ describe('ngSwitch', () => {
   var element;
 
 
-  afterEach(function() {
+   afterEach(() => {
     dealoc(element);
   });
 
 
-  it('should switch on value change', inject(function($rootScope, $compile) {
+  test('should switch on value change', angular.mock.inject(function($rootScope, $compile) {
     element = $compile(
       '<div ng-switch="select">' +
         '<div ng-switch-when="1">first:{{name}}</div>' +
@@ -36,7 +35,7 @@ describe('ngSwitch', function() {
   }));
 
 
-  it('should show all switch-whens that match the current value', inject(function($rootScope, $compile) {
+  test('should show all switch-whens that match the current value', angular.mock.inject(function($rootScope, $compile) {
     element = $compile(
       '<ul ng-switch="select">' +
         '<li ng-switch-when="1">first:{{name}}</li>' +
@@ -68,8 +67,8 @@ describe('ngSwitch', function() {
   }));
 
 
-  it('should show all elements between start and end markers that match the current value',
-      inject(function($rootScope, $compile) {
+  test('should show all elements between start and end markers that match the current value',
+      angular.mock.inject(function($rootScope, $compile) {
     element = $compile(
       '<ul ng-switch="select">' +
         '<li ng-switch-when-start="1">A</li>' +
@@ -94,7 +93,7 @@ describe('ngSwitch', function() {
   }));
 
 
-  it('should switch on switch-when-default', inject(function($rootScope, $compile) {
+  test('should switch on switch-when-default', angular.mock.inject(function($rootScope, $compile) {
     element = $compile(
       '<ng:switch on="select">' +
         '<div ng:switch-when="1">one</div>' +
@@ -108,8 +107,8 @@ describe('ngSwitch', function() {
   }));
 
 
-  it('should show all default elements between start and end markers when no match',
-      inject(function($rootScope, $compile) {
+  test('should show all default elements between start and end markers when no match',
+      angular.mock.inject(function($rootScope, $compile) {
     element = $compile(
       '<ul ng-switch="select">' +
         '<li ng-switch-when-start="1">A</li>' +
@@ -134,7 +133,7 @@ describe('ngSwitch', function() {
   }));
 
 
-  it('should show all switch-when-default', inject(function($rootScope, $compile) {
+  test('should show all switch-when-default', angular.mock.inject(function($rootScope, $compile) {
     element = $compile(
       '<ul ng-switch="select">' +
         '<li ng-switch-when="1">one</li>' +
@@ -149,8 +148,8 @@ describe('ngSwitch', function() {
   }));
 
 
-  it('should always display the elements that do not match a switch',
-      inject(function($rootScope, $compile) {
+  test('should always display the elements that do not match a switch',
+      angular.mock.inject(function($rootScope, $compile) {
     element = $compile(
       '<ul ng-switch="select">' +
         '<li>always </li>' +
@@ -167,10 +166,10 @@ describe('ngSwitch', function() {
   }));
 
 
-  it('should display the elements that do not have ngSwitchWhen nor ' +
+  test('should display the elements that do not have ngSwitchWhen nor ' +
      'ngSwitchDefault at the position specified in the template, when the ' +
      'first and last elements in the ngSwitch body do not have a ngSwitch* ' +
-     'directive', inject(function($rootScope, $compile) {
+     'directive', angular.mock.inject(function($rootScope, $compile) {
     element = $compile(
       '<ul ng-switch="select">' +
         '<li>1</li>' +
@@ -190,10 +189,10 @@ describe('ngSwitch', function() {
   }));
 
 
-  it('should display the elements that do not have ngSwitchWhen nor ' +
+  test('should display the elements that do not have ngSwitchWhen nor ' +
      'ngSwitchDefault at the position specified in the template when the ' +
      'first and last elements in the ngSwitch have a ngSwitch* directive',
-      inject(function($rootScope, $compile) {
+      angular.mock.inject(function($rootScope, $compile) {
     element = $compile(
       '<ul ng-switch="select">' +
         '<li ng-switch-when="1">2</li>' +
@@ -210,7 +209,7 @@ describe('ngSwitch', function() {
     expect(element.text()).toEqual('236');
   }));
 
-  it('should properly create and destroy child scopes', inject(function($rootScope, $compile) {
+  test('should properly create and destroy child scopes', angular.mock.inject(function($rootScope, $compile) {
     element = $compile(
       '<ng:switch on="url">' +
         '<div ng-switch-when="a">{{name}}</div>' +
@@ -225,7 +224,7 @@ describe('ngSwitch', function() {
     $rootScope.$apply();
     var child1 = getChildScope();
     expect(child1).toBeDefined();
-    spyOn(child1, '$destroy');
+    jest.spyOn(child1, '$destroy').mockImplementation(() => {});
 
     $rootScope.url = 'x';
     $rootScope.$apply();
@@ -240,7 +239,7 @@ describe('ngSwitch', function() {
   }));
 
 
-  it('should interoperate with other transclusion directives like ngRepeat', inject(function($rootScope, $compile) {
+  test('should interoperate with other transclusion directives like ngRepeat', angular.mock.inject(function($rootScope, $compile) {
     element = $compile(
       '<div ng-switch="value">' +
           '<div ng-switch-when="foo" ng-repeat="foo in foos">{{value}}:{{foo}}|</div>' +
@@ -265,8 +264,8 @@ describe('ngSwitch', function() {
   }));
 
 
-  it('should not leak jq data when compiled but not attached to parent when parent is destroyed',
-      inject(function($rootScope, $compile) {
+  test('should not leak jq data when compiled but not attached to parent when parent is destroyed',
+      angular.mock.inject(function($rootScope, $compile) {
     element = $compile(
       '<div ng-repeat="i in []">' +
         '<ng-switch on="url">' +
@@ -280,7 +279,7 @@ describe('ngSwitch', function() {
   }));
 
 
-  it('should properly support case labels with different numbers of transclude fns', inject(function($rootScope, $compile) {
+  test('should properly support case labels with different numbers of transclude fns', angular.mock.inject(function($rootScope, $compile) {
     element = $compile(
       '<div ng-switch="mode">' +
         '<p ng-switch-when="a">Block1</p>' +
@@ -303,8 +302,8 @@ describe('ngSwitch', function() {
   }));
 
 
-  it('should not trigger a digest after an element is removed', inject(function($$rAF, $compile, $rootScope, $timeout) {
-    var spy = spyOn($rootScope, '$digest').and.callThrough();
+  test('should not trigger a digest after an element is removed', angular.mock.inject(function($$rAF, $compile, $rootScope, $timeout) {
+    var spy = jest.spyOn($rootScope, '$digest');
 
     $rootScope.select = 1;
     element = $compile(
@@ -318,7 +317,7 @@ describe('ngSwitch', function() {
 
     $rootScope.select = 2;
     $rootScope.$apply();
-    spy.calls.reset();
+    spy.mockClear();
     expect(element.text()).toEqual('second');
     // If ngSwitch re-introduces code that triggers a digest after an element is removed (in an
     // animation .then callback), flushing the queue ensures the callback will be called, and the test
@@ -331,8 +330,8 @@ describe('ngSwitch', function() {
   }));
 
 
-  it('should handle changes to the switch value in a digest loop with multiple value matches',
-    inject(function($compile, $rootScope) {
+  test('should handle changes to the switch value in a digest loop with multiple value matches',
+    angular.mock.inject(function($compile, $rootScope) {
       var scope = $rootScope.$new();
       scope.value = 'foo';
 
@@ -361,9 +360,9 @@ describe('ngSwitch', function() {
   );
 
 
-  describe('ngSwitchWhen separator', function() {
+  describe('ngSwitchWhen separator', () => {
 
-    it('should be possible to define a separator', inject(function($rootScope, $compile) {
+    test('should be possible to define a separator', angular.mock.inject(function($rootScope, $compile) {
       element = $compile(
         '<div ng-switch="mode">' +
           '<p ng-switch-when="a|b" ng-switch-when-separator="|">Block1|</p>' +
@@ -386,7 +385,7 @@ describe('ngSwitch', function() {
     }));
 
 
-    it('should be possible to use a separator at the end of the value', inject(function($rootScope, $compile) {
+    test('should be possible to use a separator at the end of the value', angular.mock.inject(function($rootScope, $compile) {
       element = $compile(
         '<div ng-switch="mode">' +
           '<p ng-switch-when="a|b|" ng-switch-when-separator="|">Block1|</p>' +
@@ -409,7 +408,7 @@ describe('ngSwitch', function() {
     }));
 
 
-    it('should be possible to use the empty string as a separator', inject(function($rootScope, $compile) {
+    test('should be possible to use the empty string as a separator', angular.mock.inject(function($rootScope, $compile) {
       element = $compile(
         '<div ng-switch="mode">' +
           '<p ng-switch-when="ab" ng-switch-when-separator="">Block1|</p>' +
@@ -432,7 +431,7 @@ describe('ngSwitch', function() {
     }));
 
 
-    it('should be possible to use separators that are multiple characters long', inject(function($rootScope, $compile) {
+    test('should be possible to use separators that are multiple characters long', angular.mock.inject(function($rootScope, $compile) {
       element = $compile(
         '<div ng-switch="mode">' +
           '<p ng-switch-when="a||b|a" ng-switch-when-separator="||">Block1|</p>' +
@@ -455,7 +454,7 @@ describe('ngSwitch', function() {
     }));
 
 
-    it('should ignore multiple appearances of the same item', inject(function($rootScope, $compile) {
+    test('should ignore multiple appearances of the same item', angular.mock.inject(function($rootScope, $compile) {
       element = $compile(
         '<div ng-switch="mode">' +
           '<p ng-switch-when="a|b|a" ng-switch-when-separator="|">Block1|</p>' +
@@ -478,9 +477,10 @@ describe('ngSwitch', function() {
     }));
   });
 });
-
-describe('ngSwitch animation', function() {
-  var body, element, $rootElement;
+ describe('ngSwitch animation', () => {
+  var body;
+  var element;
+  var $rootElement;
 
   function html(content) {
     $rootElement.html(content);
@@ -488,33 +488,33 @@ describe('ngSwitch animation', function() {
     return element;
   }
 
-  beforeEach(module(function() {
+  beforeEach(angular.mock.module(function() {
     // we need to run animation on attached elements;
     return function(_$rootElement_) {
       $rootElement = _$rootElement_;
-      body = jqLite(window.document.body);
+      body = angular.element(window.document.body);
       body.append($rootElement);
     };
   }));
 
-  afterEach(function() {
+   afterEach(() => {
     dealoc(body);
     dealoc(element);
   });
 
-  describe('behavior', function() {
-    it('should destroy the previous leave animation if a new one takes place', function() {
-      module('ngAnimate');
-      module(function($animateProvider) {
+  describe('behavior', () => {
+    test('should destroy the previous leave animation if a new one takes place', () => {
+      angular.mock.module('ngAnimate');
+      angular.mock.module(function($animateProvider) {
         $animateProvider.register('.long-leave', function() {
           return {
-            leave: function(element, done) {
+            leave(element, done) {
               //do nothing at all
             }
           };
         });
       });
-      inject(function($compile, $rootScope, $animate, $templateCache) {
+      angular.mock.inject(function($compile, $rootScope, $animate, $templateCache) {
         var item;
         var $scope = $rootScope.$new();
         element = $compile(html(
@@ -526,7 +526,8 @@ describe('ngSwitch animation', function() {
 
         $scope.$apply('inc = "one"');
 
-        var destroyed, inner = element.children(0);
+        var destroyed;
+        var inner = element.children(0);
         inner.on('$destroy', function() {
           destroyed = true;
         });
@@ -540,11 +541,11 @@ describe('ngSwitch animation', function() {
     });
   });
 
-  describe('events', function() {
-    beforeEach(module('ngAnimateMock'));
+  describe('events', () => {
+    beforeEach(angular.mock.module('ngAnimateMock'));
 
-    it('should fire off the enter animation',
-      inject(function($compile, $rootScope, $animate) {
+    test('should fire off the enter animation',
+      angular.mock.inject(function($compile, $rootScope, $animate) {
         var item;
         var $scope = $rootScope.$new();
         element = $compile(html(
@@ -566,8 +567,8 @@ describe('ngSwitch animation', function() {
     );
 
 
-    it('should fire off the leave animation',
-      inject(function($compile, $rootScope, $animate) {
+    test('should fire off the leave animation',
+      angular.mock.inject(function($compile, $rootScope, $animate) {
         var item;
         var $scope = $rootScope.$new();
         element = $compile(html(
@@ -599,8 +600,8 @@ describe('ngSwitch animation', function() {
       })
     );
 
-    it('should work with svg elements when the svg container is transcluded', function() {
-      module(function($compileProvider) {
+    test('should work with svg elements when the svg container is transcluded', () => {
+      angular.mock.module(function($compileProvider) {
         $compileProvider.directive('svgContainer', function() {
           return {
             template: '<svg ng-transclude></svg>',
@@ -609,7 +610,7 @@ describe('ngSwitch animation', function() {
           };
         });
       });
-      inject(function($compile, $rootScope) {
+      angular.mock.inject(function($compile, $rootScope) {
         element = $compile('<svg-container ng-switch="inc"><circle ng-switch-when="one"></circle>' +
           '</svg-container>')($rootScope);
         $rootScope.inc = 'one';

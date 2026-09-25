@@ -1,23 +1,22 @@
 'use strict';
+ describe('ngAnimate $$animateJsDriver', () => {
 
-describe('ngAnimate $$animateJsDriver', function() {
+  beforeEach(angular.mock.module('ngAnimate'));
+  beforeEach(angular.mock.module('ngAnimateMock'));
 
-  beforeEach(module('ngAnimate'));
-  beforeEach(module('ngAnimateMock'));
-
-  it('should register the $$animateJsDriver into the list of drivers found in $animateProvider',
-    module(function($animateProvider) {
+  test('should register the $$animateJsDriver into the list of drivers found in $animateProvider',
+    angular.mock.module(function($animateProvider) {
 
     expect($animateProvider.drivers).toContain('$$animateJsDriver');
   }));
 
-  describe('with $$animateJs', function() {
+  describe('with $$animateJs', () => {
     var capturedAnimation = null;
     var captureLog = [];
     var element;
     var driver;
 
-    beforeEach(module(function($provide) {
+    beforeEach(angular.mock.module(function($provide) {
       $provide.factory('$$animateJs', function($$AnimateRunner) {
         return function() {
           var runner = new $$AnimateRunner();
@@ -27,7 +26,7 @@ describe('ngAnimate $$animateJsDriver', function() {
             runner: runner
           });
           return {
-            start: function() {
+            start() {
               return runner;
             }
           };
@@ -35,7 +34,7 @@ describe('ngAnimate $$animateJsDriver', function() {
       });
 
       captureLog.length = 0;
-      element = jqLite('<div></div>');
+      element = angular.element('<div></div>');
 
       return function($rootElement, $$animateJsDriver) {
         $rootElement.append(element);
@@ -46,8 +45,8 @@ describe('ngAnimate $$animateJsDriver', function() {
       };
     }));
 
-    it('should trigger a standard animation call to $$animateJs when a regular animation is executed',
-      inject(function($rootScope) {
+    test('should trigger a standard animation call to $$animateJs when a regular animation is executed',
+      angular.mock.inject(function($rootScope) {
 
       driver({
         element: element,
@@ -63,12 +62,12 @@ describe('ngAnimate $$animateJsDriver', function() {
     }));
 
 
-    it('should trigger two regular JS animations when a grouped animation is passed in',
-      inject(function($rootScope) {
+    test('should trigger two regular JS animations when a grouped animation is passed in',
+      angular.mock.inject(function($rootScope) {
 
-      var child1 = jqLite('<div></div>');
+      var child1 = angular.element('<div></div>');
       element.append(child1);
-      var child2 = jqLite('<div></div>');
+      var child2 = angular.element('<div></div>');
       element.append(child2);
 
       driver({
@@ -96,11 +95,12 @@ describe('ngAnimate $$animateJsDriver', function() {
       expect(second[1]).toBe('enter');
     }));
 
-    they('should $prop both animations when $prop() is called on the runner', ['end', 'cancel'], function(method) {
-      inject(function($rootScope, $animate) {
-        var child1 = jqLite('<div></div>');
+    test.each(['end', 'cancel'].map((prop) => ({ prop })))(
+        'should $prop both animations when $prop() is called on the runner', function({ prop: method }) {
+      angular.mock.inject(function($rootScope, $animate) {
+        var child1 = angular.element('<div></div>');
         element.append(child1);
-        var child2 = jqLite('<div></div>');
+        var child2 = angular.element('<div></div>');
         element.append(child2);
 
         var animator = driver({
@@ -135,11 +135,12 @@ describe('ngAnimate $$animateJsDriver', function() {
       });
     });
 
-    they('should fully $prop when all inner animations are complete', ['end', 'cancel'], function(method) {
-      inject(function($rootScope, $animate) {
-        var child1 = jqLite('<div></div>');
+    test.each(['end', 'cancel'].map((prop) => ({ prop })))(
+        'should fully $prop when all inner animations are complete', function({ prop: method }) {
+      angular.mock.inject(function($rootScope, $animate) {
+        var child1 = angular.element('<div></div>');
         element.append(child1);
-        var child2 = jqLite('<div></div>');
+        var child2 = angular.element('<div></div>');
         element.append(child2);
 
         var animator = driver({

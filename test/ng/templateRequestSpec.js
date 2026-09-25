@@ -1,21 +1,20 @@
 'use strict';
+ describe('$templateRequest', () => {
 
-describe('$templateRequest', function() {
+  describe('provider', () => {
 
-  describe('provider', function() {
+    describe('httpOptions', () => {
 
-    describe('httpOptions', function() {
-
-      it('should default to undefined and fallback to default $http options', function() {
+      test('should default to undefined and fallback to default $http options', () => {
 
         var defaultHeader;
 
-        module(function($templateRequestProvider) {
+        angular.mock.module(function($templateRequestProvider) {
           expect($templateRequestProvider.httpOptions()).toBeUndefined();
         });
 
-        inject(function($templateRequest, $http, $templateCache) {
-          spyOn($http, 'get').and.callThrough();
+        angular.mock.inject(function($templateRequest, $http, $templateCache) {
+          jest.spyOn($http, 'get');
 
           $templateRequest('tpl.html');
 
@@ -27,11 +26,11 @@ describe('$templateRequest', function() {
 
       });
 
-      it('should be configurable', function() {
+      test('should be configurable', () => {
 
         function someTransform() {}
 
-        module(function($templateRequestProvider) {
+        angular.mock.module(function($templateRequestProvider) {
 
           // Configure the template request service to provide  specific headers and transforms
           $templateRequestProvider.httpOptions({
@@ -40,8 +39,8 @@ describe('$templateRequest', function() {
           });
         });
 
-        inject(function($templateRequest, $http, $templateCache) {
-          spyOn($http, 'get').and.callThrough();
+        angular.mock.inject(function($templateRequest, $http, $templateCache) {
+          jest.spyOn($http, 'get');
 
           $templateRequest('tpl.html');
 
@@ -54,16 +53,16 @@ describe('$templateRequest', function() {
       });
 
 
-      it('should be allow you to override the cache', function() {
+      test('should be allow you to override the cache', () => {
 
         var httpOptions = {};
 
-        module(function($templateRequestProvider) {
+        angular.mock.module(function($templateRequestProvider) {
           $templateRequestProvider.httpOptions(httpOptions);
         });
 
-        inject(function($templateRequest, $http, $cacheFactory) {
-          spyOn($http, 'get').and.callThrough();
+        angular.mock.inject(function($templateRequest, $http, $cacheFactory) {
+          jest.spyOn($http, 'get');
 
           var customCache = $cacheFactory('customCache');
           httpOptions.cache = customCache;
@@ -79,8 +78,8 @@ describe('$templateRequest', function() {
     });
   });
 
-  it('should download the provided template file',
-    inject(function($rootScope, $templateRequest, $httpBackend) {
+  test('should download the provided template file',
+    angular.mock.inject(function($rootScope, $templateRequest, $httpBackend) {
 
     $httpBackend.expectGET('tpl.html').respond('<div>abc</div>');
 
@@ -93,8 +92,8 @@ describe('$templateRequest', function() {
     expect(content).toBe('<div>abc</div>');
   }));
 
-  it('should cache the request to prevent extra downloads',
-    inject(function($rootScope, $templateRequest, $templateCache, $httpBackend) {
+  test('should cache the request to prevent extra downloads',
+    angular.mock.inject(function($rootScope, $templateRequest, $templateCache, $httpBackend) {
 
     $httpBackend.expectGET('tpl.html').respond('matias');
 
@@ -114,11 +113,11 @@ describe('$templateRequest', function() {
     expect($templateCache.get('tpl.html')).toBe('matias');
   }));
 
-  it('should return the cached value on the first request',
-    inject(function($rootScope, $templateRequest, $templateCache, $httpBackend) {
+  test('should return the cached value on the first request',
+    angular.mock.inject(function($rootScope, $templateRequest, $templateCache, $httpBackend) {
 
       $httpBackend.expectGET('tpl.html').respond('matias');
-      spyOn($templateCache, 'put').and.returnValue('_matias');
+      jest.spyOn($templateCache, 'put').mockReturnValue('_matias');
 
       var content = [];
       function tplRequestCb(html) {
@@ -132,12 +131,12 @@ describe('$templateRequest', function() {
       expect(content[0]).toBe('_matias');
     }));
 
-  it('should call `$exceptionHandler` on request error', function() {
-    module(function($exceptionHandlerProvider) {
+  test('should call `$exceptionHandler` on request error', () => {
+    angular.mock.module(function($exceptionHandlerProvider) {
       $exceptionHandlerProvider.mode('log');
     });
 
-    inject(function($exceptionHandler, $httpBackend, $templateRequest) {
+    angular.mock.inject(function($exceptionHandler, $httpBackend, $templateRequest) {
       $httpBackend.expectGET('tpl.html').respond(404, '', {}, 'Not Found');
 
       var err;
@@ -151,13 +150,13 @@ describe('$templateRequest', function() {
     });
   });
 
-  it('should not call `$exceptionHandler` on request error when `ignoreRequestError` is true',
+  test('should not call `$exceptionHandler` on request error when `ignoreRequestError` is true',
     function() {
-      module(function($exceptionHandlerProvider) {
+      angular.mock.module(function($exceptionHandlerProvider) {
         $exceptionHandlerProvider.mode('log');
       });
 
-      inject(function($exceptionHandler, $httpBackend, $templateRequest) {
+      angular.mock.inject(function($exceptionHandler, $httpBackend, $templateRequest) {
         $httpBackend.expectGET('tpl.html').respond(404);
 
         var err;
@@ -170,11 +169,11 @@ describe('$templateRequest', function() {
     }
   );
 
-  it('should not call `$exceptionHandler` when the template is empty',
-    inject(function($exceptionHandler, $httpBackend, $rootScope, $templateRequest) {
+  test('should not call `$exceptionHandler` when the template is empty',
+    angular.mock.inject(function($exceptionHandler, $httpBackend, $rootScope, $templateRequest) {
       $httpBackend.expectGET('tpl.html').respond('');
 
-      var onError = jasmine.createSpy('onError');
+      var onError = jest.fn().mockName('onError');
       $templateRequest('tpl.html').catch(onError);
       $rootScope.$digest();
       $httpBackend.flush();
@@ -184,11 +183,11 @@ describe('$templateRequest', function() {
     })
   );
 
-  it('should accept empty templates and refuse null or undefined templates in cache',
-    inject(function($rootScope, $templateRequest, $templateCache, $sce) {
+  test('should accept empty templates and refuse null or undefined templates in cache',
+    angular.mock.inject(function($rootScope, $templateRequest, $templateCache, $sce) {
 
     // Will throw on any template not in cache.
-    spyOn($sce, 'getTrustedResourceUrl').and.returnValue(false);
+    jest.spyOn($sce, 'getTrustedResourceUrl').mockReturnValue(false);
 
     expect(function() {
       $templateRequest('tpl.html'); // should go through $sce
@@ -217,8 +216,8 @@ describe('$templateRequest', function() {
     $templateCache.removeAll();
   }));
 
-  it('should keep track of how many requests are going on',
-    inject(function($rootScope, $templateRequest, $httpBackend) {
+  test('should keep track of how many requests are going on',
+    angular.mock.inject(function($rootScope, $templateRequest, $httpBackend) {
 
     $httpBackend.expectGET('a.html').respond('a');
     $httpBackend.expectGET('b.html').respond('c');
@@ -245,9 +244,9 @@ describe('$templateRequest', function() {
     expect($templateRequest.totalPendingRequests).toBe(0);
   }));
 
-  it('should not try to parse a response as JSON',
-    inject(function($templateRequest, $httpBackend) {
-      var spy = jasmine.createSpy('success');
+  test('should not try to parse a response as JSON',
+    angular.mock.inject(function($templateRequest, $httpBackend) {
+      var spy = jest.fn().mockName('success');
       $httpBackend.expectGET('a.html').respond('{{text}}', {
         'Content-Type': 'application/json'
       });
@@ -256,14 +255,14 @@ describe('$templateRequest', function() {
       expect(spy).toHaveBeenCalledOnceWith('{{text}}');
   }));
 
-  it('should use custom response transformers (array)', function() {
-    module(function($httpProvider) {
+  test('should use custom response transformers (array)', () => {
+    angular.mock.module(function($httpProvider) {
       $httpProvider.defaults.transformResponse.push(function(data) {
         return data + '!!';
       });
     });
-    inject(function($templateRequest, $httpBackend) {
-      var spy = jasmine.createSpy('success');
+    angular.mock.inject(function($templateRequest, $httpBackend) {
+      var spy = jest.fn().mockName('success');
       $httpBackend.expectGET('a.html').respond('{{text}}', {
         'Content-Type': 'application/json'
       });
@@ -273,14 +272,14 @@ describe('$templateRequest', function() {
     });
   });
 
-  it('should use custom response transformers (function)', function() {
-    module(function($httpProvider) {
+  test('should use custom response transformers (function)', () => {
+    angular.mock.module(function($httpProvider) {
       $httpProvider.defaults.transformResponse = function(data) {
         return data + '!!';
       };
     });
-    inject(function($templateRequest, $httpBackend) {
-      var spy = jasmine.createSpy('success');
+    angular.mock.inject(function($templateRequest, $httpBackend) {
+      var spy = jest.fn().mockName('success');
       $httpBackend.expectGET('a.html').respond('{{text}}', {
         'Content-Type': 'application/json'
       });

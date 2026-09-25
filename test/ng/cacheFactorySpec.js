@@ -1,29 +1,28 @@
 'use strict';
+ describe('$cacheFactory', () => {
 
-describe('$cacheFactory', function() {
-
-  it('should be injected', inject(function($cacheFactory) {
+  test('should be injected', angular.mock.inject(function($cacheFactory) {
     expect($cacheFactory).toBeDefined();
   }));
 
 
-  it('should return a new cache whenever called', inject(function($cacheFactory) {
+  test('should return a new cache whenever called', angular.mock.inject(function($cacheFactory) {
     var cache1 = $cacheFactory('cache1');
     var cache2 = $cacheFactory('cache2');
     expect(cache1).not.toEqual(cache2);
   }));
 
 
-  it('should complain if the cache id is being reused', inject(function($cacheFactory) {
+  test('should complain if the cache id is being reused', angular.mock.inject(function($cacheFactory) {
     $cacheFactory('cache1');
     expect(function() { $cacheFactory('cache1'); }).
       toThrowMinErr('$cacheFactory', 'iid', 'CacheId \'cache1\' is already taken!');
   }));
 
 
-  describe('info', function() {
+  describe('info', () => {
 
-    it('should provide info about all created caches', inject(function($cacheFactory) {
+    test('should provide info about all created caches', angular.mock.inject(function($cacheFactory) {
       expect($cacheFactory.info()).toEqual({});
 
       var cache1 = $cacheFactory('cache1');
@@ -35,11 +34,11 @@ describe('$cacheFactory', function() {
   });
 
 
-  describe('get', function() {
+  describe('get', () => {
 
-    it('should return a cache if looked up by id', inject(function($cacheFactory) {
-      var cache1 = $cacheFactory('cache1'),
-          cache2 = $cacheFactory('cache2');
+    test('should return a cache if looked up by id', angular.mock.inject(function($cacheFactory) {
+      var cache1 = $cacheFactory('cache1');
+      var cache2 = $cacheFactory('cache2');
 
       expect(cache1).not.toBe(cache2);
       expect(cache1).toBe($cacheFactory.get('cache1'));
@@ -47,17 +46,17 @@ describe('$cacheFactory', function() {
     }));
   });
 
-  describe('cache', function() {
+  describe('cache', () => {
     var cache;
 
-    beforeEach(inject(function($cacheFactory) {
+    beforeEach(angular.mock.inject(function($cacheFactory) {
       cache = $cacheFactory('test');
     }));
 
 
-    describe('put, get & remove', function() {
+    describe('put, get & remove', () => {
 
-      it('should add cache entries via add and retrieve them via get', inject(function($cacheFactory) {
+      test('should add cache entries via add and retrieve them via get', angular.mock.inject(function($cacheFactory) {
         cache.put('key1', 'bar');
         cache.put('key2', {bar:'baz'});
 
@@ -66,7 +65,7 @@ describe('$cacheFactory', function() {
       }));
 
 
-      it('should ignore put if the value is undefined', inject(function($cacheFactory) {
+      test('should ignore put if the value is undefined', angular.mock.inject(function($cacheFactory) {
         cache.put();
         cache.put('key1');
         cache.put('key2', undefined);
@@ -75,7 +74,7 @@ describe('$cacheFactory', function() {
       }));
 
 
-      it('should remove entries via remove', inject(function($cacheFactory) {
+      test('should remove entries via remove', angular.mock.inject(function($cacheFactory) {
         cache.put('k1', 'foo');
         cache.put('k2', 'bar');
 
@@ -91,12 +90,12 @@ describe('$cacheFactory', function() {
       }));
 
 
-      it('should return undefined when entry does not exist', inject(function($cacheFactory) {
+      test('should return undefined when entry does not exist', angular.mock.inject(function($cacheFactory) {
         expect(cache.remove('non-existent')).toBeUndefined();
       }));
 
 
-      it('should stringify keys', inject(function($cacheFactory) {
+      test('should stringify keys', angular.mock.inject(function($cacheFactory) {
         cache.put('123', 'foo');
         cache.put(123, 'bar');
 
@@ -108,16 +107,16 @@ describe('$cacheFactory', function() {
       }));
 
 
-      it('should return value from put', inject(function($cacheFactory) {
+      test('should return value from put', angular.mock.inject(function($cacheFactory) {
         var obj = {};
         expect(cache.put('k1', obj)).toBe(obj);
       }));
     });
 
 
-    describe('info', function() {
+    describe('info', () => {
 
-      it('should size increment with put and decrement with remove', inject(function($cacheFactory) {
+      test('should size increment with put and decrement with remove', angular.mock.inject(function($cacheFactory) {
         expect(cache.info().size).toBe(0);
 
         cache.put('foo', 'bar');
@@ -133,7 +132,7 @@ describe('$cacheFactory', function() {
         expect(cache.info().size).toBe(0);
       }));
 
-      it('should only decrement size when an element is actually removed via remove', inject(function($cacheFactory) {
+      test('should only decrement size when an element is actually removed via remove', angular.mock.inject(function($cacheFactory) {
         cache.put('foo', 'bar');
         expect(cache.info().size).toBe(1);
 
@@ -147,15 +146,15 @@ describe('$cacheFactory', function() {
         expect(cache.info().size).toBe(0);
       }));
 
-      it('should return cache id', inject(function($cacheFactory) {
+      test('should return cache id', angular.mock.inject(function($cacheFactory) {
         expect(cache.info().id).toBe('test');
       }));
     });
 
 
-    describe('removeAll', function() {
+    describe('removeAll', () => {
 
-      it('should blow away all data', inject(function($cacheFactory) {
+      test('should blow away all data', angular.mock.inject(function($cacheFactory) {
         cache.put('id1', 1);
         cache.put('id2', 2);
         cache.put('id3', 3);
@@ -171,9 +170,9 @@ describe('$cacheFactory', function() {
     });
 
 
-    describe('destroy', function() {
+    describe('destroy', () => {
 
-      it('should make the cache unusable and remove references to it from $cacheFactory', inject(function($cacheFactory) {
+      test('should make the cache unusable and remove references to it from $cacheFactory', angular.mock.inject(function($cacheFactory) {
         cache.put('foo', 'bar');
         cache.destroy();
 
@@ -188,9 +187,9 @@ describe('$cacheFactory', function() {
   });
 
 
-  describe('LRU cache', function() {
+  describe('LRU cache', () => {
 
-    it('should create cache with defined capacity', inject(function($cacheFactory) {
+    test('should create cache with defined capacity', angular.mock.inject(function($cacheFactory) {
       var cache = $cacheFactory('cache1', {capacity: 5});
       expect(cache.info().size).toBe(0);
 
@@ -207,10 +206,10 @@ describe('$cacheFactory', function() {
     }));
 
 
-    describe('eviction', function() {
+    describe('eviction', () => {
       var cache;
 
-      beforeEach(inject(function($cacheFactory) {
+      beforeEach(angular.mock.inject(function($cacheFactory) {
         cache = $cacheFactory('cache1', {capacity: 2});
 
         cache.put('id0', 0);
@@ -218,7 +217,7 @@ describe('$cacheFactory', function() {
       }));
 
 
-      it('should kick out the first entry on put', inject(function($cacheFactory) {
+      test('should kick out the first entry on put', angular.mock.inject(function($cacheFactory) {
         cache.put('id2', 2);
         expect(cache.get('id0')).toBeUndefined();
         expect(cache.get('id1')).toBe(1);
@@ -226,7 +225,7 @@ describe('$cacheFactory', function() {
       }));
 
 
-      it('should refresh an entry via get', inject(function($cacheFactory) {
+      test('should refresh an entry via get', angular.mock.inject(function($cacheFactory) {
         cache.get('id0');
         cache.put('id2', 2);
         expect(cache.get('id0')).toBe(0);
@@ -235,7 +234,7 @@ describe('$cacheFactory', function() {
       }));
 
 
-      it('should refresh an entry via put', inject(function($cacheFactory) {
+      test('should refresh an entry via put', angular.mock.inject(function($cacheFactory) {
         cache.put('id0', '00');
         cache.put('id2', 2);
         expect(cache.get('id0')).toBe('00');
@@ -244,7 +243,7 @@ describe('$cacheFactory', function() {
       }));
 
 
-      it('should not purge an entry if another one was removed', inject(function($cacheFactory) {
+      test('should not purge an entry if another one was removed', angular.mock.inject(function($cacheFactory) {
         cache.remove('id1');
         cache.put('id2', 2);
         expect(cache.get('id0')).toBe(0);
@@ -253,7 +252,7 @@ describe('$cacheFactory', function() {
       }));
 
 
-      it('should purge the next entry if the stalest one was removed', inject(function($cacheFactory) {
+      test('should purge the next entry if the stalest one was removed', angular.mock.inject(function($cacheFactory) {
         cache.remove('id0');
         cache.put('id2', 2);
         cache.put('id3', 3);
@@ -264,7 +263,7 @@ describe('$cacheFactory', function() {
       }));
 
 
-      it('should correctly recreate the linked list if all cache entries were removed', inject(function($cacheFactory) {
+      test('should correctly recreate the linked list if all cache entries were removed', angular.mock.inject(function($cacheFactory) {
         cache.remove('id0');
         cache.remove('id1');
         cache.put('id2', 2);
@@ -278,7 +277,7 @@ describe('$cacheFactory', function() {
       }));
 
 
-      it('should blow away the entire cache via removeAll and start evicting when full', inject(function($cacheFactory) {
+      test('should blow away the entire cache via removeAll and start evicting when full', angular.mock.inject(function($cacheFactory) {
         cache.put('id0', 0);
         cache.put('id1', 1);
         cache.removeAll();
@@ -296,7 +295,7 @@ describe('$cacheFactory', function() {
       }));
 
 
-      it('should correctly refresh and evict items if operations are chained', inject(function($cacheFactory) {
+      test('should correctly refresh and evict items if operations are chained', angular.mock.inject(function($cacheFactory) {
         cache = $cacheFactory('cache2', {capacity: 3});
 
         cache.put('id0', 0); //0

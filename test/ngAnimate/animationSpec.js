@@ -1,23 +1,22 @@
 'use strict';
+ describe('$$animation', () => {
 
-describe('$$animation', function() {
-
-  beforeEach(module('ngAnimate'));
-  beforeEach(module('ngAnimateMock'));
+  beforeEach(angular.mock.module('ngAnimate'));
+  beforeEach(angular.mock.module('ngAnimateMock'));
 
   var element;
-  afterEach(function() {
+   afterEach(() => {
     dealoc(element);
   });
 
-  beforeEach(module(function($$animationProvider) {
+  beforeEach(angular.mock.module(function($$animationProvider) {
     $$animationProvider.drivers.length = 0;
   }));
 
-  it('should not run an animation if there are no drivers',
-    inject(function($$animation, $animate, $rootScope) {
+  test('should not run an animation if there are no drivers',
+    angular.mock.inject(function($$animation, $animate, $rootScope) {
 
-    element = jqLite('<div></div>');
+    element = angular.element('<div></div>');
     var done = false;
     $$animation(element, 'someEvent').then(function() {
       done = true;
@@ -27,16 +26,16 @@ describe('$$animation', function() {
     expect(done).toBe(true);
   }));
 
-  it('should not run an animation if no drivers return an animation step function', function() {
-    module(function($$animationProvider, $provide) {
+  test('should not run an animation if no drivers return an animation step function', () => {
+    angular.mock.module(function($$animationProvider, $provide) {
       $$animationProvider.drivers.push('matiasDriver');
       $provide.value('matiasDriver', function() {
         return false;
       });
     });
-    inject(function($$animation, $animate, $rootScope) {
-      element = jqLite('<div></div>');
-      var parent = jqLite('<div></div>');
+    angular.mock.inject(function($$animation, $animate, $rootScope) {
+      element = angular.element('<div></div>');
+      var parent = angular.element('<div></div>');
       parent.append(element);
 
       var done = false;
@@ -50,11 +49,11 @@ describe('$$animation', function() {
     });
   });
 
-  describe('drivers', function() {
-    it('should use the first driver that returns a step function', function() {
+  describe('drivers', () => {
+    test('should use the first driver that returns a step function', () => {
       var count = 0;
       var activeDriver;
-      module(function($$animationProvider, $provide) {
+      angular.mock.module(function($$animationProvider, $provide) {
         $$animationProvider.drivers.push('1');
         $$animationProvider.drivers.push('2');
         $$animationProvider.drivers.push('3');
@@ -68,7 +67,7 @@ describe('$$animation', function() {
         $provide.value('2', function() {
           count++;
           return {
-            start: function() {
+            start() {
               activeDriver = '2';
               return runner;
             }
@@ -84,8 +83,8 @@ describe('$$animation', function() {
         };
       });
 
-      inject(function($$animation, $rootScope, $rootElement) {
-        element = jqLite('<div></div>');
+      angular.mock.inject(function($$animation, $rootScope, $rootElement) {
+        element = angular.element('<div></div>');
         $rootElement.append(element);
 
         $$animation(element, 'enter');
@@ -96,17 +95,17 @@ describe('$$animation', function() {
       });
     });
 
-    describe('step function', function() {
+    describe('step function', () => {
       var capturedAnimation;
-      beforeEach(module(function($$animationProvider, $provide) {
-        element = jqLite('<div></div>');
+      beforeEach(angular.mock.module(function($$animationProvider, $provide) {
+        element = angular.element('<div></div>');
 
         $$animationProvider.drivers.push('stepper');
         $provide.factory('stepper', function($$AnimateRunner) {
           return function() {
             capturedAnimation = arguments;
             return {
-              start: function() {
+              start() {
                 return new $$AnimateRunner();
               }
             };
@@ -114,8 +113,8 @@ describe('$$animation', function() {
         });
       }));
 
-      it('should obtain the element, event, the provided options and the domOperation',
-        inject(function($$animation, $rootScope, $rootElement) {
+      test('should obtain the element, event, the provided options and the domOperation',
+        angular.mock.inject(function($$animation, $rootScope, $rootElement) {
         $rootElement.append(element);
 
         var options = {};
@@ -138,8 +137,8 @@ describe('$$animation', function() {
         expect(domOperationCalled).toBe(true);
       }));
 
-      it('should obtain the classes string which is a combination of className, addClass and removeClass',
-        inject(function($$animation, $rootScope, $rootElement) {
+      test('should obtain the classes string which is a combination of className, addClass and removeClass',
+        angular.mock.inject(function($$animation, $rootScope, $rootElement) {
 
         element.addClass('blue red');
         $rootElement.append(element);
@@ -157,9 +156,9 @@ describe('$$animation', function() {
       }));
     });
 
-    it('should traverse the drivers in reverse order', function() {
+    test('should traverse the drivers in reverse order', () => {
       var log = [];
-      module(function($$animationProvider, $provide) {
+      angular.mock.module(function($$animationProvider, $provide) {
         $$animationProvider.drivers.push('first');
         $$animationProvider.drivers.push('second');
 
@@ -174,8 +173,8 @@ describe('$$animation', function() {
         });
       });
 
-      inject(function($$animation, $rootScope, $rootElement) {
-        element = jqLite('<div></div>');
+      angular.mock.inject(function($$animation, $rootScope, $rootElement) {
+        element = angular.element('<div></div>');
         $rootElement.append(element);
         $$animation(element, 'enter');
         $rootScope.$digest();
@@ -183,15 +182,15 @@ describe('$$animation', function() {
       });
     });
 
-    they('should $prop the animation call if the driver $proped the returned promise',
-      ['resolve', 'reject'], function(event) {
+    test.each(['resolve', 'reject'].map((prop) => ({ prop, proped: prop === 'resolve' ? 'resolved' : 'rejected' })))(
+        'should $prop the animation call if the driver $proped the returned promise', function({ prop: event }) {
 
-      module(function($$animationProvider, $provide) {
+      angular.mock.module(function($$animationProvider, $provide) {
         $$animationProvider.drivers.push('resolvingAnimation');
         $provide.factory('resolvingAnimation', function($$AnimateRunner) {
           return function() {
             return {
-              start: function() {
+              start() {
                 return new $$AnimateRunner();
               }
             };
@@ -199,10 +198,10 @@ describe('$$animation', function() {
         });
       });
 
-      inject(function($$animation, $rootScope, $animate) {
+      angular.mock.inject(function($$animation, $rootScope, $animate) {
         var status;
-        var element = jqLite('<div></div>');
-        var parent = jqLite('<div></div>');
+        var element = angular.element('<div></div>');
+        var parent = angular.element('<div></div>');
         parent.append(element);
 
         var runner = $$animation(element, 'enter');
@@ -229,23 +228,23 @@ describe('$$animation', function() {
       });
     });
 
-    they('should $prop the driver animation when runner.$prop() is called',
-      ['cancel', 'end'], function(method) {
+    test.each(['cancel', 'end'].map((prop) => ({ prop })))(
+        'should $prop the driver animation when runner.$prop() is called', function({ prop: method }) {
 
       var log = [];
 
-      module(function($$animationProvider, $provide) {
+      angular.mock.module(function($$animationProvider, $provide) {
         $$animationProvider.drivers.push('actualDriver');
         $provide.factory('actualDriver', function($$AnimateRunner) {
           return function() {
             return {
-              start: function() {
+              start() {
                 log.push('start');
                 return new $$AnimateRunner({
-                  end: function() {
+                  end() {
                     log.push('end');
                   },
-                  cancel: function() {
+                  cancel() {
                     log.push('cancel');
                   }
                 });
@@ -255,8 +254,8 @@ describe('$$animation', function() {
         });
       });
 
-      inject(function($$animation, $rootScope, $rootElement) {
-        element = jqLite('<div></div>');
+      angular.mock.inject(function($$animation, $rootScope, $rootElement) {
+        element = angular.element('<div></div>');
         $rootElement.append(element);
 
         var runner = $$animation(element, 'enter');
@@ -268,12 +267,12 @@ describe('$$animation', function() {
     });
   });
 
-  describe('when', function() {
+  describe('when', () => {
     var captureLog;
     var runnerLog;
     var capturedAnimation;
 
-    beforeEach(module(function($$animationProvider, $provide) {
+    beforeEach(angular.mock.module(function($$animationProvider, $provide) {
       captureLog = [];
       runnerLog = [];
       capturedAnimation = null;
@@ -283,7 +282,7 @@ describe('$$animation', function() {
         return function(details) {
           captureLog.push(capturedAnimation = details); //only one param is passed into the driver
           return {
-            start: function() {
+            start() {
               return new $$AnimateRunner({
                 end: runnerEvent('end'),
                 cancel: runnerEvent('cancel')
@@ -300,26 +299,26 @@ describe('$$animation', function() {
       }
     }));
 
-    describe('singular', function() {
-      beforeEach(module(function($provide) {
-        element = jqLite('<div></div>');
+    describe('singular', () => {
+      beforeEach(angular.mock.module(function($provide) {
+        element = angular.element('<div></div>');
         return function($rootElement) {
           $rootElement.append(element);
         };
       }));
 
-      it('should space out multiple ancestorial class-based animations with a RAF in between',
-        inject(function($rootScope, $$animation, $$rAF) {
+      test('should space out multiple ancestorial class-based animations with a RAF in between',
+        angular.mock.inject(function($rootScope, $$animation, $$rAF) {
 
         var parent = element;
-        element = jqLite('<div></div>');
-        parent.append(element);
+        var wrapper = angular.element('<div></div>');
+        parent.append(wrapper);
 
-        var child = jqLite('<div></div>');
-        element.append(child);
+        var child = angular.element('<div></div>');
+        wrapper.append(child);
 
         $$animation(parent, 'addClass', { addClass: 'blue' });
-        $$animation(element, 'addClass', { addClass: 'red' });
+        $$animation(wrapper, 'addClass', { addClass: 'red' });
         $$animation(child, 'addClass', { addClass: 'green' });
 
         $rootScope.$digest();
@@ -336,18 +335,18 @@ describe('$$animation', function() {
         expect(capturedAnimation.options.addClass).toBe('green');
       }));
 
-      it('should properly cancel out pending animations that are spaced with a RAF request before the digest completes',
-        inject(function($rootScope, $$animation, $$rAF) {
+      test('should properly cancel out pending animations that are spaced with a RAF request before the digest completes',
+        angular.mock.inject(function($rootScope, $$animation, $$rAF) {
 
         var parent = element;
-        element = jqLite('<div></div>');
-        parent.append(element);
+        var wrapper = angular.element('<div></div>');
+        parent.append(wrapper);
 
-        var child = jqLite('<div></div>');
-        element.append(child);
+        var child = angular.element('<div></div>');
+        wrapper.append(child);
 
         var r1 = $$animation(parent, 'addClass', { addClass: 'blue' });
-        var r2 = $$animation(element, 'addClass', { addClass: 'red' });
+        var r2 = $$animation(wrapper, 'addClass', { addClass: 'red' });
         var r3 = $$animation(child, 'addClass', { addClass: 'green' });
 
         r2.end();
@@ -363,18 +362,18 @@ describe('$$animation', function() {
         expect(capturedAnimation.options.addClass).toBe('green');
       }));
 
-      it('should properly cancel out pending animations that are spaced with a RAF request after the digest completes',
-        inject(function($rootScope, $$animation, $$rAF) {
+      test('should properly cancel out pending animations that are spaced with a RAF request after the digest completes',
+        angular.mock.inject(function($rootScope, $$animation, $$rAF) {
 
         var parent = element;
-        element = jqLite('<div></div>');
-        parent.append(element);
+        var wrapper = angular.element('<div></div>');
+        parent.append(wrapper);
 
-        var child = jqLite('<div></div>');
-        element.append(child);
+        var child = angular.element('<div></div>');
+        wrapper.append(child);
 
         var r1 = $$animation(parent, 'addClass', { addClass: 'blue' });
-        var r2 = $$animation(element, 'addClass', { addClass: 'red' });
+        var r2 = $$animation(wrapper, 'addClass', { addClass: 'red' });
         var r3 = $$animation(child, 'addClass', { addClass: 'green' });
 
         $rootScope.$digest();
@@ -392,17 +391,17 @@ describe('$$animation', function() {
         expect(capturedAnimation.options.addClass).toBe('green');
       }));
 
-      they('should return a runner that object that contains a $prop() function',
-        ['end', 'cancel', 'then'], function(method) {
-        inject(function($$animation) {
+      test.each(['end', 'cancel', 'then'].map((prop) => ({ prop })))(
+          'should return a runner that object that contains a $prop() function', function({ prop: method }) {
+        angular.mock.inject(function($$animation) {
           var runner = $$animation(element, 'someEvent');
-          expect(isFunction(runner[method])).toBe(true);
+          expect(angular.isFunction(runner[method])).toBe(true);
         });
       });
 
-      they('should close the animation if runner.$prop() is called before the $postDigest phase kicks in',
-        ['end', 'cancel'], function(method) {
-        inject(function($$animation, $rootScope, $animate) {
+      test.each(['end', 'cancel'].map((prop) => ({ prop })))(
+          'should close the animation if runner.$prop() is called before the $postDigest phase kicks in', function({ prop: method }) {
+        angular.mock.inject(function($$animation, $rootScope, $animate) {
           var status;
           var runner = $$animation(element, 'someEvent');
           runner.then(function() { status = 'end'; },
@@ -417,16 +416,16 @@ describe('$$animation', function() {
         });
       });
 
-      they('should update the runner methods to the ones provided by the driver when the animation starts',
-        ['end', 'cancel'], function(method) {
+      test.each(['end', 'cancel'].map((prop) => ({ prop })))(
+          'should update the runner methods to the ones provided by the driver when the animation starts', function({ prop: method }) {
 
-        var spy = jasmine.createSpy();
-        module(function($$animationProvider, $provide) {
+        var spy = jest.fn();
+        angular.mock.module(function($$animationProvider, $provide) {
           $$animationProvider.drivers.push('animalDriver');
           $provide.factory('animalDriver', function($$AnimateRunner) {
             return function() {
               return {
-                start: function() {
+                start() {
                   var data = {};
                   data[method] = spy;
                   return new $$AnimateRunner(data);
@@ -435,7 +434,7 @@ describe('$$animation', function() {
             };
           });
         });
-        inject(function($$animation, $rootScope, $rootElement) {
+        angular.mock.inject(function($$animation, $rootScope, $rootElement) {
           var r1 = $$animation(element, 'someEvent');
           r1[method]();
           expect(spy).not.toHaveBeenCalled();
@@ -448,8 +447,8 @@ describe('$$animation', function() {
         });
       });
 
-      it('should not start the animation if the element is removed from the DOM before the postDigest kicks in',
-        inject(function($$animation) {
+      test('should not start the animation if the element is removed from the DOM before the postDigest kicks in',
+        angular.mock.inject(function($$animation) {
 
         var runner = $$animation(element, 'someEvent');
 
@@ -458,8 +457,8 @@ describe('$$animation', function() {
         expect(capturedAnimation).toBeFalsy();
       }));
 
-      it('should immediately end the animation if the element is removed from the DOM during the animation',
-        inject(function($$animation, $animate, $rootScope) {
+      test('should immediately end the animation if the element is removed from the DOM during the animation',
+        angular.mock.inject(function($$animation, $animate, $rootScope) {
 
         var runner = $$animation(element, 'someEvent');
         $rootScope.$digest();
@@ -470,8 +469,8 @@ describe('$$animation', function() {
         expect(runnerLog).toEqual(['end']);
       }));
 
-      it('should not end the animation when the leave animation removes the element from the DOM',
-        inject(function($$animation, $animate, $rootScope) {
+      test('should not end the animation when the leave animation removes the element from the DOM',
+        angular.mock.inject(function($$animation, $animate, $rootScope) {
 
         var runner = $$animation(element, 'leave', {}, function() {
           element.remove();
@@ -485,27 +484,27 @@ describe('$$animation', function() {
         expect(runnerLog).toEqual([]);
       }));
 
-      it('should remove the $destroy event listener when the animation is closed',
-        inject(function($$animation, $rootScope) {
+      test('should remove the $destroy event listener when the animation is closed',
+        angular.mock.inject(function($$animation, $rootScope) {
 
-        var addListen = spyOn(element, 'on').and.callThrough();
-        var removeListen = spyOn(element, 'off').and.callThrough();
+        var addListen = jest.spyOn(element, 'on');
+        var removeListen = jest.spyOn(element, 'off');
         var runner = $$animation(element, 'someEvent');
 
-        var args = addListen.calls.mostRecent().args[0];
+        var args = addListen.mock.lastCall[0];
         expect(args).toBe('$destroy');
 
         runner.end();
 
-        args = removeListen.calls.mostRecent().args[0];
+        args = removeListen.mock.lastCall[0];
         expect(args).toBe('$destroy');
       }));
 
-      it('should always sort parent-element animations to run in order of parent-to-child DOM structure',
-        inject(function($$animation, $rootScope, $animate) {
+      test('should always sort parent-element animations to run in order of parent-to-child DOM structure',
+        angular.mock.inject(function($$animation, $rootScope, $animate) {
 
-        var child = jqLite('<div></div>');
-        var grandchild = jqLite('<div></div>');
+        var child = angular.element('<div></div>');
+        var grandchild = angular.element('<div></div>');
 
         element.append(child);
         child.append(grandchild);
@@ -526,16 +525,16 @@ describe('$$animation', function() {
       }));
 
 
-      they('should only apply the ng-$prop-prepare class if there are a child animations',
-        ['enter', 'leave', 'move'], function(animationType) {
-        inject(function($$animation, $rootScope, $animate) {
+      test.each(['enter', 'leave', 'move'].map((prop) => ({ prop })))(
+          'should only apply the ng-$prop-prepare class if there are a child animations', function({ prop: animationType }) {
+        angular.mock.inject(function($$animation, $rootScope, $animate) {
           var expectedClassName = 'ng-' + animationType + '-prepare';
 
           $$animation(element, animationType);
           $rootScope.$digest();
           expect(element).not.toHaveClass(expectedClassName);
 
-          var child = jqLite('<div></div>');
+          var child = angular.element('<div></div>');
           element.append(child);
 
           $$animation(element, animationType);
@@ -548,12 +547,12 @@ describe('$$animation', function() {
       });
 
 
-      they('should remove the preparation class before the $prop-animation starts',
-        ['enter', 'leave', 'move'], function(animationType) {
-        inject(function($$animation, $rootScope, $$rAF) {
+      test.each(['enter', 'leave', 'move'].map((prop) => ({ prop })))(
+          'should remove the preparation class before the $prop-animation starts', function({ prop: animationType }) {
+        angular.mock.inject(function($$animation, $rootScope, $$rAF) {
           var expectedClassName = 'ng-' + animationType + '-prepare';
 
-          var child = jqLite('<div></div>');
+          var child = angular.element('<div></div>');
           element.append(child);
 
           $$animation(element, animationType);
@@ -571,39 +570,44 @@ describe('$$animation', function() {
       });
     });
 
-    describe('grouped', function() {
+    describe('grouped', () => {
       var fromElement;
       var toElement;
       var fromAnchors;
       var toAnchors;
-      beforeEach(module(function($provide) {
-        fromElement = jqLite('<div></div>');
-        toElement = jqLite('<div></div>');
+      beforeEach(angular.mock.module(function($provide) {
+        fromElement = angular.element('<div></div>');
+        toElement = angular.element('<div></div>');
         fromAnchors = [
-          jqLite('<div>1</div>'),
-          jqLite('<div>2</div>'),
-          jqLite('<div>3</div>')
+          angular.element('<div>1</div>'),
+          angular.element('<div>2</div>'),
+          angular.element('<div>3</div>')
         ];
         toAnchors = [
-          jqLite('<div>a</div>'),
-          jqLite('<div>b</div>'),
-          jqLite('<div>c</div>')
+          angular.element('<div>a</div>'),
+          angular.element('<div>b</div>'),
+          angular.element('<div>c</div>')
         ];
 
         return function($rootElement) {
           $rootElement.append(fromElement);
           $rootElement.append(toElement);
-          forEach(fromAnchors, function(a) {
+          angular.forEach(fromAnchors, function(a) {
             fromElement.append(a);
           });
-          forEach(toAnchors, function(a) {
+          angular.forEach(toAnchors, function(a) {
             toElement.append(a);
           });
         };
       }));
 
-      it('should group animations together when they have shared anchors and a shared CSS class',
-        inject(function($$animation, $rootScope) {
+      afterEach(() => {
+        dealoc(fromElement);
+        dealoc(toElement);
+      });
+
+      test('should group animations together when they have shared anchors and a shared CSS class',
+        angular.mock.inject(function($$animation, $rootScope) {
 
         fromElement.addClass('shared-class');
         $$animation(fromElement, 'leave');
@@ -633,8 +637,8 @@ describe('$$animation', function() {
         assertCompareNodes(toElm, anchors['in']);
       }));
 
-      it('should group animations together and properly match up multiple anchors based on their references',
-        inject(function($$animation, $rootScope) {
+      test('should group animations together and properly match up multiple anchors based on their references',
+        angular.mock.inject(function($$animation, $rootScope) {
 
         var attr = 'ng-animate-ref';
 
@@ -665,8 +669,8 @@ describe('$$animation', function() {
         assertCompareNodes(toAnchors[1], anchors[2]['in']);
       }));
 
-      it('should group animations together on the from and to elements if their both contain matching anchors',
-        inject(function($$animation, $rootScope) {
+      test('should group animations together on the from and to elements if their both contain matching anchors',
+        angular.mock.inject(function($$animation, $rootScope) {
 
         fromElement.addClass('shared-class');
         fromElement.attr('ng-animate-ref', '1');
@@ -683,8 +687,8 @@ describe('$$animation', function() {
         assertCompareNodes(toElement, anchors['in']);
       }));
 
-      it('should not group animations into an anchored animation if enter/leave events are NOT used',
-        inject(function($$animation, $rootScope, $$rAF) {
+      test('should not group animations into an anchored animation if enter/leave events are NOT used',
+        angular.mock.inject(function($$animation, $rootScope, $$rAF) {
 
         fromElement.addClass('shared-class');
         fromElement.attr('ng-animate-ref', '1');
@@ -703,8 +707,8 @@ describe('$$animation', function() {
         expect(captureLog.length).toBe(2);
       }));
 
-      it('should not group animations together if a matching pair of anchors is not detected',
-        inject(function($$animation, $rootScope) {
+      test('should not group animations together if a matching pair of anchors is not detected',
+        angular.mock.inject(function($$animation, $rootScope) {
 
         fromElement.addClass('shared-class');
         $$animation(fromElement, 'leave');
@@ -719,8 +723,8 @@ describe('$$animation', function() {
         expect(captureLog.length).toBe(2);
       }));
 
-      it('should not group animations together if a matching CSS class is not detected',
-        inject(function($$animation, $rootScope) {
+      test('should not group animations together if a matching CSS class is not detected',
+        angular.mock.inject(function($$animation, $rootScope) {
 
         fromElement.addClass('even-class');
         $$animation(fromElement, 'leave');
@@ -735,8 +739,8 @@ describe('$$animation', function() {
         expect(captureLog.length).toBe(2);
       }));
 
-      it('should expose the shared CSS class in the options provided to the driver',
-        inject(function($$animation, $rootScope) {
+      test('should expose the shared CSS class in the options provided to the driver',
+        angular.mock.inject(function($$animation, $rootScope) {
 
         fromElement.addClass('fresh-class');
         $$animation(fromElement, 'leave');
@@ -751,8 +755,8 @@ describe('$$animation', function() {
         expect(capturedAnimation.classes).toBe('fresh-class');
       }));
 
-      it('should update the runner methods to the grouped runner methods handled by the driver',
-        inject(function($$animation, $rootScope) {
+      test('should update the runner methods to the grouped runner methods handled by the driver',
+        angular.mock.inject(function($$animation, $rootScope) {
 
         fromElement.addClass('group-1');
         var runner1 = $$animation(fromElement, 'leave');
@@ -771,8 +775,9 @@ describe('$$animation', function() {
         expect(runner1.cancel).toBe(runner2.cancel);
       }));
 
-      they('should end the animation if the $prop element is prematurely removed from the DOM during the animation', ['from', 'to'], function(event) {
-        inject(function($$animation, $rootScope) {
+      test.each(['from', 'to'].map((prop) => ({ prop })))(
+          'should end the animation if the $prop element is prematurely removed from the DOM during the animation', function({ prop: event }) {
+        angular.mock.inject(function($$animation, $rootScope) {
           fromElement.addClass('group-1');
           $$animation(fromElement, 'leave');
 
@@ -790,13 +795,13 @@ describe('$$animation', function() {
         });
       });
 
-      it('should not end the animation when the `from` animation calls its own leave dom operation',
-        inject(function($$animation, $rootScope) {
+      test('should not end the animation when the `from` animation calls its own leave dom operation',
+        angular.mock.inject(function($$animation, $rootScope) {
 
         fromElement.addClass('group-1');
         var elementRemoved = false;
         $$animation(fromElement, 'leave', {
-          domOperation: function() {
+          domOperation() {
             elementRemoved = true;
             fromElement.remove();
           }
@@ -820,8 +825,8 @@ describe('$$animation', function() {
         expect(runnerLog).toEqual([]);
       }));
 
-      it('should not end the animation if any of the anchor elements are removed from the DOM during the animation',
-        inject(function($$animation, $rootScope) {
+      test('should not end the animation if any of the anchor elements are removed from the DOM during the animation',
+        angular.mock.inject(function($$animation, $rootScope) {
 
         fromElement.addClass('group-1');
         var elementRemoved = false;
@@ -843,13 +848,13 @@ describe('$$animation', function() {
         expect(runnerLog).toEqual([]);
       }));
 
-      it('should prepare a parent-element animation to run first before the anchored animation',
-        inject(function($$animation, $rootScope, $rootElement, $animate) {
+      test('should prepare a parent-element animation to run first before the anchored animation',
+        angular.mock.inject(function($$animation, $rootScope, $rootElement, $animate) {
 
         fromAnchors[0].attr('ng-animate-ref', 'shared');
         toAnchors[0].attr('ng-animate-ref', 'shared');
 
-        var parent = jqLite('<div></div>');
+        var parent = angular.element('<div></div>');
         parent.append(fromElement);
         parent.append(toElement);
         $rootElement.append(parent);
@@ -872,33 +877,34 @@ describe('$$animation', function() {
         expect(captureLog[0].element).toBe(parent);
         expect(captureLog[1].from.element).toBe(fromElement);
         expect(captureLog[1].to.element).toBe(toElement);
+        dealoc(parent);
       }));
     });
   });
 
-  describe('[options]', function() {
+  describe('[options]', () => {
     var runner;
     var defered;
     var parent;
     var mockedDriverFn;
     var mockedPlayerFn;
 
-    beforeEach(module(function($$animationProvider, $provide) {
+    beforeEach(angular.mock.module(function($$animationProvider, $provide) {
       $$animationProvider.drivers.push('mockedTestDriver');
       $provide.factory('mockedTestDriver', function() {
         return mockedDriverFn;
       });
 
-      element = jqLite('<div></div>');
-      parent = jqLite('<div></div>');
+      element = angular.element('<div></div>');
+      parent = angular.element('<div></div>');
 
       return function($$AnimateRunner, $rootElement, $document) {
-        jqLite($document[0].body).append($rootElement);
+        angular.element($document[0].body).append($rootElement);
         $rootElement.append(parent);
 
         mockedDriverFn = function(element, method, options, domOperation) {
           return {
-            start: function() {
+            start() {
               runner = new $$AnimateRunner();
               return runner;
             }
@@ -907,8 +913,8 @@ describe('$$animation', function() {
       };
     }));
 
-    it('should temporarily assign the provided CSS class for the duration of the animation',
-      inject(function($rootScope, $$animation) {
+    test('should temporarily assign the provided CSS class for the duration of the animation',
+      angular.mock.inject(function($rootScope, $$animation) {
 
       parent.append(element);
 
@@ -927,8 +933,8 @@ describe('$$animation', function() {
       expect(element).not.toHaveClass('fudge');
     }));
 
-    it('should add and remove the ng-animate CSS class when the animation is active',
-      inject(function($$animation, $rootScope) {
+    test('should add and remove the ng-animate CSS class when the animation is active',
+      angular.mock.inject(function($$animation, $rootScope) {
 
       parent.append(element);
 
@@ -943,12 +949,12 @@ describe('$$animation', function() {
     }));
 
 
-    it('should apply the `ng-animate` and temporary CSS classes before the driver is invoked', function() {
+    test('should apply the `ng-animate` and temporary CSS classes before the driver is invoked', () => {
       var capturedElementClasses;
 
       parent.append(element);
 
-      module(function($provide) {
+      angular.mock.module(function($provide) {
         $provide.factory('mockedTestDriver', function() {
           return function(details) {
             capturedElementClasses = details.element.attr('class');
@@ -956,7 +962,7 @@ describe('$$animation', function() {
         });
       });
 
-      inject(function($$animation, $rootScope) {
+      angular.mock.inject(function($$animation, $rootScope) {
         parent.append(element);
 
         $$animation(element, 'enter', {
@@ -969,14 +975,14 @@ describe('$$animation', function() {
       });
     });
 
-    it('should perform the DOM operation at the end of the animation if the driver doesn\'t run it already',
-      inject(function($$animation, $rootScope) {
+    test('should perform the DOM operation at the end of the animation if the driver doesn\'t run it already',
+      angular.mock.inject(function($$animation, $rootScope) {
 
       parent.append(element);
 
       var domOperationFired = false;
       $$animation(element, 'enter', {
-        domOperation: function() {
+        domOperation() {
           domOperationFired = true;
         }
       });
@@ -990,11 +996,11 @@ describe('$$animation', function() {
       expect(domOperationFired).toBeTruthy();
     }));
 
-    it('should still apply the `from` and `to` styling even if no driver was detected', function() {
-      module(function($$animationProvider) {
+    test('should still apply the `from` and `to` styling even if no driver was detected', () => {
+      angular.mock.module(function($$animationProvider) {
         $$animationProvider.drivers.length = 0;
       });
-      inject(function($$animation, $rootScope) {
+      angular.mock.inject(function($$animation, $rootScope) {
         $$animation(element, 'event', {
           from: { background: 'red' },
           to: { background: 'blue' }
@@ -1004,8 +1010,8 @@ describe('$$animation', function() {
       });
     });
 
-    it('should still apply the `from` and `to` styling even if the driver does not do the job', function() {
-      module(function($$animationProvider, $provide) {
+    test('should still apply the `from` and `to` styling even if the driver does not do the job', () => {
+      angular.mock.module(function($$animationProvider, $provide) {
         $$animationProvider.drivers[0] = 'dumbDriver';
         $provide.factory('dumbDriver', function($q) {
           return function stepFn() {
@@ -1013,7 +1019,7 @@ describe('$$animation', function() {
           };
         });
       });
-      inject(function($$animation, $rootScope, $animate) {
+      angular.mock.inject(function($$animation, $rootScope, $animate) {
         element.addClass('four');
         parent.append(element);
 
@@ -1036,11 +1042,11 @@ describe('$$animation', function() {
       });
     });
 
-    it('should still resolve the `addClass` and `removeClass` classes even if no driver was detected', function() {
-      module(function($$animationProvider) {
+    test('should still resolve the `addClass` and `removeClass` classes even if no driver was detected', () => {
+      angular.mock.module(function($$animationProvider) {
         $$animationProvider.drivers.length = 0;
       });
-      inject(function($$animation, $rootScope) {
+      angular.mock.inject(function($$animation, $rootScope) {
         element.addClass('four');
 
         $$animation(element, 'event', {
@@ -1055,8 +1061,8 @@ describe('$$animation', function() {
       });
     });
 
-    it('should still resolve the `addClass` and `removeClass` classes even if the driver does not do the job', function() {
-      module(function($$animationProvider, $provide) {
+    test('should still resolve the `addClass` and `removeClass` classes even if the driver does not do the job', () => {
+      angular.mock.module(function($$animationProvider, $provide) {
         $$animationProvider.drivers[0] = 'dumbDriver';
         $provide.factory('dumbDriver', function($$AnimateRunner) {
           return function initFn() {
@@ -1066,7 +1072,7 @@ describe('$$animation', function() {
           };
         });
       });
-      inject(function($$animation, $rootScope, $animate) {
+      angular.mock.inject(function($$animation, $rootScope, $animate) {
         parent.append(element);
         element.addClass('four');
 

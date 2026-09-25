@@ -1,20 +1,22 @@
 'use strict';
+ describe('$$testability', () => {
+  describe('finding elements', () => {
+    var $$testability;
+    var $compile;
+    var scope;
+    var element;
 
-describe('$$testability', function() {
-  describe('finding elements', function() {
-    var $$testability, $compile, scope, element;
-
-    beforeEach(inject(function(_$$testability_, _$compile_, $rootScope) {
+    beforeEach(angular.mock.inject(function(_$$testability_, _$compile_, $rootScope) {
       $$testability = _$$testability_;
       $compile = _$compile_;
       scope = $rootScope.$new();
     }));
 
-    afterEach(function() {
+     afterEach(() => {
       dealoc(element);
     });
 
-    it('should find partial bindings', function() {
+    test('should find partial bindings', () => {
       element =
           '<div>' +
           '  <span>{{name}}</span>' +
@@ -27,7 +29,7 @@ describe('$$testability', function() {
       expect(names[1]).toBe(element.find('span')[1]);
     });
 
-    it('should find exact bindings', function() {
+    test('should find exact bindings', () => {
       element =
           '<div>' +
           '  <span>{{name}}</span>' +
@@ -39,7 +41,7 @@ describe('$$testability', function() {
       expect(users[0]).toBe(element.find('span')[0]);
     });
 
-    it('should ignore filters for exact bindings', function() {
+    test('should ignore filters for exact bindings', () => {
       element =
           '<div>' +
           '  <span>{{name | uppercase}}</span>' +
@@ -51,7 +53,7 @@ describe('$$testability', function() {
       expect(users[0]).toBe(element.find('span')[0]);
     });
 
-    it('should ignore whitespace for exact bindings', function() {
+    test('should ignore whitespace for exact bindings', () => {
       element =
           '<div>' +
           '  <span>{{ name }}</span>' +
@@ -63,7 +65,7 @@ describe('$$testability', function() {
       expect(users[0]).toBe(element.find('span')[0]);
     });
 
-    it('should find bindings by class', function() {
+    test('should find bindings by class', () => {
       element =
           '<div>' +
           '  <span ng-bind="name"></span>' +
@@ -76,7 +78,7 @@ describe('$$testability', function() {
       expect(names[1]).toBe(element.find('span')[1]);
     });
 
-    it('should only search within the context element', function() {
+    test('should only search within the context element', () => {
       element =
           '<div>' +
           '  <ul><li>{{name}}</li></ul>' +
@@ -88,7 +90,7 @@ describe('$$testability', function() {
       expect(names[0]).toBe(element.find('li')[0]);
     });
 
-    it('should find bindings with allowed special characters', function() {
+    test('should find bindings with allowed special characters', () => {
       element =
           '<div>' +
           '  <span>{{$index}}</span>' +
@@ -114,7 +116,7 @@ describe('$$testability', function() {
       expect(filteredFoo[0]).toBe(element.find('span')[3]);
     });
 
-    it('should find partial models', function() {
+    test('should find partial models', () => {
       element =
           '<div>' +
           '  <input type="text" ng-model="name"/>' +
@@ -127,7 +129,7 @@ describe('$$testability', function() {
       expect(names[1]).toBe(element.find('input')[1]);
     });
 
-    it('should find exact models', function() {
+    test('should find exact models', () => {
       element =
           '<div>' +
           '  <input type="text" ng-model="name"/>' +
@@ -139,7 +141,7 @@ describe('$$testability', function() {
       expect(users[0]).toBe(element.find('input')[0]);
     });
 
-    it('should find models in different input types', function() {
+    test('should find models in different input types', () => {
       element =
           '<div>' +
           '  <input type="text" ng-model="name"/>' +
@@ -152,7 +154,7 @@ describe('$$testability', function() {
       expect(names[1]).toBe(element.find('textarea')[0]);
     });
 
-    it('should only search for models within the context element', function() {
+    test('should only search for models within the context element', () => {
       element =
           '<div>' +
           '  <ul><li><input type="text" ng-model="name"/></li></ul>' +
@@ -165,8 +167,8 @@ describe('$$testability', function() {
     });
   });
 
-  describe('location', function() {
-    beforeEach(module(function() {
+  describe('location', () => {
+    beforeEach(angular.mock.module(function() {
       return function($httpBackend) {
         $httpBackend.when('GET', 'foo.html').respond('foo');
         $httpBackend.when('GET', 'baz.html').respond('baz');
@@ -175,30 +177,30 @@ describe('$$testability', function() {
       };
     }));
 
-    it('should return the current URL', inject(function($location, $$testability) {
+    test('should return the current URL', angular.mock.inject(function($location, $$testability) {
       $location.path('/bar.html');
       expect($$testability.getLocation()).toMatch(/bar.html$/);
     }));
 
-    it('should change the URL', inject(function($location, $$testability) {
+    test('should change the URL', angular.mock.inject(function($location, $$testability) {
       $location.path('/bar.html');
       $$testability.setLocation('foo.html');
       expect($location.path()).toEqual('/foo.html');
     }));
   });
 
-  describe('waiting for stability', function() {
-    it('should process callbacks immediately with no outstanding requests',
-      inject(function($$testability) {
-        var callback = jasmine.createSpy('callback');
+  describe('waiting for stability', () => {
+    test('should process callbacks immediately with no outstanding requests',
+      angular.mock.inject(function($$testability) {
+        var callback = jest.fn().mockName('callback');
         $$testability.whenStable(callback);
         expect(callback).toHaveBeenCalled();
       }));
 
-    it('should delegate to `$browser.notifyWhenNoOutstandingRequests()`',
-      inject(function($$testability, $browser) {
-        var spy = spyOn($browser, 'notifyWhenNoOutstandingRequests');
-        var callback = noop;
+    test('should delegate to `$browser.notifyWhenNoOutstandingRequests()`',
+      angular.mock.inject(function($$testability, $browser) {
+        var spy = jest.spyOn($browser, 'notifyWhenNoOutstandingRequests').mockImplementation(() => {});
+        var callback = angular.noop;
 
         $$testability.whenStable(callback);
         expect(spy).toHaveBeenCalledWith(callback);
