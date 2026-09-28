@@ -3815,6 +3815,8 @@ function $CompileProvider($provide, $$sanitizeUriProvider) {
         } else if (nodeName === 'a' && (attrNormalizedName === 'href' ||
                                    attrNormalizedName === 'ngHref')) {
           return $sce.URL;
+        } else if (nodeName === "image" && (attrNormalizedName === "href" || attrNormalizedName === 'ngHref')) {
+          return $sce.MEDIA_URL;
         }
       }
 
