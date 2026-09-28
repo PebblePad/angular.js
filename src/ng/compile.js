@@ -2244,7 +2244,7 @@ function $CompileProvider($provide, $$sanitizeUriProvider) {
           nodeName = nodeName_(this.$$element);
 
           // Sanitize img[srcset] values.
-          if (nodeName === 'img' && key === 'srcset') {
+          if ((nodeName === 'img' || nodeName === 'source') && key === 'srcset') {
             this[key] = value = sanitizeSrcset(value, '$set(\'srcset\', value)');
           }
 
