@@ -2523,11 +2523,6 @@ function $CompileProvider($provide, $$sanitizeUriProvider) {
       function compileNodes(nodeList, transcludeFn, $rootElement, maxPriority, ignoreDirective,
                               previousCompileContext) {
         var linkFns = [];
-
-        var // `nodeList` can be either an element's `.childNodes` (live NodeList)
-        // or a jqLite/jQuery collection or an array
-        notLiveList = isArray(nodeList) || (nodeList instanceof jqLite);
-
         var attrs;
         var directives;
         var nodeLinkFn;
@@ -2635,32 +2630,6 @@ function $CompileProvider($provide, $$sanitizeUriProvider) {
             } else if (childLinkFn) {
               childLinkFn(scope, node.childNodes, undefined, parentBoundTranscludeFn);
             }
-          }
-        }
-      }
-
-      function mergeConsecutiveTextNodes(nodeList, idx, notLiveList) {
-        var node = nodeList[idx];
-        var parent = node.parentNode;
-        var sibling;
-
-        if (node.nodeType !== NODE_TYPE_TEXT) {
-          return;
-        }
-
-        while (true) {
-          sibling = parent ? node.nextSibling : nodeList[idx + 1];
-          if (!sibling || sibling.nodeType !== NODE_TYPE_TEXT) {
-            break;
-          }
-
-          node.nodeValue = node.nodeValue + sibling.nodeValue;
-
-          if (sibling.parentNode) {
-            sibling.parentNode.removeChild(sibling);
-          }
-          if (notLiveList && sibling === nodeList[idx + 1]) {
-            nodeList.splice(idx + 1, 1);
           }
         }
       }

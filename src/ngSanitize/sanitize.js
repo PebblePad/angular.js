@@ -19,7 +19,6 @@ var isArray;
 var isDefined;
 var lowercase;
 var noop;
-var nodeContains;
 var htmlParser;
 var htmlSanitizeWriter;
 
@@ -316,11 +315,6 @@ function $SanitizeProvider() {
   htmlParser = htmlParserImpl;
   htmlSanitizeWriter = htmlSanitizeWriterImpl;
 
-  nodeContains = window.Node.prototype.contains || /** @this */ function(arg) {
-    // eslint-disable-next-line no-bitwise
-    return !!(this.compareDocumentPosition(arg) & 16);
-  };
-
   // Regular Expressions for parsing tags and attributes
   var SURROGATE_PAIR_REGEXP = /[\uD800-\uDBFF][\uDC00-\uDFFF]/g;
 
@@ -464,13 +458,6 @@ function $SanitizeProvider() {
 
     function getInertBodyElement_InertDocument(html) {
       inertBodyElement.innerHTML = html;
-
-      // Support: IE 9-11 only
-      // strip custom-namespaced attributes on IE<=11
-      if (document.documentMode) {
-        stripCustomNsAttrs(inertBodyElement);
-      }
-
       return inertBodyElement;
     }
   })(window, window.document);
@@ -635,42 +622,10 @@ function $SanitizeProvider() {
     };
   }
 
-
-  /**
-   * When IE9-11 comes across an unknown namespaced attribute e.g. 'xlink:foo' it adds 'xmlns:ns1' attribute to declare
-   * ns1 namespace and prefixes the attribute with 'ns1' (e.g. 'ns1:xlink:foo'). This is undesirable since we don't want
-   * to allow any of these custom attributes. This method strips them all.
-   *
-   * @param node Root element to process
-   */
-  function stripCustomNsAttrs(node) {
-    while (node) {
-      if (node.nodeType === window.Node.ELEMENT_NODE) {
-        var attrs = node.attributes;
-        for (var i = 0, l = attrs.length; i < l; i++) {
-          var attrNode = attrs[i];
-          var attrName = attrNode.name.toLowerCase();
-          if (attrName === 'xmlns:ns1' || attrName.lastIndexOf('ns1:', 0) === 0) {
-            node.removeAttributeNode(attrNode);
-            i--;
-            l--;
-          }
-        }
-      }
-
-      var nextNode = node.firstChild;
-      if (nextNode) {
-        stripCustomNsAttrs(nextNode);
-      }
-
-      node = getNonDescendant('nextSibling', node);
-    }
-  }
-
   function getNonDescendant(propName, node) {
     // An element is clobbered if its `propName` property points to one of its descendants
     var nextNode = node[propName];
-    if (nextNode && nodeContains.call(node, nextNode)) {
+    if (nextNode && Node.prototype.contains.call(node, nextNode)) {
       throw $sanitizeMinErr('elclob', 'Failed to sanitize html because the element is clobbered: {0}', node.outerHTML || node.outerText);
     }
     return nextNode;

@@ -103,6 +103,14 @@
 */
 
 ////////////////////////////////////
+/**
+ * documentMode is an IE-only property
+ * http://msdn.microsoft.com/en-us/library/ie/cc196988(v=vs.85).aspx
+ */
+if (window.document.documentMode) {
+  throw new Error('Internet Explorer is not supported!');
+}
+
 
 /**
  * @ngdoc module
@@ -977,15 +985,6 @@ function copy(source, destination, maxDepth) {
         return new source.constructor(copyElement(source.buffer), source.byteOffset, source.length);
 
       case '[object ArrayBuffer]':
-        // Support: IE10
-        if (!source.slice) {
-          // If we're in this case we know the environment supports ArrayBuffer
-          /* eslint-disable no-undef */
-          var copied = new ArrayBuffer(source.byteLength);
-          new Uint8Array(copied).set(new Uint8Array(source));
-          /* eslint-enable */
-          return copied;
-        }
         return source.slice(0);
 
       case '[object Boolean]':

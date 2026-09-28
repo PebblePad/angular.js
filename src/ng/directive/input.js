@@ -1343,38 +1343,7 @@ function baseInputType(scope, element, attr, ctrl, $sniffer, $browser) {
     }
   };
 
-  // if the browser does support "input" event, we are fine - except on IE9 which doesn't fire the
-  // input event on backspace, delete or cut
-  if ($sniffer.hasEvent('input')) {
-    element.on('input', listener);
-  } else {
-    var deferListener = function(ev, input, origValue) {
-      if (!timeout) {
-        timeout = $browser.defer(function() {
-          timeout = null;
-          if (!input || input.value !== origValue) {
-            listener(ev);
-          }
-        });
-      }
-    };
-
-    element.on('keydown', /** @this */ function(event) {
-      var key = event.keyCode;
-
-      // ignore
-      //    command            modifiers                   arrows
-      if (key === 91 || (15 < key && key < 19) || (37 <= key && key <= 40)) return;
-
-      deferListener(event, this, this.value);
-    });
-
-    // if user modifies input value using context menu in IE, we need "paste", "cut" and "drop" events to catch it
-    if ($sniffer.hasEvent('paste')) {
-      element.on('paste cut drop', deferListener);
-    }
-  }
-
+  element.on('input', listener);
   // if user paste into input using mouse on older browser
   // or form autocomplete on newer browser, we need "change" event to catch it
   element.on('change', listener);

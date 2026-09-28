@@ -161,10 +161,7 @@ function $LogProvider() {
         forEach(arguments, function(arg) {
           args.push(formatError(arg));
         });
-        // Support: IE 9 only
-        // console methods don't inherit from Function.prototype in IE 9 so we can't
-        // call `logFn.apply(console, args)` directly.
-        return Function.prototype.apply.call(logFn, console, args);
+        return logFn.apply(console, args);
       };
     }
   }];

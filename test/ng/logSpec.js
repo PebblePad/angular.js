@@ -70,23 +70,10 @@
     }
   ));
 
-  runTests({ie9Mode: false});
-  runTests({ie9Mode: true});
+  runTests();
 
-  function runTests(options) {
-    var ie9Mode = options.ie9Mode;
-
+  function runTests() {
     function attachMockConsoleTo$window() {
-      // Support: IE 9 only
-      // Simulate missing apply on console methods in IE 9.
-      if (ie9Mode) {
-        log.apply = log.call =
-        warn.apply = warn.call =
-        info.apply = info.call =
-        error.apply = error.call =
-        debug.apply = debug.call = null;
-      }
-
       $window.console = {
         log: log,
         warn: warn,
@@ -96,7 +83,7 @@
       };
     }
 
-    describe(ie9Mode ? 'IE 9 logging behavior' : 'Modern browsers\' logging behavior', function() {
+    describe('Modern browsers\' logging behavior', function() {
       beforeEach(angular.mock.module(attachMockConsoleTo$window));
 
       test('should work if $window.navigator not defined', angular.mock.inject(

@@ -194,21 +194,10 @@ var wrapMap = {
 wrapMap.tbody = wrapMap.tfoot = wrapMap.colgroup = wrapMap.caption = wrapMap.thead;
 wrapMap.th = wrapMap.td;
 
-// Support: IE <10 only
-// IE 9 requires an option wrapper & it needs to have the whole table structure
-// set up in advance; assigning `"<td></td>"` to `tr.innerHTML` doesn't work, etc.
-var wrapMapIE9 = {
-  option: [1, '<select multiple="multiple">', '</select>'],
-  _default: [0, '', '']
-};
-
 for (var key in wrapMap) {
   var wrapMapValueClosing = wrapMap[key];
   var wrapMapValue = wrapMapValueClosing.slice().reverse();
-  wrapMapIE9[key] = [wrapMapValue.length, '<' + wrapMapValue.join('><') + '>', '</' + wrapMapValueClosing.join('></') + '>'];
 }
-
-wrapMapIE9.optgroup = wrapMapIE9.option;
 
 function jqLiteIsTextNode(html) {
   return !HTML_REGEXP.test(html);
@@ -299,13 +288,6 @@ function jqLiteWrapNode(node, wrapper) {
 
   wrapper.appendChild(node);
 }
-
-
-// IE9-11 has no method "contains" in SVG element and in Node.prototype. Bug #10259.
-var jqLiteContains = window.Node.prototype.contains || /** @this */ function(arg) {
-  // eslint-disable-next-line no-bitwise
-  return !!(this.compareDocumentPosition(arg) & 16);
-};
 
 /////////////////////////////////////////////
 function JQLite(element) {
@@ -905,7 +887,7 @@ function specialMouseHandlerWrapper(target, event, handler) {
   var related = event.relatedTarget;
   // For mousenter/leave call the handler if related is outside the target.
   // NB: No relatedTarget if the mouse left/entered the browser window
-  if (!related || (related !== target && !jqLiteContains.call(target, related))) {
+  if (!related || (related !== target && !target.contains(related))) {
     handler.call(target, event);
   }
 }
