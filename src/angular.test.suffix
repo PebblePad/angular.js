@@ -6,7 +6,6 @@
     'AST': AST,
     'Browser': Browser,
     'EMAIL_REGEXP': EMAIL_REGEXP,
-    'URL_REGEXP': URL_REGEXP,
     'ISO_DATE_REGEXP': ISO_DATE_REGEXP,
     'Lexer': Lexer,
     'LocationHashbangInHtml5Url': LocationHashbangInHtml5Url,
