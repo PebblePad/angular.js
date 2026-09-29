@@ -1,3 +1,27 @@
+/**
+ * @typedef {Object} JsFile
+ * @property {string} name
+ * @property {boolean} module
+ * @property {license} boolean
+ * @property {boolean} [main]
+ * @property {{ dist: string, test: string }} [prefix]
+ * @property {{ dist: string, test: string }} [suffix]
+ * @property {Array<string>} [segments]
+ * @property {string} [content]
+ */
+
+/**
+ * @typedef {Object} Module
+ * @property {string} name
+ * @property {string} description
+ * @property {Array<JsFile>} jsFiles
+ * @property {Array<string>} peerDependencies
+ */
+
+/**
+ *
+ * @type {Array<Module>}
+ */
 export const modules = [
   {
     name: "angular",
@@ -6,6 +30,7 @@ export const modules = [
     jsFiles: [
       {
         name: "angular",
+        license: true,
         module: false,
         prefix: {
           dist: "src/angular.prefix",
@@ -100,6 +125,13 @@ export const modules = [
           "prebuilt-locales/angular-locale_en-us.js",
           "src/ng/injectStyles.js"
         ]
+      },
+      {
+        name: "index",
+        license: false,
+        main: true,
+        module: true,
+        content: "require('./angular.js');\nmodule.exports = angular;",
       }
     ]
   },
@@ -110,6 +142,7 @@ export const modules = [
     jsFiles: [
       {
         name: "angular-animate",
+        license: true,
         module: false,
         prefix: {
           dist: "src/module.prefix",
@@ -133,6 +166,13 @@ export const modules = [
           "src/ngAnimate/ngAnimateSwap.js",
           "src/ngAnimate/module.js"
         ],
+      },
+      {
+        name: "index",
+        license: false,
+        main: true,
+        module: true,
+        content: "require('./angular-animate.js');\nmodule.exports = 'ngAnimate';",
       }
     ],
     peerDependencies: ["angular"]
@@ -144,6 +184,7 @@ export const modules = [
     jsFiles: [
       {
         name: "angular-cookies",
+        license: true,
         module: false,
         prefix: {
           dist: "src/module.prefix",
@@ -157,6 +198,13 @@ export const modules = [
           "src/ngCookies/cookies.js",
           "src/ngCookies/cookieWriter.js"
         ],
+      },
+      {
+        name: "index",
+        license: false,
+        main: true,
+        module: true,
+        content: "require('./angular-cookies.js');\nmodule.exports = 'ngCookies';",
       }
     ],
     peerDependencies: ["angular"]
@@ -168,6 +216,7 @@ export const modules = [
     jsFiles: [
       {
         name: "angular-message-format",
+        license: true,
         module: false,
         prefix: {
           dist: "src/module.prefix",
@@ -184,6 +233,13 @@ export const modules = [
           "src/ngMessageFormat/messageFormatParser.js",
           "src/ngMessageFormat/messageFormatService.js"
         ],
+      },
+      {
+        name: "index",
+        license: false,
+        main: true,
+        module: true,
+        content: "require('./angular-message-format.js');\nmodule.exports = 'ngMessageFormat';",
       }
     ],
     peerDependencies: ["angular"]
@@ -195,6 +251,7 @@ export const modules = [
     jsFiles: [
       {
         name: "angular-messages",
+        license: true,
         module: false,
         prefix: {
           dist: "src/module.prefix",
@@ -207,6 +264,13 @@ export const modules = [
         segments: [
           "src/ngMessages/messages.js"
         ],
+      },
+      {
+        name: "index",
+        license: false,
+        main: true,
+        module: true,
+        content: "require('./angular-messages.js');\nmodule.exports = 'ngMessages';",
       }
     ],
     peerDependencies: ["angular"]
@@ -232,11 +296,19 @@ export const modules = [
           dist: "src/module.suffix",
           test: "src/module.suffix",
         },
+        license: true,
         module: false,
         segments: [
           "src/ngParseExt/ucd.js",
           "src/ngParseExt/module.js"
         ],
+      },
+      {
+        name: "index",
+        license: false,
+        main: true,
+        module: true,
+        content: "require('./angular-parse-ext.js');\nmodule.exports = 'ngParseExt';",
       }
     ],
     peerDependencies: ["angular"]
@@ -248,18 +320,26 @@ export const modules = [
     jsFiles: [
       {
         name: "angular-resource",
+        license: true,
         module: false,
         prefix: {
-          dist: null,
-          test: null,
+          dist: "src/module.prefix",
+          test: "src/module.prefix",
         },
         suffix: {
-          dist: null,
+          dist: "src/module.suffix",
           test: "src/resource.test.suffix"
         },
         segments: [
           "src/ngResource/resource.js"
         ],
+      },
+      {
+        name: "index",
+        license: false,
+        main: true,
+        module: true,
+        content: "require('./angular-resource.js');\nmodule.exports = 'ngResource';",
       }
     ],
     peerDependencies: ["angular"]
@@ -271,6 +351,7 @@ export const modules = [
     jsFiles: [
       {
         name: "angular-route",
+        license: true,
         module: false,
         prefix: {
           dist: "src/module.prefix",
@@ -287,6 +368,13 @@ export const modules = [
           "src/ngRoute/routeParams.js",
           "src/ngRoute/directive/ngView.js"
         ],
+      },
+      {
+        name: "index",
+        license: false,
+        main: true,
+        module: true,
+        content: "require('./angular-route.js');\nmodule.exports = 'ngRoute';",
       }
     ],
     peerDependencies: ["angular"]
@@ -298,6 +386,7 @@ export const modules = [
     jsFiles: [
       {
         name: "angular-sanitize",
+        license: true,
         module: false,
         prefix: {
           dist: "src/module.prefix",
@@ -311,6 +400,13 @@ export const modules = [
           "src/ngSanitize/sanitize.js",
           "src/ngSanitize/filter/linky.js"
         ],
+      },
+      {
+        name: "index",
+        license: false,
+        main: true,
+        module: true,
+        content: "require('./angular-sanitize.js');\nmodule.exports = 'ngSanitize';",
       }
     ],
     peerDependencies: ["angular"]
@@ -322,6 +418,8 @@ export const modules = [
     jsFiles: [
       {
         name: "angular-mocks",
+        license: true,
+        main: true,
         module: false,
         prefix: {
           dist: "src/module.prefix",
@@ -347,6 +445,7 @@ export const modules = [
     jsFiles: [
       {
         name: "angular-touch",
+        license: true,
         module: false,
         prefix: {
           dist: "src/module.prefix",
@@ -361,6 +460,13 @@ export const modules = [
           "src/ngTouch/swipe.js",
           "src/ngTouch/directive/ngSwipe.js"
         ],
+      },
+      {
+        name: "index",
+        license: false,
+        main: true,
+        module: true,
+        content: "require('./angular-touch.js');\nmodule.exports = 'ngTouch';",
       }
     ],
     peerDependencies: ["angular"]
@@ -372,6 +478,7 @@ export const modules = [
     jsFiles: [
       {
         name: "angular-aria",
+        license: true,
         module: false,
         prefix: {
           dist: "src/module.prefix",
@@ -384,6 +491,13 @@ export const modules = [
         segments: [
           "src/ngAria/aria.js"
         ],
+      },
+      {
+        name: "index",
+        license: false,
+        main: true,
+        module: true,
+        content: "require('./angular-aria.js');\nmodule.exports = 'ngAria';",
       }
     ],
     peerDependencies: ["angular"]
@@ -406,6 +520,7 @@ export const modules = [
     jsFiles: [
       {
         name: "angular-loader",
+        license: true,
         module: false,
         prefix: {
           dist: "src/loader.prefix",

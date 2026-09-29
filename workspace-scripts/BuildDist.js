@@ -7,14 +7,14 @@ import { version } from "./config/Version.js";
 const buildForTestEnv = process.argv.slice(2).some((a) => a === "--test");
 const fileWrapperKey = buildForTestEnv ? "test" : "dist";
 const outputDirectory = buildForTestEnv ? "./test/.build" : "./dist";
+const noopFilePreOrSuffix = { dist: null, test: null };
 
 console.log(`Building for "${buildForTestEnv ? "test" : "dist"}"`);
 console.log("-".repeat("24"));
 
-const inlineLicense = `
-/**
+const inlineLicense = `/**
  * @license AngularJS v${version}
- * (c) 2010-2020 Google, Inc. http://angularjs.org
+ * (c) 2010-2020 Google, Inc. https://angularjs.org
  * License: MIT
  * Forked maintenance by PebblePad
  */
@@ -36,10 +36,12 @@ async function buildModule(moduleDetails) {
   const directoryPath = `${outputDirectory}/${moduleDetails.name}`;
   await fsp.mkdir(directoryPath, { recursive: true });
 
+  const mainFile = moduleDetails.jsFiles.find((f) => f.main);
+
   const modulePackageJson = structuredClone(packageJsonTemplate);
   modulePackageJson.name = moduleDetails.name;
   modulePackageJson.description = moduleDetails.description;
-  modulePackageJson.main = moduleDetails.jsFiles.length === 0 ? "" : `${moduleDetails.jsFiles[0].name}.js`;
+  modulePackageJson.main = mainFile === undefined ? "" : `${mainFile.name}.js`;
   modulePackageJson.version = version;
 
   if (moduleDetails.peerDependencies !== undefined) {
@@ -59,14 +61,17 @@ async function buildModule(moduleDetails) {
 async function buildModuleFiles(moduleDetails, directoryPath) {
   for (const file of moduleDetails.jsFiles) {
     const fileReads = [];
-    const segments = file.segments;
+    const prefix = file.prefix ?? noopFilePreOrSuffix;
+    const suffix = file.suffix ?? noopFilePreOrSuffix;
+    const segments = file.segments ?? [];
+    const content = file.content ?? '';
 
-    if (file.prefix[fileWrapperKey] !== null) {
-      segments.unshift(file.prefix[fileWrapperKey]);
+    if (prefix[fileWrapperKey] !== null) {
+      segments.unshift(prefix[fileWrapperKey]);
     }
 
-    if (file.suffix[fileWrapperKey] !== null) {
-      segments.push(file.suffix[fileWrapperKey]);
+    if (suffix[fileWrapperKey] !== null) {
+      segments.push(suffix[fileWrapperKey]);
     }
 
     for (const segment of segments) {
@@ -75,11 +80,19 @@ async function buildModuleFiles(moduleDetails, directoryPath) {
 
     const fileContents = await Promise.all(fileReads);
     const [major, minor, patch] = version.split(".");
-    const srcContent = inlineLicense + fileContents.join("")
+    const licenseContent = file.license ? inlineLicense : "";
+
+    const srcContent = licenseContent + fileContents.join("") + content
         .replaceAll("NG_VERSION_FULL", version)
         .replaceAll("'NG_VERSION_MAJOR'", major)
         .replaceAll("'NG_VERSION_MINOR'", minor)
         .replaceAll("'NG_VERSION_DOT'", patch);
+
+    const baseFilename = `${directoryPath}/${file.name}`;
+    await fsp.writeFile(`${baseFilename}.js`, srcContent, "utf8");
+    if (file.main) {
+      return;
+    }
 
     const minified = await minify(srcContent, {
       format: {
@@ -90,9 +103,7 @@ async function buildModuleFiles(moduleDetails, directoryPath) {
       ...file.minify
     })
 
-    const baseFilename = `${directoryPath}/${file.name}`;
     await Promise.all([
-      fsp.writeFile(`${baseFilename}.js`, srcContent, "utf8"),
       fsp.writeFile(`${baseFilename}.min.js`, minified.code, "utf8"),
       fsp.writeFile(`${baseFilename}.min.js.map`, minified.map, "utf8")
     ]);
