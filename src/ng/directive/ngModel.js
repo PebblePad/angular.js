@@ -1,4 +1,3 @@
-'use strict';
 
 /* global VALID_CLASS: true,
   INVALID_CLASS: true,

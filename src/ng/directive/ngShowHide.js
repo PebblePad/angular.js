@@ -1,4 +1,3 @@
-'use strict';
 
 var NG_HIDE_CLASS = 'ng-hide';
 var NG_HIDE_IN_PROGRESS_CLASS = 'ng-hide-animate';

@@ -1,4 +1,3 @@
-'use strict';
 
 // NOTE: ADVANCED_OPTIMIZATIONS mode.
 //

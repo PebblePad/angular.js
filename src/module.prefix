@@ -1,7 +1,2 @@
-/**
- * @license AngularJS v"NG_VERSION_FULL"
- * (c) 2010-2020 Google LLC. http://angularjs.org
- * License: MIT
- */
 ((window, angular) => {
-
+'use strict';

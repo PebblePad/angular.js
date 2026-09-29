@@ -1,4 +1,3 @@
-'use strict';
 
 /* global stripHash: true */
 

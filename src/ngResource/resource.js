@@ -1,4 +1,3 @@
-'use strict';
 
 var $resourceMinErr = angular.$$minErr('$resource');
 

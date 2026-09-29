@@ -1,4 +1,3 @@
-'use strict';
 /* global getHash: true, stripHash: false */
 
 function getHash(url) {

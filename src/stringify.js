@@ -1,5 +1,3 @@
-'use strict';
-
 /* exported toDebugString */
 
 function serializeObject(obj, maxDepth) {

@@ -1,4 +1,3 @@
-'use strict';
 
 /** @this */
 function $$IntervalFactoryProvider() {

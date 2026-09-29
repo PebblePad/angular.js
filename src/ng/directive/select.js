@@ -1,4 +1,3 @@
-'use strict';
 
 /* exported selectDirective, optionDirective */
 

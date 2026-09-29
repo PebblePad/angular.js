@@ -1,4 +1,3 @@
-'use strict';
 
 var $animateMinErr = minErr('$animate');
 var ELEMENT_NODE = 1;

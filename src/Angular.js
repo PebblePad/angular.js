@@ -1,4 +1,3 @@
-'use strict';
 
 /* We need to tell ESLint what variables are being exported */
 /* exported

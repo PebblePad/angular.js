@@ -1,4 +1,3 @@
-'use strict';
 
 /* global currencyFilter: true,
  dateFilter: true,

@@ -1,4 +1,3 @@
-'use strict';
 
 var MAX_DIGITS = 22;
 var DECIMAL_SEP = '.';

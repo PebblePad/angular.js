@@ -1,4 +1,3 @@
-'use strict';
 
 var $$rAFSchedulerFactory = ['$$rAF', function($$rAF) {
   var queue;

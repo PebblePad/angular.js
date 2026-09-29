@@ -1,3 +1,2 @@
   window.ngInternals.sanitizeText = sanitizeText;
-
 })(window, window.angular);

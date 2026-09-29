@@ -1,4 +1,3 @@
-'use strict';
 
 /** @this */
 var $$AnimateCacheProvider = function() {

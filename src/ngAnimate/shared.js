@@ -1,4 +1,3 @@
-'use strict';
 
 var ELEMENT_NODE = 1;
 var COMMENT_NODE = 8;

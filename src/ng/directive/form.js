@@ -1,4 +1,3 @@
-'use strict';
 
 /* global -nullFormCtrl, -PENDING_CLASS, -SUBMITTED_CLASS
  */

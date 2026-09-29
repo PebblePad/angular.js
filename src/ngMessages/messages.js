@@ -1,4 +1,3 @@
-'use strict';
 
 var forEach;
 var isArray;

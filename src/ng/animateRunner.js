@@ -1,4 +1,3 @@
-'use strict';
 
 var $$AnimateAsyncRunFactoryProvider = /** @this */ function() {
   this.$get = ['$$rAF', function($$rAF) {

@@ -1,4 +1,3 @@
-'use strict';
 
 // TODO(matsko): use caching here to speed things up for detection
 // TODO(matsko): add documentation
