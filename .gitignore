@@ -23,4 +23,5 @@ npm-debug.log
 *.log
 *.stackdump
 dist/
+dist-tarballs/
 test/.build
