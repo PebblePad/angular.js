@@ -1,5 +1,6 @@
 'use strict';
  describe('errors', () => {
+  const angularVersion = angular.version.full.replaceAll("\"", "");
   var originalObjectMaxDepthInErrorMessage = ngInternals.minErrConfig.objectMaxDepth;
   var originalUrlErrorParamsEnabled =  ngInternals.minErrConfig.urlErrorParamsEnabled;
 
@@ -193,9 +194,9 @@
       var error = testError('secondcode', 'description {0}, and {1}', 'a', firstError.message);
 
       expect(error.message).toBe(('[test:secondcode] description a, and [test:firstcode] longer ' +
-        'string and so on\n\nhttps://errors.angularjs.org/"NG_VERSION_FULL"/test/' +
+        'string and so on\n\nhttps://errors.angularjs.org/NG_VERSION_FULL/test/' +
         'secondcode?p0=a&p1=%5Btest%3Afirstcode%5D%20longer%20string%20and%20so%20on%0Ahttps' +
-        '%3A%2F%2Ferrors.angularjs.org%2F%22NG_VERSION_FULL%22%2Ftest%2Ffirstcode').replaceAll("NG_VERSION_FULL", angular.version.full));
+        '%3A%2F%2Ferrors.angularjs.org%2FNG_VERSION_FULL%2Ftest%2Ffirstcode').replaceAll("NG_VERSION_FULL", angularVersion));
     });
 
     test('should not generate URL query parameters when urlErrorParamsEnabled is  false', () => {
@@ -203,7 +204,7 @@
       angular.errorHandlingConfig({urlErrorParamsEnabled: false});
 
       expect(testError('acode', 'aproblem', 'a', 'b', 'c').message).toBe(('[test:acode] aproblem\n' +
-        'https://errors.angularjs.org/"NG_VERSION_FULL"/test/acode').replaceAll("NG_VERSION_FULL", angular.version.full));
+        'https://errors.angularjs.org/NG_VERSION_FULL/test/acode').replaceAll("NG_VERSION_FULL", angularVersion));
     });
   });
 });

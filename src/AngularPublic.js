@@ -118,7 +118,7 @@
 var version = {
   // These placeholder strings will be replaced by grunt's `build` task.
   // They need to be double- or single-quoted.
-  full: 'NG_VERSION_FULL',
+  full: '"NG_VERSION_FULL"',
   major: 'NG_VERSION_MAJOR',
   minor: 'NG_VERSION_MINOR',
   dot: 'NG_VERSION_DOT',

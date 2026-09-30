@@ -204,7 +204,7 @@ const toKebab = (camel) => camel.replace(/[A-Z]/g, (c) => '-' + c.toLowerCase())
 
 const isEmptyStyle = (value) => value === '' || value === null || value === undefined;
 
-const ogCetComputedStyle = window.getComputedStyle;
+const ogGetComputedStyle = window.getComputedStyle;
 const defaultAnimationValues = {
   transitionDuration: '0s',
   transitionDelay: '0s',
@@ -244,7 +244,7 @@ const applyShorthandLonghands = (styles, shorthandProp, keys) => {
 };
 
 window.getComputedStyle = (element, pseudoElement) => {
-  const styles = ogCetComputedStyle(element, pseudoElement);
+  const styles = ogGetComputedStyle(element, pseudoElement);
 
   applyShorthandLonghands(styles, 'transition', ['duration', 'delay', 'property']);
   applyShorthandLonghands(styles, 'animation', ['duration', 'delay', 'iterationCount']);

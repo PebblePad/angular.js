@@ -4,7 +4,6 @@ import { execSync } from "child_process";
 
 const baseDirectory = resolve("dist");
 const outputDirectory = resolve("dist-tarballs");
-fs.mkdirSync(outputDirectory, { recursive: true });
 
 console.log("Cleaning up previous tarballs: In progress ⌚");
 await fsp.rm(outputDirectory, { force: true, recursive: true });

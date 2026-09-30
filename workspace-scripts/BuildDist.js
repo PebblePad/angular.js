@@ -82,8 +82,8 @@ async function buildModuleFiles(moduleDetails, directoryPath) {
     const [major, minor, patch] = version.split(".");
     const licenseContent = file.license ? inlineLicense : "";
 
-    const srcContent = licenseContent + fileContents.join("") + content
-        .replaceAll("NG_VERSION_FULL", version)
+    const srcContent = (licenseContent + fileContents.join("") + content)
+        .replaceAll("\"NG_VERSION_FULL\"", version)
         .replaceAll("'NG_VERSION_MAJOR'", major)
         .replaceAll("'NG_VERSION_MINOR'", minor)
         .replaceAll("'NG_VERSION_DOT'", patch);

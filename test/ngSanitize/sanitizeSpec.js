@@ -204,7 +204,7 @@
   });
 
   describe('clobbered elements', () => {
-    //JSOOM polyfill
+    //JSDOM polyfill
     Object.defineProperty(HTMLFormElement.prototype, "firstChild", {
       get() {
         for (const input of this.querySelectorAll("input")) {
