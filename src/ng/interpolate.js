@@ -1,4 +1,3 @@
-'use strict';
 
 var $interpolateMinErr = angular.$interpolateMinErr = minErr('$interpolate');
 $interpolateMinErr.throwNoconcat = function(text) {
@@ -96,10 +95,10 @@ function $InterpolateProvider() {
 
 
   this.$get = ['$parse', '$exceptionHandler', '$sce', function($parse, $exceptionHandler, $sce) {
-    var startSymbolLength = startSymbol.length,
-        endSymbolLength = endSymbol.length,
-        escapedStartRegexp = new RegExp(startSymbol.replace(/./g, escape), 'g'),
-        escapedEndRegexp = new RegExp(endSymbol.replace(/./g, escape), 'g');
+    var startSymbolLength = startSymbol.length;
+    var endSymbolLength = endSymbol.length;
+    var escapedStartRegexp = new RegExp(startSymbol.replace(/./g, escape), 'g');
+    var escapedEndRegexp = new RegExp(endSymbol.replace(/./g, escape), 'g');
 
     function escape(ch) {
       return '\\\\\\' + ch;
@@ -241,7 +240,7 @@ function $InterpolateProvider() {
       var contextAllowsConcatenation = trustedContext === $sce.URL || trustedContext === $sce.MEDIA_URL;
 
       // Provide a quick exit and simplified result function for text with no interpolation
-      if (!text.length || text.indexOf(startSymbol) === -1) {
+      if (!text.length || !text.includes(startSymbol)) {
         if (mustHaveExpression) return;
 
         var unescapedText = unescapeText(text);
@@ -257,16 +256,16 @@ function $InterpolateProvider() {
       }
 
       allOrNothing = !!allOrNothing;
-      var startIndex,
-          endIndex,
-          index = 0,
-          expressions = [],
-          parseFns,
-          textLength = text.length,
-          exp,
-          concat = [],
-          expressionPositions = [],
-          singleExpression;
+      var startIndex;
+      var endIndex;
+      var index = 0;
+      var expressions = [];
+      var parseFns;
+      var textLength = text.length;
+      var exp;
+      var concat = [];
+      var expressionPositions = [];
+      var singleExpression;
 
 
       while (index < textLength) {
@@ -346,7 +345,7 @@ function $InterpolateProvider() {
           // all of these properties are undocumented for now
           exp: text, //just for compatibility with regular watchers created via $watch
           expressions: expressions,
-          $$watchDelegate: function(scope, listener) {
+          $$watchDelegate(scope, listener) {
             var lastValue;
             return scope.$watchGroup(parseFns, /** @this */ function interpolateFnWatcher(values, oldValues) {
               var currValue = compute(values);

@@ -1,48 +1,47 @@
 'use strict';
+ describe('$$rAFScheduler', () => {
 
-describe('$$rAFScheduler', function() {
+  beforeEach(angular.mock.module('ngAnimate'));
 
-  beforeEach(module('ngAnimate'));
+  test('should accept an array of tasks and run the first task immediately',
+    angular.mock.inject(function($$rAFScheduler) {
 
-  it('should accept an array of tasks and run the first task immediately',
-    inject(function($$rAFScheduler) {
-
-    var taskSpy = jasmine.createSpy();
+    var taskSpy = jest.fn();
     var tasks = [taskSpy];
     $$rAFScheduler([tasks]);
     expect(taskSpy).toHaveBeenCalled();
   }));
 
-  it('should run tasks based on how many RAFs have run in comparison to the task index',
-    inject(function($$rAFScheduler, $$rAF) {
+  test('should run tasks based on how many RAFs have run in comparison to the task index',
+    angular.mock.inject(function($$rAFScheduler, $$rAF) {
+      var i;
+      var tasks = [];
 
-    var i, tasks = [];
+      for (i = 0; i < 5; i++) {
+        tasks.push([jest.fn()]);
+      }
 
-    for (i = 0; i < 5; i++) {
-      tasks.push([jasmine.createSpy()]);
-    }
+      $$rAFScheduler(tasks);
 
-    $$rAFScheduler(tasks);
+      for (i = 1; i < 5; i++) {
+        var taskSpy = tasks[i][0];
+        expect(taskSpy).not.toHaveBeenCalled();
+        $$rAF.flush();
+        expect(taskSpy).toHaveBeenCalled();
+      }
+    }));
 
-    for (i = 1; i < 5; i++) {
-      var taskSpy = tasks[i][0];
-      expect(taskSpy).not.toHaveBeenCalled();
-      $$rAF.flush();
-      expect(taskSpy).toHaveBeenCalled();
-    }
-  }));
-
-  it('should space out subarrays by a RAF and run the internals in parallel',
-    inject(function($$rAFScheduler, $$rAF) {
+  test('should space out subarrays by a RAF and run the internals in parallel',
+    angular.mock.inject(function($$rAFScheduler, $$rAF) {
 
     var spies = {
-      a: jasmine.createSpy(),
-      b: jasmine.createSpy(),
-      c: jasmine.createSpy(),
+      a: jest.fn(),
+      b: jest.fn(),
+      c: jest.fn(),
 
-      x: jasmine.createSpy(),
-      y: jasmine.createSpy(),
-      z: jasmine.createSpy()
+      x: jest.fn(),
+      y: jest.fn(),
+      z: jest.fn()
     };
 
     var items = [[spies.a, spies.x],
@@ -76,23 +75,23 @@ describe('$$rAFScheduler', function() {
     expect(spies.z).toHaveBeenCalled();
   }));
 
-  describe('.waitUntilQuiet', function() {
+  describe('.waitUntilQuiet', () => {
 
-    it('should run the `last` provided function when a RAF fully passes',
-      inject(function($$rAFScheduler, $$rAF) {
+    test('should run the `last` provided function when a RAF fully passes',
+      angular.mock.inject(function($$rAFScheduler, $$rAF) {
 
-      var q1 = jasmine.createSpy();
+      var q1 = jest.fn();
       $$rAFScheduler.waitUntilQuiet(q1);
 
       expect(q1).not.toHaveBeenCalled();
 
-      var q2 = jasmine.createSpy();
+      var q2 = jest.fn();
       $$rAFScheduler.waitUntilQuiet(q2);
 
       expect(q1).not.toHaveBeenCalled();
       expect(q2).not.toHaveBeenCalled();
 
-      var q3 = jasmine.createSpy();
+      var q3 = jest.fn();
       $$rAFScheduler.waitUntilQuiet(q3);
 
       expect(q1).not.toHaveBeenCalled();
@@ -106,9 +105,9 @@ describe('$$rAFScheduler', function() {
       expect(q3).toHaveBeenCalled();
     }));
 
-    it('should always execute itself before the next RAF task tick occurs', function() {
-      module(provideLog);
-      inject(function($$rAFScheduler, $$rAF, log) {
+    test('should always execute itself before the next RAF task tick occurs', () => {
+      angular.mock.module(provideLog);
+      angular.mock.inject(function($$rAFScheduler, $$rAF, log) {
         var quietFn = log.fn('quiet');
         var tasks = [
           [log.fn('task1')],

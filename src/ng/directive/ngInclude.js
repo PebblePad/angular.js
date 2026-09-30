@@ -1,4 +1,3 @@
-'use strict';
 
 /**
  * @ngdoc directive
@@ -192,16 +191,16 @@ var ngIncludeDirective = ['$templateRequest', '$anchorScroll', '$animate',
     terminal: true,
     transclude: 'element',
     controller: angular.noop,
-    compile: function(element, attr) {
-      var srcExp = attr.ngInclude || attr.src,
-          onloadExp = attr.onload || '',
-          autoScrollExp = attr.autoscroll;
+    compile(element, attr) {
+      var srcExp = attr.ngInclude || attr.src;
+      var onloadExp = attr.onload || '';
+      var autoScrollExp = attr.autoscroll;
 
       return function(scope, $element, $attr, ctrl, $transclude) {
-        var changeCounter = 0,
-            currentScope,
-            previousElement,
-            currentElement;
+        var changeCounter = 0;
+        var currentScope;
+        var previousElement;
+        var currentElement;
 
         var cleanupLastIncludeContent = function() {
           if (previousElement) {
@@ -286,7 +285,7 @@ var ngIncludeFillContentDirective = ['$compile',
       restrict: 'ECA',
       priority: -400,
       require: 'ngInclude',
-      link: function(scope, $element, $attr, ctrl) {
+      link(scope, $element, $attr, ctrl) {
         if (toString.call($element[0]).match(/SVG/)) {
           // WebKit: https://bugs.webkit.org/show_bug.cgi?id=135698 --- SVG elements do not
           // support innerHTML, so detect this here and try to generate the contents

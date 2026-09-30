@@ -1,14 +1,13 @@
 'use strict';
-
-describe('boolean attr directives', function() {
+ describe('boolean attr directives', () => {
   var element;
 
-  afterEach(function() {
+   afterEach(() => {
     dealoc(element);
   });
 
 
-  it('should properly evaluate 0 as false', inject(function($rootScope, $compile) {
+  test('should properly evaluate 0 as false', angular.mock.inject(function($rootScope, $compile) {
     // jQuery does not treat 0 as false, when setting attr()
     element = $compile('<button ng-disabled="isDisabled">Button</button>')($rootScope);
     $rootScope.isDisabled = 0;
@@ -20,7 +19,7 @@ describe('boolean attr directives', function() {
   }));
 
 
-  it('should bind disabled', inject(function($rootScope, $compile) {
+  test('should bind disabled', angular.mock.inject(function($rootScope, $compile) {
     element = $compile('<button ng-disabled="isDisabled">Button</button>')($rootScope);
     $rootScope.isDisabled = false;
     $rootScope.$digest();
@@ -31,7 +30,7 @@ describe('boolean attr directives', function() {
   }));
 
 
-  it('should bind checked', inject(function($rootScope, $compile) {
+  test('should bind checked', angular.mock.inject(function($rootScope, $compile) {
     element = $compile('<input type="checkbox" ng-checked="isChecked" />')($rootScope);
     $rootScope.isChecked = false;
     $rootScope.$digest();
@@ -42,14 +41,14 @@ describe('boolean attr directives', function() {
   }));
 
 
-  it('should not bind checked when ngModel is present', inject(function($rootScope, $compile, $document, $rootElement) {
+  test('should not bind checked when ngModel is present', angular.mock.inject(function($rootScope, $compile, $document, $rootElement) {
     // test for https://github.com/angular/angular.js/issues/10662
     element = $compile('<input type="checkbox" ng-model="value" ng-false-value="\'false\'" ' +
       'ng-true-value="\'true\'" ng-checked="value" />')($rootScope);
 
     // Append the app to the document so that "click" triggers "change"
     // Support: Chrome, Safari 8, 9
-    jqLite($document[0].body).append($rootElement.append(element));
+    angular.element($document[0].body).append($rootElement.append(element));
 
     $rootScope.value = 'true';
     $rootScope.$digest();
@@ -63,9 +62,9 @@ describe('boolean attr directives', function() {
   }));
 
 
-  it('should bind selected', inject(function($rootScope, $compile) {
+  test('should bind selected', angular.mock.inject(function($rootScope, $compile) {
     element = $compile('<select><option value=""></option><option ng-selected="isSelected">Greetings!</option></select>')($rootScope);
-    jqLite(window.document.body).append(element);
+    angular.element(window.document.body).append(element);
     $rootScope.isSelected = false;
     $rootScope.$digest();
     expect(element.children()[1].selected).toBeFalsy();
@@ -75,7 +74,7 @@ describe('boolean attr directives', function() {
   }));
 
 
-  it('should bind readonly', inject(function($rootScope, $compile) {
+  test('should bind readonly', angular.mock.inject(function($rootScope, $compile) {
     element = $compile('<input type="text" ng-readonly="isReadonly" />')($rootScope);
     $rootScope.isReadonly = false;
     $rootScope.$digest();
@@ -86,7 +85,7 @@ describe('boolean attr directives', function() {
   }));
 
 
-  it('should bind open', inject(function($rootScope, $compile) {
+  test('should bind open', angular.mock.inject(function($rootScope, $compile) {
     element = $compile('<details ng-open="isOpen"></details>')($rootScope);
     $rootScope.isOpen = false;
     $rootScope.$digest();
@@ -97,8 +96,8 @@ describe('boolean attr directives', function() {
   }));
 
 
-  describe('multiple', function() {
-    it('should NOT bind to multiple via ngMultiple', inject(function($rootScope, $compile) {
+  describe('multiple', () => {
+    test('should NOT bind to multiple via ngMultiple', angular.mock.inject(function($rootScope, $compile) {
       element = $compile('<select ng-multiple="isMultiple"></select>')($rootScope);
       $rootScope.isMultiple = false;
       $rootScope.$digest();
@@ -109,7 +108,7 @@ describe('boolean attr directives', function() {
     }));
 
 
-    it('should throw an exception if binding to multiple attribute', inject(function($rootScope, $compile) {
+    test('should throw an exception if binding to multiple attribute', angular.mock.inject(function($rootScope, $compile) {
       expect(function() {
         $compile('<select multiple="{{isMultiple}}"></select>');
       }).toThrowMinErr('$compile', 'selmulti', 'Binding to the \'multiple\' attribute is not supported. ' +

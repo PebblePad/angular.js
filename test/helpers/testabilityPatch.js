@@ -1,30 +1,31 @@
 /* global jQuery: true, uid: true, jqCache: true */
 'use strict';
 
-if (window.bindJQuery) bindJQuery();
+const toDealoc = [];
+afterEach(() => {
+  toDealoc.forEach((e) => dealoc(e));
+  toDealoc.length = 0;
+});
 
-beforeEach(function() {
-
-  // all this stuff is not needed for module tests, where jqlite and publishExternalAPI and jqLite are not global vars
-  if (window.publishExternalAPI) {
-    publishExternalAPI(angular);
-
-    // This resets global id counter;
-    uid = 0;
-
-    // reset to jQuery or default to us.
-    bindJQuery();
-
-    // Clear the cache to prevent memory leak failures from previous tests
-    // breaking subsequent tests unnecessarily
-    jqCache = jqLite.cache = {};
+ beforeEach(() => {
+  // This resets global id counter;
+  ngInternals.uid.current = 0;
+  // If JQuery env
+  if (angular.element.cache === undefined) {
+    angular.element.cache = {};
   }
+  // Clear the cache to prevent memory leak failures from previous tests
+  // breaking subsequent tests unnecessarily
+  Object.keys(angular.element.cache).forEach((key) => {
+    delete angular.element.cache[key];
+  })
 
   angular.element(window.document.body).empty().removeData();
 });
 
-afterEach(function() {
-  var count, cache;
+ afterEach(() => {
+  var count;
+  var cache;
 
   // These Nodes are persisted across tests.
   // They used to be assigned a `$$hashKey` when animated, which we needed to clear after each test
@@ -51,15 +52,13 @@ afterEach(function() {
     }
   }
 
-  if (!window.jQuery) {
-    // jQuery 2.x doesn't expose the cache storage.
-
-    // complain about uncleared jqCache references
+  if (!window.disableCacheLeakCheck) {
+    window.disableCacheLeakCheck = false;
     count = 0;
 
     cache = angular.element.cache;
 
-    forEachSorted(cache, function(expando, key) {
+    forEachSorted(cache, function(expando) {
       angular.forEach(expando.data, function(value, key) {
         count++;
         if (value && value.$element) {
@@ -67,6 +66,7 @@ afterEach(function() {
         } else {
           dump('LEAK', key, angular.toJson(value));
         }
+
         delete expando.data[key];
       });
     });
@@ -74,18 +74,17 @@ afterEach(function() {
       throw new Error('Found jqCache references that were not deallocated! count: ' + count);
     }
   }
-
-  // copied from Angular.js
-  // we need this method here so that we can run module tests with wrapped angular.js
-  function forEachSorted(obj, iterator, context) {
-    var keys = Object.keys(obj).sort();
-    for (var i = 0; i < keys.length; i++) {
-      iterator.call(context, obj[keys[i]], keys[i]);
-    }
-    return keys;
-  }
 });
 
+// copied from Angular.js
+// we need this method here so that we can run module tests with wrapped angular.js
+function forEachSorted(obj, iterator, context) {
+  var keys = Object.keys(obj).sort();
+  for (var i = 0; i < keys.length; i++) {
+    iterator.call(context, obj[keys[i]], keys[i]);
+  }
+  return keys;
+}
 
 function dealoc(obj) {
   var jqCache = angular.element.cache;
@@ -117,9 +116,17 @@ function dealoc(obj) {
   }
 }
 
+function clearJqLiteCache() {
+  forEachSorted(angular.element.cache, (expando) => {
+    angular.forEach(expando.data, (value, key) => {
+      delete expando.data[key];
+    });
+  });
+}
+
 
 function jqLiteCacheSize() {
-  return Object.keys(jqLite.cache).length;
+  return Object.keys(angular.element.cache).length;
 }
 
 
@@ -129,13 +136,13 @@ function jqLiteCacheSize() {
  */
 function sortedHtml(element, showNgClass) {
   var html = '';
-  forEach(jqLite(element), function toString(node) {
+  angular.forEach(angular.element(element), function toString(node) {
 
     if (node.nodeName === '#text') {
       html += node.nodeValue.
-        replace(/&(\w+[&;\W])?/g, function(match, entity) {return entity ? match : '&amp;';}).
-        replace(/</g, '&lt;').
-        replace(/>/g, '&gt;');
+      replace(/&(\w+[&;\W])?/g, function(match, entity) {return entity ? match : '&amp;';}).
+      replace(/</g, '&lt;').
+      replace(/>/g, '&gt;');
     } else if (node.nodeName === '#comment') {
       html += '<!--' + node.nodeValue + '-->';
     } else {
@@ -146,7 +153,7 @@ function sortedHtml(element, showNgClass) {
       if (!showNgClass) {
         className = className.replace(/ng-[\w-]+\s*/g, '');
       }
-      className = trim(className);
+      className = ngInternals.trim(className);
       if (className) {
         attrs.push(' class="' + className + '"');
       }
@@ -181,18 +188,18 @@ function sortedHtml(element, showNgClass) {
       if (node.style) {
         var style = [];
         if (node.style.cssText) {
-          forEach(node.style.cssText.split(';'), function(value) {
-            value = trim(value);
+          angular.forEach(node.style.cssText.split(';'), function(value) {
+            value = ngInternals.trim(value);
             if (value) {
-              style.push(lowercase(value));
+              style.push(angular.lowercase(value));
             }
           });
         }
         for (var css in node.style) {
           var value = node.style[css];
-          if (isString(value) && isString(css) && css !== 'cssText' && value && isNaN(Number(css))) {
-            var text = lowercase(css + ': ' + value);
-            if (value !== 'false' && style.indexOf(text) === -1) {
+          if (angular.isString(value) && angular.isString(css) && css !== 'cssText' && value && isNaN(Number(css))) {
+            var text = angular.lowercase(css + ': ' + value);
+            if (value !== 'false' && !style.includes(text)) {
               style.push(text);
             }
           }
@@ -200,7 +207,7 @@ function sortedHtml(element, showNgClass) {
         style.sort();
         var tmp = style;
         style = [];
-        forEach(tmp, function(value) {
+        angular.forEach(tmp, function(value) {
           if (!value.match(/^max[^-]/)) {
             style.push(value);
           }
@@ -224,7 +231,7 @@ function sortedHtml(element, showNgClass) {
 function childrenTagsOf(element) {
   var tags = [];
 
-  forEach(jqLite(element).children(), function(child) {
+  angular.forEach(angular.element(element).children(), function(child) {
     tags.push(child.nodeName.toLowerCase());
   });
 
@@ -256,41 +263,41 @@ function assertVisible(node) {
 
 function provideLog($provide) {
   $provide.factory('log', function() {
-      var messages = [];
+    var messages = [];
 
-      function log(msg) {
-        messages.push(msg);
-        return msg;
-      }
+    function log(msg) {
+      messages.push(msg);
+      return msg;
+    }
 
-      log.toString = function() {
-        return messages.join('; ');
+    log.toString = function() {
+      return messages.join('; ');
+    };
+
+    log.toArray = function() {
+      return messages;
+    };
+
+    log.reset = function() {
+      messages = [];
+    };
+
+    log.empty = function() {
+      var currentMessages = messages;
+      messages = [];
+      return currentMessages;
+    };
+
+    log.fn = function(msg) {
+      return function() {
+        log(msg);
       };
+    };
 
-      log.toArray = function() {
-        return messages;
-      };
+    log.$$log = true;
 
-      log.reset = function() {
-        messages = [];
-      };
-
-      log.empty = function() {
-        var currentMessages = messages;
-        messages = [];
-        return currentMessages;
-      };
-
-      log.fn = function(msg) {
-        return function() {
-          log(msg);
-        };
-      };
-
-      log.$$log = true;
-
-      return log;
-    });
+    return log;
+  });
 }
 
 function pending() {
@@ -302,25 +309,25 @@ function trace(name) {
 }
 
 var karmaDump = window.dump || function() {
-  window.console.log.apply(window.console, arguments);
+  window.console.log(...arguments);
 };
 
 window.dump = function() {
-  karmaDump.apply(undefined, Array.prototype.map.call(arguments, function(arg) {
+  karmaDump(...Array.prototype.map.call(arguments, function(arg) {
     return angular.mock.dump(arg);
   }));
 };
 
 function generateInputCompilerHelper(helper) {
-  beforeEach(function() {
+   beforeEach(() => {
     helper.validationCounter = {};
 
-    module(function($compileProvider) {
+    angular.mock.module(function($compileProvider) {
       $compileProvider.directive('validationSpy', function() {
         return {
           priority: 1,
           require: 'ngModel',
-          link: function(scope, element, attrs, ctrl) {
+          link(scope, element, attrs, ctrl) {
             var validationName = attrs.validationSpy;
 
             var originalValidator = ctrl.$validators[validationName];
@@ -341,35 +348,32 @@ function generateInputCompilerHelper(helper) {
         };
       });
     });
-    inject(function($compile, $rootScope, $sniffer, $document, $rootElement) {
+    angular.mock.inject(function($compile, $rootScope, $sniffer) {
 
       helper.compileInput = function(inputHtml, mockValidity, scope) {
 
         scope = helper.scope = scope || $rootScope;
 
         // Create the input element and dealoc when done
-        helper.inputElm = jqLite(inputHtml);
+        helper.inputElm = angular.element(inputHtml);
 
         // Set up mock validation if necessary
-        if (isObject(mockValidity)) {
-          VALIDITY_STATE_PROPERTY = 'ngMockValidity';
-          helper.inputElm.prop(VALIDITY_STATE_PROPERTY, mockValidity);
+        if (angular.isObject(mockValidity)) {
+          Object.defineProperty(helper.inputElm[0], 'validity', {
+            value: mockValidity, configurable: true, writable: true
+          });
         }
 
         // Create the form element and dealoc when done
-        helper.formElm = jqLite('<form name="form"></form>');
+        helper.formElm = angular.element('<form name="form"></form>');
         helper.formElm.append(helper.inputElm);
 
         // Compile the lot and return the input element
-        $compile(helper.formElm)(scope);
+        compileForTest(helper.formElm, scope);
+        document.body.append(helper.formElm[0]);
 
-        $rootElement.append(helper.formElm);
-        // Append the app to the document so that "click" on a radio/checkbox triggers "change"
-        // Support: Chrome, Safari 8, 9
-        jqLite($document[0].body).append($rootElement);
-
-        spyOn(scope.form, '$addControl').and.callThrough();
-        spyOn(scope.form, '$$renameControl').and.callThrough();
+        jest.spyOn(scope.form, '$addControl');
+        jest.spyOn(scope.form, '$$renameControl');
 
         scope.$digest();
 
@@ -392,12 +396,49 @@ function generateInputCompilerHelper(helper) {
     });
   });
 
-  afterEach(function() {
+   afterEach(() => {
     helper.dealoc();
-  });
-
-  afterEach(function() {
-    VALIDITY_STATE_PROPERTY = 'validity';
   });
 }
 
+function generateTestCompiler(elementLike) {
+  let compile;
+
+  angular.mock.inject(($compile) => {
+    compile = $compile;
+  });
+
+  const compiler = compile(elementLike);
+
+  return (providedScope, cloneConnectFn, options) => {
+    const compiled = compiler(providedScope, cloneConnectFn, options)
+    toDealoc.push(compiled);
+    return compiled;
+  };
+}
+
+function compileForTest(elementLike, providedScope, cloneConnectFn, options) {
+  let scope = providedScope;
+
+  angular.mock.inject(($rootScope) => {
+    if (scope === undefined) {
+      scope = $rootScope;
+    }
+  });
+
+  return generateTestCompiler(elementLike)(scope, cloneConnectFn, options);
+}
+
+window.disableCacheLeakCheck = false;
+window.dealoc = dealoc;
+window.toDealoc = toDealoc;
+window.compileForTest = compileForTest;
+window.generateTestCompiler = generateTestCompiler;
+window.generateInputCompilerHelper = generateInputCompilerHelper;
+window.sortedHtml = sortedHtml;
+window.assertVisible = assertVisible;
+window.assertHidden = assertHidden;
+window.provideLog = provideLog;
+window.jqLiteCacheSize = jqLiteCacheSize;
+window.clearJqLiteCache = clearJqLiteCache;
+window.childrenTagsOf = childrenTagsOf;

@@ -1,5 +1,4 @@
-  jqLite(function() {
+  jqLite(() => {
     angularInit(window.document, bootstrap);
   });
-
 })(window);

@@ -1,4 +1,3 @@
-'use strict';
 
 /* exported $AnimateCssProvider */
 
@@ -500,7 +499,8 @@ var $AnimateCssProvider = ['$animateProvider', /** @this */ function($animatePro
         return closeAndReturnNoopAnimator();
       }
 
-      var stagger, cacheKey = $$animateCache.cacheKey(node, method, options.addClass, options.removeClass);
+      var stagger;
+      var cacheKey = $$animateCache.cacheKey(node, method, options.addClass, options.removeClass);
       if ($$animateCache.containsCachedAnimationWithoutDuration(cacheKey)) {
         preparationClasses = null;
         return closeAndReturnNoopAnimator();
@@ -653,7 +653,7 @@ var $AnimateCssProvider = ['$animateProvider', /** @this */ function($animatePro
       return {
         $$willAnimate: true,
         end: endFn,
-        start: function() {
+        start() {
           if (animationClosed) return;
 
           runnerHost = {
@@ -770,7 +770,7 @@ var $AnimateCssProvider = ['$animateProvider', /** @this */ function($animatePro
 
         return {
           $$willAnimate: false,
-          start: function() {
+          start() {
             return runner;
           },
           end: endFn
@@ -912,7 +912,8 @@ var $AnimateCssProvider = ['$animateProvider', /** @this */ function($animatePro
           maxDurationTime = maxDuration * ONE_SECOND;
 
           if (options.easing) {
-            var easeProp, easeVal = options.easing;
+            var easeProp;
+            var easeVal = options.easing;
             if (flags.hasTransitions) {
               easeProp = TRANSITION_PROP + TIMING_KEY;
               temporaryStyles.push([easeProp, easeVal]);

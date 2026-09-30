@@ -1,9 +1,7 @@
 'use strict';
-
-describe('ngAnimate $animateCss', function() {
-
-  beforeEach(module('ngAnimate'));
-  beforeEach(module('ngAnimateMock'));
+ describe('ngAnimate $animateCss', () => {
+  beforeEach(angular.mock.module('ngAnimate'));
+  beforeEach(angular.mock.module('ngAnimateMock'));
 
   function assertAnimationRunning(element, not) {
     var className = element.attr('class');
@@ -17,7 +15,7 @@ describe('ngAnimate $animateCss', function() {
 
   function getPossiblyPrefixedStyleValue(element, styleProp) {
     var value = element.css(styleProp);
-    if (isUndefined(value)) value = element.css('-webkit-' + styleProp);
+    if (angular.isUndefined(value)) value = element.css('-webkit-' + styleProp);
 
     return value;
   }
@@ -40,8 +38,9 @@ describe('ngAnimate $animateCss', function() {
     color: 'blue'
   };
 
-  var ss, triggerAnimationStartFrame;
-  beforeEach(module(function() {
+  var ss;
+  var triggerAnimationStartFrame;
+  beforeEach(angular.mock.module(function() {
     return function($document, $sniffer, $$rAF, $animate) {
       ss = createMockStyleSheet($document);
 
@@ -52,14 +51,20 @@ describe('ngAnimate $animateCss', function() {
     };
   }));
 
-  afterEach(function() {
+   afterEach(() => {
     if (ss) {
       ss.destroy();
     }
   });
 
-  it('should return false if neither transitions or keyframes are supported by the browser',
-    inject(function($animateCss, $sniffer, $rootElement, $document) {
+  // Jest runs ngMock's afterEach before testabilityPatch's, so the injector is already gone by the
+  // time the shared cleanup would dealoc `$rootElement`. Dealoc it (and its children) here instead.
+  afterEach(angular.mock.inject(function($rootElement) {
+    dealoc($rootElement);
+  }));
+
+  test('should return false if neither transitions or keyframes are supported by the browser',
+    angular.mock.inject(function($animateCss, $sniffer, $rootElement, $document) {
 
     var animator;
     var element = angular.element('<div></div>');
@@ -74,28 +79,26 @@ describe('ngAnimate $animateCss', function() {
     expect(animator.$$willAnimate).toBeFalsy();
   }));
 
-  describe('when active', function() {
-    if (!browserSupportsCssAnimations()) return;
+  describe('when active', () => {
+    test('should not attempt an animation if animations are globally disabled',
+      angular.mock.inject(function($animateCss, $animate, $rootElement, $document) {
+        $animate.enabled(false);
 
-    it('should not attempt an animation if animations are globally disabled',
-      inject(function($animateCss, $animate, $rootElement, $document) {
+        var animator;
+        var element = angular.element('<div></div>');
+        $rootElement.append(element);
+        angular.element($document[0].body).append($rootElement);
 
-      $animate.enabled(false);
+        animator = $animateCss(element, {
+          duration: 10,
+          to: { 'height': '100px' }
+        });
 
-      var animator, element = angular.element('<div></div>');
-      $rootElement.append(element);
-      angular.element($document[0].body).append($rootElement);
+        expect(animator.$$willAnimate).toBeFalsy();
+      }));
 
-      animator = $animateCss(element, {
-        duration: 10,
-        to: { 'height': '100px' }
-      });
-
-      expect(animator.$$willAnimate).toBeFalsy();
-    }));
-
-    it('should silently quit the animation and not throw when an element has no parent during preparation',
-      inject(function($animateCss, $rootScope, $document, $rootElement) {
+    test('should silently quit the animation and not throw when an element has no parent during preparation',
+      angular.mock.inject(function($animateCss, $rootScope, $document, $rootElement) {
 
       var element = angular.element('<div></div>');
       expect(function() {
@@ -111,8 +114,8 @@ describe('ngAnimate $animateCss', function() {
       expect(element).not.toHaveClass('fake-active');
     }));
 
-    it('should silently quit the animation and not throw when an element has no parent before starting',
-      inject(function($animateCss, $$rAF, $rootScope, $document, $rootElement) {
+    test('should silently quit the animation and not throw when an element has no parent before starting',
+      angular.mock.inject(function($animateCss, $$rAF, $rootScope, $document, $rootElement) {
 
       var element = angular.element('<div></div>');
       angular.element($document[0].body).append($rootElement);
@@ -131,9 +134,9 @@ describe('ngAnimate $animateCss', function() {
       }).not.toThrow();
     }));
 
-    describe('rAF usage', function() {
-      it('should buffer all requests into a single requestAnimationFrame call',
-        inject(function($animateCss, $$rAF, $rootScope, $document, $rootElement) {
+    describe('rAF usage', () => {
+      test('should buffer all requests into a single requestAnimationFrame call',
+        angular.mock.inject(function($animateCss, $$rAF, $rootScope, $document, $rootElement) {
 
         angular.element($document[0].body).append($rootElement);
 
@@ -156,7 +159,7 @@ describe('ngAnimate $animateCss', function() {
         expect(count).toBe(0);
 
         triggerAnimationStartFrame();
-        forEach(runners, function(runner) {
+        angular.forEach(runners, function(runner) {
           runner.end();
         });
 
@@ -164,16 +167,16 @@ describe('ngAnimate $animateCss', function() {
         expect(count).toBe(3);
       }));
 
-      it('should cancel previous requests to rAF to avoid premature flushing', function() {
+      test('should cancel previous requests to rAF to avoid premature flushing', () => {
         var count = 0;
-        module(function($provide) {
+        angular.mock.module(function($provide) {
           $provide.value('$$rAF', function() {
             return function cancellationFn() {
               count++;
             };
           });
         });
-        inject(function($animateCss, $$rAF, $document, $rootElement) {
+        angular.mock.inject(function($animateCss, $$rAF, $document, $rootElement) {
           angular.element($document[0].body).append($rootElement);
 
           function makeRequest() {
@@ -190,10 +193,11 @@ describe('ngAnimate $animateCss', function() {
       });
     });
 
-    describe('animator and runner', function() {
+    describe('animator and runner', () => {
       var animationDuration = 5;
-      var element, animator;
-      beforeEach(inject(function($animateCss, $rootElement, $document) {
+      var element;
+      var animator;
+      beforeEach(angular.mock.inject(function($animateCss, $rootElement, $document) {
         element = angular.element('<div></div>');
         $rootElement.append(element);
         angular.element($document[0].body).append($rootElement);
@@ -206,12 +210,16 @@ describe('ngAnimate $animateCss', function() {
         });
       }));
 
-      it('should expose start and end functions for the animator object', inject(function() {
+      afterEach(() => {
+        dealoc(element);
+      })
+
+      test('should expose start and end functions for the animator object', angular.mock.inject(function() {
         expect(typeof animator.start).toBe('function');
         expect(typeof animator.end).toBe('function');
       }));
 
-      it('should expose end, cancel, resume and pause methods on the runner object', inject(function() {
+      test('should expose end, cancel, resume and pause methods on the runner object', angular.mock.inject(function() {
         var runner = animator.start();
         triggerAnimationStartFrame();
 
@@ -221,7 +229,7 @@ describe('ngAnimate $animateCss', function() {
         expect(typeof runner.pause).toBe('function');
       }));
 
-      it('should start the animation', inject(function() {
+      test('should start the animation', angular.mock.inject(function() {
         expect(element).not.toHaveClass('ng-enter-active');
         animator.start();
         triggerAnimationStartFrame();
@@ -229,7 +237,7 @@ describe('ngAnimate $animateCss', function() {
         expect(element).toHaveClass('ng-enter-active');
       }));
 
-      it('should end the animation when called from the animator object', inject(function() {
+      test('should end the animation when called from the animator object', angular.mock.inject(function() {
         animator.start();
         triggerAnimationStartFrame();
 
@@ -237,14 +245,14 @@ describe('ngAnimate $animateCss', function() {
         expect(element).not.toHaveClass('ng-enter-active');
       }));
 
-      it('should end the animation when called from the runner object', inject(function() {
+      test('should end the animation when called from the runner object', angular.mock.inject(function() {
         var runner = animator.start();
         triggerAnimationStartFrame();
         runner.end();
         expect(element).not.toHaveClass('ng-enter-active');
       }));
 
-      it('should permanently close the animation if closed before the next rAF runs', inject(function() {
+      test('should permanently close the animation if closed before the next rAF runs', angular.mock.inject(function() {
         var runner = animator.start();
         runner.end();
 
@@ -252,8 +260,8 @@ describe('ngAnimate $animateCss', function() {
         expect(element).not.toHaveClass('ng-enter-active');
       }));
 
-      it('should return a runner object at the start of the animation that contains a `then` method',
-        inject(function($rootScope) {
+      test('should return a runner object at the start of the animation that contains a `then` method',
+        angular.mock.inject(function($rootScope) {
 
         var runner = animator.start();
         triggerAnimationStartFrame();
@@ -270,12 +278,12 @@ describe('ngAnimate $animateCss', function() {
         expect(resolved).toBeTruthy();
       }));
 
-      it('should cancel the animation and reject', inject(function($rootScope) {
+      test('should cancel the animation and reject', angular.mock.inject(function($rootScope) {
         var rejected;
         var runner = animator.start();
         triggerAnimationStartFrame();
 
-        runner.then(noop, function() {
+        runner.then(angular.noop, function() {
           rejected = true;
         });
 
@@ -284,9 +292,8 @@ describe('ngAnimate $animateCss', function() {
         expect(rejected).toBeTruthy();
       }));
 
-      it('should run pause, but not effect the transition animation', inject(function() {
+      test('should run pause, but not effect the transition animation', angular.mock.inject(function() {
         var blockingDelay = '-' + animationDuration + 's';
-
         expect(element.css('transition-delay')).toEqual(blockingDelay);
         var runner = animator.start();
         triggerAnimationStartFrame();
@@ -296,7 +303,7 @@ describe('ngAnimate $animateCss', function() {
         expect(element.css('transition-delay')).not.toEqual(blockingDelay);
       }));
 
-      it('should pause the transition, have no effect, but not end it', inject(function() {
+      test('should pause the transition, have no effect, but not end it', angular.mock.inject(function() {
         var runner = animator.start();
         triggerAnimationStartFrame();
 
@@ -308,7 +315,7 @@ describe('ngAnimate $animateCss', function() {
         expect(element).toHaveClass('ng-enter-active');
       }));
 
-      it('should resume the animation', inject(function() {
+      test('should resume the animation', angular.mock.inject(function() {
         var runner = animator.start();
         triggerAnimationStartFrame();
 
@@ -323,8 +330,8 @@ describe('ngAnimate $animateCss', function() {
         expect(element).not.toHaveClass('ng-enter-active');
       }));
 
-      it('should pause and resume a keyframe animation using animation-play-state',
-        inject(function($animateCss) {
+      test('should pause and resume a keyframe animation using animation-play-state',
+        angular.mock.inject(function($animateCss) {
 
         element.attr('style', '');
         ss.addPossiblyPrefixedRule('.ng-enter', 'animation:1.5s keyframe_animation;');
@@ -343,8 +350,8 @@ describe('ngAnimate $animateCss', function() {
         expect(element.attr('style')).toBeFalsy();
       }));
 
-      it('should remove the animation-play-state style if the animation is closed',
-        inject(function($animateCss) {
+      test('should remove the animation-play-state style if the animation is closed',
+        angular.mock.inject(function($animateCss) {
 
         element.attr('style', '');
         ss.addPossiblyPrefixedRule('.ng-enter', 'animation:1.5s keyframe_animation;');
@@ -364,9 +371,10 @@ describe('ngAnimate $animateCss', function() {
       }));
     });
 
-    describe('CSS', function() {
-      describe('detected styles', function() {
-        var element, options;
+    describe('CSS', () => {
+      describe('detected styles', () => {
+        var element;
+        var options;
 
         function assertAnimationComplete(bool) {
           var assert = expect(element);
@@ -377,15 +385,19 @@ describe('ngAnimate $animateCss', function() {
           assert.toHaveClass('ng-enter-active');
         }
 
-        beforeEach(inject(function($rootElement, $document) {
+        beforeEach(angular.mock.inject(function($rootElement, $document) {
           element = angular.element('<div></div>');
           $rootElement.append(element);
           angular.element($document[0].body).append($rootElement);
           options = { event: 'enter', structural: true };
         }));
 
-        it('should always return an object even if no animation is detected',
-          inject(function($animateCss) {
+        afterEach(() => {
+          dealoc(element);
+        });
+
+        test('should always return an object even if no animation is detected',
+          angular.mock.inject(function($animateCss) {
 
           ss.addRule('.some-animation', 'background:red;');
 
@@ -393,13 +405,13 @@ describe('ngAnimate $animateCss', function() {
           var animator = $animateCss(element, options);
 
           expect(animator).toBeTruthy();
-          expect(isFunction(animator.start)).toBeTruthy();
+          expect(angular.isFunction(animator.start)).toBeTruthy();
           expect(animator.end).toBeTruthy();
           expect(animator.$$willAnimate).toBe(false);
         }));
 
-        it('should close the animation immediately, but still return an animator object if no animation is detected',
-          inject(function($animateCss) {
+        test('should close the animation immediately, but still return an animator object if no animation is detected',
+          angular.mock.inject(function($animateCss) {
 
           ss.addRule('.another-fake-animation', 'background:blue;');
 
@@ -410,13 +422,13 @@ describe('ngAnimate $animateCss', function() {
           });
 
           expect(element).not.toHaveClass('ng-enter');
-          expect(isFunction(animator.start)).toBeTruthy();
+          expect(angular.isFunction(animator.start)).toBeTruthy();
         }));
 
-        they('should close the animation, but still accept $prop callbacks if no animation is detected',
-          ['done', 'then'], function(method) {
+        test.each(['done', 'then'].map((prop) => ({ prop })))(
+            'should close the animation, but still accept $prop callbacks if no animation is detected', function({ prop: method }) {
 
-          inject(function($animateCss, $animate, $rootScope) {
+          angular.mock.inject(function($animateCss, $animate, $rootScope) {
             ss.addRule('.the-third-fake-animation', 'background:green;');
 
             element.addClass('another-fake-animation');
@@ -440,10 +452,10 @@ describe('ngAnimate $animateCss', function() {
           });
         });
 
-        they('should close the animation, but still accept recognize runner.$prop if no animation is detected',
-          ['done(cancel)', 'catch'], function(method) {
+        test.each(['done(cancel)', 'catch'].map((prop) => ({ prop })))(
+            'should close the animation, but still accept recognize runner.$prop if no animation is detected', function({ prop: method }) {
 
-          inject(function($animateCss, $rootScope) {
+          angular.mock.inject(function($animateCss, $rootScope) {
             ss.addRule('.the-third-fake-animation', 'background:green;');
 
             element.addClass('another-fake-animation');
@@ -475,7 +487,7 @@ describe('ngAnimate $animateCss', function() {
           });
         });
 
-        it('should use the highest transition duration value detected in the CSS class', inject(function($animateCss) {
+        test('should use the highest transition duration value detected in the CSS class', angular.mock.inject(function($animateCss) {
           ss.addPossiblyPrefixedRule('.ng-enter', 'transition:1s linear all;' +
                                                   'transition-duration:10s, 15s, 20s;');
 
@@ -494,7 +506,7 @@ describe('ngAnimate $animateCss', function() {
           assertAnimationComplete(true);
         }));
 
-        it('should use the highest transition delay value detected in the CSS class', inject(function($animateCss) {
+        test('should use the highest transition delay value detected in the CSS class', angular.mock.inject(function($animateCss) {
           ss.addPossiblyPrefixedRule('.ng-enter', 'transition:1s linear all;' +
                                                   'transition-delay:10s, 15s, 20s;');
 
@@ -513,8 +525,8 @@ describe('ngAnimate $animateCss', function() {
           assertAnimationComplete(true);
         }));
 
-        it('should only close when both the animation delay and duration have passed',
-          inject(function($animateCss) {
+        test('should only close when both the animation delay and duration have passed',
+          angular.mock.inject(function($animateCss) {
 
           ss.addPossiblyPrefixedRule('.ng-enter', 'transition:10s 5s linear all;');
 
@@ -532,8 +544,8 @@ describe('ngAnimate $animateCss', function() {
           assertAnimationComplete(true);
         }));
 
-        it('should not close a transition when a child element fires the transitionend event',
-          inject(function($animateCss) {
+        test('should not close a transition when a child element fires the transitionend event',
+          angular.mock.inject(function($animateCss) {
 
           ss.addPossiblyPrefixedRule('.ng-enter', 'transition:4s linear all;');
           ss.addPossiblyPrefixedRule('.non-angular-animation', 'transition:5s linear all;');
@@ -559,8 +571,8 @@ describe('ngAnimate $animateCss', function() {
           assertAnimationComplete(true);
         }));
 
-        it('should not close a keyframe animation when a child element fires the animationend event',
-          inject(function($animateCss) {
+        test('should not close a keyframe animation when a child element fires the animationend event',
+          angular.mock.inject(function($animateCss) {
 
           ss.addPossiblyPrefixedRule('.ng-enter', 'animation:animation 4s;');
           ss.addPossiblyPrefixedRule('.non-angular-animation', 'animation:animation 5s;');
@@ -584,9 +596,10 @@ describe('ngAnimate $animateCss', function() {
 
           keyframeProgress(element, 4);
           assertAnimationComplete(true);
+          dealoc(child);
         }));
 
-        it('should use the highest keyframe duration value detected in the CSS class', inject(function($animateCss) {
+        test('should use the highest keyframe duration value detected in the CSS class', angular.mock.inject(function($animateCss) {
           ss.addPossiblyPrefixedRule('.ng-enter', 'animation:animation 1s, animation 2s, animation 3s;');
 
           var animator = $animateCss(element, options);
@@ -604,7 +617,7 @@ describe('ngAnimate $animateCss', function() {
           assertAnimationComplete(true);
         }));
 
-        it('should use the highest keyframe delay value detected in the CSS class', inject(function($animateCss) {
+        test('should use the highest keyframe delay value detected in the CSS class', angular.mock.inject(function($animateCss) {
           ss.addPossiblyPrefixedRule('.ng-enter', 'animation:animation 1s 2s, animation 1s 10s, animation 1s 1000ms;');
 
           var animator = $animateCss(element, options);
@@ -622,7 +635,7 @@ describe('ngAnimate $animateCss', function() {
           assertAnimationComplete(true);
         }));
 
-        it('should use the highest keyframe duration value detected in the CSS class with respect to the animation-iteration-count property', inject(function($animateCss) {
+        test('should use the highest keyframe duration value detected in the CSS class with respect to the animation-iteration-count property', angular.mock.inject(function($animateCss) {
           ss.addPossiblyPrefixedRule('.ng-enter',
                     'animation:animation 1s 2s 3, animation 1s 10s 2, animation 1s 1000ms infinite;');
 
@@ -641,7 +654,7 @@ describe('ngAnimate $animateCss', function() {
           assertAnimationComplete(true);
         }));
 
-        it('should use the highest duration value when both transitions and keyframes are used', inject(function($animateCss) {
+        test('should use the highest duration value when both transitions and keyframes are used', angular.mock.inject(function($animateCss) {
           ss.addPossiblyPrefixedRule('.ng-enter', 'transition:1s linear all;' +
                                                   'transition-duration:10s, 15s, 20s;' +
                                                   'animation:animation 1s, animation 2s, animation 3s 0s 7;');
@@ -669,7 +682,7 @@ describe('ngAnimate $animateCss', function() {
           assertAnimationComplete(true);
         }));
 
-        it('should use the highest delay value when both transitions and keyframes are used', inject(function($animateCss) {
+        test('should use the highest delay value when both transitions and keyframes are used', angular.mock.inject(function($animateCss) {
           ss.addPossiblyPrefixedRule('.ng-enter', 'transition:1s linear all;' +
                                                   'transition-delay:10s, 15s, 20s;' +
                                                   'animation:animation 1s 2s, animation 1s 16s, animation 1s 19s;');
@@ -697,9 +710,9 @@ describe('ngAnimate $animateCss', function() {
         }));
       });
 
-      describe('staggering', function() {
-        it('should apply a stagger based when an active ng-EVENT-stagger class with a transition-delay is detected',
-          inject(function($animateCss, $document, $rootElement, $timeout) {
+      describe('staggering', () => {
+        test('should apply a stagger based when an active ng-EVENT-stagger class with a transition-delay is detected',
+          angular.mock.inject(function($animateCss, $document, $rootElement, $timeout) {
 
           angular.element($document[0].body).append($rootElement);
 
@@ -737,10 +750,12 @@ describe('ngAnimate $animateCss', function() {
             expect(elm).not.toHaveClass('ng-enter-active');
             expect(elm).not.toHaveClass('ng-enter-stagger');
           }
+
+            elements.forEach((e) => dealoc(e));
         }));
 
-        it('should apply a stagger based when for all provided addClass/removeClass CSS classes',
-          inject(function($animateCss, $document, $rootElement, $timeout) {
+        test('should apply a stagger based when for all provided addClass/removeClass CSS classes',
+          angular.mock.inject(function($animateCss, $document, $rootElement, $timeout) {
 
           angular.element($document[0].body).append($rootElement);
 
@@ -807,10 +822,12 @@ describe('ngAnimate $animateCss', function() {
             expect(elm).not.toHaveClass('green-add-stagger');
             expect(elm).not.toHaveClass('blue-remove-stagger');
           }
+
+          elements.forEach((e) => dealoc(e));
         }));
 
-        it('should block the transition animation between start and animate when staggered',
-          inject(function($animateCss, $document, $rootElement) {
+        test('should block the transition animation between start and animate when staggered',
+          angular.mock.inject(function($animateCss, $document, $rootElement) {
 
           angular.element($document[0].body).append($rootElement);
 
@@ -838,39 +855,43 @@ describe('ngAnimate $animateCss', function() {
               expect(element.css('transition-delay')).toContain('-2s');
             }
           }
+
+          elms.forEach((e) => dealoc(e));
         }));
 
-        it('should block (pause) the keyframe animation between start and animate when staggered',
-          inject(function($animateCss, $document, $rootElement) {
+        test('should block (pause) the keyframe animation between start and animate when staggered',
+          angular.mock.inject(function($animateCss, $document, $rootElement) {
+            angular.element($document[0].body).append($rootElement);
 
-          angular.element($document[0].body).append($rootElement);
+            ss.addPossiblyPrefixedRule('.ng-enter-stagger', 'animation-delay:0.2s');
+            ss.addPossiblyPrefixedRule('.ng-enter', 'animation:my_animation 2s;');
 
-          ss.addPossiblyPrefixedRule('.ng-enter-stagger', 'animation-delay:0.2s');
-          ss.addPossiblyPrefixedRule('.ng-enter', 'animation:my_animation 2s;');
+            var i;
+            var element;
+            var elements = [];
+            for (i = 0; i < 5; i++) {
+              element = angular.element('<div class="transition-animation"></div>');
+              $rootElement.append(element);
 
-          var i, element, elements = [];
-          for (i = 0; i < 5; i++) {
-            element = angular.element('<div class="transition-animation"></div>');
-            $rootElement.append(element);
-
-            $animateCss(element, { event: 'enter', structural: true }).start();
-            elements.push(element);
-          }
-
-          triggerAnimationStartFrame();
-
-          for (i = 0; i < 5; i++) {
-            element = elements[i];
-            if (i === 0) { // the first element is always run right away
-              expect(element.attr('style')).toBeFalsy();
-            } else {
-              expect(getPossiblyPrefixedStyleValue(element, 'animation-play-state')).toBe('paused');
+              $animateCss(element, { event: 'enter', structural: true }).start();
+              elements.push(element);
             }
-          }
-        }));
 
-        it('should not apply a stagger if the transition delay value is inherited from a earlier CSS class',
-          inject(function($animateCss, $document, $rootElement) {
+            triggerAnimationStartFrame();
+
+            for (i = 0; i < 5; i++) {
+              element = elements[i];
+              if (i === 0) { // the first element is always run right away
+                expect(element.attr('style')).toBeFalsy();
+              } else {
+                expect(getPossiblyPrefixedStyleValue(element, 'animation-play-state')).toBe('paused');
+              }
+            }
+            elements.forEach((e) => dealoc(e));
+          }));
+
+        test('should not apply a stagger if the transition delay value is inherited from a earlier CSS class',
+          angular.mock.inject(function($animateCss, $document, $rootElement) {
 
           angular.element($document[0].body).append($rootElement);
 
@@ -885,37 +906,40 @@ describe('ngAnimate $animateCss', function() {
 
 
             expect(element).toHaveClass('ng-enter-active');
+            dealoc(element);
           }
         }));
 
-        it('should apply a stagger only if the transition duration value is zero when inherited from a earlier CSS class',
-          inject(function($animateCss, $document, $rootElement) {
+        test('should apply a stagger only if the transition duration value is zero when inherited from a earlier CSS class',
+          angular.mock.inject(function($animateCss, $document, $rootElement) {
+            angular.element($document[0].body).append($rootElement);
 
-          angular.element($document[0].body).append($rootElement);
+            ss.addPossiblyPrefixedRule('.transition-animation', 'transition:2s 5s linear all;');
+            ss.addPossiblyPrefixedRule('.transition-animation.ng-enter-stagger',
+                'transition:0s 0.2s;');
 
-          ss.addPossiblyPrefixedRule('.transition-animation', 'transition:2s 5s linear all;');
-          ss.addPossiblyPrefixedRule('.transition-animation.ng-enter-stagger',
-            'transition-duration:0s; transition-delay:0.2s;');
+            var element;
+            var i;
+            var elms = [];
+            for (i = 0; i < 5; i++) {
+              element = angular.element('<div class="transition-animation"></div>');
+              $rootElement.append(element);
 
-          var element, i, elms = [];
-          for (i = 0; i < 5; i++) {
-            element = angular.element('<div class="transition-animation"></div>');
-            $rootElement.append(element);
+              elms.push(element);
+              $animateCss(element, { event: 'enter', structural: true }).start();
+            }
 
-            elms.push(element);
-            $animateCss(element, { event: 'enter', structural: true }).start();
-          }
-
-          triggerAnimationStartFrame();
-          for (i = 1; i < 5; i++) {
-            element = elms[i];
-            expect(element).not.toHaveClass('ng-enter-active');
-          }
-        }));
+            triggerAnimationStartFrame();
+            for (i = 1; i < 5; i++) {
+              element = elms[i];
+              expect(element).not.toHaveClass('ng-enter-active');
+            }
+            elms.forEach((e) => dealoc(e));
+          }));
 
 
-        it('should ignore animation staggers if only transition animations were detected',
-          inject(function($animateCss, $document, $rootElement) {
+        test('should ignore animation staggers if only transition animations were detected',
+          angular.mock.inject(function($animateCss, $document, $rootElement) {
 
           angular.element($document[0].body).append($rootElement);
 
@@ -931,11 +955,12 @@ describe('ngAnimate $animateCss', function() {
 
 
             expect(element).toHaveClass('ng-enter-active');
+            dealoc(element);
           }
         }));
 
-        it('should ignore transition staggers if only keyframe animations were detected',
-          inject(function($animateCss, $document, $rootElement) {
+        test('should ignore transition staggers if only keyframe animations were detected',
+          angular.mock.inject(function($animateCss, $document, $rootElement) {
 
           angular.element($document[0].body).append($rootElement);
 
@@ -951,142 +976,149 @@ describe('ngAnimate $animateCss', function() {
 
 
             expect(elm).toHaveClass('ng-enter-active');
+            dealoc(elm);
           }
         }));
 
-        it('should start on the highest stagger value if both transition and keyframe staggers are used together',
-          inject(function($animateCss, $document, $rootElement, $timeout, $browser) {
+        test('should start on the highest stagger value if both transition and keyframe staggers are used together',
+          angular.mock.inject(function($animateCss, $document, $rootElement, $timeout, $browser) {
+            angular.element($document[0].body).append($rootElement);
 
-          angular.element($document[0].body).append($rootElement);
+            ss.addPossiblyPrefixedRule('.ng-enter-stagger', 'transition-delay: 0.5s; ' +
+                                                            'animation-delay: 1s');
 
-          ss.addPossiblyPrefixedRule('.ng-enter-stagger', 'transition-delay: 0.5s; ' +
-                                                          'animation-delay: 1s');
+            ss.addPossiblyPrefixedRule('.ng-enter', 'transition: 10s linear all; ' +
+                                                    'animation: 20s my_animation');
 
-          ss.addPossiblyPrefixedRule('.ng-enter', 'transition: 10s linear all; ' +
-                                                  'animation: 20s my_animation');
+            var i;
+            var elm;
+            var elements = [];
+            for (i = 0; i < 5; i++) {
+              elm = angular.element('<div></div>');
+              elements.push(elm);
+              $rootElement.append(elm);
 
-          var i, elm, elements = [];
-          for (i = 0; i < 5; i++) {
-            elm = angular.element('<div></div>');
-            elements.push(elm);
-            $rootElement.append(elm);
+              $animateCss(elm, { event: 'enter', structural: true }).start();
 
-            $animateCss(elm, { event: 'enter', structural: true }).start();
+              expect(elm).toHaveClass('ng-enter');
+            }
 
-            expect(elm).toHaveClass('ng-enter');
-          }
-
-          triggerAnimationStartFrame();
-
-          expect(elements[0]).toHaveClass('ng-enter-active');
-          for (i = 1; i < 5; i++) {
-            elm = elements[i];
-
-            expect(elm).not.toHaveClass('ng-enter-active');
-
-            $timeout.flush(500);
-            expect(elm).not.toHaveClass('ng-enter-active');
-
-            $timeout.flush(500);
-            expect(elm).toHaveClass('ng-enter-active');
-          }
-        }));
-
-        it('should apply the closing timeout ontop of the stagger timeout',
-          inject(function($animateCss, $document, $rootElement, $timeout, $browser) {
-
-          angular.element($document[0].body).append($rootElement);
-
-          ss.addPossiblyPrefixedRule('.ng-enter-stagger', 'transition-delay:1s;');
-          ss.addPossiblyPrefixedRule('.ng-enter', 'transition:10s linear all;');
-
-          var elm, i, elms = [];
-          for (i = 0; i < 5; i++) {
-            elm = angular.element('<div></div>');
-            elms.push(elm);
-            $rootElement.append(elm);
-
-            $animateCss(elm, { event: 'enter', structural: true }).start();
             triggerAnimationStartFrame();
-          }
 
-          for (i = 1; i < 2; i++) {
-            elm = elms[i];
-            expect(elm).toHaveClass('ng-enter');
-            $timeout.flush(1000);
-            $timeout.flush(15000);
-            expect(elm).not.toHaveClass('ng-enter');
-          }
-        }));
+            expect(elements[0]).toHaveClass('ng-enter-active');
+            for (i = 1; i < 5; i++) {
+              elm = elements[i];
 
-        it('should apply the closing timeout ontop of the stagger timeout with an added delay',
-          inject(function($animateCss, $document, $rootElement, $timeout, $browser) {
+              expect(elm).not.toHaveClass('ng-enter-active');
 
-          angular.element($document[0].body).append($rootElement);
+              $timeout.flush(500);
+              expect(elm).not.toHaveClass('ng-enter-active');
 
-          ss.addPossiblyPrefixedRule('.ng-enter-stagger', 'transition-delay:1s;');
-          ss.addPossiblyPrefixedRule('.ng-enter', 'transition:10s linear all; transition-delay:50s;');
+              $timeout.flush(500);
+              expect(elm).toHaveClass('ng-enter-active');
+            }
+            elements.forEach((e) => dealoc(e));
+          }));
 
-          var elm, i, elms = [];
-          for (i = 0; i < 5; i++) {
-            elm = angular.element('<div></div>');
-            elms.push(elm);
-            $rootElement.append(elm);
+        test('should apply the closing timeout ontop of the stagger timeout',
+          angular.mock.inject(function($animateCss, $document, $rootElement, $timeout, $browser) {
+            angular.element($document[0].body).append($rootElement);
 
-            $animateCss(elm, { event: 'enter', structural: true }).start();
+            ss.addPossiblyPrefixedRule('.ng-enter-stagger', 'transition-delay:1s;');
+            ss.addPossiblyPrefixedRule('.ng-enter', 'transition:10s linear all;');
+
+            var elm;
+            var i;
+            var elms = [];
+            for (i = 0; i < 5; i++) {
+              elm = angular.element('<div></div>');
+              elms.push(elm);
+              $rootElement.append(elm);
+
+              $animateCss(elm, { event: 'enter', structural: true }).start();
+              triggerAnimationStartFrame();
+            }
+
+            for (i = 1; i < 2; i++) {
+              elm = elms[i];
+              expect(elm).toHaveClass('ng-enter');
+              $timeout.flush(1000);
+              $timeout.flush(15000);
+              expect(elm).not.toHaveClass('ng-enter');
+            }
+            elms.forEach((e) => dealoc(e));
+          }));
+
+        test('should apply the closing timeout ontop of the stagger timeout with an added delay',
+          angular.mock.inject(function($animateCss, $document, $rootElement, $timeout, $browser) {
+            angular.element($document[0].body).append($rootElement);
+
+            ss.addPossiblyPrefixedRule('.ng-enter-stagger', 'transition-delay:1s;');
+            ss.addPossiblyPrefixedRule('.ng-enter', 'transition:10s linear all; transition-delay:50s;');
+
+            var elm;
+            var i;
+            var elms = [];
+            for (i = 0; i < 5; i++) {
+              elm = angular.element('<div></div>');
+              elms.push(elm);
+              $rootElement.append(elm);
+
+              $animateCss(elm, { event: 'enter', structural: true }).start();
+              triggerAnimationStartFrame();
+            }
+
+            for (i = 1; i < 2; i++) {
+              elm = elms[i];
+              expect(elm).toHaveClass('ng-enter');
+              $timeout.flush(1000);
+              $timeout.flush(65000);
+              expect(elm).not.toHaveClass('ng-enter');
+            }
+          }));
+
+        test('should issue a stagger if a stagger value is provided in the options',
+          angular.mock.inject(function($animateCss, $document, $rootElement, $timeout) {
+            angular.element($document[0].body).append($rootElement);
+            ss.addPossiblyPrefixedRule('.ng-enter', 'transition:2s linear all');
+
+            var elm;
+            var i;
+            var elements = [];
+            for (i = 0; i < 5; i++) {
+              elm = angular.element('<div></div>');
+              elements.push(elm);
+              $rootElement.append(elm);
+
+              $animateCss(elm, {
+                event: 'enter',
+                structural: true,
+                stagger: 0.5
+              }).start();
+              expect(elm).toHaveClass('ng-enter');
+            }
+
             triggerAnimationStartFrame();
-          }
 
-          for (i = 1; i < 2; i++) {
-            elm = elms[i];
-            expect(elm).toHaveClass('ng-enter');
-            $timeout.flush(1000);
-            $timeout.flush(65000);
-            expect(elm).not.toHaveClass('ng-enter');
-          }
-        }));
+            expect(elements[0]).toHaveClass('ng-enter-active');
+            for (i = 1; i < 5; i++) {
+              elm = elements[i];
 
-        it('should issue a stagger if a stagger value is provided in the options',
-          inject(function($animateCss, $document, $rootElement, $timeout) {
+              expect(elm).not.toHaveClass('ng-enter-active');
+              $timeout.flush(500);
+              expect(elm).toHaveClass('ng-enter-active');
 
-          angular.element($document[0].body).append($rootElement);
-          ss.addPossiblyPrefixedRule('.ng-enter', 'transition:2s linear all');
+              browserTrigger(elm, 'transitionend',
+                { timeStamp: Date.now() + 1000, elapsedTime: 2 });
 
-          var elm, i, elements = [];
-          for (i = 0; i < 5; i++) {
-            elm = angular.element('<div></div>');
-            elements.push(elm);
-            $rootElement.append(elm);
+              expect(elm).not.toHaveClass('ng-enter');
+              expect(elm).not.toHaveClass('ng-enter-active');
+              expect(elm).not.toHaveClass('ng-enter-stagger');
+            }
+          }));
 
-            $animateCss(elm, {
-              event: 'enter',
-              structural: true,
-              stagger: 0.5
-            }).start();
-            expect(elm).toHaveClass('ng-enter');
-          }
-
-          triggerAnimationStartFrame();
-
-          expect(elements[0]).toHaveClass('ng-enter-active');
-          for (i = 1; i < 5; i++) {
-            elm = elements[i];
-
-            expect(elm).not.toHaveClass('ng-enter-active');
-            $timeout.flush(500);
-            expect(elm).toHaveClass('ng-enter-active');
-
-            browserTrigger(elm, 'transitionend',
-              { timeStamp: Date.now() + 1000, elapsedTime: 2 });
-
-            expect(elm).not.toHaveClass('ng-enter');
-            expect(elm).not.toHaveClass('ng-enter-active');
-            expect(elm).not.toHaveClass('ng-enter-stagger');
-          }
-        }));
-
-        it('should only add/remove classes once the stagger timeout has passed',
-          inject(function($animateCss, $document, $rootElement, $timeout) {
+        test('should only add/remove classes once the stagger timeout has passed',
+          angular.mock.inject(function($animateCss, $document, $rootElement, $timeout) {
 
           angular.element($document[0].body).append($rootElement);
 
@@ -1111,9 +1143,9 @@ describe('ngAnimate $animateCss', function() {
         }));
       });
 
-      describe('closing timeout', function() {
-        it('should close off the animation after 150% of the animation time has passed',
-          inject(function($animateCss, $document, $rootElement, $timeout) {
+      describe('closing timeout', () => {
+        test('should close off the animation after 150% of the animation time has passed',
+          angular.mock.inject(function($animateCss, $document, $rootElement, $timeout) {
 
           ss.addPossiblyPrefixedRule('.ng-enter', 'transition:10s linear all;');
 
@@ -1135,8 +1167,8 @@ describe('ngAnimate $animateCss', function() {
           expect(element).not.toHaveClass('ng-enter-active');
         }));
 
-        it('should close off the animation after 150% of the animation time has passed and consider the detected delay value',
-          inject(function($animateCss, $document, $rootElement, $timeout) {
+        test('should close off the animation after 150% of the animation time has passed and consider the detected delay value',
+          angular.mock.inject(function($animateCss, $document, $rootElement, $timeout) {
 
           ss.addPossiblyPrefixedRule('.ng-enter', 'transition:10s linear all; transition-delay:30s;');
 
@@ -1158,78 +1190,78 @@ describe('ngAnimate $animateCss', function() {
           expect(element).not.toHaveClass('ng-enter-active');
         }));
 
-        it('should still resolve the animation once expired',
-          inject(function($animateCss, $document, $rootElement, $timeout, $animate, $rootScope) {
+        test('should still resolve the animation once expired',
+          angular.mock.inject(function($animateCss, $document, $rootElement, $timeout, $animate, $rootScope) {
+            ss.addPossiblyPrefixedRule('.ng-enter', 'transition:10s linear all;');
 
-          ss.addPossiblyPrefixedRule('.ng-enter', 'transition:10s linear all;');
+            var element = angular.element('<div></div>');
+            $rootElement.append(element);
+            angular.element($document[0].body).append($rootElement);
 
-          var element = angular.element('<div></div>');
-          $rootElement.append(element);
-          angular.element($document[0].body).append($rootElement);
+            var animator = $animateCss(element, { event: 'enter', structural: true });
 
-          var animator = $animateCss(element, { event: 'enter', structural: true });
+            var failed;
+            var passed;
+            animator.start().then(function() {
+                passed = true;
+              }, function() {
+                failed = true;
+              });
 
-          var failed, passed;
-          animator.start().then(function() {
-              passed = true;
-            }, function() {
-              failed = true;
-            });
+            triggerAnimationStartFrame();
+            $timeout.flush(15000);
+            $animate.flush();
+            $rootScope.$digest();
+            expect(passed).toBe(true);
+          }));
 
-          triggerAnimationStartFrame();
-          $timeout.flush(15000);
-          $animate.flush();
-          $rootScope.$digest();
-          expect(passed).toBe(true);
-        }));
+        test('should not resolve/reject after passing if the animation completed successfully',
+          angular.mock.inject(function($animateCss, $document, $rootElement, $timeout, $rootScope, $animate) {
+            ss.addPossiblyPrefixedRule('.ng-enter', 'transition:10s linear all;');
 
-        it('should not resolve/reject after passing if the animation completed successfully',
-          inject(function($animateCss, $document, $rootElement, $timeout, $rootScope, $animate) {
+            var element = angular.element('<div></div>');
+            $rootElement.append(element);
+            angular.element($document[0].body).append($rootElement);
 
-          ss.addPossiblyPrefixedRule('.ng-enter', 'transition:10s linear all;');
+            var animator = $animateCss(element, { event: 'enter', structural: true });
 
-          var element = angular.element('<div></div>');
-          $rootElement.append(element);
-          angular.element($document[0].body).append($rootElement);
+            var failed;
+            var passed;
+            animator.start().then(
+              function() {
+                passed = true;
+              },
+              function() {
+                failed = true;
+              }
+            );
+            triggerAnimationStartFrame();
 
-          var animator = $animateCss(element, { event: 'enter', structural: true });
+            browserTrigger(element, 'transitionend',
+              { timeStamp: Date.now() + 1000, elapsedTime: 10 });
 
-          var failed, passed;
-          animator.start().then(
-            function() {
-              passed = true;
-            },
-            function() {
-              failed = true;
-            }
-          );
-          triggerAnimationStartFrame();
+            $animate.flush();
+            $rootScope.$digest();
 
-          browserTrigger(element, 'transitionend',
-            { timeStamp: Date.now() + 1000, elapsedTime: 10 });
+            expect(passed).toBe(true);
+            expect(failed).not.toBe(true);
 
-          $animate.flush();
-          $rootScope.$digest();
+            $timeout.flush(15000);
 
-          expect(passed).toBe(true);
-          expect(failed).not.toBe(true);
+            expect(passed).toBe(true);
+            expect(failed).not.toBe(true);
+          }));
 
-          $timeout.flush(15000);
-
-          expect(passed).toBe(true);
-          expect(failed).not.toBe(true);
-        }));
-
-        it('should close all stacked animations after the last timeout runs on the same element',
-          inject(function($animateCss, $document, $rootElement, $timeout, $animate) {
+        test('should close all stacked animations after the last timeout runs on the same element',
+          angular.mock.inject(function($animateCss, $document, $rootElement, $timeout, $animate) {
 
           var now = 0;
-          spyOn(Date, 'now').and.callFake(function() {
+          jest.spyOn(Date, 'now').mockImplementation(function() {
             return now;
           });
 
-          var cancelSpy = spyOn($timeout, 'cancel').and.callThrough();
-          var doneSpy = jasmine.createSpy();
+          var cancelSpy = jest.spyOn($timeout, 'cancel');
+          var doneSpy = jest.fn();
 
           ss.addPossiblyPrefixedRule('.elm', 'transition:1s linear all;');
           ss.addRule('.elm.red', 'background:red;');
@@ -1251,7 +1283,7 @@ describe('ngAnimate $animateCss', function() {
           expect(doneSpy).not.toHaveBeenCalled();
           expect(cancelSpy).toHaveBeenCalled();
 
-          cancelSpy.calls.reset();
+          cancelSpy.mockClear();
 
           // timeout will not be set again since the former animation is longer
           animate(element, 'green', doneSpy);
@@ -1278,8 +1310,8 @@ describe('ngAnimate $animateCss', function() {
           }
         }));
 
-        it('should not throw an error any pending timeout requests resolve after the element has already been removed',
-          inject(function($animateCss, $document, $rootElement, $timeout, $animate) {
+        test('should not throw an error any pending timeout requests resolve after the element has already been removed',
+          angular.mock.inject(function($animateCss, $document, $rootElement, $timeout, $animate) {
 
           var element = angular.element('<div></div>');
           $rootElement.append(element);
@@ -1296,8 +1328,8 @@ describe('ngAnimate $animateCss', function() {
           }).not.toThrow();
         }));
 
-        it('should consider a positive options.delay value for the closing timeout',
-          inject(function($animateCss, $rootElement, $timeout, $document) {
+        test('should consider a positive options.delay value for the closing timeout',
+          angular.mock.inject(function($animateCss, $rootElement, $timeout, $document) {
 
           var element = angular.element('<div></div>');
           $rootElement.append(element);
@@ -1329,8 +1361,8 @@ describe('ngAnimate $animateCss', function() {
           expect(getPossiblyPrefixedStyleValue(element, 'transition-delay')).toBeOneOf('', '0s');
         }));
 
-        it('should ignore a boolean options.delay value for the closing timeout',
-          inject(function($animateCss, $rootElement, $timeout, $document) {
+        test('should ignore a boolean options.delay value for the closing timeout',
+          angular.mock.inject(function($animateCss, $rootElement, $timeout, $document) {
 
           var element = angular.element('<div></div>');
           $rootElement.append(element);
@@ -1363,8 +1395,8 @@ describe('ngAnimate $animateCss', function() {
         }));
 
 
-        it('should cancel the timeout when the animation is ended normally',
-          inject(function($animateCss, $document, $rootElement, $timeout) {
+        test('should cancel the timeout when the animation is ended normally',
+          angular.mock.inject(function($animateCss, $document, $rootElement, $timeout) {
 
           ss.addPossiblyPrefixedRule('.ng-enter', 'transition:10s linear all;');
 
@@ -1381,24 +1413,24 @@ describe('ngAnimate $animateCss', function() {
 
           animator.end();
 
-          expect(element.data(ANIMATE_TIMER_KEY)).toBeUndefined();
+          expect(element.data('$$animateCss')).toBeUndefined();
           $timeout.verifyNoPendingTasks();
         }));
 
       });
 
-      describe('getComputedStyle', function() {
+      describe('getComputedStyle', () => {
         var count;
         var acceptableTimingsData = {
           transitionDuration: '10s'
         };
 
-        beforeEach(module(function($provide) {
+        beforeEach(angular.mock.module(function($provide) {
           count = {};
-          $provide.value('$window', extend({}, window, {
+          $provide.value('$window', angular.extend({}, window, {
             document: angular.element(window.document),
-            getComputedStyle: function(node) {
-              var key = node.className.indexOf('stagger') >= 0
+            getComputedStyle(node) {
+              var key = node.className.includes('stagger')
                   ? 'stagger' : 'normal';
               count[key] = count[key] || 0;
               count[key]++;
@@ -1411,112 +1443,116 @@ describe('ngAnimate $animateCss', function() {
           };
         }));
 
-        it('should cache frequent calls to getComputedStyle before the next animation frame kicks in',
-          inject(function($animateCss, $document, $rootElement) {
+        test('should cache frequent calls to getComputedStyle before the next animation frame kicks in',
+          angular.mock.inject(function($animateCss, $document, $rootElement) {
+            var i;
+            var elm;
+            var animator;
+            for (i = 0; i < 5; i++) {
+              elm = angular.element('<div></div>');
+              $rootElement.append(elm);
+              animator = $animateCss(elm, { event: 'enter', structural: true });
+              var runner = animator.start();
+            }
 
-          var i, elm, animator;
-          for (i = 0; i < 5; i++) {
-            elm = angular.element('<div></div>');
-            $rootElement.append(elm);
-            animator = $animateCss(elm, { event: 'enter', structural: true });
-            var runner = animator.start();
-          }
+            expect(count.normal).toBe(1);
 
-          expect(count.normal).toBe(1);
+            for (i = 0; i < 5; i++) {
+              elm = angular.element('<div></div>');
+              $rootElement.append(elm);
+              animator = $animateCss(elm, { event: 'enter', structural: true });
+              animator.start();
+            }
 
-          for (i = 0; i < 5; i++) {
-            elm = angular.element('<div></div>');
-            $rootElement.append(elm);
-            animator = $animateCss(elm, { event: 'enter', structural: true });
+            expect(count.normal).toBe(1);
+            triggerAnimationStartFrame();
+
+            expect(count.normal).toBe(2);
+
+            for (i = 0; i < 5; i++) {
+              elm = angular.element('<div></div>');
+              $rootElement.append(elm);
+              animator = $animateCss(elm, { event: 'enter', structural: true });
+              animator.start();
+            }
+
+            expect(count.normal).toBe(3);
+          }));
+
+        test('should cache frequent calls to getComputedStyle for stagger animations before the next animation frame kicks in',
+          angular.mock.inject(function($animateCss, $document, $rootElement, $$rAF) {
+            var element = angular.element('<div></div>');
+            $rootElement.append(element);
+            var animator = $animateCss(element, { event: 'enter', structural: true });
             animator.start();
-          }
+            triggerAnimationStartFrame();
 
-          expect(count.normal).toBe(1);
-          triggerAnimationStartFrame();
+            expect(count.stagger).toBeUndefined();
 
-          expect(count.normal).toBe(2);
+            var i;
+            var elm;
+            for (i = 0; i < 5; i++) {
+              elm = angular.element('<div></div>');
+              $rootElement.append(elm);
+              animator = $animateCss(elm, { event: 'enter', structural: true });
+              animator.start();
+            }
 
-          for (i = 0; i < 5; i++) {
-            elm = angular.element('<div></div>');
-            $rootElement.append(elm);
-            animator = $animateCss(elm, { event: 'enter', structural: true });
-            animator.start();
-          }
+            expect(count.stagger).toBe(1);
 
-          expect(count.normal).toBe(3);
-        }));
+            for (i = 0; i < 5; i++) {
+              elm = angular.element('<div></div>');
+              $rootElement.append(elm);
+              animator = $animateCss(elm, { event: 'enter', structural: true });
+              animator.start();
+            }
 
-        it('should cache frequent calls to getComputedStyle for stagger animations before the next animation frame kicks in',
-          inject(function($animateCss, $document, $rootElement, $$rAF) {
+            expect(count.stagger).toBe(1);
+            $$rAF.flush();
 
-          var element = angular.element('<div></div>');
-          $rootElement.append(element);
-          var animator = $animateCss(element, { event: 'enter', structural: true });
-          animator.start();
-          triggerAnimationStartFrame();
+            for (i = 0; i < 5; i++) {
+              elm = angular.element('<div></div>');
+              $rootElement.append(elm);
+              animator = $animateCss(elm, { event: 'enter', structural: true });
+              animator.start();
+            }
 
-          expect(count.stagger).toBeUndefined();
-
-          var i, elm;
-          for (i = 0; i < 5; i++) {
-            elm = angular.element('<div></div>');
-            $rootElement.append(elm);
-            animator = $animateCss(elm, { event: 'enter', structural: true });
-            animator.start();
-          }
-
-          expect(count.stagger).toBe(1);
-
-          for (i = 0; i < 5; i++) {
-            elm = angular.element('<div></div>');
-            $rootElement.append(elm);
-            animator = $animateCss(elm, { event: 'enter', structural: true });
-            animator.start();
-          }
-
-          expect(count.stagger).toBe(1);
-          $$rAF.flush();
-
-          for (i = 0; i < 5; i++) {
-            elm = angular.element('<div></div>');
-            $rootElement.append(elm);
-            animator = $animateCss(elm, { event: 'enter', structural: true });
-            animator.start();
-          }
-
-          triggerAnimationStartFrame();
-          expect(count.stagger).toBe(2);
-        }));
+            triggerAnimationStartFrame();
+            expect(count.stagger).toBe(2);
+          }));
       });
 
-      describe('transitionend/animationend event listeners', function() {
-        var element, elementOnSpy, elementOffSpy, progress;
+      describe('transitionend/animationend event listeners', () => {
+        var element;
+        var elementOnSpy;
+        var elementOffSpy;
+        var progress;
 
         function setStyles(event) {
           switch (event) {
-            case TRANSITIONEND_EVENT:
+            case "transitionend":
               ss.addPossiblyPrefixedRule('.ng-enter', 'transition: 10s linear all;');
               progress = transitionProgress;
               break;
-            case ANIMATIONEND_EVENT:
+            case "animationend":
               ss.addPossiblyPrefixedRule('.ng-enter', 'animation: animation 10s;');
               progress = keyframeProgress;
               break;
           }
         }
 
-        beforeEach(inject(function($rootElement, $document) {
+        beforeEach(angular.mock.inject(function($rootElement, $document) {
           element = angular.element('<div></div>');
           $rootElement.append(element);
           angular.element($document[0].body).append($rootElement);
 
-          elementOnSpy = spyOn(element, 'on').and.callThrough();
-          elementOffSpy = spyOn(element, 'off').and.callThrough();
+          elementOnSpy = jest.spyOn(element, 'on');
+          elementOffSpy = jest.spyOn(element, 'off');
         }));
 
-        they('should remove the $prop event listeners on cancel',
-          [TRANSITIONEND_EVENT, ANIMATIONEND_EVENT], function(event) {
-            inject(function($animateCss) {
+        test.each(["transitionend", "animationend"].map((prop) => ({ prop })))(
+            'should remove the $prop event listeners on cancel', function({ prop: event }) {
+            angular.mock.inject(function($animateCss) {
 
               setStyles(event);
 
@@ -1528,19 +1564,19 @@ describe('ngAnimate $animateCss', function() {
               var runner = animator.start();
               triggerAnimationStartFrame();
 
-              expect(elementOnSpy).toHaveBeenCalledOnce();
-              expect(elementOnSpy.calls.mostRecent().args[0]).toBe(event);
+              expect(elementOnSpy).toHaveBeenCalledTimes(1);
+              expect(elementOnSpy.mock.lastCall[0]).toBe(event);
 
               runner.cancel();
 
-              expect(elementOffSpy).toHaveBeenCalledOnce();
-              expect(elementOffSpy.calls.mostRecent().args[0]).toBe(event);
+              expect(elementOffSpy).toHaveBeenCalledTimes(1);
+              expect(elementOffSpy.mock.lastCall[0]).toBe(event);
             });
         });
 
-        they('should remove the $prop event listener when the animation is closed',
-          [TRANSITIONEND_EVENT, ANIMATIONEND_EVENT], function(event) {
-            inject(function($animateCss) {
+        test.each(["transitionend", "animationend"].map((prop) => ({ prop })))(
+            'should remove the $prop event listener when the animation is closed', function({ prop: event }) {
+            angular.mock.inject(function($animateCss) {
 
               setStyles(event);
 
@@ -1552,19 +1588,19 @@ describe('ngAnimate $animateCss', function() {
               var runner = animator.start();
               triggerAnimationStartFrame();
 
-              expect(elementOnSpy).toHaveBeenCalledOnce();
-              expect(elementOnSpy.calls.mostRecent().args[0]).toBe(event);
+              expect(elementOnSpy).toHaveBeenCalledTimes(1);
+              expect(elementOnSpy.mock.lastCall[0]).toBe(event);
 
               progress(element, 10);
 
-              expect(elementOffSpy).toHaveBeenCalledOnce();
-              expect(elementOffSpy.calls.mostRecent().args[0]).toBe(event);
+              expect(elementOffSpy).toHaveBeenCalledTimes(1);
+              expect(elementOffSpy.mock.lastCall[0]).toBe(event);
             });
         });
 
-        they('should remove the $prop event listener when the closing timeout occurs',
-          [TRANSITIONEND_EVENT, ANIMATIONEND_EVENT], function(event) {
-            inject(function($animateCss, $timeout) {
+        test.each(["transitionend", "animationend"].map((prop) => ({ prop })))(
+            'should remove the $prop event listener when the closing timeout occurs', function({ prop: event }) {
+            angular.mock.inject(function($animateCss, $timeout) {
 
               setStyles(event);
 
@@ -1576,28 +1612,28 @@ describe('ngAnimate $animateCss', function() {
               animator.start();
               triggerAnimationStartFrame();
 
-              expect(elementOnSpy).toHaveBeenCalledOnce();
-              expect(elementOnSpy.calls.mostRecent().args[0]).toBe(event);
+              expect(elementOnSpy).toHaveBeenCalledTimes(1);
+              expect(elementOnSpy.mock.lastCall[0]).toBe(event);
 
               $timeout.flush(15000);
 
-              expect(elementOffSpy).toHaveBeenCalledOnce();
-              expect(elementOffSpy.calls.mostRecent().args[0]).toBe(event);
+              expect(elementOffSpy).toHaveBeenCalledTimes(1);
+              expect(elementOffSpy.mock.lastCall[0]).toBe(event);
             });
         });
 
-        they('should not add or remove $prop event listeners when no animation styles are detected',
-          [TRANSITIONEND_EVENT, ANIMATIONEND_EVENT], function(event) {
-            inject(function($animateCss, $timeout) {
+        test.each(["transitionend", "animationend"].map((prop) => ({ prop })))(
+            'should not add or remove $prop event listeners when no animation styles are detected', function({ prop: event }) {
+            angular.mock.inject(function($animateCss, $timeout) {
 
-              progress = event === TRANSITIONEND_EVENT ? transitionProgress : keyframeProgress;
+              progress = event === "transitionend" ? transitionProgress : keyframeProgress;
 
               // Make sure other event listeners are not affected
-              var otherEndSpy = jasmine.createSpy('otherEndSpy');
+              var otherEndSpy = jest.fn().mockName('otherEndSpy');
               element.on(event, otherEndSpy);
 
-              expect(elementOnSpy).toHaveBeenCalledOnce();
-              elementOnSpy.calls.reset();
+              expect(elementOnSpy).toHaveBeenCalledTimes(1);
+              elementOnSpy.mockClear();
 
               var animator = $animateCss(element, {
                 event: 'enter',
@@ -1614,15 +1650,14 @@ describe('ngAnimate $animateCss', function() {
               expect(elementOffSpy).not.toHaveBeenCalled();
 
               progress(element, 10);
-              expect(otherEndSpy).toHaveBeenCalledOnce();
+              expect(otherEndSpy).toHaveBeenCalledTimes(1);
             });
         });
-
       });
     });
 
-    it('should avoid applying the same cache to an element a follow-up animation is run on the same element',
-      inject(function($animateCss, $rootElement, $document) {
+    test('should avoid applying the same cache to an element a follow-up animation is run on the same element',
+      angular.mock.inject(function($animateCss, $rootElement, $document) {
 
       function endTransition(element, elapsedTime) {
         browserTrigger(element, 'transitionend',
@@ -1658,8 +1693,8 @@ describe('ngAnimate $animateCss', function() {
       expect(element.attr('style')).not.toContain('transition');
     }));
 
-    it('should clear cache if no animation so follow-up animation on the same element will not be from cache',
-      inject(function($animateCss, $rootElement, $document, $$rAF) {
+    test('should clear cache if no animation so follow-up animation on the same element will not be from cache',
+      angular.mock.inject(function($animateCss, $rootElement, $document, $$rAF) {
         var element = angular.element('<div class="rclass"></div>');
         var options = {
           event: 'enter',
@@ -1676,8 +1711,8 @@ describe('ngAnimate $animateCss', function() {
         expect(animator.$$willAnimate).toBeTruthy();
     }));
 
-    it('should apply a custom temporary class when a non-structural animation is used',
-      inject(function($animateCss, $rootElement, $document) {
+    test('should apply a custom temporary class when a non-structural animation is used',
+      angular.mock.inject(function($animateCss, $rootElement, $document) {
 
       var element = angular.element('<div></div>');
       $rootElement.append(element);
@@ -1694,10 +1729,10 @@ describe('ngAnimate $animateCss', function() {
       expect(element).toHaveClass('super-active');
     }));
 
-    describe('structural animations', function() {
-      they('should decorate the element with the ng-$prop CSS class',
-        ['enter', 'leave', 'move'], function(event) {
-        inject(function($animateCss, $rootElement, $document) {
+    describe('structural animations', () => {
+      test.each(['enter', 'leave', 'move'].map((prop) => ({ prop })))(
+          'should decorate the element with the ng-$prop CSS class', function({ prop: event }) {
+        angular.mock.inject(function($animateCss, $rootElement, $document) {
           var element = angular.element('<div></div>');
           $rootElement.append(element);
           angular.element($document[0].body).append($rootElement);
@@ -1712,9 +1747,9 @@ describe('ngAnimate $animateCss', function() {
         });
       });
 
-      they('should decorate the element with the ng-$prop-active CSS class',
-        ['enter', 'leave', 'move'], function(event) {
-        inject(function($animateCss, $rootElement, $document) {
+      test.each(['enter', 'leave', 'move'].map((prop) => ({ prop })))(
+          'should decorate the element with the ng-$prop-active CSS class', function({ prop: event }) {
+        angular.mock.inject(function($animateCss, $rootElement, $document) {
           var element = angular.element('<div></div>');
           $rootElement.append(element);
           angular.element($document[0].body).append($rootElement);
@@ -1730,12 +1765,14 @@ describe('ngAnimate $animateCss', function() {
           triggerAnimationStartFrame();
 
           expect(element).toHaveClass('ng-' + event + '-active');
+          dealoc(element);
+          dealoc($rootElement);
         });
       });
 
-      they('should remove the ng-$prop and ng-$prop-active CSS classes from the element once the animation is done',
-        ['enter', 'leave', 'move'], function(event) {
-        inject(function($animateCss, $rootElement, $document) {
+      test.each(['enter', 'leave', 'move'].map((prop) => ({ prop })))(
+          'should remove the ng-$prop and ng-$prop-active CSS classes from the element once the animation is done', function({ prop: event }) {
+        angular.mock.inject(function($animateCss, $rootElement, $document) {
           var element = angular.element('<div></div>');
           $rootElement.append(element);
           angular.element($document[0].body).append($rootElement);
@@ -1756,12 +1793,14 @@ describe('ngAnimate $animateCss', function() {
 
           expect(element).not.toHaveClass('ng-' + event);
           expect(element).not.toHaveClass('ng-' + event + '-active');
+          dealoc(element);
+          dealoc($rootElement);
         });
       });
 
-      they('should allow additional CSS classes to be added and removed alongside the $prop animation',
-        ['enter', 'leave', 'move'], function(event) {
-        inject(function($animateCss, $rootElement) {
+      test.each(['enter', 'leave', 'move'].map((prop) => ({ prop })))(
+          'should allow additional CSS classes to be added and removed alongside the $prop animation', function({ prop: event }) {
+        angular.mock.inject(function($animateCss, $rootElement) {
           var element = angular.element('<div class="green"></div>');
           $rootElement.append(element);
           var animator = $animateCss(element, {
@@ -1786,13 +1825,15 @@ describe('ngAnimate $animateCss', function() {
           expect(element).not.toHaveClass('green');
           expect(element).toHaveClass('green-remove');
           expect(element).toHaveClass('green-remove-active');
+          dealoc(element);
+          dealoc($rootElement);
         });
       });
 
-      they('should place a CSS transition block after the preparation function to block accidental style changes',
-        ['enter', 'leave', 'move', 'addClass', 'removeClass'], function(event) {
+      test.each(['enter', 'leave', 'move', 'addClass', 'removeClass'].map((prop) => ({ prop })))(
+          'should place a CSS transition block after the preparation function to block accidental style changes', function({ prop: event }) {
 
-        inject(function($animateCss, $rootElement, $document) {
+        angular.mock.inject(function($animateCss, $rootElement, $document) {
           var element = angular.element('<div></div>');
           $rootElement.append(element);
           angular.element($document[0].body).append($rootElement);
@@ -1816,13 +1857,15 @@ describe('ngAnimate $animateCss', function() {
           triggerAnimationStartFrame();
 
           expect(element.attr('style')).toBeFalsy();
+          dealoc(element);
+          dealoc($rootElement);
         });
       });
 
-      they('should not place a CSS transition block if options.skipBlocking is provided',
-        ['enter', 'leave', 'move', 'addClass', 'removeClass'], function(event) {
+      test.each(['enter', 'leave', 'move', 'addClass', 'removeClass'].map((prop) => ({ prop })))(
+          'should not place a CSS transition block if options.skipBlocking is provided', function({ prop: event }) {
 
-        inject(function($animateCss, $rootElement, $document) {
+        angular.mock.inject(function($animateCss, $rootElement, $document) {
           var element = angular.element('<div></div>');
           $rootElement.append(element);
           angular.element($document[0].body).append($rootElement);
@@ -1840,7 +1883,7 @@ describe('ngAnimate $animateCss', function() {
             data.event = event;
           }
 
-          var blockSpy = spyOn(helpers, 'blockTransitions').and.callThrough();
+          var blockSpy = jest.spyOn(ngInternals.helpers, 'blockTransitions');
 
           data.skipBlocking = true;
           var animator = $animateCss(element, data);
@@ -1857,13 +1900,14 @@ describe('ngAnimate $animateCss', function() {
           data.skipBlocking = false;
           $animateCss(element, { addClass: 'test' });
           expect(blockSpy).toHaveBeenCalled();
+          blockSpy.mockRestore();
         });
       });
 
-      they('should place a CSS transition block after the preparation function even if a duration is provided',
-        ['enter', 'leave', 'move', 'addClass', 'removeClass'], function(event) {
+      test.each(['enter', 'leave', 'move', 'addClass', 'removeClass'].map((prop) => ({ prop })))(
+          'should place a CSS transition block after the preparation function even if a duration is provided', function({ prop: event }) {
 
-        inject(function($animateCss, $rootElement, $document) {
+        angular.mock.inject(function($animateCss, $rootElement, $document) {
           var element = angular.element('<div></div>');
           $rootElement.append(element);
           angular.element($document[0].body).append($rootElement);
@@ -1896,8 +1940,8 @@ describe('ngAnimate $animateCss', function() {
         });
       });
 
-      it('should allow multiple events to be animated at the same time',
-        inject(function($animateCss, $rootElement, $document) {
+      test('should allow multiple events to be animated at the same time',
+        angular.mock.inject(function($animateCss, $rootElement, $document) {
 
         var element = angular.element('<div></div>');
         $rootElement.append(element);
@@ -1931,8 +1975,8 @@ describe('ngAnimate $animateCss', function() {
         expect(element).not.toHaveClass('ng-move-active');
       }));
 
-      it('should not break when running anchored animations without duration',
-        inject(function($animate, $document, $rootElement) {
+      test('should not break when running anchored animations without duration',
+        angular.mock.inject(function($animate, $document, $rootElement) {
           var element1 = angular.element('<div class="item" ng-animate-ref="test">Item 1</div>');
           var element2 = angular.element('<div class="item" ng-animate-ref="test">Item 2</div>');
 
@@ -1950,10 +1994,10 @@ describe('ngAnimate $animateCss', function() {
       );
     });
 
-    describe('class-based animations', function() {
-      they('should decorate the element with the class-$prop CSS class',
-        ['add', 'remove'], function(event) {
-        inject(function($animateCss, $rootElement) {
+    describe('class-based animations', () => {
+      test.each(['add', 'remove'].map((prop) => ({ prop })))(
+          'should decorate the element with the class-$prop CSS class', function({ prop: event }) {
+        angular.mock.inject(function($animateCss, $rootElement) {
           var element = angular.element('<div></div>');
           $rootElement.append(element);
 
@@ -1963,12 +2007,14 @@ describe('ngAnimate $animateCss', function() {
           options.to = fakeStyle;
           $animateCss(element, options);
           expect(element).toHaveClass('class-' + event);
+          dealoc(element);
+          dealoc($rootElement);
         });
       });
 
-      they('should decorate the element with the class-$prop-active CSS class',
-        ['add', 'remove'], function(event) {
-        inject(function($animateCss, $rootElement) {
+      test.each(['add', 'remove'].map((prop) => ({ prop })))(
+          'should decorate the element with the class-$prop-active CSS class', function({ prop: event }) {
+        angular.mock.inject(function($animateCss, $rootElement) {
           var element = angular.element('<div></div>');
           $rootElement.append(element);
 
@@ -1985,9 +2031,9 @@ describe('ngAnimate $animateCss', function() {
         });
       });
 
-      they('should remove the class-$prop-add and class-$prop-active CSS classes from the element once the animation is done',
-        ['enter', 'leave', 'move'], function(event) {
-        inject(function($animateCss, $rootElement, $document) {
+      test.each(['enter', 'leave', 'move'].map((prop) => ({ prop })))(
+          'should remove the class-$prop-add and class-$prop-active CSS classes from the element once the animation is done', function({ prop: event }) {
+        angular.mock.inject(function($animateCss, $rootElement, $document) {
           var element = angular.element('<div></div>');
           $rootElement.append(element);
           angular.element($document[0].body).append($rootElement);
@@ -2007,12 +2053,13 @@ describe('ngAnimate $animateCss', function() {
 
           expect(element).not.toHaveClass('ng-' + event);
           expect(element).not.toHaveClass('ng-' + event + '-active');
+          dealoc(element);
         });
       });
 
-      they('should allow the class duration styles to be recalculated once started if the CSS classes being applied result new transition styles',
-        ['add', 'remove'], function(event) {
-        inject(function($animateCss, $rootElement, $document) {
+      test.each(['add', 'remove'].map((prop) => ({ prop })))(
+          'should allow the class duration styles to be recalculated once started if the CSS classes being applied result new transition styles', function({ prop: event }) {
+        angular.mock.inject(function($animateCss, $rootElement, $document) {
 
           var element = angular.element('<div></div>');
 
@@ -2043,12 +2090,14 @@ describe('ngAnimate $animateCss', function() {
 
           expect(element).not.toHaveClass('natural-class-' + event);
           expect(element).not.toHaveClass('natural-class-' + event + '-active');
+          dealoc(element);
+          dealoc($rootElement);
         });
       });
 
-      they('should force the class-based values to be applied early if no options.applyClassEarly is used as an option',
-        ['enter', 'leave', 'move'], function(event) {
-        inject(function($animateCss, $rootElement, $document) {
+      test.each(['enter', 'leave', 'move'].map((prop) => ({ prop })))(
+          'should force the class-based values to be applied early if no options.applyClassEarly is used as an option', function({ prop: event }) {
+        angular.mock.inject(function($animateCss, $rootElement, $document) {
 
           ss.addPossiblyPrefixedRule('.blue.ng-' + event, 'transition:2s linear all;');
 
@@ -2082,13 +2131,15 @@ describe('ngAnimate $animateCss', function() {
           expect(element).not.toHaveClass('ng-' + event + '-active');
           expect(element).toHaveClass('blue');
           expect(element).not.toHaveClass('red');
+          dealoc(element);
+          dealoc($rootElement);
         });
       });
     });
 
-    describe('options', function() {
+    describe('options', () => {
       var element;
-      beforeEach(module(function() {
+      beforeEach(angular.mock.module(function() {
         return function($rootElement, $document) {
           angular.element($document[0].body).append($rootElement);
 
@@ -2097,7 +2148,11 @@ describe('ngAnimate $animateCss', function() {
         };
       }));
 
-      it('should not alter the provided options input in any way throughout the animation', inject(function($animateCss) {
+      afterEach(() => {
+        dealoc(element);
+      })
+
+      test('should not alter the provided options input in any way throughout the animation', angular.mock.inject(function($animateCss) {
         var initialOptions = {
           from: { height: '50px' },
           to: { width: '50px' },
@@ -2112,7 +2167,7 @@ describe('ngAnimate $animateCss', function() {
           staggerIndex: 3
         };
 
-        var copiedOptions = copy(initialOptions);
+        var copiedOptions = angular.copy(initialOptions);
         expect(copiedOptions).toEqual(initialOptions);
 
         var animator = $animateCss(element, copiedOptions);
@@ -2128,8 +2183,8 @@ describe('ngAnimate $animateCss', function() {
         expect(copiedOptions).toEqual(initialOptions);
       }));
 
-      it('should not create a copy of the provided options if they have already been prepared earlier',
-        inject(function($animate, $animateCss) {
+      test('should not create a copy of the provided options if they have already been prepared earlier',
+        angular.mock.inject(function($animate, $animateCss) {
 
         var options = {
           from: { height: '50px' },
@@ -2150,9 +2205,9 @@ describe('ngAnimate $animateCss', function() {
         expect(options.from).toBeFalsy();
       }));
 
-      describe('[$$skipPreparationClasses]', function() {
-        it('should not apply and remove the preparation classes to the element when true',
-          inject(function($animateCss) {
+      describe('[$$skipPreparationClasses]', () => {
+        test('should not apply and remove the preparation classes to the element when true',
+          angular.mock.inject(function($animateCss) {
 
           var options = {
             duration: 3000,
@@ -2189,8 +2244,8 @@ describe('ngAnimate $animateCss', function() {
         }));
       });
 
-      describe('[duration]', function() {
-        it('should be applied for a transition directly', inject(function($animateCss, $rootElement) {
+      describe('[duration]', () => {
+        test('should be applied for a transition directly', angular.mock.inject(function($animateCss, $rootElement) {
           var element = angular.element('<div></div>');
           $rootElement.append(element);
 
@@ -2208,10 +2263,11 @@ describe('ngAnimate $animateCss', function() {
           var style = element.attr('style');
           expect(style).toContain('3000s');
           expect(style).toContain('linear');
+          dealoc(element);
         }));
 
-        it('should be applied to a CSS keyframe animation directly if keyframes are detected within the CSS class',
-          inject(function($animateCss, $rootElement) {
+        test('should be applied to a CSS keyframe animation directly if keyframes are detected within the CSS class',
+          angular.mock.inject(function($animateCss, $rootElement) {
 
           ss.addPossiblyPrefixedRule('.ng-enter', 'animation:1.5s keyframe_animation;');
 
@@ -2228,8 +2284,8 @@ describe('ngAnimate $animateCss', function() {
           expect(getPossiblyPrefixedStyleValue(element, 'animation-duration')).toEqual('5s');
         }));
 
-        it('should remove all inline keyframe styling when an animation completes if a custom duration was applied',
-          inject(function($animateCss, $rootElement) {
+        test('should remove all inline keyframe styling when an animation completes if a custom duration was applied',
+          angular.mock.inject(function($animateCss, $rootElement) {
 
           ss.addPossiblyPrefixedRule('.ng-enter', 'animation:1.5s keyframe_animation;');
 
@@ -2249,8 +2305,8 @@ describe('ngAnimate $animateCss', function() {
           expect(element.attr('style')).toBeFalsy();
         }));
 
-        it('should remove all inline keyframe delay styling when an animation completes if a custom duration was applied',
-          inject(function($animateCss, $rootElement) {
+        test('should remove all inline keyframe delay styling when an animation completes if a custom duration was applied',
+          angular.mock.inject(function($animateCss, $rootElement) {
 
           ss.addPossiblyPrefixedRule('.ng-enter', 'animation:1.5s keyframe_animation;');
 
@@ -2272,8 +2328,8 @@ describe('ngAnimate $animateCss', function() {
           expect(element.attr('style')).toBeFalsy();
         }));
 
-        it('should not prepare the animation at all if a duration of zero is provided',
-          inject(function($animateCss, $rootElement) {
+        test('should not prepare the animation at all if a duration of zero is provided',
+          angular.mock.inject(function($animateCss, $rootElement) {
 
           ss.addPossiblyPrefixedRule('.ng-enter', 'transition:1s linear all;');
 
@@ -2288,8 +2344,8 @@ describe('ngAnimate $animateCss', function() {
           expect(animator.$$willAnimate).toBeFalsy();
         }));
 
-        it('should apply a transition and keyframe duration directly if both transitions and keyframe classes are detected',
-          inject(function($animateCss, $rootElement) {
+        test('should apply a transition and keyframe duration directly if both transitions and keyframe classes are detected',
+          angular.mock.inject(function($animateCss, $rootElement) {
 
           ss.addPossiblyPrefixedRule('.ng-enter', 'animation:3s keyframe_animation;' +
                                                   'transition:5s linear all;');
@@ -2312,8 +2368,8 @@ describe('ngAnimate $animateCss', function() {
         }));
       });
 
-      describe('[delay]', function() {
-        it('should be applied for a transition directly', inject(function($animateCss, $rootElement) {
+      describe('[delay]', () => {
+        test('should be applied for a transition directly', angular.mock.inject(function($animateCss, $rootElement) {
           var element = angular.element('<div></div>');
           $rootElement.append(element);
 
@@ -2331,10 +2387,12 @@ describe('ngAnimate $animateCss', function() {
 
           var prop = element.css('transition-delay');
           expect(prop).toEqual('500s');
+          dealoc(element);
+          dealoc($rootElement);
         }));
 
-        it('should return false for the animator if a delay is provided but not a duration',
-          inject(function($animateCss, $rootElement) {
+        test('should return false for the animator if a delay is provided but not a duration',
+          angular.mock.inject(function($animateCss, $rootElement) {
 
           var element = angular.element('<div></div>');
           $rootElement.append(element);
@@ -2348,10 +2406,11 @@ describe('ngAnimate $animateCss', function() {
 
           var animator = $animateCss(element, options);
           expect(animator.$$willAnimate).toBeFalsy();
+          dealoc(element);
         }));
 
-        it('should override the delay value present in the CSS class',
-          inject(function($animateCss, $rootElement) {
+        test('should override the delay value present in the CSS class',
+          angular.mock.inject(function($animateCss, $rootElement) {
 
           ss.addPossiblyPrefixedRule('.ng-enter', 'transition:1s linear all;' +
                                                   'transition-delay:10s;');
@@ -2371,10 +2430,12 @@ describe('ngAnimate $animateCss', function() {
 
           var prop = element.css('transition-delay');
           expect(prop).toEqual('500s');
+          dealoc(element);
+          dealoc($rootElement);
         }));
 
-        it('should allow the delay value to zero if provided',
-          inject(function($animateCss, $rootElement) {
+        test('should allow the delay value to zero if provided',
+          angular.mock.inject(function($animateCss, $rootElement) {
 
           ss.addPossiblyPrefixedRule('.ng-enter', 'transition:1s linear all;' +
                                                   'transition-delay:10s;');
@@ -2394,10 +2455,12 @@ describe('ngAnimate $animateCss', function() {
 
           var prop = element.css('transition-delay');
           expect(prop).toEqual('0s');
+          dealoc(element);
+          dealoc($rootElement);
         }));
 
-        it('should be applied to a CSS keyframe animation if detected within the CSS class',
-          inject(function($animateCss, $rootElement) {
+        test('should be applied to a CSS keyframe animation if detected within the CSS class',
+          angular.mock.inject(function($animateCss, $rootElement) {
 
           ss.addPossiblyPrefixedRule('.ng-enter', 'animation:1.5s keyframe_animation;');
 
@@ -2415,8 +2478,8 @@ describe('ngAnimate $animateCss', function() {
           expect(element.attr('style')).not.toContain('transition-delay');
         }));
 
-        it('should apply a transition and keyframe delay if both transitions and keyframe classes are detected',
-          inject(function($animateCss, $rootElement) {
+        test('should apply a transition and keyframe delay if both transitions and keyframe classes are detected',
+          angular.mock.inject(function($animateCss, $rootElement) {
 
           ss.addPossiblyPrefixedRule('.ng-enter', 'animation:3s keyframe_animation;' +
                                                   'transition:5s linear all;');
@@ -2438,19 +2501,19 @@ describe('ngAnimate $animateCss', function() {
           expect(element.css('transition-delay')).toEqual('10s');
         }));
 
-        it('should apply the keyframe and transition duration value before the CSS classes are applied', function() {
-          var classSpy = jasmine.createSpy();
-          module(function($provide) {
+        test('should apply the keyframe and transition duration value before the CSS classes are applied', () => {
+          var classSpy = jest.fn();
+          angular.mock.module(function($provide) {
             $provide.value('$$jqLite', {
-              addClass: function() {
+              addClass() {
                 classSpy();
               },
-              removeClass: function() {
+              removeClass() {
                 classSpy();
               }
             });
           });
-          inject(function($animateCss, $rootElement) {
+          angular.mock.inject(function($animateCss, $rootElement) {
             element.addClass('element');
             ss.addPossiblyPrefixedRule('.element', 'animation:3s keyframe_animation;' +
                                                    'transition:5s linear all;');
@@ -2464,8 +2527,8 @@ describe('ngAnimate $animateCss', function() {
             };
             var animator = $animateCss(element, options);
 
-            expect(element.attr('style') || '').not.toContain('animation-delay');
-            expect(element.attr('style') || '').not.toContain('transition-delay');
+            expect(getPossiblyPrefixedStyleValue(element, 'animation-delay')).not.toEqual('2s');
+            expect(element.css('transition-delay')).not.toEqual('2s');
             expect(classSpy).not.toHaveBeenCalled();
 
             //redefine the classSpy to assert that the delay values have been
@@ -2484,8 +2547,8 @@ describe('ngAnimate $animateCss', function() {
           });
         });
 
-        it('should apply blocking before the animation starts, but then apply the detected delay when options.delay is true',
-          inject(function($animateCss, $rootElement) {
+        test('should apply blocking before the animation starts, but then apply the detected delay when options.delay is true',
+          angular.mock.inject(function($animateCss, $rootElement) {
 
           ss.addPossiblyPrefixedRule('.ng-enter', 'transition:2s linear all; transition-delay: 1s;');
 
@@ -2504,8 +2567,8 @@ describe('ngAnimate $animateCss', function() {
           expect(element.attr('style') || '').not.toContain('transition-delay');
         }));
 
-        it('should consider a negative value when delay:true is used with a keyframe animation',
-          inject(function($animateCss, $rootElement) {
+        test('should consider a negative value when delay:true is used with a keyframe animation',
+          angular.mock.inject(function($animateCss, $rootElement) {
 
           ss.addPossiblyPrefixedRule('.ng-enter', 'animation: 2s keyframe_animation; ' +
                                                   'animation-delay: -1s;');
@@ -2524,7 +2587,7 @@ describe('ngAnimate $animateCss', function() {
           expect(getPossiblyPrefixedStyleValue(element, 'animation-delay')).toContain('-1s');
         }));
 
-        they('should consider a negative value when a negative option delay is provided for a $prop animation', {
+        test.each(Object.entries({
           'transition': function() {
             return {
               prop: 'transition-delay',
@@ -2537,8 +2600,9 @@ describe('ngAnimate $animateCss', function() {
               css: 'animation: 2s keyframe_animation'
             };
           }
-        }, function(testDetailsFactory) {
-          inject(function($animateCss, $rootElement) {
+        }).map(([prop, value]) => ({ prop, value })))(
+            'should consider a negative value when a negative option delay is provided for a $prop animation', function({ value: testDetailsFactory }) {
+          angular.mock.inject(function($animateCss, $rootElement) {
             var testDetails = testDetailsFactory();
 
             ss.addPossiblyPrefixedRule('.ng-enter', testDetails.css);
@@ -2557,7 +2621,7 @@ describe('ngAnimate $animateCss', function() {
           });
         });
 
-        they('should expect the $propend event to always return the full duration even when negative values are used', {
+        test.each(Object.entries({
           'transition': function() {
             return {
               event: 'transitionend',
@@ -2570,8 +2634,9 @@ describe('ngAnimate $animateCss', function() {
               css: 'animation: 5s keyframe_animation; animation-delay: -2s;'
             };
           }
-        }, function(testDetailsFactory) {
-          inject(function($animateCss, $rootElement) {
+        }).map(([prop, value]) => ({ prop, value, propend: prop + 'end' })))(
+            'should expect the $propend event to always return the full duration even when negative values are used', function({ value: testDetailsFactory }) {
+          angular.mock.inject(function($animateCss, $rootElement) {
             var testDetails = testDetailsFactory();
             var event = testDetails.event;
 
@@ -2595,9 +2660,9 @@ describe('ngAnimate $animateCss', function() {
         });
       });
 
-      describe('[transitionStyle]', function() {
-        it('should apply the transition directly onto the element and animate accordingly',
-          inject(function($animateCss, $rootElement) {
+      describe('[transitionStyle]', () => {
+        test('should apply the transition directly onto the element and animate accordingly',
+          angular.mock.inject(function($animateCss, $rootElement) {
 
           var options = {
             transitionStyle: '5.5s linear all',
@@ -2628,8 +2693,8 @@ describe('ngAnimate $animateCss', function() {
           expect(element.attr('style')).toBeFalsy();
         }));
 
-        it('should give priority to the provided duration value, but only update the duration style itself',
-          inject(function($animateCss, $rootElement) {
+        test('should give priority to the provided duration value, but only update the duration style itself',
+          angular.mock.inject(function($animateCss, $rootElement) {
 
           var options = {
             transitionStyle: '5.5s ease-in color',
@@ -2649,8 +2714,8 @@ describe('ngAnimate $animateCss', function() {
           expect(style).toContain('ease-in');
         }));
 
-        it('should give priority to the provided delay value, but only update the delay style itself',
-          inject(function($animateCss, $rootElement) {
+        test('should give priority to the provided delay value, but only update the delay style itself',
+          angular.mock.inject(function($animateCss, $rootElement) {
 
           var options = {
             transitionStyle: '5.5s 4s ease-in color',
@@ -2671,8 +2736,8 @@ describe('ngAnimate $animateCss', function() {
           expect(style).toContain('ease-in');
         }));
 
-        it('should execute the animation only if there is any provided CSS styling to go with the transition',
-          inject(function($animateCss, $rootElement) {
+        test('should execute the animation only if there is any provided CSS styling to go with the transition',
+          angular.mock.inject(function($animateCss, $rootElement) {
 
           var options = {
             transitionStyle: '6s 4s ease-out all'
@@ -2693,9 +2758,9 @@ describe('ngAnimate $animateCss', function() {
         }));
       });
 
-      describe('[keyframeStyle]', function() {
-        it('should apply the keyframe animation directly onto the element and animate accordingly',
-          inject(function($animateCss, $rootElement) {
+      describe('[keyframeStyle]', () => {
+        test('should apply the keyframe animation directly onto the element and animate accordingly',
+          angular.mock.inject(function($animateCss, $rootElement) {
 
           var options = {
             keyframeStyle: 'my_animation 5.5s',
@@ -2725,8 +2790,8 @@ describe('ngAnimate $animateCss', function() {
           expect(element.attr('style')).toBeFalsy();
         }));
 
-        it('should give priority to the provided duration value, but only update the duration style itself',
-          inject(function($animateCss, $rootElement) {
+        test('should give priority to the provided duration value, but only update the duration style itself',
+          angular.mock.inject(function($animateCss, $rootElement) {
 
           var options = {
             keyframeStyle: 'my_animation 5.5s',
@@ -2746,8 +2811,8 @@ describe('ngAnimate $animateCss', function() {
           expect(detectedStyle).toContain('my_animation');
         }));
 
-        it('should give priority to the provided delay value, but only update the duration style itself',
-          inject(function($animateCss, $rootElement) {
+        test('should give priority to the provided delay value, but only update the duration style itself',
+          angular.mock.inject(function($animateCss, $rootElement) {
 
           var options = {
             keyframeStyle: 'my_animation 5.5s 10s',
@@ -2767,8 +2832,8 @@ describe('ngAnimate $animateCss', function() {
           expect(getPossiblyPrefixedStyleValue(element, 'animation-name')).toEqual('my_animation');
         }));
 
-        it('should be able to execute the animation if it is the only provided value',
-          inject(function($animateCss, $rootElement) {
+        test('should be able to execute the animation if it is the only provided value',
+          angular.mock.inject(function($animateCss, $rootElement) {
 
           var options = {
             keyframeStyle: 'my_animation 5.5s 10s'
@@ -2785,9 +2850,9 @@ describe('ngAnimate $animateCss', function() {
         }));
       });
 
-      describe('[from] and [to]', function() {
-        it('should apply from styles to an element during the preparation phase',
-          inject(function($animateCss, $rootElement) {
+      describe('[from] and [to]', () => {
+        test('should apply from styles to an element during the preparation phase',
+          angular.mock.inject(function($animateCss, $rootElement) {
 
           var options = {
             duration: 2.5,
@@ -2801,8 +2866,8 @@ describe('ngAnimate $animateCss', function() {
           expect(element.attr('style')).toMatch(/width:\s*50px/);
         }));
 
-        it('should apply to styles to an element during the animation phase',
-          inject(function($animateCss, $rootElement) {
+        test('should apply to styles to an element during the animation phase',
+          angular.mock.inject(function($animateCss, $rootElement) {
 
           var options = {
             duration: 2.5,
@@ -2820,8 +2885,8 @@ describe('ngAnimate $animateCss', function() {
           expect(element.css('width')).toBe('25px');
         }));
 
-        it('should apply the union of from and to styles to the element if no animation will be run',
-          inject(function($animateCss, $rootElement) {
+        test('should apply the union of from and to styles to the element if no animation will be run',
+          angular.mock.inject(function($animateCss, $rootElement) {
 
           var options = {
             event: 'enter',
@@ -2839,8 +2904,8 @@ describe('ngAnimate $animateCss', function() {
           expect(element.css('height')).toBe('50px');
         }));
 
-        it('should retain to and from styles on an element after an animation completes',
-          inject(function($animateCss, $rootElement) {
+        test('should retain to and from styles on an element after an animation completes',
+          angular.mock.inject(function($animateCss, $rootElement) {
 
           var options = {
             event: 'enter',
@@ -2863,8 +2928,8 @@ describe('ngAnimate $animateCss', function() {
           expect(element.css('height')).toBe('66px');
         }));
 
-        it('should always apply the from styles before the start function is called even if no transition is detected when started',
-          inject(function($animateCss, $rootElement) {
+        test('should always apply the from styles before the start function is called even if no transition is detected when started',
+          angular.mock.inject(function($animateCss, $rootElement) {
 
           ss.addPossiblyPrefixedRule('.my-class', 'transition: 0s linear color');
 
@@ -2883,8 +2948,8 @@ describe('ngAnimate $animateCss', function() {
           expect(element.css('height')).toBe('500px');
         }));
 
-        it('should apply an inline transition if [to] styles and a duration are provided',
-          inject(function($animateCss, $rootElement) {
+        test('should apply an inline transition if [to] styles and a duration are provided',
+          angular.mock.inject(function($animateCss, $rootElement) {
 
           var options = {
             event: 'enter',
@@ -2904,8 +2969,8 @@ describe('ngAnimate $animateCss', function() {
           expect(style).toContain('linear');
         }));
 
-        it('should remove all inline transition styling when an animation completes',
-          inject(function($animateCss, $rootElement) {
+        test('should remove all inline transition styling when an animation completes',
+          angular.mock.inject(function($animateCss, $rootElement) {
 
           var options = {
             event: 'enter',
@@ -2929,8 +2994,8 @@ describe('ngAnimate $animateCss', function() {
           expect(style).not.toContain('transition');
         }));
 
-        it('should retain existing styles when an inline styled animation completes',
-          inject(function($animateCss, $rootElement) {
+        test('should retain existing styles when an inline styled animation completes',
+          angular.mock.inject(function($animateCss, $rootElement) {
 
           var options = {
             event: 'enter',
@@ -2954,8 +3019,8 @@ describe('ngAnimate $animateCss', function() {
           expect(element.css('opacity')).toEqual('0.5');
         }));
 
-        it('should remove all inline transition delay styling when an animation completes',
-          inject(function($animateCss, $rootElement) {
+        test('should remove all inline transition delay styling when an animation completes',
+          angular.mock.inject(function($animateCss, $rootElement) {
 
           ss.addPossiblyPrefixedRule('.ng-enter', 'transition: 1s linear color');
 
@@ -2978,8 +3043,8 @@ describe('ngAnimate $animateCss', function() {
           expect(element.attr('style') || '').not.toContain('transition');
         }));
 
-        it('should not apply an inline transition if only [from] styles and a duration are provided',
-          inject(function($animateCss, $rootElement) {
+        test('should not apply an inline transition if only [from] styles and a duration are provided',
+          angular.mock.inject(function($animateCss, $rootElement) {
 
           var options = {
             duration: 3,
@@ -2990,8 +3055,8 @@ describe('ngAnimate $animateCss', function() {
           expect(animator.$$willAnimate).toBeFalsy();
         }));
 
-        it('should apply a transition if [from] styles are provided with a class that is added',
-          inject(function($animateCss, $rootElement) {
+        test('should apply a transition if [from] styles are provided with a class that is added',
+          angular.mock.inject(function($animateCss, $rootElement) {
 
           var options = {
             addClass: 'superb',
@@ -2999,11 +3064,11 @@ describe('ngAnimate $animateCss', function() {
           };
 
           var animator = $animateCss(element, options);
-          expect(isFunction(animator.start)).toBe(true);
+          expect(angular.isFunction(animator.start)).toBe(true);
         }));
 
-        it('should apply an inline transition if only [from] styles, but classes are added or removed and a duration is provided',
-          inject(function($animateCss, $rootElement) {
+        test('should apply an inline transition if only [from] styles, but classes are added or removed and a duration is provided',
+          angular.mock.inject(function($animateCss, $rootElement) {
 
           var options = {
             duration: 3,
@@ -3015,8 +3080,8 @@ describe('ngAnimate $animateCss', function() {
           expect(animator.$$willAnimate).toBeTruthy();
         }));
 
-        it('should not apply an inline transition if no styles are provided',
-          inject(function($animateCss, $rootElement) {
+        test('should not apply an inline transition if no styles are provided',
+          angular.mock.inject(function($animateCss, $rootElement) {
 
           var emptyObject = {};
           var options = {
@@ -3029,8 +3094,8 @@ describe('ngAnimate $animateCss', function() {
           expect(animator.$$willAnimate).toBeFalsy();
         }));
 
-        it('should apply a transition duration if the existing transition duration\'s property value is not \'all\'',
-          inject(function($animateCss, $rootElement) {
+        test('should apply a transition duration if the existing transition duration\'s property value is not \'all\'',
+          angular.mock.inject(function($animateCss, $rootElement) {
 
           ss.addPossiblyPrefixedRule('.ng-enter', 'transition: 1s linear color');
 
@@ -3052,8 +3117,8 @@ describe('ngAnimate $animateCss', function() {
           expect(style).toContain('linear');
         }));
 
-        it('should apply a transition duration and an animation duration if duration + styles options are provided for a matching keyframe animation',
-          inject(function($animateCss, $rootElement) {
+        test('should apply a transition duration and an animation duration if duration + styles options are provided for a matching keyframe animation',
+          angular.mock.inject(function($animateCss, $rootElement) {
 
           ss.addPossiblyPrefixedRule('.ng-enter', 'animation:3.5s keyframe_animation;');
 
@@ -3077,16 +3142,20 @@ describe('ngAnimate $animateCss', function() {
         }));
       });
 
-      describe('[easing]', function() {
+      describe('[easing]', () => {
 
         var element;
-        beforeEach(inject(function($document, $rootElement) {
+        beforeEach(angular.mock.inject(function($document, $rootElement) {
           element = angular.element('<div></div>');
           $rootElement.append(element);
           angular.element($document[0].body).append($rootElement);
         }));
 
-        it('should apply easing to a transition animation if it exists', inject(function($animateCss) {
+        afterEach(() => {
+          dealoc(element);
+        });
+
+        test('should apply easing to a transition animation if it exists', angular.mock.inject(function($animateCss) {
           ss.addPossiblyPrefixedRule('.red', 'transition:1s linear all;');
           var easing = 'ease-out';
           var animator = $animateCss(element, { addClass: 'red', easing: easing });
@@ -3097,8 +3166,8 @@ describe('ngAnimate $animateCss', function() {
           expect(style).toContain('ease-out');
         }));
 
-        it('should not apply easing to transitions nor keyframes on an element animation if nothing is detected',
-          inject(function($animateCss) {
+        test('should not apply easing to transitions nor keyframes on an element animation if nothing is detected',
+          angular.mock.inject(function($animateCss) {
 
           ss.addRule('.red', ';');
           var easing = 'ease-out';
@@ -3109,8 +3178,8 @@ describe('ngAnimate $animateCss', function() {
           expect(element.attr('style')).toBeFalsy();
         }));
 
-        it('should apply easing to both keyframes and transition animations if detected',
-          inject(function($animateCss) {
+        test('should apply easing to both keyframes and transition animations if detected',
+          angular.mock.inject(function($animateCss) {
 
           ss.addPossiblyPrefixedRule('.red', 'transition: 1s linear all;');
           ss.addPossiblyPrefixedRule('.blue', 'animation: 1s my_keyframe;');
@@ -3125,28 +3194,29 @@ describe('ngAnimate $animateCss', function() {
         }));
       });
 
-      describe('[cleanupStyles]', function() {
-        it('should cleanup [from] and [to] styles that have been applied for the animation when true',
-          inject(function($animateCss) {
+      describe('[cleanupStyles]', () => {
+        test('should cleanup [from] and [to] styles that have been applied for the animation when true',
+          angular.mock.inject(function($animateCss) {
 
           var runner = $animateCss(element, {
             duration: 1,
-            from: { background: 'gold' },
+            // jsdom leaves the longhands behind when the `background` shorthand is removed, so use a longhand
+            from: { 'background-color': 'gold' },
             to: { color: 'brown' },
             cleanupStyles: true
           }).start();
 
-          assertStyleIsPresent(element, 'background', true);
+          assertStyleIsPresent(element, 'background-color', true);
           assertStyleIsPresent(element, 'color', false);
 
           triggerAnimationStartFrame();
 
-          assertStyleIsPresent(element, 'background', true);
+          assertStyleIsPresent(element, 'background-color', true);
           assertStyleIsPresent(element, 'color', true);
 
           runner.end();
 
-          assertStyleIsPresent(element, 'background', false);
+          assertStyleIsPresent(element, 'background-color', false);
           assertStyleIsPresent(element, 'color', false);
 
           function assertStyleIsPresent(element, style, bool) {
@@ -3154,8 +3224,8 @@ describe('ngAnimate $animateCss', function() {
           }
         }));
 
-        it('should restore existing overidden styles already present on the element when true',
-          inject(function($animateCss) {
+        test('should restore existing overidden styles already present on the element when true',
+          angular.mock.inject(function($animateCss) {
 
           element.css('height', '100px');
           element.css('width', '111px');
@@ -3190,8 +3260,8 @@ describe('ngAnimate $animateCss', function() {
         }));
       });
 
-      it('should round up long elapsedTime values to close off a CSS3 animation',
-        inject(function($animateCss) {
+      test('should round up long elapsedTime values to close off a CSS3 animation',
+        angular.mock.inject(function($animateCss) {
 
         ss.addPossiblyPrefixedRule('.millisecond-transition.ng-leave', 'transition:510ms linear all;');
 
@@ -3213,13 +3283,13 @@ describe('ngAnimate $animateCss', function() {
       }));
     });
 
-    describe('SVG', function() {
-      it('should properly apply transitions on an SVG element',
-        inject(function($animateCss, $rootScope, $compile, $document, $rootElement) {
+    describe('SVG', () => {
+      test('should properly apply transitions on an SVG element',
+        angular.mock.inject(function($animateCss, $rootScope, $compile, $document, $rootElement) {
 
-        var element = $compile('<svg width="500" height="500">' +
+        var element = compileForTest('<svg width="500" height="500">' +
                                  '<circle cx="15" cy="5" r="100" fill="orange" />' +
-                               '</svg>')($rootScope);
+                               '</svg>');
 
         angular.element($document[0].body).append($rootElement);
         $rootElement.append(element);
@@ -3241,7 +3311,7 @@ describe('ngAnimate $animateCss', function() {
         expect(element).not.toHaveClass('ng-enter-active');
       }));
 
-      it('should properly remove classes from SVG elements', inject(function($animateCss) {
+      test('should properly remove classes from SVG elements', angular.mock.inject(function($animateCss) {
         var element = angular.element('<svg width="500" height="500">' +
                                 '<rect class="class-of-doom"></rect>' +
                              '</svg>');

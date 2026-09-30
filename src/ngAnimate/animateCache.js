@@ -1,4 +1,3 @@
-'use strict';
 
 /** @this */
 var $$AnimateCacheProvider = function() {
@@ -9,7 +8,7 @@ var $$AnimateCacheProvider = function() {
 
   this.$get = [function() {
     return {
-      cacheKey: function(node, method, addClass, removeClass) {
+      cacheKey(node, method, addClass, removeClass) {
         var parentNode = node.parentNode;
         var parentID = parentNode[KEY] || (parentNode[KEY] = ++parentCounter);
         var parts = [parentID, method, node.getAttribute('class')];
@@ -22,7 +21,7 @@ var $$AnimateCacheProvider = function() {
         return parts.join(' ');
       },
 
-      containsCachedAnimationWithoutDuration: function(key) {
+      containsCachedAnimationWithoutDuration(key) {
         var entry = cache[key];
 
         // nothing cached, so go ahead and animate
@@ -30,21 +29,21 @@ var $$AnimateCacheProvider = function() {
         return (entry && !entry.isValid) || false;
       },
 
-      flush: function() {
+      flush() {
         cache = Object.create(null);
       },
 
-      count: function(key) {
+      count(key) {
         var entry = cache[key];
         return entry ? entry.total : 0;
       },
 
-      get: function(key) {
+      get(key) {
         var entry = cache[key];
         return entry && entry.value;
       },
 
-      put: function(key, value, isValid) {
+      put(key, value, isValid) {
         if (!cache[key]) {
           cache[key] = { total: 1, value: value, isValid: isValid };
         } else {

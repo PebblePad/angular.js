@@ -1,4 +1,3 @@
-'use strict';
 
 var $$AnimateAsyncRunFactoryProvider = /** @this */ function() {
   this.$get = ['$$rAF', function($$rAF) {
@@ -95,11 +94,11 @@ var $$AnimateRunnerFactoryProvider = /** @this */ function() {
     }
 
     AnimateRunner.prototype = {
-      setHost: function(host) {
+      setHost(host) {
         this.host = host || {};
       },
 
-      done: function(fn) {
+      done(fn) {
         if (this._state === DONE_COMPLETE_STATE) {
           fn();
         } else {
@@ -109,7 +108,7 @@ var $$AnimateRunnerFactoryProvider = /** @this */ function() {
 
       progress: noop,
 
-      getPromise: function() {
+      getPromise() {
         if (!this.promise) {
           var self = this;
           this.promise = $q(function(resolve, reject) {
@@ -125,7 +124,7 @@ var $$AnimateRunnerFactoryProvider = /** @this */ function() {
         return this.promise;
       },
 
-      then: function(resolveHandler, rejectHandler) {
+      then(resolveHandler, rejectHandler) {
         return this.getPromise().then(resolveHandler, rejectHandler);
       },
 
@@ -137,33 +136,33 @@ var $$AnimateRunnerFactoryProvider = /** @this */ function() {
         return this.getPromise()['finally'](handler);
       },
 
-      pause: function() {
+      pause() {
         if (this.host.pause) {
           this.host.pause();
         }
       },
 
-      resume: function() {
+      resume() {
         if (this.host.resume) {
           this.host.resume();
         }
       },
 
-      end: function() {
+      end() {
         if (this.host.end) {
           this.host.end();
         }
         this._resolve(true);
       },
 
-      cancel: function() {
+      cancel() {
         if (this.host.cancel) {
           this.host.cancel();
         }
         this._resolve(false);
       },
 
-      complete: function(response) {
+      complete(response) {
         var self = this;
         if (self._state === INITIAL_STATE) {
           self._state = DONE_PENDING_STATE;
@@ -173,7 +172,7 @@ var $$AnimateRunnerFactoryProvider = /** @this */ function() {
         }
       },
 
-      _resolve: function(response) {
+      _resolve(response) {
         if (this._state !== DONE_COMPLETE_STATE) {
           forEach(this._doneCallbacks, function(fn) {
             fn(response);

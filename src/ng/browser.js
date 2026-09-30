@@ -1,4 +1,3 @@
-'use strict';
 /* global getHash: true, stripHash: false */
 
 function getHash(url) {
@@ -32,13 +31,13 @@ function trimEmptyHash(url) {
  * @param {object} $sniffer $sniffer service
  */
 function Browser(window, document, $log, $sniffer, $$taskTrackerFactory) {
-  var self = this,
-      location = window.location,
-      history = window.history,
-      setTimeout = window.setTimeout,
-      clearTimeout = window.clearTimeout,
-      pendingDeferIds = {},
-      taskTracker = $$taskTrackerFactory($log);
+  var self = this;
+  var location = window.location;
+  var history = window.history;
+  var setTimeout = window.setTimeout;
+  var clearTimeout = window.clearTimeout;
+  var pendingDeferIds = {};
+  var taskTracker = $$taskTrackerFactory($log);
 
   self.isMock = false;
 
@@ -57,17 +56,20 @@ function Browser(window, document, $log, $sniffer, $$taskTrackerFactory) {
   // URL API
   //////////////////////////////////////////////////////////////
 
-  var cachedState, lastHistoryState,
-      lastBrowserUrl = location.href,
-      baseElement = document.find('base'),
-      pendingLocation = null,
-      getCurrentState = !$sniffer.history ? noop : function getCurrentState() {
-        try {
-          return history.state;
-        } catch (e) {
-          // MSIE can reportedly throw when there is no state (UNCONFIRMED).
-        }
-      };
+  var cachedState;
+
+  var lastHistoryState;
+  var lastBrowserUrl = location.href;
+  var baseElement = document.find('base');
+  var pendingLocation = null;
+
+  var getCurrentState = !$sniffer.history ? noop : function getCurrentState() {
+    try {
+      return history.state;
+    } catch (e) {
+      // MSIE can reportedly throw when there is no state (UNCONFIRMED).
+    }
+  };
 
   cacheState();
 
@@ -169,8 +171,8 @@ function Browser(window, document, $log, $sniffer, $$taskTrackerFactory) {
     return cachedState;
   };
 
-  var urlChangeListeners = [],
-      urlChangeInit = false;
+  var urlChangeListeners = [];
+  var urlChangeInit = false;
 
   function cacheStateAndFireUrlChange() {
     pendingLocation = null;
@@ -335,7 +337,6 @@ function Browser(window, document, $log, $sniffer, $$taskTrackerFactory) {
     }
     return false;
   };
-
 }
 
 /** @this */

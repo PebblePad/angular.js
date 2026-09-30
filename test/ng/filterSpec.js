@@ -1,18 +1,18 @@
 'use strict';
+ describe('$filter', () => {
+  var $filterProvider;
+  var $filter;
 
-describe('$filter', function() {
-  var $filterProvider, $filter;
-
-  beforeEach(module(function(_$filterProvider_) {
+  beforeEach(angular.mock.module(function(_$filterProvider_) {
     $filterProvider = _$filterProvider_;
   }));
 
-  beforeEach(inject(function(_$filter_) {
+  beforeEach(angular.mock.inject(function(_$filter_) {
     $filter = _$filter_;
   }));
 
-  describe('provider', function() {
-    it('should allow registration of filters', function() {
+  describe('provider', () => {
+    test('should allow registration of filters', () => {
       var FooFilter = function() {
         return function() { return 'foo'; };
       };
@@ -23,7 +23,7 @@ describe('$filter', function() {
       expect(fooFilter()).toBe('foo');
     });
 
-    it('should allow registration of a map of filters', function() {
+    test('should allow registration of a map of filters', () => {
       var FooFilter = function() {
         return function() { return 'foo'; };
       };

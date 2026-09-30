@@ -1,4 +1,3 @@
-'use strict';
 
 /* global ngTouch: false */
 
@@ -105,9 +104,11 @@ ngTouch.factory('$swipe', [function() {
      * as described above.
      *
      */
-    bind: function(element, eventHandlers, pointerTypes) {
+    bind(element, eventHandlers, pointerTypes) {
       // Absolute total movement, used to control swipe vs. scroll.
-      var totalX, totalY;
+      var totalX;
+
+      var totalY;
       // Coordinates of the start position.
       var startCoords;
       // Last event's position.

@@ -1,4 +1,3 @@
-'use strict';
 /**
  * @ngdoc directive
  * @name ngRequired
@@ -66,7 +65,7 @@ var requiredDirective = ['$parse', function($parse) {
   return {
     restrict: 'A',
     require: '?ngModel',
-    link: function(scope, elm, attr, ctrl) {
+    link(scope, elm, attr, ctrl) {
       if (!ctrl) return;
       // For boolean attributes like required, presence means true
       var value = attr.hasOwnProperty('required') || $parse(attr.ngRequired)(scope);
@@ -177,7 +176,7 @@ var patternDirective = ['$parse', function($parse) {
   return {
     restrict: 'A',
     require: '?ngModel',
-    compile: function(tElm, tAttr) {
+    compile(tElm, tAttr) {
       var patternExp;
       var parseFn;
 
@@ -302,7 +301,7 @@ var maxlengthDirective = ['$parse', function($parse) {
   return {
     restrict: 'A',
     require: '?ngModel',
-    link: function(scope, elm, attr, ctrl) {
+    link(scope, elm, attr, ctrl) {
       if (!ctrl) return;
 
       var maxlength = attr.maxlength || $parse(attr.ngMaxlength)(scope);
@@ -395,7 +394,7 @@ var minlengthDirective = ['$parse', function($parse) {
   return {
     restrict: 'A',
     require: '?ngModel',
-    link: function(scope, elm, attr, ctrl) {
+    link(scope, elm, attr, ctrl) {
       if (!ctrl) return;
 
       var minlength = attr.minlength || $parse(attr.ngMinlength)(scope);

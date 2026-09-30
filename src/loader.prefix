@@ -1,10 +1,5 @@
-/**
- * @license AngularJS v"NG_VERSION_FULL"
- * (c) 2010-2020 Google LLC. http://angularjs.org
- * License: MIT
- */
+(() => {
 'use strict';
-(function() {
     // NOTE:
     // These functions are copied here from `src/Angular.js`, because they are needed inside the
     // `angular-loader.js` closure and need to be available before the main `angular.js` script has
@@ -32,4 +27,3 @@
 
       return val;
     }
-

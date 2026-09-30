@@ -1,4 +1,3 @@
-'use strict';
 // NOTE:  The usage of window and document instead of $window and $document here is
 // deliberate.  This service depends on the specific behavior of anchor nodes created by the
 // browser (resolving and parsing URLs) that is unlikely to be provided by mock objects and
@@ -67,20 +66,11 @@ function urlResolve(url) {
   if (!isString(url)) return url;
 
   var href = url;
-
-  // Support: IE 9-11 only
-  if (msie) {
-    // Normalize before parse.  Refer Implementation Notes on why this is
-    // done in two steps on IE.
-    urlParsingNode.setAttribute('href', href);
-    href = urlParsingNode.href;
-  }
-
   urlParsingNode.setAttribute('href', href);
 
   var hostname = urlParsingNode.hostname;
 
-  if (!ipv6InBrackets && hostname.indexOf(':') > -1) {
+  if (!ipv6InBrackets && hostname.includes(':')) {
     hostname = '[' + hostname + ']';
   }
 

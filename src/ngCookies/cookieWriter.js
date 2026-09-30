@@ -1,4 +1,3 @@
-'use strict';
 
 /**
  * @name $$cookieWriter
@@ -16,7 +15,8 @@ function $$CookieWriter($document, $log, $browser) {
   var rawDocument = $document[0];
 
   function buildCookieString(name, value, options) {
-    var path, expires;
+    var path;
+    var expires;
     options = options || {};
     expires = options.expires;
     path = angular.isDefined(options.path) ? options.path : cookiePath;

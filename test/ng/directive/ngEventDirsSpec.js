@@ -1,17 +1,16 @@
 'use strict';
-
-describe('event directives', function() {
+ describe('event directives', () => {
   var element;
 
 
-  afterEach(function() {
+   afterEach(() => {
     dealoc(element);
   });
 
 
-  describe('ngSubmit', function() {
+  describe('ngSubmit', () => {
 
-    it('should get called on form submit', inject(function($rootScope, $compile) {
+    test('should get called on form submit', angular.mock.inject(function($rootScope, $compile) {
       element = $compile(
         '<form action="/foo" ng-submit="submitted = true">' +
           '<input type="submit" />' +
@@ -31,7 +30,7 @@ describe('event directives', function() {
       expect($rootScope.submitted).toEqual(true);
     }));
 
-    it('should expose event on form submit', inject(function($rootScope, $compile) {
+    test('should expose event on form submit', angular.mock.inject(function($rootScope, $compile) {
       $rootScope.formSubmission = function(e) {
         if (e) {
           $rootScope.formSubmitted = 'foo';
@@ -58,50 +57,50 @@ describe('event directives', function() {
     }));
   });
 
-  describe('focus', function() {
+  describe('focus', () => {
 
-    describe('call the listener asynchronously during $apply', function() {
+    describe('call the listener asynchronously during $apply', () => {
       function run(scope) {
-        inject(function($compile) {
+        angular.mock.inject(function($compile) {
           element = $compile('<input type="text" ng-focus="focus()">')(scope);
-          scope.focus = jasmine.createSpy('focus');
+          scope.focus = jest.fn().mockName('focus');
 
           scope.$apply(function() {
             element.triggerHandler('focus');
             expect(scope.focus).not.toHaveBeenCalled();
           });
 
-          expect(scope.focus).toHaveBeenCalledOnce();
+          expect(scope.focus).toHaveBeenCalledTimes(1);
         });
       }
 
-      it('should call the listener with non isolate scopes', inject(function($rootScope) {
+      test('should call the listener with non isolate scopes', angular.mock.inject(function($rootScope) {
         run($rootScope.$new());
       }));
 
-      it('should call the listener with isolate scopes', inject(function($rootScope) {
+      test('should call the listener with isolate scopes', angular.mock.inject(function($rootScope) {
         run($rootScope.$new(true));
       }));
 
     });
 
-    it('should call the listener synchronously inside of $apply if outside of $apply',
-        inject(function($rootScope, $compile) {
+    test('should call the listener synchronously inside of $apply if outside of $apply',
+        angular.mock.inject(function($rootScope, $compile) {
       element = $compile('<input type="text" ng-focus="focus()" ng-model="value">')($rootScope);
-      $rootScope.focus = jasmine.createSpy('focus').and.callFake(function() {
+      $rootScope.focus = jest.fn().mockName('focus').mockImplementation(function() {
         $rootScope.value = 'newValue';
       });
 
       element.triggerHandler('focus');
 
-      expect($rootScope.focus).toHaveBeenCalledOnce();
+      expect($rootScope.focus).toHaveBeenCalledTimes(1);
       expect(element.val()).toBe('newValue');
     }));
 
   });
 
-  describe('DOM event object', function() {
-    it('should allow access to the $event object', inject(function($rootScope, $compile) {
+  describe('DOM event object', () => {
+    test('should allow access to the $event object', angular.mock.inject(function($rootScope, $compile) {
       var scope = $rootScope.$new();
       element = $compile('<button ng-click="e = $event">BTN</button>')(scope);
       element.triggerHandler('click');
@@ -109,57 +108,57 @@ describe('event directives', function() {
     }));
   });
 
-  describe('blur', function() {
+  describe('blur', () => {
 
-    describe('call the listener asynchronously during $apply', function() {
+    describe('call the listener asynchronously during $apply', () => {
       function run(scope) {
-        inject(function($compile) {
+        angular.mock.inject(function($compile) {
           element = $compile('<input type="text" ng-blur="blur()">')(scope);
-          scope.blur = jasmine.createSpy('blur');
+          scope.blur = jest.fn().mockName('blur');
 
           scope.$apply(function() {
             element.triggerHandler('blur');
             expect(scope.blur).not.toHaveBeenCalled();
           });
 
-          expect(scope.blur).toHaveBeenCalledOnce();
+          expect(scope.blur).toHaveBeenCalledTimes(1);
         });
       }
 
-      it('should call the listener with non isolate scopes', inject(function($rootScope) {
+      test('should call the listener with non isolate scopes', angular.mock.inject(function($rootScope) {
         run($rootScope.$new());
       }));
 
-      it('should call the listener with isolate scopes', inject(function($rootScope) {
+      test('should call the listener with isolate scopes', angular.mock.inject(function($rootScope) {
         run($rootScope.$new(true));
       }));
 
     });
 
-    it('should call the listener synchronously inside of $apply if outside of $apply',
-        inject(function($rootScope, $compile) {
+    test('should call the listener synchronously inside of $apply if outside of $apply',
+        angular.mock.inject(function($rootScope, $compile) {
       element = $compile('<input type="text" ng-blur="blur()" ng-model="value">')($rootScope);
-      $rootScope.blur = jasmine.createSpy('blur').and.callFake(function() {
+      $rootScope.blur = jest.fn().mockName('blur').mockImplementation(function() {
         $rootScope.value = 'newValue';
       });
 
       element.triggerHandler('blur');
 
-      expect($rootScope.blur).toHaveBeenCalledOnce();
+      expect($rootScope.blur).toHaveBeenCalledTimes(1);
       expect(element.val()).toBe('newValue');
     }));
   });
 
 
-  it('should call the listener synchronously if the event is triggered inside of a digest',
-      inject(function($rootScope, $compile) {
+  test('should call the listener synchronously if the event is triggered inside of a digest',
+      angular.mock.inject(function($rootScope, $compile) {
     var watchedVal;
 
     element = $compile('<button type="button" ng-click="click()">Button</button>')($rootScope);
     $rootScope.$watch('value', function(newValue) {
       watchedVal = newValue;
     });
-    $rootScope.click = jasmine.createSpy('click').and.callFake(function() {
+    $rootScope.click = jest.fn().mockName('click').mockImplementation(function() {
       $rootScope.value = 'newValue';
     });
 
@@ -167,39 +166,39 @@ describe('event directives', function() {
       element.triggerHandler('click');
     });
 
-    expect($rootScope.click).toHaveBeenCalledOnce();
+    expect($rootScope.click).toHaveBeenCalledTimes(1);
     expect(watchedVal).toEqual('newValue');
   }));
 
 
-  it('should call the listener synchronously if the event is triggered outside of a digest',
-      inject(function($rootScope, $compile) {
+  test('should call the listener synchronously if the event is triggered outside of a digest',
+      angular.mock.inject(function($rootScope, $compile) {
     var watchedVal;
 
     element = $compile('<button type="button" ng-click="click()">Button</button>')($rootScope);
     $rootScope.$watch('value', function(newValue) {
       watchedVal = newValue;
     });
-    $rootScope.click = jasmine.createSpy('click').and.callFake(function() {
+    $rootScope.click = jest.fn().mockName('click').mockImplementation(function() {
       $rootScope.value = 'newValue';
     });
 
     element.triggerHandler('click');
 
-    expect($rootScope.click).toHaveBeenCalledOnce();
+    expect($rootScope.click).toHaveBeenCalledTimes(1);
     expect(watchedVal).toEqual('newValue');
   }));
 
 
-  describe('throwing errors in event handlers', function() {
+  describe('throwing errors in event handlers', () => {
 
-    it('should not stop execution if the event is triggered outside a digest', function() {
+    test('should not stop execution if the event is triggered outside a digest', () => {
 
-      module(function($exceptionHandlerProvider) {
+      angular.mock.module(function($exceptionHandlerProvider) {
         $exceptionHandlerProvider.mode('log');
       });
 
-      inject(function($rootScope, $compile, $exceptionHandler, $log) {
+      angular.mock.inject(function($rootScope, $compile, $exceptionHandler, $log) {
 
         element = $compile('<button ng-click="click()">Click</button>')($rootScope);
         expect($log.assertEmpty());
@@ -221,13 +220,13 @@ describe('event directives', function() {
     });
 
 
-    it('should not stop execution if the event is triggered inside a digest', function() {
+    test('should not stop execution if the event is triggered inside a digest', () => {
 
-      module(function($exceptionHandlerProvider) {
+      angular.mock.module(function($exceptionHandlerProvider) {
         $exceptionHandlerProvider.mode('log');
       });
 
-      inject(function($rootScope, $compile, $exceptionHandler, $log) {
+      angular.mock.inject(function($rootScope, $compile, $exceptionHandler, $log) {
 
         element = $compile('<button ng-click="click()">Click</button>')($rootScope);
         expect($log.assertEmpty());
@@ -251,13 +250,13 @@ describe('event directives', function() {
     });
 
 
-    it('should not stop execution if the event is triggered in a watch expression function', function() {
+    test('should not stop execution if the event is triggered in a watch expression function', () => {
 
-      module(function($exceptionHandlerProvider) {
+      angular.mock.module(function($exceptionHandlerProvider) {
         $exceptionHandlerProvider.mode('log');
       });
 
-      inject(function($rootScope, $compile, $exceptionHandler, $log) {
+      angular.mock.inject(function($rootScope, $compile, $exceptionHandler, $log) {
 
         element = $compile('<button ng-click="click()">Click</button>')($rootScope);
         $rootScope.click = function() {

@@ -1,4 +1,3 @@
-'use strict';
 
 var $$AnimateJsDriverProvider = ['$$animationProvider', /** @this */ function($$animationProvider) {
   $$animationProvider.drivers.push('$$animateJsDriver');
@@ -10,7 +9,7 @@ var $$AnimateJsDriverProvider = ['$$animationProvider', /** @this */ function($$
         if (!fromAnimation && !toAnimation) return;
 
         return {
-          start: function() {
+          start() {
             var animationRunners = [];
 
             if (fromAnimation) {

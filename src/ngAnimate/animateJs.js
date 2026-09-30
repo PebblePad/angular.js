@@ -1,4 +1,3 @@
-'use strict';
 
 // TODO(matsko): use caching here to speed things up for detection
 // TODO(matsko): add documentation
@@ -40,9 +39,11 @@ var $$AnimateJsProvider = ['$animateProvider', /** @this */ function($animatePro
       // defined via the module.animation factory function. If nothing is detected then
       // we don't return anything which then makes $animation query the next driver.
       var animations = lookupAnimations(classes);
-      var before, after;
+      var before;
+      var after;
       if (animations.length) {
-        var afterFn, beforeFn;
+        var afterFn;
+        var beforeFn;
         if (event === 'leave') {
           beforeFn = 'leave';
           afterFn = 'afterLeave'; // TODO(matsko): get rid of this
@@ -75,7 +76,7 @@ var $$AnimateJsProvider = ['$animateProvider', /** @this */ function($animatePro
 
       return {
         $$willAnimate: true,
-        end: function() {
+        end() {
           if (runner) {
             runner.end();
           } else {
@@ -85,7 +86,7 @@ var $$AnimateJsProvider = ['$animateProvider', /** @this */ function($animatePro
           }
           return runner;
         },
-        start: function() {
+        start() {
           if (runner) {
             return runner;
           }
@@ -116,10 +117,10 @@ var $$AnimateJsProvider = ['$animateProvider', /** @this */ function($animatePro
           }
 
           runner.setHost({
-            end: function() {
+            end() {
               endAnimations();
             },
-            cancel: function() {
+            cancel() {
               endAnimations(true);
             }
           });
@@ -205,10 +206,10 @@ var $$AnimateJsProvider = ['$animateProvider', /** @this */ function($animatePro
             };
 
             runner = new $$AnimateRunner({
-              end: function() {
+              end() {
                 onAnimationComplete();
               },
-              cancel: function() {
+              cancel() {
                 onAnimationComplete(true);
               }
             });
@@ -228,7 +229,8 @@ var $$AnimateJsProvider = ['$animateProvider', /** @this */ function($animatePro
       function packageAnimations(element, event, options, animations, fnName) {
         var operations = groupEventedAnimations(element, event, options, animations, fnName);
         if (operations.length === 0) {
-          var a, b;
+          var a;
+          var b;
           if (fnName === 'beforeSetClass') {
             a = groupEventedAnimations(element, 'removeClass', options, animations, 'beforeRemoveClass');
             b = groupEventedAnimations(element, 'addClass', options, animations, 'beforeAddClass');
@@ -277,10 +279,11 @@ var $$AnimateJsProvider = ['$animateProvider', /** @this */ function($animatePro
 
     function lookupAnimations(classes) {
       classes = isArray(classes) ? classes : classes.split(' ');
-      var matches = [], flagMap = {};
+      var matches = [];
+      var flagMap = {};
       for (var i = 0; i < classes.length; i++) {
-        var klass = classes[i],
-            animationFactory = $animateProvider.$$registeredAnimations[klass];
+        var klass = classes[i];
+        var animationFactory = $animateProvider.$$registeredAnimations[klass];
         if (animationFactory && !flagMap[klass]) {
           matches.push($injector.get(animationFactory));
           flagMap[klass] = true;

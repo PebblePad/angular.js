@@ -1,21 +1,20 @@
 'use strict';
 
 /* globals generateInputCompilerHelper: false */
-
-describe('validators', function() {
-
-  var helper = {}, $rootScope;
+ describe('validators', () => {
+  var helper = {};
+  var $rootScope;
 
   generateInputCompilerHelper(helper);
 
-  beforeEach(inject(function(_$rootScope_) {
+  beforeEach(angular.mock.inject(function(_$rootScope_) {
     $rootScope = _$rootScope_;
   }));
 
 
-  describe('pattern', function() {
+  describe('pattern', () => {
 
-    it('should validate in-lined pattern', function() {
+    test('should validate in-lined pattern', () => {
       var inputElm = helper.compileInput('<input type="text" ng-model="value" ng-pattern="/^\\d\\d\\d-\\d\\d-\\d\\d\\d\\d$/" />');
 
       helper.changeInputValueTo('x000-00-0000x');
@@ -35,8 +34,9 @@ describe('validators', function() {
     });
 
 
-    it('should listen on ng-pattern when pattern is observed', function() {
-      var value, patternVal = /^\w+$/;
+    test('should listen on ng-pattern when pattern is observed', () => {
+      var value;
+      var patternVal = /^\w+$/;
       var inputElm = helper.compileInput('<input type="text" ng-model="value" ng-pattern="pat" attr-capture />');
       helper.attrs.$observe('pattern', function(v) {
         value = helper.attrs.pattern;
@@ -50,7 +50,7 @@ describe('validators', function() {
     });
 
 
-    it('should validate in-lined pattern with modifiers', function() {
+    test('should validate in-lined pattern with modifiers', () => {
       var inputElm = helper.compileInput('<input type="text" ng-model="value" ng-pattern="/^abc?$/i" />');
 
       helper.changeInputValueTo('aB');
@@ -61,7 +61,7 @@ describe('validators', function() {
     });
 
 
-    it('should validate pattern from scope', function() {
+    test('should validate pattern from scope', () => {
       $rootScope.regexp = /^\d\d\d-\d\d-\d\d\d\d$/;
       var inputElm = helper.compileInput('<input type="text" ng-model="value" ng-pattern="regexp" />');
 
@@ -92,7 +92,7 @@ describe('validators', function() {
     });
 
 
-    it('should perform validations when the ngPattern scope value changes', function() {
+    test('should perform validations when the ngPattern scope value changes', () => {
       $rootScope.regexp = /^[a-z]+$/;
       var inputElm = helper.compileInput('<input type="text" ng-model="value" ng-pattern="regexp" />');
 
@@ -119,7 +119,7 @@ describe('validators', function() {
     });
 
 
-    it('should register "pattern" with the model validations when the pattern attribute is used', function() {
+    test('should register "pattern" with the model validations when the pattern attribute is used', () => {
       var inputElm = helper.compileInput('<input type="text" name="input" ng-model="value" pattern="^\\d+$" />');
 
       helper.changeInputValueTo('abcd');
@@ -132,7 +132,7 @@ describe('validators', function() {
     });
 
 
-    it('should not throw an error when scope pattern can\'t be found', function() {
+    test('should not throw an error when scope pattern can\'t be found', () => {
       expect(function() {
         var inputElm = helper.compileInput('<input type="text" ng-model="foo" ng-pattern="fooRegexp" />');
         $rootScope.$apply('foo = \'bar\'');
@@ -140,7 +140,7 @@ describe('validators', function() {
     });
 
 
-    it('should throw an error when the scope pattern is not a regular expression', function() {
+    test('should throw an error when the scope pattern is not a regular expression', () => {
       expect(function() {
         var inputElm = helper.compileInput('<input type="text" ng-model="foo" ng-pattern="fooRegexp" />');
         $rootScope.$apply(function() {
@@ -151,7 +151,7 @@ describe('validators', function() {
     });
 
 
-    it('should be invalid if entire string does not match pattern', function() {
+    test('should be invalid if entire string does not match pattern', () => {
       var inputElm = helper.compileInput('<input type="text" name="test" ng-model="value" pattern="\\d{4}">');
       helper.changeInputValueTo('1234');
       expect($rootScope.form.test.$error.pattern).not.toBe(true);
@@ -167,7 +167,7 @@ describe('validators', function() {
     });
 
 
-    it('should be cope with patterns that start with ^', function() {
+    test('should be cope with patterns that start with ^', () => {
       var inputElm = helper.compileInput('<input type="text" name="test" ng-model="value" pattern="^\\d{4}">');
       helper.changeInputValueTo('1234');
       expect($rootScope.form.test.$error.pattern).not.toBe(true);
@@ -183,7 +183,7 @@ describe('validators', function() {
     });
 
 
-    it('should be cope with patterns that end with $', function() {
+    test('should be cope with patterns that end with $', () => {
       var inputElm = helper.compileInput('<input type="text" name="test" ng-model="value" pattern="\\d{4}$">');
       helper.changeInputValueTo('1234');
       expect($rootScope.form.test.$error.pattern).not.toBe(true);
@@ -199,7 +199,7 @@ describe('validators', function() {
     });
 
 
-    it('should validate the viewValue and not the modelValue', function() {
+    test('should validate the viewValue and not the modelValue', () => {
       var inputElm = helper.compileInput('<input type="text" name="test" ng-model="value" pattern="\\d{4}">');
       var ctrl = inputElm.controller('ngModel');
 
@@ -214,7 +214,7 @@ describe('validators', function() {
     });
 
 
-    it('should validate on non-input elements', inject(function($compile) {
+    test('should validate on non-input elements', angular.mock.inject(function($compile) {
       $rootScope.pattern = '\\d{4}';
       var elm = $compile('<span ng-model="value" pattern="\\d{4}"></span>')($rootScope);
       var elmNg = $compile('<span ng-model="value" ng-pattern="pattern"></span>')($rootScope);
@@ -229,9 +229,11 @@ describe('validators', function() {
 
       expect(ctrl.$error.pattern).toBe(true);
       expect(ctrlNg.$error.pattern).toBe(true);
+      dealoc(elm);
+      dealoc(elmNg);
     }));
 
-    it('should only validate once after compilation when inside ngRepeat', function() {
+    test('should only validate once after compilation when inside ngRepeat', () => {
 
       $rootScope.pattern = /\d{4}/;
 
@@ -256,9 +258,9 @@ describe('validators', function() {
   });
 
 
-  describe('minlength', function() {
+  describe('minlength', () => {
 
-    it('should invalidate values that are shorter than the given minlength', function() {
+    test('should invalidate values that are shorter than the given minlength', () => {
       var inputElm = helper.compileInput('<input type="text" ng-model="value" ng-minlength="3" />');
 
       helper.changeInputValueTo('aa');
@@ -269,11 +271,11 @@ describe('validators', function() {
     });
 
 
-    it('should listen on ng-minlength when minlength is observed', function() {
+    test('should listen on ng-minlength when minlength is observed', () => {
       var value = 0;
       var inputElm = helper.compileInput('<input type="text" ng-model="value" ng-minlength="min" attr-capture />');
       helper.attrs.$observe('minlength', function(v) {
-        value = toInt(helper.attrs.minlength);
+        value = ngInternals.toInt(helper.attrs.minlength);
       });
 
       $rootScope.$apply('min = 5');
@@ -282,7 +284,7 @@ describe('validators', function() {
     });
 
 
-    it('should observe the standard minlength attribute and register it as a validator on the model', function() {
+    test('should observe the standard minlength attribute and register it as a validator on the model', () => {
       var inputElm = helper.compileInput('<input type="text" name="input" ng-model="value" minlength="{{ min }}" />');
       $rootScope.$apply('min = 10');
 
@@ -297,18 +299,18 @@ describe('validators', function() {
     });
 
 
-    it('should validate when the model is initialized as a number', function() {
+    test('should validate when the model is initialized as a number', () => {
       $rootScope.value = 12345;
       var inputElm = helper.compileInput('<input type="text" name="input" ng-model="value" minlength="3" />');
       expect($rootScope.value).toBe(12345);
       expect($rootScope.form.input.$error.minlength).toBeUndefined();
     });
 
-    it('should validate emptiness against the viewValue', function() {
+    test('should validate emptiness against the viewValue', () => {
       var inputElm = helper.compileInput('<input type="text" name="input" ng-model="value" minlength="3" />');
 
       var ctrl = inputElm.controller('ngModel');
-      spyOn(ctrl, '$isEmpty').and.callThrough();
+      jest.spyOn(ctrl, '$isEmpty');
 
       ctrl.$parsers.push(function(value) {
         return value + '678';
@@ -319,7 +321,7 @@ describe('validators', function() {
     });
 
 
-    it('should validate on non-input elements', inject(function($compile) {
+    test('should validate on non-input elements', angular.mock.inject(function($compile) {
       $rootScope.min = 3;
       var elm = $compile('<span ng-model="value" minlength="{{min}}"></span>')($rootScope);
       var elmNg = $compile('<span ng-model="value" ng-minlength="min"></span>')($rootScope);
@@ -334,10 +336,12 @@ describe('validators', function() {
 
       expect(ctrl.$error.minlength).toBe(true);
       expect(ctrlNg.$error.minlength).toBe(true);
+      dealoc(elm);
+      dealoc(elmNg);
     }));
 
 
-    it('should only validate once after compilation when inside ngRepeat', function() {
+    test('should only validate once after compilation when inside ngRepeat', () => {
       $rootScope.minlength = 5;
 
       var element = helper.compileInput(
@@ -360,9 +364,9 @@ describe('validators', function() {
     });
   });
 
-  describe('maxlength', function() {
+  describe('maxlength', () => {
 
-    it('should invalidate values that are longer than the given maxlength', function() {
+    test('should invalidate values that are longer than the given maxlength', () => {
       var inputElm = helper.compileInput('<input type="text" ng-model="value" ng-maxlength="5" />');
 
       helper.changeInputValueTo('aaaaaaaa');
@@ -373,7 +377,7 @@ describe('validators', function() {
     });
 
 
-    it('should only accept empty values when maxlength is 0', function() {
+    test('should only accept empty values when maxlength is 0', () => {
       var inputElm = helper.compileInput('<input type="text" ng-model="value" ng-maxlength="0" />');
 
       helper.changeInputValueTo('');
@@ -384,7 +388,7 @@ describe('validators', function() {
     });
 
 
-    it('should accept values of any length when maxlength is negative', function() {
+    test('should accept values of any length when maxlength is negative', () => {
       var inputElm = helper.compileInput('<input type="text" ng-model="value" ng-maxlength="-1" />');
 
       helper.changeInputValueTo('');
@@ -395,7 +399,7 @@ describe('validators', function() {
     });
 
 
-    it('should accept values of any length when maxlength is non-numeric', function() {
+    test('should accept values of any length when maxlength is non-numeric', () => {
       var inputElm = helper.compileInput('<input type="text" ng-model="value" ng-maxlength="maxlength" />');
       helper.changeInputValueTo('aaaaaaaaaa');
 
@@ -417,11 +421,11 @@ describe('validators', function() {
     });
 
 
-    it('should listen on ng-maxlength when maxlength is observed', function() {
+    test('should listen on ng-maxlength when maxlength is observed', () => {
       var value = 0;
       var inputElm = helper.compileInput('<input type="text" ng-model="value" ng-maxlength="max" attr-capture />');
       helper.attrs.$observe('maxlength', function(v) {
-        value = toInt(helper.attrs.maxlength);
+        value = ngInternals.toInt(helper.attrs.maxlength);
       });
 
       $rootScope.$apply('max = 10');
@@ -430,7 +434,7 @@ describe('validators', function() {
     });
 
 
-    it('should observe the standard maxlength attribute and register it as a validator on the model', function() {
+    test('should observe the standard maxlength attribute and register it as a validator on the model', () => {
       var inputElm = helper.compileInput('<input type="text" name="input" ng-model="value" maxlength="{{ max }}" />');
       $rootScope.$apply('max = 1');
 
@@ -445,7 +449,7 @@ describe('validators', function() {
     });
 
 
-    it('should assign the correct model after an observed validator became valid', function() {
+    test('should assign the correct model after an observed validator became valid', () => {
       var inputElm = helper.compileInput('<input type="text" name="input" ng-model="value" maxlength="{{ max }}" />');
 
       $rootScope.$apply('max = 1');
@@ -457,7 +461,7 @@ describe('validators', function() {
     });
 
 
-    it('should assign the correct model after an observed validator became invalid', function() {
+    test('should assign the correct model after an observed validator became invalid', () => {
       var inputElm = helper.compileInput('<input type="text" name="input" ng-model="value" maxlength="{{ max }}" />');
 
       $rootScope.$apply('max = 6');
@@ -469,7 +473,7 @@ describe('validators', function() {
     });
 
 
-    it('should leave the value as invalid if observed maxlength changed, but is still invalid', function() {
+    test('should leave the value as invalid if observed maxlength changed, but is still invalid', () => {
       var inputElm = helper.compileInput('<input type="text" name="input" ng-model="value" maxlength="{{ max }}" />');
       $rootScope.$apply('max = 1');
 
@@ -486,39 +490,39 @@ describe('validators', function() {
     });
 
 
-    it('should not notify if observed maxlength changed, but is still invalid', function() {
+    test('should not notify if observed maxlength changed, but is still invalid', () => {
       var inputElm = helper.compileInput('<input type="text" name="input" ng-model="value" ng-change="ngChangeSpy()" ' +
                    'maxlength="{{ max }}" />');
 
       $rootScope.$apply('max = 1');
       helper.changeInputValueTo('12345');
 
-      $rootScope.ngChangeSpy = jasmine.createSpy();
+      $rootScope.ngChangeSpy = jest.fn();
       $rootScope.$apply('max = 3');
 
       expect($rootScope.ngChangeSpy).not.toHaveBeenCalled();
     });
 
 
-    it('should leave the model untouched when validating before model initialization', function() {
+    test('should leave the model untouched when validating before model initialization', () => {
       $rootScope.value = '12345';
       var inputElm = helper.compileInput('<input type="text" name="input" ng-model="value" minlength="3" />');
       expect($rootScope.value).toBe('12345');
     });
 
 
-    it('should validate when the model is initialized as a number', function() {
+    test('should validate when the model is initialized as a number', () => {
       $rootScope.value = 12345;
       var inputElm = helper.compileInput('<input type="text" name="input" ng-model="value" maxlength="10" />');
       expect($rootScope.value).toBe(12345);
       expect($rootScope.form.input.$error.maxlength).toBeUndefined();
     });
 
-    it('should validate emptiness against the viewValue', function() {
+    test('should validate emptiness against the viewValue', () => {
       var inputElm = helper.compileInput('<input type="text" name="input" ng-model="value" maxlength="10" />');
 
       var ctrl = inputElm.controller('ngModel');
-      spyOn(ctrl, '$isEmpty').and.callThrough();
+      jest.spyOn(ctrl, '$isEmpty');
 
       ctrl.$parsers.push(function(value) {
         return value + '678';
@@ -529,7 +533,7 @@ describe('validators', function() {
     });
 
 
-    it('should validate on non-input elements', inject(function($compile) {
+    test('should validate on non-input elements', angular.mock.inject(function($compile) {
       $rootScope.max = 3;
       var elm = $compile('<span ng-model="value" maxlength="{{max}}"></span>')($rootScope);
       var elmNg = $compile('<span ng-model="value" ng-maxlength="max"></span>')($rootScope);
@@ -544,10 +548,12 @@ describe('validators', function() {
 
       expect(ctrl.$error.maxlength).toBe(true);
       expect(ctrlNg.$error.maxlength).toBe(true);
+      dealoc(elm);
+      dealoc(elmNg);
     }));
 
 
-    it('should only validate once after compilation when inside ngRepeat', function() {
+    test('should only validate once after compilation when inside ngRepeat', () => {
       $rootScope.maxlength = 5;
 
       var element = helper.compileInput(
@@ -571,9 +577,9 @@ describe('validators', function() {
   });
 
 
-  describe('required', function() {
+  describe('required', () => {
 
-    it('should allow bindings via ngRequired', function() {
+    test('should allow bindings via ngRequired', () => {
       var inputElm = helper.compileInput('<input type="text" ng-model="value" ng-required="required" />');
 
       $rootScope.$apply('required = false');
@@ -596,7 +602,7 @@ describe('validators', function() {
     });
 
 
-    it('should invalid initial value with bound required', function() {
+    test('should invalid initial value with bound required', () => {
       var inputElm = helper.compileInput('<input type="text" ng-model="value" required="{{required}}" />');
 
       $rootScope.$apply('required = true');
@@ -605,7 +611,7 @@ describe('validators', function() {
     });
 
 
-    it('should be $invalid but $pristine if not touched', function() {
+    test('should be $invalid but $pristine if not touched', () => {
       var inputElm = helper.compileInput('<input type="text" ng-model="name" name="alias" required />');
 
       $rootScope.$apply('name = null');
@@ -619,7 +625,7 @@ describe('validators', function() {
     });
 
 
-    it('should allow empty string if not required', function() {
+    test('should allow empty string if not required', () => {
       var inputElm = helper.compileInput('<input type="text" ng-model="foo" />');
       helper.changeInputValueTo('a');
       helper.changeInputValueTo('');
@@ -627,13 +633,13 @@ describe('validators', function() {
     });
 
 
-    it('should set $invalid when model undefined', function() {
+    test('should set $invalid when model undefined', () => {
       var inputElm = helper.compileInput('<input type="text" ng-model="notDefined" required />');
       expect(inputElm).toBeInvalid();
     });
 
 
-    it('should consider bad input as an error before any other errors are considered', function() {
+    test('should consider bad input as an error before any other errors are considered', () => {
       var inputElm = helper.compileInput('<input type="text" ng-model="value" required />', { badInput: true });
       var ctrl = inputElm.controller('ngModel');
       ctrl.$parsers.push(function() {
@@ -648,7 +654,7 @@ describe('validators', function() {
     });
 
 
-    it('should allow `false` as a valid value when the input type is not "checkbox"', function() {
+    test('should allow `false` as a valid value when the input type is not "checkbox"', () => {
       var inputElm = helper.compileInput('<input type="radio" ng-value="true" ng-model="answer" required />' +
         '<input type="radio" ng-value="false" ng-model="answer" required />');
 
@@ -663,11 +669,11 @@ describe('validators', function() {
     });
 
 
-    it('should validate emptiness against the viewValue', function() {
+    test('should validate emptiness against the viewValue', () => {
       var inputElm = helper.compileInput('<input type="text" name="input" ng-model="value" required />');
 
       var ctrl = inputElm.controller('ngModel');
-      spyOn(ctrl, '$isEmpty').and.callThrough();
+      jest.spyOn(ctrl, '$isEmpty');
 
       ctrl.$parsers.push(function(value) {
         return value + '678';
@@ -678,7 +684,7 @@ describe('validators', function() {
     });
 
 
-    it('should validate on non-input elements', inject(function($compile) {
+    test('should validate on non-input elements', angular.mock.inject(function($compile) {
       $rootScope.value = '12';
       var elm = $compile('<span ng-model="value" required></span>')($rootScope);
       var elmNg = $compile('<span ng-model="value" ng-required="true"></span>')($rootScope);
@@ -693,17 +699,19 @@ describe('validators', function() {
 
       expect(ctrl.$error.required).toBe(true);
       expect(ctrlNg.$error.required).toBe(true);
+      dealoc(elm);
+      dealoc(elmNg);
     }));
 
 
-    it('should override "required" when ng-required="false" is set', function() {
+    test('should override "required" when ng-required="false" is set', () => {
       var inputElm = helper.compileInput('<input type="text" ng-model="notDefined" required ng-required="false" />');
 
       expect(inputElm).toBeValid();
     });
 
 
-    it('should validate only once after compilation when inside ngRepeat', function() {
+    test('should validate only once after compilation when inside ngRepeat', () => {
       helper.compileInput(
          '<div ng-repeat="input in [0]">' +
            '<input type="text" ng-model="value" required validation-spy="required" />' +
@@ -715,7 +723,7 @@ describe('validators', function() {
     });
 
 
-    it('should validate only once after compilation when inside ngRepeat and ngRequired is true', function() {
+    test('should validate only once after compilation when inside ngRepeat and ngRequired is true', () => {
       $rootScope.isRequired = true;
 
       helper.compileInput(
@@ -727,7 +735,7 @@ describe('validators', function() {
     });
 
 
-    it('should validate only once after compilation when inside ngRepeat and ngRequired is false', function() {
+    test('should validate only once after compilation when inside ngRepeat and ngRequired is false', () => {
       $rootScope.isRequired = false;
 
       helper.compileInput(
@@ -739,7 +747,7 @@ describe('validators', function() {
     });
 
 
-    it('should validate once when inside ngRepeat, and set the "required" error when ngRequired is false by default', function() {
+    test('should validate once when inside ngRepeat, and set the "required" error when ngRequired is false by default', () => {
       $rootScope.isRequired = false;
       $rootScope.refs = {};
 
@@ -753,7 +761,7 @@ describe('validators', function() {
     });
 
 
-    it('should validate only once when inside ngIf with required on non-input elements', inject(function($compile) {
+    test('should validate only once when inside ngIf with required on non-input elements', angular.mock.inject(function($compile) {
       $rootScope.value = '12';
       $rootScope.refs = {};
       helper.compileInput('<div ng-if="true"><span ng-model="value" ng-ref="refs.ctrl" ng-ref-read="ngModel" required validation-spy="required"></span></div>');

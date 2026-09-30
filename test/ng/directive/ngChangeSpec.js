@@ -1,51 +1,50 @@
 'use strict';
 
 /* globals generateInputCompilerHelper: false */
-
-describe('ngChange', function() {
-
-  var helper = {}, $rootScope;
+ describe('ngChange', () => {
+  var helper = {};
+  var $rootScope;
 
   generateInputCompilerHelper(helper);
 
-  beforeEach(inject(function(_$rootScope_) {
+  beforeEach(angular.mock.inject(function(_$rootScope_) {
     $rootScope = _$rootScope_;
   }));
 
-  it('should $eval expression after new value is set in the model', function() {
+  test('should $eval expression after new value is set in the model', () => {
     helper.compileInput('<input type="text" ng-model="value" ng-change="change()" />');
 
-    $rootScope.change = jasmine.createSpy('change').and.callFake(function() {
+    $rootScope.change = jest.fn().mockName('change').mockImplementation(function() {
       expect($rootScope.value).toBe('new value');
     });
 
     helper.changeInputValueTo('new value');
-    expect($rootScope.change).toHaveBeenCalledOnce();
+    expect($rootScope.change).toHaveBeenCalledTimes(1);
   });
 
 
-  it('should not $eval the expression if changed from model', function() {
+  test('should not $eval the expression if changed from model', () => {
     helper.compileInput('<input type="text" ng-model="value" ng-change="change()" />');
 
-    $rootScope.change = jasmine.createSpy('change');
+    $rootScope.change = jest.fn().mockName('change');
     $rootScope.$apply('value = true');
 
     expect($rootScope.change).not.toHaveBeenCalled();
   });
 
 
-  it('should $eval ngChange expression on checkbox', function() {
+  test('should $eval ngChange expression on checkbox', () => {
     var inputElm = helper.compileInput('<input type="checkbox" ng-model="foo" ng-change="changeFn()">');
 
-    $rootScope.changeFn = jasmine.createSpy('changeFn');
+    $rootScope.changeFn = jest.fn().mockName('changeFn');
     expect($rootScope.changeFn).not.toHaveBeenCalled();
 
     browserTrigger(inputElm, 'click');
-    expect($rootScope.changeFn).toHaveBeenCalledOnce();
+    expect($rootScope.changeFn).toHaveBeenCalledTimes(1);
   });
 
 
-  it('should be able to change the model and via that also update the view', function() {
+  test('should be able to change the model and via that also update the view', () => {
     var inputElm = helper.compileInput('<input type="text" ng-model="value" ng-change="value=\'b\'" />');
 
     helper.changeInputValueTo('a');

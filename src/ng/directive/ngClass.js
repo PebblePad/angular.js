@@ -1,4 +1,3 @@
-'use strict';
 
 /* exported
   ngClassDirective,
@@ -13,7 +12,7 @@ function classDirective(name, selector) {
   return ['$parse', function($parse) {
     return {
       restrict: 'AC',
-      link: function(scope, element, attr) {
+      link(scope, element, attr) {
         var classCounts = element.data('$classCounts');
         var oldModulo = true;
         var oldClassString;

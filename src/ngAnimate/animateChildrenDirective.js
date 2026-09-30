@@ -1,4 +1,3 @@
-'use strict';
 
 /**
  * @ngdoc directive
@@ -80,7 +79,7 @@
  */
 var $$AnimateChildrenDirective = ['$interpolate', function($interpolate) {
   return {
-    link: function(scope, element, attrs) {
+    link(scope, element, attrs) {
       var val = attrs.ngAnimateChildren;
       if (isString(val) && val.length === 0) { //empty attribute
         element.data(NG_ANIMATE_CHILDREN_DATA, true);

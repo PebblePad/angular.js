@@ -1,4 +1,3 @@
-'use strict';
 
 var $intervalMinErr = minErr('$interval');
 

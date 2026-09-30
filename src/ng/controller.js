@@ -1,4 +1,3 @@
-'use strict';
 
 var $controllerMinErr = minErr('$controller');
 
@@ -89,7 +88,11 @@ function $ControllerProvider() {
       //                     callback is invoked.
       //   param `ident` --- An optional label which overrides the label parsed from the controller
       //                     expression, if any.
-      var instance, match, constructor, identifier;
+      var instance;
+
+      var match;
+      var constructor;
+      var identifier;
       later = later === true;
       if (ident && isString(ident)) {
         identifier = ident;

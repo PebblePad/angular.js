@@ -1,4 +1,3 @@
-'use strict';
 
 /**
  * Computes a hash of an 'obj'.
@@ -44,29 +43,29 @@ function NgMapShim() {
   this._lastIndex = -1;
 }
 NgMapShim.prototype = {
-  _idx: function(key) {
+  _idx(key) {
     if (key !== this._lastKey) {
       this._lastKey = key;
       this._lastIndex = this._keys.indexOf(key);
     }
     return this._lastIndex;
   },
-  _transformKey: function(key) {
+  _transformKey(key) {
     return isNumberNaN(key) ? nanKey : key;
   },
-  get: function(key) {
+  get(key) {
     key = this._transformKey(key);
     var idx = this._idx(key);
     if (idx !== -1) {
       return this._values[idx];
     }
   },
-  has: function(key) {
+  has(key) {
     key = this._transformKey(key);
     var idx = this._idx(key);
     return idx !== -1;
   },
-  set: function(key, value) {
+  set(key, value) {
     key = this._transformKey(key);
     var idx = this._idx(key);
     if (idx === -1) {
@@ -78,7 +77,7 @@ NgMapShim.prototype = {
     // Support: IE11
     // Do not `return this` to simulate the partial IE11 implementation
   },
-  delete: function(key) {
+  delete(key) {
     key = this._transformKey(key);
     var idx = this._idx(key);
     if (idx === -1) {

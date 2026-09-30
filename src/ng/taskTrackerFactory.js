@@ -1,4 +1,3 @@
-'use strict';
 
 /**
  * ! This is a private undocumented service !

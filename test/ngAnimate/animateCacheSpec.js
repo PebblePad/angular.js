@@ -1,15 +1,16 @@
 'use strict';
+ describe('ngAnimate $$animateCache', () => {
+  const getDomNode = (e) => (e instanceof angular.element) ? e[0] : e;
 
-describe('ngAnimate $$animateCache', function() {
-  beforeEach(module('ngAnimate'));
+  beforeEach(angular.mock.module('ngAnimate'));
 
-  it('should store the details in a lookup', inject(function($$animateCache) {
+  test('should store the details in a lookup', angular.mock.inject(function($$animateCache) {
     var data = { 'hello': 'there' };
     $$animateCache.put('key', data, true);
     expect($$animateCache.get('key')).toBe(data);
   }));
 
-  it('should update existing stored details in a lookup', inject(function($$animateCache) {
+  test('should update existing stored details in a lookup', angular.mock.inject(function($$animateCache) {
     var data = { 'hello': 'there' };
     $$animateCache.put('key', data, true);
 
@@ -18,11 +19,12 @@ describe('ngAnimate $$animateCache', function() {
     expect($$animateCache.get('key')).toBe(otherData);
   }));
 
-  it('should create a special cacheKey based on the element/parent and className relationship', inject(function($$animateCache) {
-    var cacheKey, elm = jqLite('<div></div>');
+  test('should create a special cacheKey based on the element/parent and className relationship', angular.mock.inject(function($$animateCache) {
+    var cacheKey;
+    var elm = angular.element('<div></div>');
     elm.addClass('one two');
 
-    var parent1 = jqLite('<div></div>');
+    var parent1 = angular.element('<div></div>');
     parent1.append(elm);
 
     cacheKey = $$animateCache.cacheKey(getDomNode(elm), 'event');
@@ -34,7 +36,7 @@ describe('ngAnimate $$animateCache', function() {
     cacheKey = $$animateCache.cacheKey(getDomNode(elm), 'event', 'add', 'remove');
     expect(cacheKey).toBe('1 event one two add remove');
 
-    var parent2 = jqLite('<div></div>');
+    var parent2 = angular.element('<div></div>');
     parent2.append(elm);
 
     cacheKey = $$animateCache.cacheKey(getDomNode(elm), 'event');
@@ -44,7 +46,7 @@ describe('ngAnimate $$animateCache', function() {
     expect(cacheKey).toBe('2 event one two three four');
   }));
 
-  it('should keep a count of how many times a cache key has been updated', inject(function($$animateCache) {
+  test('should keep a count of how many times a cache key has been updated', angular.mock.inject(function($$animateCache) {
     var data = { 'hello': 'there' };
     var key = 'key';
     expect($$animateCache.count(key)).toBe(0);
@@ -57,7 +59,7 @@ describe('ngAnimate $$animateCache', function() {
     expect($$animateCache.count(key)).toBe(2);
   }));
 
-  it('should flush the cache and the counters', inject(function($$animateCache) {
+  test('should flush the cache and the counters', angular.mock.inject(function($$animateCache) {
     $$animateCache.put('key1', { data: 'value' }, true);
     $$animateCache.put('key2', { data: 'value' }, true);
 
@@ -73,8 +75,8 @@ describe('ngAnimate $$animateCache', function() {
     expect($$animateCache.count('key2')).toBe(0);
   }));
 
-  describe('containsCachedAnimationWithoutDuration', function() {
-    it('should return false if the validity of a key is false', inject(function($$animateCache) {
+  describe('containsCachedAnimationWithoutDuration', () => {
+    test('should return false if the validity of a key is false', angular.mock.inject(function($$animateCache) {
       var validEntry = { someEssentialProperty: true };
       var invalidEntry = { someEssentialProperty: false };
 
@@ -85,7 +87,7 @@ describe('ngAnimate $$animateCache', function() {
       expect($$animateCache.containsCachedAnimationWithoutDuration('key2')).toBe(true);
     }));
 
-    it('should return false if the key does not exist in the cache', inject(function($$animateCache) {
+    test('should return false if the key does not exist in the cache', angular.mock.inject(function($$animateCache) {
       expect($$animateCache.containsCachedAnimationWithoutDuration('key2')).toBe(false);
 
       $$animateCache.put('key2', {}, false);

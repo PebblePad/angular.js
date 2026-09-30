@@ -1,4 +1,3 @@
-'use strict';
 
 /**
  * @ngdoc directive
@@ -30,73 +29,73 @@
  * @example
  * This example shows various combinations of `href`, `ng-href` and `ng-click` attributes
  * in links and their different behaviors:
-    <example name="ng-href">
-      <file name="index.html">
-        <input ng-model="value" /><br />
-        <a id="link-1" href ng-click="value = 1">link 1</a> (link, don't reload)<br />
-        <a id="link-2" href="" ng-click="value = 2">link 2</a> (link, don't reload)<br />
-        <a id="link-3" ng-href="/{{'123'}}">link 3</a> (link, reload!)<br />
-        <a id="link-4" href="" name="xx" ng-click="value = 4">anchor</a> (link, don't reload)<br />
-        <a id="link-5" name="xxx" ng-click="value = 5">anchor</a> (no link)<br />
-        <a id="link-6" ng-href="{{value}}">link</a> (link, change location)
-      </file>
-      <file name="protractor.js" type="protractor">
-        it('should execute ng-click but not reload when href without value', function() {
-          element(by.id('link-1')).click();
-          expect(element(by.model('value')).getAttribute('value')).toEqual('1');
-          expect(element(by.id('link-1')).getAttribute('href')).toBe('');
-        });
+ <example name="ng-href">
+ <file name="index.html">
+ <input ng-model="value" /><br />
+ <a id="link-1" href ng-click="value = 1">link 1</a> (link, don't reload)<br />
+ <a id="link-2" href="" ng-click="value = 2">link 2</a> (link, don't reload)<br />
+ <a id="link-3" ng-href="/{{'123'}}">link 3</a> (link, reload!)<br />
+ <a id="link-4" href="" name="xx" ng-click="value = 4">anchor</a> (link, don't reload)<br />
+ <a id="link-5" name="xxx" ng-click="value = 5">anchor</a> (no link)<br />
+ <a id="link-6" ng-href="{{value}}">link</a> (link, change location)
+ </file>
+ <file name="protractor.js" type="protractor">
+ it('should execute ng-click but not reload when href without value', function() {
+ element(by.id('link-1')).click();
+ expect(element(by.model('value')).getAttribute('value')).toEqual('1');
+ expect(element(by.id('link-1')).getAttribute('href')).toBe('');
+ });
 
-        it('should execute ng-click but not reload when href empty string', function() {
-          element(by.id('link-2')).click();
-          expect(element(by.model('value')).getAttribute('value')).toEqual('2');
-          expect(element(by.id('link-2')).getAttribute('href')).toBe('');
-        });
+ it('should execute ng-click but not reload when href empty string', function() {
+ element(by.id('link-2')).click();
+ expect(element(by.model('value')).getAttribute('value')).toEqual('2');
+ expect(element(by.id('link-2')).getAttribute('href')).toBe('');
+ });
 
-        it('should execute ng-click and change url when ng-href specified', function() {
-          expect(element(by.id('link-3')).getAttribute('href')).toMatch(/\/123$/);
+ it('should execute ng-click and change url when ng-href specified', function() {
+ expect(element(by.id('link-3')).getAttribute('href')).toMatch(/\/123$/);
 
-          element(by.id('link-3')).click();
+ element(by.id('link-3')).click();
 
-          // At this point, we navigate away from an AngularJS page, so we need
-          // to use browser.driver to get the base webdriver.
+ // At this point, we navigate away from an AngularJS page, so we need
+ // to use browser.driver to get the base webdriver.
 
-          browser.wait(function() {
-            return browser.driver.getCurrentUrl().then(function(url) {
-              return url.match(/\/123$/);
-            });
-          }, 5000, 'page should navigate to /123');
-        });
+ browser.wait(function() {
+ return browser.driver.getCurrentUrl().then(function(url) {
+ return url.match(/\/123$/);
+ });
+ }, 5000, 'page should navigate to /123');
+ });
 
-        it('should execute ng-click but not reload when href empty string and name specified', function() {
-          element(by.id('link-4')).click();
-          expect(element(by.model('value')).getAttribute('value')).toEqual('4');
-          expect(element(by.id('link-4')).getAttribute('href')).toBe('');
-        });
+ it('should execute ng-click but not reload when href empty string and name specified', function() {
+ element(by.id('link-4')).click();
+ expect(element(by.model('value')).getAttribute('value')).toEqual('4');
+ expect(element(by.id('link-4')).getAttribute('href')).toBe('');
+ });
 
-        it('should execute ng-click but not reload when no href but name specified', function() {
-          element(by.id('link-5')).click();
-          expect(element(by.model('value')).getAttribute('value')).toEqual('5');
-          expect(element(by.id('link-5')).getAttribute('href')).toBe(null);
-        });
+ it('should execute ng-click but not reload when no href but name specified', function() {
+ element(by.id('link-5')).click();
+ expect(element(by.model('value')).getAttribute('value')).toEqual('5');
+ expect(element(by.id('link-5')).getAttribute('href')).toBe(null);
+ });
 
-        it('should only change url when only ng-href', function() {
-          element(by.model('value')).clear();
-          element(by.model('value')).sendKeys('6');
-          expect(element(by.id('link-6')).getAttribute('href')).toMatch(/\/6$/);
+ it('should only change url when only ng-href', function() {
+ element(by.model('value')).clear();
+ element(by.model('value')).sendKeys('6');
+ expect(element(by.id('link-6')).getAttribute('href')).toMatch(/\/6$/);
 
-          element(by.id('link-6')).click();
+ element(by.id('link-6')).click();
 
-          // At this point, we navigate away from an AngularJS page, so we need
-          // to use browser.driver to get the base webdriver.
-          browser.wait(function() {
-            return browser.driver.getCurrentUrl().then(function(url) {
-              return url.match(/\/6$/);
-            });
-          }, 5000, 'page should navigate to /6');
-        });
-      </file>
-    </example>
+ // At this point, we navigate away from an AngularJS page, so we need
+ // to use browser.driver to get the base webdriver.
+ browser.wait(function() {
+ return browser.driver.getCurrentUrl().then(function(url) {
+ return url.match(/\/6$/);
+ });
+ }, 5000, 'page should navigate to /6');
+ });
+ </file>
+ </example>
  */
 
 /**
@@ -167,19 +166,19 @@
  * attribute. See the {@link guide/interpolation interpolation guide} for more info.
  *
  * @example
-    <example name="ng-disabled">
-      <file name="index.html">
-        <label>Click me to toggle: <input type="checkbox" ng-model="checked"></label><br/>
-        <button ng-model="button" ng-disabled="checked">Button</button>
-      </file>
-      <file name="protractor.js" type="protractor">
-        it('should toggle button', function() {
-          expect(element(by.css('button')).getAttribute('disabled')).toBeFalsy();
-          element(by.model('checked')).click();
-          expect(element(by.css('button')).getAttribute('disabled')).toBeTruthy();
-        });
-      </file>
-    </example>
+ <example name="ng-disabled">
+ <file name="index.html">
+ <label>Click me to toggle: <input type="checkbox" ng-model="checked"></label><br/>
+ <button ng-model="button" ng-disabled="checked">Button</button>
+ </file>
+ <file name="protractor.js" type="protractor">
+ it('should toggle button', function() {
+ expect(element(by.css('button')).getAttribute('disabled')).toBeFalsy();
+ element(by.model('checked')).click();
+ expect(element(by.css('button')).getAttribute('disabled')).toBeTruthy();
+ });
+ </file>
+ </example>
  *
  * @param {expression} ngDisabled If the {@link guide/expression expression} is truthy,
  *     then the `disabled` attribute will be set on the element
@@ -202,19 +201,19 @@
  * attribute. See the {@link guide/interpolation interpolation guide} for more info.
  *
  * @example
-    <example name="ng-checked">
-      <file name="index.html">
-        <label>Check me to check both: <input type="checkbox" ng-model="leader"></label><br/>
-        <input id="checkFollower" type="checkbox" ng-checked="leader" aria-label="Follower input">
-      </file>
-      <file name="protractor.js" type="protractor">
-        it('should check both checkBoxes', function() {
-          expect(element(by.id('checkFollower')).getAttribute('checked')).toBeFalsy();
-          element(by.model('leader')).click();
-          expect(element(by.id('checkFollower')).getAttribute('checked')).toBeTruthy();
-        });
-      </file>
-    </example>
+ <example name="ng-checked">
+ <file name="index.html">
+ <label>Check me to check both: <input type="checkbox" ng-model="leader"></label><br/>
+ <input id="checkFollower" type="checkbox" ng-checked="leader" aria-label="Follower input">
+ </file>
+ <file name="protractor.js" type="protractor">
+ it('should check both checkBoxes', function() {
+ expect(element(by.id('checkFollower')).getAttribute('checked')).toBeFalsy();
+ element(by.model('leader')).click();
+ expect(element(by.id('checkFollower')).getAttribute('checked')).toBeTruthy();
+ });
+ </file>
+ </example>
  *
  * @element INPUT
  * @param {expression} ngChecked If the {@link guide/expression expression} is truthy,
@@ -238,19 +237,19 @@
  * attribute. See the {@link guide/interpolation interpolation guide} for more info.
  *
  * @example
-    <example name="ng-readonly">
-      <file name="index.html">
-        <label>Check me to make text readonly: <input type="checkbox" ng-model="checked"></label><br/>
-        <input type="text" ng-readonly="checked" value="I'm AngularJS" aria-label="Readonly field" />
-      </file>
-      <file name="protractor.js" type="protractor">
-        it('should toggle readonly attr', function() {
-          expect(element(by.css('[type="text"]')).getAttribute('readonly')).toBeFalsy();
-          element(by.model('checked')).click();
-          expect(element(by.css('[type="text"]')).getAttribute('readonly')).toBeTruthy();
-        });
-      </file>
-    </example>
+ <example name="ng-readonly">
+ <file name="index.html">
+ <label>Check me to make text readonly: <input type="checkbox" ng-model="checked"></label><br/>
+ <input type="text" ng-readonly="checked" value="I'm AngularJS" aria-label="Readonly field" />
+ </file>
+ <file name="protractor.js" type="protractor">
+ it('should toggle readonly attr', function() {
+ expect(element(by.css('[type="text"]')).getAttribute('readonly')).toBeFalsy();
+ element(by.model('checked')).click();
+ expect(element(by.css('[type="text"]')).getAttribute('readonly')).toBeTruthy();
+ });
+ </file>
+ </example>
  *
  * @element INPUT
  * @param {expression} ngReadonly If the {@link guide/expression expression} is truthy,
@@ -279,22 +278,22 @@
  * </div>
  *
  * @example
-    <example name="ng-selected">
-      <file name="index.html">
-        <label>Check me to select: <input type="checkbox" ng-model="selected"></label><br/>
-        <select aria-label="ngSelected demo">
-          <option>Hello!</option>
-          <option id="greet" ng-selected="selected">Greetings!</option>
-        </select>
-      </file>
-      <file name="protractor.js" type="protractor">
-        it('should select Greetings!', function() {
-          expect(element(by.id('greet')).getAttribute('selected')).toBeFalsy();
-          element(by.model('selected')).click();
-          expect(element(by.id('greet')).getAttribute('selected')).toBeTruthy();
-        });
-      </file>
-    </example>
+ <example name="ng-selected">
+ <file name="index.html">
+ <label>Check me to select: <input type="checkbox" ng-model="selected"></label><br/>
+ <select aria-label="ngSelected demo">
+ <option>Hello!</option>
+ <option id="greet" ng-selected="selected">Greetings!</option>
+ </select>
+ </file>
+ <file name="protractor.js" type="protractor">
+ it('should select Greetings!', function() {
+ expect(element(by.id('greet')).getAttribute('selected')).toBeFalsy();
+ element(by.model('selected')).click();
+ expect(element(by.id('greet')).getAttribute('selected')).toBeTruthy();
+ });
+ </file>
+ </example>
  *
  * @element OPTION
  * @param {expression} ngSelected If the {@link guide/expression expression} is truthy,
@@ -320,26 +319,26 @@
  * recommended to use {@link ng.ngShow} and {@link ng.ngHide} instead.
  *
  * @example
-     <example name="ng-open">
-       <file name="index.html">
-         <label>Toggle details: <input type="checkbox" ng-model="open"></label><br/>
-         <details id="details" ng-open="open">
-            <summary>List</summary>
-            <ul>
-              <li>Apple</li>
-              <li>Orange</li>
-              <li>Durian</li>
-            </ul>
-         </details>
-       </file>
-       <file name="protractor.js" type="protractor">
-         it('should toggle open', function() {
-           expect(element(by.id('details')).getAttribute('open')).toBeFalsy();
-           element(by.model('open')).click();
-           expect(element(by.id('details')).getAttribute('open')).toBeTruthy();
-         });
-       </file>
-     </example>
+ <example name="ng-open">
+ <file name="index.html">
+ <label>Toggle details: <input type="checkbox" ng-model="open"></label><br/>
+ <details id="details" ng-open="open">
+ <summary>List</summary>
+ <ul>
+ <li>Apple</li>
+ <li>Orange</li>
+ <li>Durian</li>
+ </ul>
+ </details>
+ </file>
+ <file name="protractor.js" type="protractor">
+ it('should toggle open', function() {
+ expect(element(by.id('details')).getAttribute('open')).toBeFalsy();
+ element(by.model('open')).click();
+ expect(element(by.id('details')).getAttribute('open')).toBeTruthy();
+ });
+ </file>
+ </example>
  *
  * @element DETAILS
  * @param {expression} ngOpen If the {@link guide/expression expression} is truthy,
@@ -350,99 +349,92 @@ var ngAttributeAliasDirectives = {};
 
 // boolean attrs are evaluated
 forEach(BOOLEAN_ATTR, function(propName, attrName) {
-  // binding to multiple is not supported
-  if (propName === 'multiple') return;
+    // binding to multiple is not supported
+    if (propName === 'multiple') return;
 
-  function defaultLinkFn(scope, element, attr) {
-    scope.$watch(attr[normalized], function ngBooleanAttrWatchAction(value) {
-      attr.$set(attrName, !!value);
-    });
-  }
+    function defaultLinkFn(scope, element, attr) {
+        scope.$watch(attr[normalized], function ngBooleanAttrWatchAction(value) {
+            attr.$set(attrName, !!value);
+        });
+    }
 
-  var normalized = directiveNormalize('ng-' + attrName);
-  var linkFn = defaultLinkFn;
+    var normalized = directiveNormalize('ng-' + attrName);
+    var linkFn = defaultLinkFn;
 
-  if (propName === 'checked') {
-    linkFn = function(scope, element, attr) {
-      // ensuring ngChecked doesn't interfere with ngModel when both are set on the same input
-      if (attr.ngModel !== attr[normalized]) {
-        defaultLinkFn(scope, element, attr);
-      }
+    if (propName === 'checked') {
+        linkFn = function(scope, element, attr) {
+            // ensuring ngChecked doesn't interfere with ngModel when both are set on the same input
+            if (attr.ngModel !== attr[normalized]) {
+                defaultLinkFn(scope, element, attr);
+            }
+        };
+    }
+
+    ngAttributeAliasDirectives[normalized] = function() {
+        return {
+            restrict: 'A',
+            priority: 100,
+            link: linkFn
+        };
     };
-  }
-
-  ngAttributeAliasDirectives[normalized] = function() {
-    return {
-      restrict: 'A',
-      priority: 100,
-      link: linkFn
-    };
-  };
 });
 
 // aliased input attrs are evaluated
 forEach(ALIASED_ATTR, function(htmlAttr, ngAttr) {
-  ngAttributeAliasDirectives[ngAttr] = function() {
-    return {
-      priority: 100,
-      link: function(scope, element, attr) {
-        //special case ngPattern when a literal regular expression value
-        //is used as the expression (this way we don't have to watch anything).
-        if (ngAttr === 'ngPattern' && attr.ngPattern.charAt(0) === '/') {
-          var match = attr.ngPattern.match(REGEX_STRING_REGEXP);
-          if (match) {
-            attr.$set('ngPattern', new RegExp(match[1], match[2]));
-            return;
-          }
-        }
+    ngAttributeAliasDirectives[ngAttr] = function() {
+        return {
+            priority: 100,
+            link(scope, element, attr) {
+                //special case ngPattern when a literal regular expression value
+                //is used as the expression (this way we don't have to watch anything).
+                if (ngAttr === 'ngPattern' && attr.ngPattern.charAt(0) === '/') {
+                    var match = attr.ngPattern.match(REGEX_STRING_REGEXP);
+                    if (match) {
+                        attr.$set('ngPattern', new RegExp(match[1], match[2]));
+                        return;
+                    }
+                }
 
-        scope.$watch(attr[ngAttr], function ngAttrAliasWatchAction(value) {
-          attr.$set(ngAttr, value);
-        });
-      }
+                scope.$watch(attr[ngAttr], function ngAttrAliasWatchAction(value) {
+                    attr.$set(ngAttr, value);
+                });
+            }
+        };
     };
-  };
 });
 
 // ng-src, ng-srcset, ng-href are interpolated
 forEach(['src', 'srcset', 'href'], function(attrName) {
-  var normalized = directiveNormalize('ng-' + attrName);
-  ngAttributeAliasDirectives[normalized] = ['$sce', function($sce) {
-    return {
-      priority: 99, // it needs to run after the attributes are interpolated
-      link: function(scope, element, attr) {
-        var propName = attrName,
-            name = attrName;
+    var normalized = directiveNormalize('ng-' + attrName);
+    ngAttributeAliasDirectives[normalized] = ['$sce', function($sce) {
+        return {
+            priority: 99, // it needs to run after the attributes are interpolated
+            link(scope, element, attr) {
+                var propName = attrName;
+                var name = attrName;
 
-        if (attrName === 'href' &&
-            toString.call(element.prop('href')) === '[object SVGAnimatedString]') {
-          name = 'xlinkHref';
-          attr.$attr[name] = 'xlink:href';
-          propName = null;
-        }
+                if (attrName === 'href' &&
+                    toString.call(element.prop('href')) === '[object SVGAnimatedString]') {
+                    name = 'xlinkHref';
+                    attr.$attr[name] = 'xlink:href';
+                    propName = null;
+                }
 
-        // We need to sanitize the url at least once, in case it is a constant
-        // non-interpolated attribute.
-        attr.$set(normalized, $sce.getTrustedMediaUrl(attr[normalized]));
+                // We need to sanitize the url at least once, in case it is a constant
+                // non-interpolated attribute.
+                attr.$set(normalized, $sce.getTrustedMediaUrl(attr[normalized]));
 
-        attr.$observe(normalized, function(value) {
-          if (!value) {
-            if (attrName === 'href') {
-              attr.$set(name, null);
+                attr.$observe(normalized, function(value) {
+                    if (!value) {
+                        if (attrName === 'href') {
+                            attr.$set(name, null);
+                        }
+                        return;
+                    }
+
+                    attr.$set(name, value);
+                });
             }
-            return;
-          }
-
-          attr.$set(name, value);
-
-          // Support: IE 9-11 only
-          // On IE, if "ng:src" directive declaration is used and "src" attribute doesn't exist
-          // then calling element.setAttribute('src', 'foo') doesn't do anything, so we need
-          // to set the property as well to achieve the desired effect.
-          // We use attr[attrName] value since $set might have sanitized the url.
-          if (msie && propName) element.prop(propName, attr[name]);
-        });
-      }
-    };
-  }];
+        };
+    }];
 });

@@ -1,23 +1,22 @@
 'use strict';
-
-describe('urlUtils', function() {
-  describe('urlResolve', function() {
-    it('should returned already parsed URLs unchanged', function() {
-      var urlObj = urlResolve('/foo?bar=baz#qux');
-      expect(urlResolve(urlObj)).toBe(urlObj);
-      expect(urlResolve(true)).toBe(true);
-      expect(urlResolve(null)).toBeNull();
-      expect(urlResolve(undefined)).toBeUndefined();
+ describe('urlUtils', () => {
+  describe('urlResolve', () => {
+    test('should returned already parsed URLs unchanged', () => {
+      var urlObj = ngInternals.urlResolve('/foo?bar=baz#qux');
+      expect(ngInternals.urlResolve(urlObj)).toBe(urlObj);
+      expect(ngInternals.urlResolve(true)).toBe(true);
+      expect(ngInternals.urlResolve(null)).toBeNull();
+      expect(ngInternals.urlResolve(undefined)).toBeUndefined();
     });
 
 
-    it('should normalize a relative url', function() {
-      expect(urlResolve('foo').href).toMatch(/^https?:\/\/[^/]+\/foo$/);
+    test('should normalize a relative url', () => {
+      expect(ngInternals.urlResolve('foo').href).toMatch(/^https?:\/\/[^/]+\/foo$/);
     });
 
 
-    it('should parse relative URL into component pieces', function() {
-      var parsed = urlResolve('foo');
+    test('should parse relative URL into component pieces', () => {
+      var parsed = ngInternals.urlResolve('foo');
       expect(parsed.href).toMatch(/https?:\/\//);
       expect(parsed.protocol).toMatch(/^https?/);
       expect(parsed.host).not.toBe('');
@@ -26,44 +25,44 @@ describe('urlUtils', function() {
     });
 
 
-    it('should return pathname as / if empty path provided', function() {
+    test('should return pathname as / if empty path provided', () => {
       // IE (all versions) counts / as empty, necessary to use / so that pathname is not context.html
-      var parsed = urlResolve('/');
+      var parsed = ngInternals.urlResolve('/');
       expect(parsed.pathname).toBe('/');
     });
 
-    it('should return an IPv6 hostname wrapped in brackets', function() {
+    test('should return an IPv6 hostname wrapped in brackets', () => {
       // Support: IE 9-11 only, Edge 16-17 only (fixed in 18 Preview)
       // IE/Edge don't wrap IPv6 addresses' hostnames in square brackets
       // when parsed out of an anchor element.
-      var parsed = urlResolve('http://[::1]/');
+      var parsed = ngInternals.urlResolve('http://[::1]/');
       expect(parsed.hostname).toBe('[::1]');
     });
 
-    it('should not put the domain in brackets for the hostname field', function() {
-      var parsed = urlResolve('https://google.com/');
+    test('should not put the domain in brackets for the hostname field', () => {
+      var parsed = ngInternals.urlResolve('https://google.com/');
       expect(parsed.hostname).toBe('google.com');
     });
   });
 
 
-  describe('urlIsSameOrigin and urlIsSameOriginAsBaseUrl', function() {
-    it('should support various combinations of urls - both string and parsed',
-      inject(function($document) {
+  describe('urlIsSameOrigin and urlIsSameOriginAsBaseUrl', () => {
+    test('should support various combinations of urls - both string and parsed',
+      angular.mock.inject(function($document) {
         function expectIsSameOrigin(url, expectedValue) {
-          expect(urlIsSameOrigin(url)).toBe(expectedValue);
-          expect(urlIsSameOrigin(urlResolve(url))).toBe(expectedValue);
+          expect(ngInternals.urlIsSameOrigin(url)).toBe(expectedValue);
+          expect(ngInternals.urlIsSameOrigin(ngInternals.urlResolve(url))).toBe(expectedValue);
 
-          // urlIsSameOriginAsBaseUrl() should behave the same as urlIsSameOrigin() by default.
+          // urlIsSameOriginAsBaseUrl() should behave the same as ngInternals.urlIsSameOrigin() by default.
           // Behavior when there is a non-default base URL or when the base URL changes dynamically
           // is tested in the end-to-end tests in e2e/tests/base-tag.spec.js.
-          expect(urlIsSameOriginAsBaseUrl(url)).toBe(expectedValue);
-          expect(urlIsSameOriginAsBaseUrl(urlResolve(url))).toBe(expectedValue);
+          expect(ngInternals.urlIsSameOriginAsBaseUrl(url)).toBe(expectedValue);
+          expect(ngInternals.urlIsSameOriginAsBaseUrl(ngInternals.urlResolve(url))).toBe(expectedValue);
         }
 
         expectIsSameOrigin('path', true);
 
-        var origin = urlResolve($document[0].location.href);
+        var origin = ngInternals.urlResolve($document[0].location.href);
         expectIsSameOrigin('//' + origin.host + '/path', true);
 
         // Different domain.
@@ -80,24 +79,24 @@ describe('urlUtils', function() {
   });
 
 
-  describe('urlIsAllowedOriginFactory', function() {
-    var origin = urlResolve(window.location.href);
+  describe('urlIsAllowedOriginFactory', () => {
+    var origin = ngInternals.urlResolve(window.location.href);
     var urlIsAllowedOrigin;
 
-    beforeEach(function() {
-      urlIsAllowedOrigin = urlIsAllowedOriginFactory([
+     beforeEach(() => {
+      urlIsAllowedOrigin = ngInternals.urlIsAllowedOriginFactory([
         'https://foo.com/',
         origin.protocol + '://bar.com:1337/'
       ]);
     });
 
 
-    it('should implicitly allow the current origin', function() {
+    test('should implicitly allow the current origin', () => {
       expect(urlIsAllowedOrigin('path')).toBe(true);
     });
 
 
-    it('should check against the list of trusted origins', function() {
+    test('should check against the list of trusted origins', () => {
       expect(urlIsAllowedOrigin('https://foo.com/path')).toBe(true);
       expect(urlIsAllowedOrigin(origin.protocol + '://bar.com:1337/path')).toBe(true);
       expect(urlIsAllowedOrigin('https://baz.com:1337/path')).toBe(false);
@@ -105,15 +104,15 @@ describe('urlUtils', function() {
     });
 
 
-    it('should support both strings and parsed URL objects', function() {
+    test('should support both strings and parsed URL objects', () => {
       expect(urlIsAllowedOrigin('path')).toBe(true);
-      expect(urlIsAllowedOrigin(urlResolve('path'))).toBe(true);
+      expect(urlIsAllowedOrigin(ngInternals.urlResolve('path'))).toBe(true);
       expect(urlIsAllowedOrigin('https://foo.com/path')).toBe(true);
-      expect(urlIsAllowedOrigin(urlResolve('https://foo.com/path'))).toBe(true);
+      expect(urlIsAllowedOrigin(ngInternals.urlResolve('https://foo.com/path'))).toBe(true);
     });
 
 
-    it('should return true only if the origins (protocol, hostname, post) match', function() {
+    test('should return true only if the origins (protocol, hostname, post) match', () => {
       var differentProtocol = (origin.protocol !== 'http') ? 'http' : 'https';
       var differentPort = (parseInt(origin.port, 10) || 0) + 1;
       var url;

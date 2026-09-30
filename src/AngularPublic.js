@@ -1,4 +1,3 @@
-'use strict';
 
 /* global angularModule: true,
   version: true,
@@ -123,7 +122,7 @@ var version = {
   major: 'NG_VERSION_MAJOR',
   minor: 'NG_VERSION_MINOR',
   dot: 'NG_VERSION_DOT',
-  codeName: '"NG_VERSION_CODENAME"'
+  codeName: 'ultimate-farewell'
 };
 
 
@@ -132,6 +131,7 @@ function publishExternalAPI(angular) {
     'errorHandlingConfig': errorHandlingConfig,
     'bootstrap': bootstrap,
     'copy': copy,
+    'shallowCopy': shallowCopy,
     'extend': extend,
     'merge': merge,
     'equals': equals,
@@ -152,7 +152,9 @@ function publishExternalAPI(angular) {
     'isElement': isElement,
     'isArray': isArray,
     'version': version,
+    'isRegExp': isRegExp,
     'isDate': isDate,
+    'includes': includes,
     'callbacks': {$$counter: 0},
     'getTestability': getTestability,
     'reloadWithDebugInfo': reloadWithDebugInfo,

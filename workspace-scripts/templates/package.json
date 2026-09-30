@@ -1,0 +1,16 @@
+{
+  "name": "",
+  "description": "",
+  "version": "",
+  "license": "MIT",
+  "author": "Angular Core Team <angular-core+npm@google.com>",
+  "contributors": [
+    "Chris Rowe <chris@pebblepad.co.uk>",
+    "Alister Stevens <alister@pebblepad.co.uk>"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/PebblePad/angular.js.git"
+  },
+  "main": ""
+}

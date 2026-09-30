@@ -1,69 +1,68 @@
 'use strict';
-
-describe('ngAnimate $$animateJs', function() {
-
-  beforeEach(module('ngAnimate'));
-  beforeEach(module('ngAnimateMock'));
+ describe('ngAnimate $$animateJs', () => {
+  var enterMoveEvents = ['enter', 'move'];
+  beforeEach(angular.mock.module('ngAnimate'));
+  beforeEach(angular.mock.module('ngAnimateMock'));
 
   function getDoneFunction(args) {
     for (var i = 1; i < args.length; i++) {
       var a = args[i];
-      if (isFunction(a)) return a;
+      if (angular.isFunction(a)) return a;
     }
   }
 
-  it('should return nothing if no animations are registered at all', inject(function($$animateJs) {
-    var element = jqLite('<div></div>');
+  test('should return nothing if no animations are registered at all', angular.mock.inject(function($$animateJs) {
+    var element = angular.element('<div></div>');
     expect($$animateJs(element, 'enter')).toBeFalsy();
   }));
 
-  it('should return nothing if no matching animations classes are found', function() {
-    module(function($animateProvider) {
+  test('should return nothing if no matching animations classes are found', () => {
+    angular.mock.module(function($animateProvider) {
       $animateProvider.register('.foo', function() {
-        return { enter: noop };
+        return { enter: angular.noop };
       });
     });
-    inject(function($$animateJs) {
-      var element = jqLite('<div class="bar"></div>');
+    angular.mock.inject(function($$animateJs) {
+      var element = angular.element('<div class="bar"></div>');
       expect($$animateJs(element, 'enter')).toBeFalsy();
     });
   });
 
-  it('should return nothing if a matching animation class is found, but not a matching event', function() {
-    module(function($animateProvider) {
+  test('should return nothing if a matching animation class is found, but not a matching event', () => {
+    angular.mock.module(function($animateProvider) {
       $animateProvider.register('.foo', function() {
-        return { enter: noop };
+        return { enter: angular.noop };
       });
     });
-    inject(function($$animateJs) {
-      var element = jqLite('<div class="foo"></div>');
+    angular.mock.inject(function($$animateJs) {
+      var element = angular.element('<div class="foo"></div>');
       expect($$animateJs(element, 'leave')).toBeFalsy();
     });
   });
 
-  it('should return a truthy value if a matching animation class and event are found', function() {
-    module(function($animateProvider) {
+  test('should return a truthy value if a matching animation class and event are found', () => {
+    angular.mock.module(function($animateProvider) {
       $animateProvider.register('.foo', function() {
-        return { enter: noop };
+        return { enter: angular.noop };
       });
     });
-    inject(function($$animateJs) {
-      var element = jqLite('<div class="foo"></div>');
+    angular.mock.inject(function($$animateJs) {
+      var element = angular.element('<div class="foo"></div>');
       expect($$animateJs(element, 'enter')).toBeTruthy();
     });
   });
 
-  it('should strictly query for the animation based on the classes value if passed in', function() {
-    module(function($animateProvider) {
+  test('should strictly query for the animation based on the classes value if passed in', () => {
+    angular.mock.module(function($animateProvider) {
       $animateProvider.register('.superman', function() {
-        return { enter: noop };
+        return { enter: angular.noop };
       });
       $animateProvider.register('.batman', function() {
-        return { leave: noop };
+        return { leave: angular.noop };
       });
     });
-    inject(function($$animateJs) {
-      var element = jqLite('<div class="batman"></div>');
+    angular.mock.inject(function($$animateJs) {
+      var element = angular.element('<div class="batman"></div>');
       expect($$animateJs(element, 'enter', 'superman')).toBeTruthy();
       expect($$animateJs(element, 'leave', 'legoman batman')).toBeTruthy();
       expect($$animateJs(element, 'enter', 'legoman')).toBeFalsy();
@@ -71,7 +70,7 @@ describe('ngAnimate $$animateJs', function() {
     });
   });
 
-  it('should run multiple animations in parallel', function() {
+  test('should run multiple animations in parallel', () => {
     var doneCallbacks = [];
     function makeAnimation(event) {
       return function() {
@@ -82,20 +81,20 @@ describe('ngAnimate $$animateJs', function() {
         return data;
       };
     }
-    module(function($animateProvider) {
+    angular.mock.module(function($animateProvider) {
       $animateProvider.register('.one', makeAnimation('enter'));
       $animateProvider.register('.two', makeAnimation('enter'));
       $animateProvider.register('.three', makeAnimation('enter'));
     });
-    inject(function($$animateJs, $animate) {
-      var element = jqLite('<div class="one two three"></div>');
+    angular.mock.inject(function($$animateJs, $animate) {
+      var element = angular.element('<div class="one two three"></div>');
       var animator = $$animateJs(element, 'enter');
       var complete = false;
       animator.start().done(function() {
         complete = true;
       });
       expect(doneCallbacks.length).toBe(3);
-      forEach(doneCallbacks, function(cb) {
+      angular.forEach(doneCallbacks, function(cb) {
         cb();
       });
       $animate.flush();
@@ -103,13 +102,14 @@ describe('ngAnimate $$animateJs', function() {
     });
   });
 
-  they('should $prop the animation when runner.$prop() is called', ['end', 'cancel'], function(method) {
+  test.each(['end', 'cancel'].map((prop) => ({ prop })))(
+      'should $prop the animation when runner.$prop() is called', function({ prop: method }) {
     var ended = false;
     var status;
-    module(function($animateProvider) {
+    angular.mock.module(function($animateProvider) {
       $animateProvider.register('.the-end', function() {
         return {
-          enter: function() {
+          enter() {
             return function(cancelled) {
               ended = true;
               status = cancelled ? 'cancel' : 'end';
@@ -118,12 +118,12 @@ describe('ngAnimate $$animateJs', function() {
         };
       });
     });
-    inject(function($$animateJs) {
-      var element = jqLite('<div class="the-end"></div>');
+    angular.mock.inject(function($$animateJs) {
+      var element = angular.element('<div class="the-end"></div>');
       var animator = $$animateJs(element, 'enter');
       var runner = animator.start();
 
-      expect(isFunction(runner[method])).toBe(true);
+      expect(angular.isFunction(runner[method])).toBe(true);
 
       expect(ended).toBeFalsy();
       runner[method]();
@@ -132,15 +132,15 @@ describe('ngAnimate $$animateJs', function() {
     });
   });
 
-  they('should $prop all of the running the animations when runner.$prop() is called',
-    ['end', 'cancel'], function(method) {
+  test.each(['end', 'cancel'].map((prop) => ({ prop })))(
+      'should $prop all of the running the animations when runner.$prop() is called', function({ prop: method }) {
 
     var lookup = {};
-    module(function($animateProvider) {
-      forEach(['one','two','three'], function(klass) {
+    angular.mock.module(function($animateProvider) {
+      angular.forEach(['one','two','three'], function(klass) {
         $animateProvider.register('.' + klass, function() {
           return {
-            enter: function() {
+            enter() {
               return function(cancelled) {
                 lookup[klass] = cancelled ? 'cancel' : 'end';
               };
@@ -149,8 +149,8 @@ describe('ngAnimate $$animateJs', function() {
         });
       });
     });
-    inject(function($$animateJs) {
-      var element = jqLite('<div class="one two three"></div>');
+    angular.mock.inject(function($$animateJs) {
+      var element = angular.element('<div class="one two three"></div>');
       var animator = $$animateJs(element, 'enter');
       var runner = animator.start();
 
@@ -161,13 +161,14 @@ describe('ngAnimate $$animateJs', function() {
     });
   });
 
-  they('should only run the $prop operation once', ['end', 'cancel'], function(method) {
+  test.each(['end', 'cancel'].map((prop) => ({ prop })))(
+      'should only run the $prop operation once', function({ prop: method }) {
     var ended = false;
     var count = 0;
-    module(function($animateProvider) {
+    angular.mock.module(function($animateProvider) {
       $animateProvider.register('.the-end', function() {
         return {
-          enter: function() {
+          enter() {
             return function(cancelled) {
               ended = true;
               count++;
@@ -176,12 +177,12 @@ describe('ngAnimate $$animateJs', function() {
         };
       });
     });
-    inject(function($$animateJs) {
-      var element = jqLite('<div class="the-end"></div>');
+    angular.mock.inject(function($$animateJs) {
+      var element = angular.element('<div class="the-end"></div>');
       var animator = $$animateJs(element, 'enter');
       var runner = animator.start();
 
-      expect(isFunction(runner[method])).toBe(true);
+      expect(angular.isFunction(runner[method])).toBe(true);
 
       expect(ended).toBeFalsy();
       runner[method]();
@@ -193,22 +194,24 @@ describe('ngAnimate $$animateJs', function() {
     });
   });
 
-  it('should always run the provided animation in atleast one RAF frame if defined', function() {
-    var before, after, endCalled;
-    module(function($animateProvider) {
+  test('should always run the provided animation in atleast one RAF frame if defined', () => {
+    var before;
+    var after;
+    var endCalled;
+    angular.mock.module(function($animateProvider) {
       $animateProvider.register('.the-end', function() {
         return {
-          beforeAddClass: function(element, className, done) {
+          beforeAddClass(element, className, done) {
             before = done;
           },
-          addClass: function(element, className, done) {
+          addClass(element, className, done) {
             after = done;
           }
         };
       });
     });
-    inject(function($$animateJs, $animate) {
-      var element = jqLite('<div class="the-end"></div>');
+    angular.mock.inject(function($$animateJs, $animate) {
+      var element = angular.element('<div class="the-end"></div>');
       var animator = $$animateJs(element, 'addClass', {
         addClass: 'red'
       });
@@ -232,18 +235,19 @@ describe('ngAnimate $$animateJs', function() {
     });
   });
 
-  they('should still run the associated DOM event when the $prop function is run but no more animations', ['cancel', 'end'], function(method) {
+  test.each(['cancel', 'end'].map((prop) => ({ prop })))(
+      'should still run the associated DOM event when the $prop function is run but no more animations', function({ prop: method }) {
     var log = [];
-    module(function($animateProvider) {
+    angular.mock.module(function($animateProvider) {
       $animateProvider.register('.the-end', function() {
         return {
-          beforeAddClass: function() {
+          beforeAddClass() {
             return function(cancelled) {
               var status = cancelled ? 'cancel' : 'end';
               log.push('before addClass ' + status);
             };
           },
-          addClass: function() {
+          addClass() {
             return function(cancelled) {
               var status = cancelled ? 'cancel' : 'end';
               log.push('after addClass' + status);
@@ -252,10 +256,10 @@ describe('ngAnimate $$animateJs', function() {
         };
       });
     });
-    inject(function($$animateJs, $animate) {
-      var element = jqLite('<div class="the-end"></div>');
+    angular.mock.inject(function($$animateJs, $animate) {
+      var element = angular.element('<div class="the-end"></div>');
       var animator = $$animateJs(element, 'addClass', {
-        domOperation: function() {
+        domOperation() {
           log.push('dom addClass');
         }
       });
@@ -273,14 +277,14 @@ describe('ngAnimate $$animateJs', function() {
     });
   });
 
-  it('should resolve the promise when end() is called', function() {
-    module(function($animateProvider) {
+  test('should resolve the promise when end() is called', () => {
+    angular.mock.module(function($animateProvider) {
       $animateProvider.register('.the-end', function() {
-        return { beforeAddClass: noop };
+        return { beforeAddClass: angular.noop };
       });
     });
-    inject(function($$animateJs, $animate, $rootScope) {
-      var element = jqLite('<div class="the-end"></div>');
+    angular.mock.inject(function($$animateJs, $animate, $rootScope) {
+      var element = angular.element('<div class="the-end"></div>');
       var animator = $$animateJs(element, 'addClass');
       var runner = animator.start();
       var done = false;
@@ -299,14 +303,14 @@ describe('ngAnimate $$animateJs', function() {
     });
   });
 
-  it('should reject the promise when cancel() is called', function() {
-    module(function($animateProvider) {
+  test('should reject the promise when cancel() is called', () => {
+    angular.mock.module(function($animateProvider) {
       $animateProvider.register('.the-end', function() {
-        return { beforeAddClass: noop };
+        return { beforeAddClass: angular.noop };
       });
     });
-    inject(function($$animateJs, $animate, $rootScope) {
-      var element = jqLite('<div class="the-end"></div>');
+    angular.mock.inject(function($$animateJs, $animate, $rootScope) {
+      var element = angular.element('<div class="the-end"></div>');
       var animator = $$animateJs(element, 'addClass');
       var runner = animator.start();
       var done = false;
@@ -325,10 +329,13 @@ describe('ngAnimate $$animateJs', function() {
     });
   });
 
-  describe('events', function() {
-    var animations, runAnimation, element, log;
-    beforeEach(module(function($animateProvider) {
-      element = jqLite('<div class="test-animation"></div>');
+  describe('events', () => {
+    var animations;
+    var runAnimation;
+    var element;
+    var log;
+    beforeEach(angular.mock.module(function($animateProvider) {
+      element = angular.element('<div class="test-animation"></div>');
       animations = {};
       log = [];
 
@@ -338,55 +345,41 @@ describe('ngAnimate $$animateJs', function() {
 
       return function($$animateJs) {
         runAnimation = function(method, done, error, options) {
-          options = extend(options || {}, {
-            domOperation: function() {
+          options = angular.extend(options || {}, {
+            domOperation() {
               log.push('dom ' + method);
             }
           });
 
           var driver = $$animateJs(element, method, 'test-animation', options);
           driver.start().done(function(status) {
-            ((status ? done : error) || noop)();
+            ((status ? done : error) || angular.noop)();
           });
         };
       };
     }));
 
-    they('$prop should have the function signature of (element, done, options) for the after animation',
-      ['enter', 'move', 'leave'], function(event) {
-      inject(function() {
+    test.each(['enter', 'move', 'leave'].map((prop) => ({ prop })))(
+        '$prop should have the function signature of (element, done, options) for the after animation', function({ prop: event }) {
+      angular.mock.inject(function() {
         var args;
         var animationOptions = {};
         animationOptions.foo = 'bar';
         animations[event] = function() {
           args = arguments;
         };
-        runAnimation(event, noop, noop, animationOptions);
+        runAnimation(event, angular.noop, angular.noop, animationOptions);
 
         expect(args.length).toBe(3);
         expect(args[0]).toBe(element);
-        expect(isFunction(args[1])).toBe(true);
+        expect(angular.isFunction(args[1])).toBe(true);
         expect(args[2].foo).toBe(animationOptions.foo);
       });
     });
 
-    they('$prop should not execute a before function', enterMoveEvents, function(event) {
-      inject(function() {
-        var args;
-        var beforeMethod = 'before' + event.charAt(0).toUpperCase() + event.substr(1);
-        var animationOptions = {};
-        animations[beforeMethod] = function() {
-          args = arguments;
-        };
-
-        runAnimation(event, noop, noop, animationOptions);
-        expect(args).toBeFalsy();
-      });
-    });
-
-    they('$prop should have the function signature of (element, className, done, options) for the before animation',
-      ['addClass', 'removeClass'], function(event) {
-      inject(function() {
+    test.each(['addClass', 'removeClass'].map((prop) => ({ prop })))(
+        '$prop should have the function signature of (element, className, done, options) for the before animation', function({ prop: event }) {
+      angular.mock.inject(function() {
         var beforeMethod = 'before' + event.charAt(0).toUpperCase() + event.substr(1);
         var args;
         var className = 'matias';
@@ -397,19 +390,19 @@ describe('ngAnimate $$animateJs', function() {
         var animationOptions = {};
         animationOptions.foo = 'bar';
         animationOptions[event] = className;
-        runAnimation(event, noop, noop, animationOptions);
+        runAnimation(event, angular.noop, angular.noop, animationOptions);
 
         expect(args.length).toBe(4);
         expect(args[0]).toBe(element);
         expect(args[1]).toBe(className);
-        expect(isFunction(args[2])).toBe(true);
+        expect(angular.isFunction(args[2])).toBe(true);
         expect(args[3].foo).toBe(animationOptions.foo);
       });
     });
 
-    they('$prop should have the function signature of (element, className, done, options) for the after animation',
-      ['addClass', 'removeClass'], function(event) {
-      inject(function() {
+    test.each(['addClass', 'removeClass'].map((prop) => ({ prop })))(
+        '$prop should have the function signature of (element, className, done, options) for the after animation', function({ prop: event }) {
+      angular.mock.inject(function() {
         var args;
         var className = 'fatias';
         animations[event] = function() {
@@ -419,18 +412,19 @@ describe('ngAnimate $$animateJs', function() {
         var animationOptions = {};
         animationOptions.foo = 'bar';
         animationOptions[event] = className;
-        runAnimation(event, noop, noop, animationOptions);
+        runAnimation(event, angular.noop, angular.noop, animationOptions);
 
         expect(args.length).toBe(4);
         expect(args[0]).toBe(element);
         expect(args[1]).toBe(className);
-        expect(isFunction(args[2])).toBe(true);
+        expect(angular.isFunction(args[2])).toBe(true);
         expect(args[3].foo).toBe(animationOptions.foo);
       });
     });
 
-    they('setClass should have the function signature of (element, addClass, removeClass, done, options) for the $prop animation', ['before', 'after'], function(event) {
-      inject(function() {
+    test.each(['before', 'after'].map((prop) => ({ prop })))(
+        'setClass should have the function signature of (element, addClass, removeClass, done, options) for the $prop animation', function({ prop: event }) {
+      angular.mock.inject(function() {
         var args;
         var method = event === 'before' ? 'beforeSetClass' : 'setClass';
         animations[method] = function() {
@@ -444,19 +438,20 @@ describe('ngAnimate $$animateJs', function() {
           addClass: addClass,
           removeClass: removeClass
         };
-        runAnimation('setClass', noop, noop, animationOptions);
+        runAnimation('setClass', angular.noop, angular.noop, animationOptions);
 
         expect(args.length).toBe(5);
         expect(args[0]).toBe(element);
         expect(args[1]).toBe(addClass);
         expect(args[2]).toBe(removeClass);
-        expect(isFunction(args[3])).toBe(true);
+        expect(angular.isFunction(args[3])).toBe(true);
         expect(args[4].foo).toBe(animationOptions.foo);
       });
     });
 
-    they('animate should have the function signature of (element, from, to, done, options) for the $prop animation', ['before', 'after'], function(event) {
-      inject(function() {
+    test.each(['before', 'after'].map((prop) => ({ prop })))(
+        'animate should have the function signature of (element, from, to, done, options) for the $prop animation', function({ prop: event }) {
+      angular.mock.inject(function() {
         var args;
         var method = event === 'before' ? 'beforeAnimate' : 'animate';
         animations[method] = function() {
@@ -470,19 +465,20 @@ describe('ngAnimate $$animateJs', function() {
           to: to,
           from: from
         };
-        runAnimation('animate', noop, noop, animationOptions);
+        runAnimation('animate', angular.noop, angular.noop, animationOptions);
 
         expect(args.length).toBe(5);
         expect(args[0]).toBe(element);
         expect(args[1]).toBe(from);
         expect(args[2]).toBe(to);
-        expect(isFunction(args[3])).toBe(true);
+        expect(angular.isFunction(args[3])).toBe(true);
         expect(args[4].foo).toBe(animationOptions.foo);
       });
     });
 
-    they('custom events should have the function signature of (element, done, options) for the $prop animation', ['before', 'after'], function(event) {
-      inject(function() {
+    test.each(['before', 'after'].map((prop) => ({ prop })))(
+        'custom events should have the function signature of (element, done, options) for the $prop animation', function({ prop: event }) {
+      angular.mock.inject(function() {
         var args;
         var method = event === 'before' ? 'beforeCustom' : 'custom';
         animations[method] = function() {
@@ -491,21 +487,21 @@ describe('ngAnimate $$animateJs', function() {
 
         var animationOptions = {};
         animationOptions.foo = 'bar';
-        runAnimation('custom', noop, noop, animationOptions);
+        runAnimation('custom', angular.noop, angular.noop, animationOptions);
 
         expect(args.length).toBe(3);
         expect(args[0]).toBe(element);
-        expect(isFunction(args[1])).toBe(true);
+        expect(angular.isFunction(args[1])).toBe(true);
         expect(args[2].foo).toBe(animationOptions.foo);
       });
     });
 
-    var enterMoveEvents = ['enter', 'move'];
     var otherEvents = ['addClass', 'removeClass', 'setClass'];
     var allEvents = ['leave'].concat(otherEvents).concat(enterMoveEvents);
 
-    they('$prop should asynchronously render the before$prop animation', otherEvents, function(event) {
-      inject(function($animate) {
+    test.each(otherEvents.map((prop) => ({ prop })))(
+        '$prop should asynchronously render the before$prop animation', function({ prop: event }) {
+      angular.mock.inject(function($animate) {
         var beforeMethod = 'before' + event.charAt(0).toUpperCase() + event.substr(1);
         animations[beforeMethod] = function(element, a, b, c) {
           log.push('before ' + event);
@@ -521,8 +517,9 @@ describe('ngAnimate $$animateJs', function() {
       });
     });
 
-    they('$prop should asynchronously render the $prop animation', allEvents, function(event) {
-      inject(function($animate) {
+    test.each(allEvents.map((prop) => ({ prop })))(
+        '$prop should asynchronously render the $prop animation', function({ prop: event }) {
+      angular.mock.inject(function($animate) {
         animations[event] = function(element, a, b, c) {
           log.push('after ' + event);
           var done = getDoneFunction(arguments);
@@ -545,14 +542,14 @@ describe('ngAnimate $$animateJs', function() {
       });
     });
 
-    they('$prop should asynchronously render the $prop animation when a start/end animator object is returned',
-      allEvents, function(event) {
+    test.each(allEvents.map((prop) => ({ prop })))(
+        '$prop should asynchronously render the $prop animation when a start/end animator object is returned', function({ prop: event }) {
 
-      inject(function($animate, $$AnimateRunner) {
+      angular.mock.inject(function($animate, $$AnimateRunner) {
         var runner;
         animations[event] = function(element, a, b, c) {
           return {
-            start: function() {
+            start() {
               log.push('start ' + event);
               runner = new $$AnimateRunner();
               return runner;
@@ -578,10 +575,10 @@ describe('ngAnimate $$animateJs', function() {
       });
     });
 
-    they('$prop should asynchronously render the $prop animation when an instance of $$AnimateRunner is returned',
-      allEvents, function(event) {
+    test.each(allEvents.map((prop) => ({ prop })))(
+        '$prop should asynchronously render the $prop animation when an instance of $$AnimateRunner is returned', function({ prop: event }) {
 
-      inject(function($animate, $$AnimateRunner) {
+      angular.mock.inject(function($animate, $$AnimateRunner) {
         var runner;
         animations[event] = function(element, a, b, c) {
           log.push('start ' + event);
@@ -607,8 +604,9 @@ describe('ngAnimate $$animateJs', function() {
       });
     });
 
-    they('$prop should asynchronously reject the before animation if the callback function is called with false', otherEvents, function(event) {
-      inject(function($animate, $rootScope) {
+    test.each(otherEvents.map((prop) => ({ prop })))(
+        '$prop should asynchronously reject the before animation if the callback function is called with false', function({ prop: event }) {
+      angular.mock.inject(function($animate, $rootScope) {
         var beforeMethod = 'before' + event.charAt(0).toUpperCase() + event.substr(1);
         animations[beforeMethod] = function(element, a, b, c) {
           log.push('before ' + event);
@@ -632,8 +630,9 @@ describe('ngAnimate $$animateJs', function() {
       });
     });
 
-    they('$prop should asynchronously reject the after animation if the callback function is called with false', allEvents, function(event) {
-      inject(function($animate, $rootScope) {
+    test.each(allEvents.map((prop) => ({ prop })))(
+        '$prop should asynchronously reject the after animation if the callback function is called with false', function({ prop: event }) {
+      angular.mock.inject(function($animate, $rootScope) {
         animations[event] = function(element, a, b, c) {
           log.push('after ' + event);
           var done = getDoneFunction(arguments);
@@ -657,7 +656,7 @@ describe('ngAnimate $$animateJs', function() {
       });
     });
 
-    it('setClass should delegate down to addClass/removeClass if not defined', inject(function($animate) {
+    test('setClass should delegate down to addClass/removeClass if not defined', angular.mock.inject(function($animate) {
       animations.addClass = function(element, done) {
         log.push('addClass');
       };
@@ -673,8 +672,8 @@ describe('ngAnimate $$animateJs', function() {
       expect(log).toEqual(['dom setClass', 'removeClass', 'addClass']);
     }));
 
-    it('beforeSetClass should delegate down to beforeAddClass/beforeRemoveClass if not defined',
-      inject(function($animate) {
+    test('beforeSetClass should delegate down to beforeAddClass/beforeRemoveClass if not defined',
+      angular.mock.inject(function($animate) {
 
       animations.beforeAddClass = function(element, className, done) {
         log.push('beforeAddClass');
@@ -694,8 +693,8 @@ describe('ngAnimate $$animateJs', function() {
       expect(log).toEqual(['beforeRemoveClass', 'beforeAddClass', 'dom setClass']);
     }));
 
-    it('leave should always ignore the `beforeLeave` animation',
-      inject(function($animate) {
+    test('leave should always ignore the `beforeLeave` animation',
+      angular.mock.inject(function($animate) {
 
       animations.beforeLeave = function(element, done) {
         log.push('beforeLeave');
@@ -713,8 +712,8 @@ describe('ngAnimate $$animateJs', function() {
       expect(log).toEqual(['leave', 'dom leave']);
     }));
 
-    it('should allow custom events to be triggered',
-      inject(function($animate) {
+    test('should allow custom events to be triggered',
+      angular.mock.inject(function($animate) {
 
       animations.beforeFlex = function(element, done) {
         log.push('beforeFlex');

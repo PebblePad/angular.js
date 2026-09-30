@@ -1,78 +1,77 @@
 'use strict';
-
-describe('$swipe', function() {
+ describe('$swipe', () => {
   var element;
   var events;
 
-  beforeEach(function() {
-    module('ngTouch');
-    inject(function($compile, $rootScope) {
+   beforeEach(() => {
+    angular.mock.module('ngTouch');
+    angular.mock.inject(function($compile, $rootScope) {
       element = $compile('<div></div>')($rootScope);
     });
     events = {
-      start: jasmine.createSpy('startSpy'),
-      move: jasmine.createSpy('moveSpy'),
-      cancel: jasmine.createSpy('cancelSpy'),
-      end: jasmine.createSpy('endSpy')
+      start: jest.fn().mockName('startSpy'),
+      move: jest.fn().mockName('moveSpy'),
+      cancel: jest.fn().mockName('cancelSpy'),
+      end: jest.fn().mockName('endSpy')
     };
   });
 
-  afterEach(function() {
+   afterEach(() => {
     dealoc(element);
   });
 
-  describe('pointerTypes', function() {
+  describe('pointerTypes', () => {
     var usedEvents;
     var MOUSE_EVENTS = ['mousedown','mousemove','mouseup'].sort();
     var TOUCH_EVENTS = ['touchcancel','touchend','touchmove','touchstart'].sort();
     var POINTER_EVENTS = ['pointerdown', 'pointermove', 'pointerup', 'pointercancel'].sort();
     var ALL_EVENTS = MOUSE_EVENTS.concat(TOUCH_EVENTS, POINTER_EVENTS).sort();
 
-    beforeEach(function() {
+     beforeEach(() => {
       usedEvents = [];
-      spyOn(element, 'on').and.callFake(function(events) {
+      jest.spyOn(element, 'on').mockImplementation(function(events) {
         angular.forEach(events.split(/\s+/), function(eventName) {
           usedEvents.push(eventName);
         });
       });
     });
 
-    it('should use mouse, touch and pointer by default', inject(function($swipe) {
+    test('should use mouse, touch and pointer by default', angular.mock.inject(function($swipe) {
       $swipe.bind(element, events);
       expect(usedEvents.sort()).toEqual(ALL_EVENTS);
     }));
 
-    it('should only use mouse events for pointerType "mouse"', inject(function($swipe) {
+    test('should only use mouse events for pointerType "mouse"', angular.mock.inject(function($swipe) {
       $swipe.bind(element, events, ['mouse']);
       expect(usedEvents.sort()).toEqual(MOUSE_EVENTS);
     }));
 
-    it('should only use touch events for pointerType "touch"', inject(function($swipe) {
+    test('should only use touch events for pointerType "touch"', angular.mock.inject(function($swipe) {
       $swipe.bind(element, events, ['touch']);
       expect(usedEvents.sort()).toEqual(TOUCH_EVENTS);
     }));
 
-    it('should only use pointer events for pointerType "pointer"', inject(function($swipe) {
+    test('should only use pointer events for pointerType "pointer"', angular.mock.inject(function($swipe) {
       $swipe.bind(element, events, ['pointer']);
       expect(usedEvents.sort()).toEqual(POINTER_EVENTS);
     }));
 
-    it('should use mouse and touch if both are specified', inject(function($swipe) {
+    test('should use mouse and touch if both are specified', angular.mock.inject(function($swipe) {
       $swipe.bind(element, events, ['touch', 'mouse']);
       expect(usedEvents.sort()).toEqual(MOUSE_EVENTS.concat(TOUCH_EVENTS).sort());
     }));
 
-    it('should use mouse and pointer if both are specified', inject(function($swipe) {
+    test('should use mouse and pointer if both are specified', angular.mock.inject(function($swipe) {
       $swipe.bind(element, events, ['mouse', 'pointer']);
       expect(usedEvents.sort()).toEqual(MOUSE_EVENTS.concat(POINTER_EVENTS).sort());
     }));
 
-    it('should use touch and pointer if both are specified', inject(function($swipe) {
+    test('should use touch and pointer if both are specified', angular.mock.inject(function($swipe) {
       $swipe.bind(element, events, ['touch', 'pointer']);
       expect(usedEvents.sort()).toEqual(TOUCH_EVENTS.concat(POINTER_EVENTS).sort());
     }));
 
-    it('should use mouse, touch and pointer if they are specified', inject(function($swipe) {
+    test('should use mouse, touch and pointer if they are specified', angular.mock.inject(function($swipe) {
       $swipe.bind(element, events, ['mouse', 'touch', 'pointer']);
       expect(usedEvents.sort()).toEqual(ALL_EVENTS);
     }));
@@ -85,7 +84,7 @@ describe('$swipe', function() {
 
   // Wrapper to abstract over using touch events or mouse events.
   function swipeTests(description, restrictBrowsers, startEvent, moveEvent, endEvent) {
-    describe('$swipe with ' + description + ' events', function() {
+    describe('$swipe with ' + description + ' events', () => {
       if (restrictBrowsers) {
         // TODO(braden): Once we have other touch-friendly browsers on CI, allow them here.
         // Currently Firefox and IE refuse to fire touch events.
@@ -95,7 +94,7 @@ describe('$swipe', function() {
         }
       }
 
-      it('should trigger the "start" event', inject(function($swipe) {
+      test('should trigger the "start" event', angular.mock.inject(function($swipe) {
         $swipe.bind(element, events);
 
         expect(events.start).not.toHaveBeenCalled();
@@ -116,7 +115,7 @@ describe('$swipe', function() {
         expect(events.end).not.toHaveBeenCalled();
       }));
 
-      it('should trigger the "move" event after a "start"', inject(function($swipe) {
+      test('should trigger the "move" event after a "start"', angular.mock.inject(function($swipe) {
         $swipe.bind(element, events);
 
         expect(events.start).not.toHaveBeenCalled();
@@ -149,7 +148,7 @@ describe('$swipe', function() {
         expect(events.end).not.toHaveBeenCalled();
       }));
 
-      it('should not trigger a "move" without a "start"', inject(function($swipe) {
+      test('should not trigger a "move" without a "start"', angular.mock.inject(function($swipe) {
         $swipe.bind(element, events);
 
         expect(events.start).not.toHaveBeenCalled();
@@ -169,7 +168,7 @@ describe('$swipe', function() {
         expect(events.end).not.toHaveBeenCalled();
       }));
 
-      it('should not trigger an "end" without a "start"', inject(function($swipe) {
+      test('should not trigger an "end" without a "start"', angular.mock.inject(function($swipe) {
         $swipe.bind(element, events);
 
         expect(events.start).not.toHaveBeenCalled();
@@ -189,7 +188,7 @@ describe('$swipe', function() {
         expect(events.end).not.toHaveBeenCalled();
       }));
 
-      it('should trigger a "start", many "move"s and an "end"', inject(function($swipe) {
+      test('should trigger a "start", many "move"s and an "end"', angular.mock.inject(function($swipe) {
         $swipe.bind(element, events);
 
         expect(events.start).not.toHaveBeenCalled();
@@ -264,7 +263,7 @@ describe('$swipe', function() {
         expect(events.cancel).not.toHaveBeenCalled();
       }));
 
-      it('should not start sending "move"s until enough horizontal motion is accumulated', inject(function($swipe) {
+      test('should not start sending "move"s until enough horizontal motion is accumulated', angular.mock.inject(function($swipe) {
         $swipe.bind(element, events);
 
         expect(events.start).not.toHaveBeenCalled();
@@ -329,7 +328,7 @@ describe('$swipe', function() {
         expect(events.cancel).not.toHaveBeenCalled();
       }));
 
-      it('should stop sending anything after vertical motion dominates', inject(function($swipe) {
+      test('should stop sending anything after vertical motion dominates', angular.mock.inject(function($swipe) {
         $swipe.bind(element, events);
 
         expect(events.start).not.toHaveBeenCalled();

@@ -1,4 +1,3 @@
-'use strict';
 
 
 /**
@@ -95,7 +94,7 @@ var ngListDirective = function() {
     restrict: 'A',
     priority: 100,
     require: 'ngModel',
-    link: function(scope, element, attr, ctrl) {
+    link(scope, element, attr, ctrl) {
       var ngList = attr.ngList || ', ';
       var trimValues = attr.ngTrim !== 'false';
       var separator = trimValues ? trim(ngList) : ngList;

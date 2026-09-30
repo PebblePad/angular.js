@@ -1,4 +1,3 @@
-'use strict';
 
 /* exported ngRepeatDirective */
 
@@ -529,21 +528,34 @@ var ngRepeatDirective = ['$parse', '$animate', '$compile', function($parse, $ani
 
         //watch props
         $scope.$watchCollection(rhs, function ngRepeatAction(collection) {
-          var index, length,
-              previousNode = $element[0],     // node that cloned nodes should be inserted after
-                                              // initialized to the comment node anchor
-              nextNode,
-              // Same as lastBlockMap but it has the current state. It will become the
-              // lastBlockMap on the next iteration.
-              nextBlockMap = createMap(),
-              collectionLength,
-              key, value, // key/value of iteration
-              trackById,
-              trackByIdFn,
-              collectionKeys,
-              block,       // last object information {scope, element, id}
-              nextBlockOrder,
-              elementsToRemove;
+          var index;
+          var length;
+
+          var // node that cloned nodes should be inserted after
+          // initialized to the comment node anchor
+          previousNode = $element[0];
+
+          var nextNode;
+
+          var // Same as lastBlockMap but it has the current state. It will become the
+          // lastBlockMap on the next iteration.
+          nextBlockMap = createMap();
+
+          var collectionLength;
+          var key;
+
+          var // key/value of iteration
+          value;
+
+          var trackById;
+          var trackByIdFn;
+          var collectionKeys;
+
+          var // last object information {scope, element, id}
+          block;
+
+          var nextBlockOrder;
+          var elementsToRemove;
 
           if (aliasAs) {
             $scope[aliasAs] = collection;

@@ -1,4 +1,3 @@
-'use strict';
 
 var $$AnimateCssDriverProvider = ['$$animationProvider', /** @this */ function($$animationProvider) {
   $$animationProvider.drivers.push('$$animateCssDriver');
@@ -47,7 +46,7 @@ var $$AnimateCssDriverProvider = ['$$animationProvider', /** @this */ function($
       if (isString(a)) a = a.split(' ');
       if (isString(b)) b = b.split(' ');
       return a.filter(function(val) {
-        return b.indexOf(val) === -1;
+        return !b.includes(val);
       }).join(' ');
     }
 
@@ -62,7 +61,8 @@ var $$AnimateCssDriverProvider = ['$$animationProvider', /** @this */ function($
 
       rootBodyElement.append(clone);
 
-      var animatorIn, animatorOut = prepareOutAnimation();
+      var animatorIn;
+      var animatorOut = prepareOutAnimation();
 
       // the user may not end up using the `out` animation and
       // only making use of the `in` animation or vice-versa.
@@ -78,7 +78,7 @@ var $$AnimateCssDriverProvider = ['$$animationProvider', /** @this */ function($
       var startingAnimator = animatorOut || animatorIn;
 
       return {
-        start: function() {
+        start() {
           var runner;
 
           var currentAnimation = startingAnimator.start();
@@ -196,7 +196,7 @@ var $$AnimateCssDriverProvider = ['$$animationProvider', /** @this */ function($
       if (!fromAnimation && !toAnimation && anchorAnimations.length === 0) return;
 
       return {
-        start: function() {
+        start() {
           var animationRunners = [];
 
           if (fromAnimation) {

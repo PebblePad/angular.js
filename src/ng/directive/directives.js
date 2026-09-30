@@ -1,4 +1,3 @@
-'use strict';
 
 function ngDirective(directive) {
   if (isFunction(directive)) {
