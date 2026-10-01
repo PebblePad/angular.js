@@ -1,4 +1,6 @@
 AngularJS [![Build Status](https://travis-ci.org/angular/angular.js.svg?branch=master)](https://travis-ci.org/angular/angular.js)
+</br>
+Fork of 1.6.10 with ongoing security patches applied
 =========
 
 AngularJS lets you write client-side web applications as if you had a smarter browser.  It lets you
